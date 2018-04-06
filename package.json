@@ -1,0 +1,42 @@
+{
+  "name": "angular-project",
+  "version": "1.0.0",
+  "description": "Angular generic project with database connectors",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon --watch server server/index.js",
+    "watch": "concurrently --raw \"cd client && npm run watch\" \"npm start\" "
+  },
+  "author": "Steeve Vandecappelle",
+  "license": "SEE LICENCE IN LICENCE",
+  "private": true,
+  "dependencies": {
+    "bcrypt": "^1.0.3",
+    "body-parser": "^1.17.2",
+    "colors": "^1.1.2",
+    "cookie-parser": "^1.4.3",
+    "core-js": "^2.5.0",
+    "csurf": "^1.9.0",
+    "dateformat": "^2.0.0",
+    "errorhandler": "^1.5.0",
+    "express": "^4.15.4",
+    "express-session": "^1.15.5",
+    "mongoose": "^4.11.8",
+    "morgan": "^1.8.2",
+    "nconf": "^0.8.4",
+    "nconf-yaml": "^1.0.2",
+    "node-yaml-config": "0.0.4",
+    "pg": "^6.4.1",
+    "semver": "^5.4.1",
+    "semver-sort": "0.0.4",
+    "sequelize": "^4.7.2",
+    "serve-favicon": "^2.4.3",
+    "winston": "^2.3.1",
+    "winston-color": "^1.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "3.5.0",
+    "nodemon": "^1.11.0"
+  }
+}

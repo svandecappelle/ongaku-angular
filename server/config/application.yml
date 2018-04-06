@@ -1,0 +1,3 @@
+product-name: application
+# possible levels:  error, warn, info, verbose, debug, silly
+log-level: info

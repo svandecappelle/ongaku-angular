@@ -1,0 +1,25 @@
+default:
+  database:
+    host: localhost
+    database: angular-init
+    username: svandecappelle
+    password:
+    type: postgresql
+    logging: false
+    schema: svandecappelle
+    dialect: postgres
+    dialectOptions:
+      multipleStatements: true
+  port: 3000
+development:
+  database:
+    host: localhost
+    database: angular-init
+    username: svandecappelle
+    password:
+    type: postgresql
+    logging: false
+    dialect: postgres
+    dialectOptions:
+      multipleStatements: true
+  port: 4000

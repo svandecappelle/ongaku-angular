@@ -1,0 +1,25 @@
+/* You can add global styles to this file, and also import other style files */
+@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+
+body {
+  margin: 0px
+}
+
+.main-process-card {
+  width: 50%;
+  max-width: 500px;
+  margin: auto;
+
+  mat-card-title {
+      font-weight: 800;
+  }
+
+  mat-card-actions {
+      text-align: center;
+  }
+}
+
+.system-avatar {
+  background-image: url('assets/img/system-user.jpg');
+  background-size: cover;
+}
