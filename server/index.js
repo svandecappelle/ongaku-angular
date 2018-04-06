@@ -18,6 +18,8 @@ const express = require('express'),
   app = express();
 var environment = process.env.NODE_ENV || 'development';
 
+var application = require('./app/index');
+
 class Server {
 
   constructor () {
@@ -121,6 +123,10 @@ class Server {
     var routes = require('./app/routes');
     // redirect all others to the index (HTML5 history)
     routes.serve(app);
+    
+    application.start();
+    
+    
   }
 
 }

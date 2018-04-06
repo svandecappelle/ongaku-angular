@@ -1,0 +1,90 @@
+/*jslint node: true */
+"use strict";
+
+var fs = require('fs'),
+    logger = require('log4js').getLogger("meta"),
+    nconf = require('nconf'),
+    objectAssign = require('object-assign'),
+    _ = require('underscore'),
+    utils = require('./utils'),
+    //translator = require('./../public/translator'),
+    db = require('./model/database'),
+    user = require('./model/user');
+
+(function (Meta) {
+    Meta.restartRequired = false;
+    Meta.config = {
+        loginAttempts: 5,
+        lockoutDuration: 60,
+        loginDays: 14,
+        allowLocalLogin: true
+    };
+
+    function mergeConfiguration(redisConfig){
+      var jsonConfiguration = nconf.get();
+      var mergedConfig = objectAssign(jsonConfiguration, redisConfig);
+      return mergedConfig;
+    }
+
+    function mergeOnNconf(redisConfig){
+      var jsonConfiguration = nconf.get();
+      _.each(redisConfig, function(val, key){
+        nconf.set(key, val);
+      });
+    }
+
+    /* Settings */
+    Meta.settings = {};
+    
+    Meta.settings.merge = function(){
+        var hash = 'settings:global';
+        db.getObject(hash, function (err, settings) {
+            if (err) {
+                callback(err);
+            } else {
+                mergeOnNconf(settings || {});
+            }
+        });
+    };
+    
+    Meta.settings.get = function (hash, callback) {
+        hash = 'settings:' + hash;
+        db.getObject(hash, function (err, settings) {
+            if (err) {
+                callback(err);
+            } else {
+                callback(null, mergeConfiguration(settings || {}));
+            }
+        });
+    };
+
+    Meta.settings.getOne = function (hash, field, callback) {
+        hash = 'settings:' + hash;
+        db.getObjectField(hash, field, callback);
+    };
+
+    Meta.settings.set = function (hash, values, callback) {
+        hash = 'settings:' + hash;
+        db.setObject(hash, values, callback);
+    };
+
+    Meta.settings.setOne = function (hash, field, value, callback) {
+        hash = 'settings:' + hash;
+        nconf.set(field, value);
+        db.setObjectField(hash, field, value, callback);
+    };
+
+    Meta.settings.setOnEmpty = function (hash, field, value, callback) {
+        Meta.settings.getOne(hash, field, function (err, curValue) {
+            if (err) {
+                return callback(err);
+            }
+
+            if (!curValue) {
+                Meta.settings.setOne(hash, field, value, callback);
+            } else {
+                callback();
+            }
+        });
+    };
+}(exports));
