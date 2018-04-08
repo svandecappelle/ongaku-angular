@@ -53,7 +53,8 @@ gen-certificate:
 	rm $(CERTIFICATE_TMP_KEY)
 
 install:
-	$(NPM) install
+	$(NPM) install 
+	$(CD) client && $(NPM) install && cd ..
 
 build: install
 	$(CD) client && npm run build

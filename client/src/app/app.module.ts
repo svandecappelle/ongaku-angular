@@ -6,6 +6,7 @@ import { NgModule } from '@angular/core';
 import { MaterialModule } from './modules/material.module';
 
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';  // replaces previous Http service
 
 import { AppComponent } from './app.component';
 import { HeaderComponent } from './header/header.component';
@@ -15,6 +16,8 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { InstallComponent } from './install/install.component';
 import { UpgradeComponent } from './upgrade/upgrade.component';
 import { MenuComponent } from './menu/menu.component';
+
+import { AudioService } from './dashboard/audio.service';   // our custom service, see below
 
 @NgModule({
   declarations: [
@@ -33,8 +36,9 @@ import { MenuComponent } from './menu/menu.component';
     ReactiveFormsModule,
     MaterialModule,
     AppRoutingModule,
+    HttpClientModule,
   ],
-  providers: [],
+  providers: [AudioService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
