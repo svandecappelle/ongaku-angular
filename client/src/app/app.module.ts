@@ -3,6 +3,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { NgModule } from '@angular/core';
 
+import 'moment-duration-format';
+
 import { MaterialModule } from './modules/material.module';
 
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
@@ -17,7 +19,11 @@ import { InstallComponent } from './install/install.component';
 import { UpgradeComponent } from './upgrade/upgrade.component';
 import { MenuComponent } from './menu/menu.component';
 
-import { AudioService } from './dashboard/audio.service';   // our custom service, see below
+import { AudioService } from './dashboard/audio.service';
+import { PlayerModule } from './player/player.module';   // our custom service, see below
+
+import { AppStateModule } from './app-state';
+import { PlayerControlsComponent } from './player/controls/player-controls/player-controls.component';
 
 @NgModule({
   declarations: [
@@ -27,7 +33,7 @@ import { AudioService } from './dashboard/audio.service';   // our custom servic
     DashboardComponent,
     InstallComponent,
     UpgradeComponent,
-    MenuComponent
+    MenuComponent,
   ],
   imports: [
     BrowserModule,
@@ -37,6 +43,8 @@ import { AudioService } from './dashboard/audio.service';   // our custom servic
     MaterialModule,
     AppRoutingModule,
     HttpClientModule,
+    AppStateModule,
+    PlayerModule,
   ],
   providers: [AudioService],
   bootstrap: [AppComponent]

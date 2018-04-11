@@ -1,7 +1,13 @@
-<p>
-  dashboard works well!
-</p>
+<h1>
+  Library:
+</h1>
 
 <ul>
-  <li *ngFor="let artist of artists">{{artist.name}}</li>
+  <li *ngFor="let artist of artists">{{artist.artist}}</li>
 </ul>
+
+<div class="actions-container">
+  <button mat-icon-button (click)="loadMore()">
+    <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
+  </button>
+</div>

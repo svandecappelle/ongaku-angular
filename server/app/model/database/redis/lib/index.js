@@ -6,7 +6,6 @@
         path = require('path'),
         express = require('express'),
         utils = require('./../../../../utils'),
-        logger = require('log4js').getLogger('Database:redis'),
         redis,
         ConnectRedis,
         reds,
@@ -40,7 +39,7 @@
             ConnectRedis = require('connect-redis')(session);
             reds = require('reds');
         } catch (err) {
-            logger.error('Unable to initialize Redis! Is Redis installed? Error :' + err.message);
+            console.error('Unable to initialize Redis! Is Redis installed? Error :' + err.message);
             process.exit();
         }
 
@@ -57,11 +56,11 @@
         if (nconf.get('redis:password')) {
             redisClient.auth(nconf.get('redis:password'));
         } else {
-            logger.warn('You have no redis password setup!');
+            console.warn('You have no redis password setup!');
         }
 
         redisClient.on('error', function (err) {
-            logger.error(err, new Error());
+            console.error(err, new Error());
         });
 
         module.client = redisClient;
@@ -83,7 +82,7 @@
         if (db) {
             redisClient.select(db, function(error) {
                 if (error) {
-                    logger.error("NodeBB could not connect to your Redis database. Redis returned the following error: " + error.message);
+                    console.error("NodeBB could not connect to your Redis database. Redis returned the following error: " + error.message);
                     process.exit();
                 }
             });

@@ -43,7 +43,9 @@ class Communication {
 	}
 
 	broadcast (event, data) {
-		this.io.sockets.emit(event, data);
+		if (this.io){
+			this.io.sockets.emit(event, data);
+		}
 	}
 
 	emit (room, event, data) {

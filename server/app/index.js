@@ -2,8 +2,8 @@ const nconf = require("nconf");
 const logger = require('log4js').getLogger('Server');
 const async = require("async");
 
-//const middleware = require('./middleware/middleware');
-// const library = require("./middleware/library");
+const middleware = require('./middleware/middleware');
+const library = require("./middleware/library");
 
 //const communication = require('./communication');
 //const meta = require('./meta');
@@ -20,8 +20,7 @@ class Application {
 	}
 
 	start () {
-		// const library = require("./middleware/library");
-		/*var q = async.queue((task, callback) => {
+		var q = async.queue((task, callback) => {
 			logger.info("Launch task: ".concat(task.name));
 			callback();
 		});
@@ -32,19 +31,19 @@ class Application {
 
 		q.push({name: 'scan'}, (err) => {
 			this.reload();
-		});*/
+		});
 	}
 	
 	reload (callback) {
-		/*library.scan(() => {
+		library.scan(() => {
 			library.scanProgress = false;
 			logger.info("Library fully scanned");
 			if (callback){
 				callback();
 			} else {
-				this.emit('library:scanned', {message: "Library scanned"});
+				//this.emit('library:scanned', {message: "Library scanned"});
 			}
-		});*/
+		});
 	}
 }
 

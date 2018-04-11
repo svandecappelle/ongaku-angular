@@ -10,16 +10,26 @@ import {Observable} from 'rxjs/Rx';
 })
 export class DashboardComponent implements OnInit {
 
-  public artists;
+  public artists = [];
+  public _page;
 
-  constructor(private _audioService: AudioService) { }
+  constructor(private _audioService: AudioService) { 
+    this._page = 0;
+  }
 
   ngOnInit() {
-    this._audioService.getArtists().subscribe(
-      data => { this.artists = data},
+    this.loadMore();
+  }
+
+  loadMore(){
+    console.log("load");
+    this._audioService.getArtists(this._page).subscribe(
+      data => { this.artists = this.artists.concat(data) },
       err => console.error(err),
       () => console.log('done loading artists')
     );
+
+    this._page +=1;
   }
 
 }

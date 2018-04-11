@@ -7,7 +7,7 @@ export class AudioService {
 
   constructor(private http:HttpClient) { }
 
-  getArtists() {
-    return this.http.get('/api/audio/library/0');
+  getArtists (page) {
+    return this.http.get(`/api/audio/library/${page}`);
   }
 }

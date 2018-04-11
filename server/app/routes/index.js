@@ -4,6 +4,7 @@ const nconf = require('nconf');
 const semver = require('semver');
 const models = require('../models');
 const users = require('./users');
+const api = require('./api');
 const groups = require('./groups');
 const install = require('./install');
 const upgrade = require('./upgrade');
@@ -40,6 +41,12 @@ class Routes {
 
     app.use('/api/users', users);
     app.use('/api/groups', groups);
+
+    try {
+      app.use('/api', api);
+    } catch(err) {
+      console.error(err);
+    }
 
     app.use(authority);
 

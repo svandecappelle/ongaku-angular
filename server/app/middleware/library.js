@@ -9,8 +9,9 @@ var library;
 try {
   library = require("../model/library");
 } catch (err) {
-  console.error("lib import error", err);
+  console.error(err);
 }
+
 const ffmetadata = require("ffmetadata");
 const mm = require('musicmetadata');
 
