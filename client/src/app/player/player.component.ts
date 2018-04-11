@@ -1,8 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AudioService } from './player.service';
+import { Song, IAppState } from '../app-state';
 
-import { Song } from '../app-state';
+import { Store, select } from '@ngrx/store';
+
 import { Subject } from 'rxjs/Subject';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-player',
@@ -22,9 +25,14 @@ export class PlayerComponent implements OnInit, OnDestroy {
     private fullTimeSubscription: any;
 
     private color = "accent";
-    
+
+    private tracklist = Observable;
   
-    constructor(private _playerService: AudioService) {
+    constructor(private _playerService: AudioService, private store: Store<IAppState>) {
+      /*this.store.select(state => state.trackList).subscribe((val) => {
+        console.log("tracklist changed");
+        console.log(val);
+      });*/
     }
   
     ngOnInit() {

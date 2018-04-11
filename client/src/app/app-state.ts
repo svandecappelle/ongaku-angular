@@ -1,12 +1,53 @@
 import { ModuleWithProviders } from '@angular/core';
-import { StoreModule } from '@ngrx/store';
+import { StoreModule, Action } from '@ngrx/store';
+
+import { PlayerStateRecord, IPlayerState } from './player/';
 
 export interface IAppState {
-
+  readonly player: IPlayerState;
+  readonly trackList: Object[];
 }
 
 export interface Song {
   audio: String;
 }
 
-export const AppStateModule : ModuleWithProviders = StoreModule.forRoot({a: 'toto'});
+export enum TrackActionTypes {
+  APPEND = '[Track] Append'
+}
+
+export class SongAction implements Action {
+  readonly type = TrackActionTypes.APPEND;
+
+  constructor (public tracks){};
+}
+
+export class Append extends SongAction {
+  
+}
+
+export type TrackActionsUnion =
+| Append;
+
+
+export function reducer(state: Object[], action: SongAction) {
+  
+  if (!state){
+    state = [];
+  }
+
+  switch(action.type) {
+    case TrackActionTypes.APPEND: {
+      return state.concat(action.tracks);
+    }
+
+    default: {
+      return state;
+    }
+  }
+}
+
+export const AppStateModule : ModuleWithProviders = StoreModule.forRoot({
+  player: PlayerStateRecord,
+  trackList: reducer
+});
