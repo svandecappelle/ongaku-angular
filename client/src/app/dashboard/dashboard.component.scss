@@ -1,0 +1,64 @@
+:host {
+    
+}
+
+.actions-container {
+    width: 100%;
+    text-align: center;
+}
+
+.library {
+    margin-bottom: 80px;
+}
+
+.example-header-image {
+    background-size: cover;
+}
+
+ul {
+    position: relative;
+    left: 0;
+    right: 0;
+
+    li {
+        list-style-type: none;
+        margin-bottom: 2rem;
+
+        .mat-card-image {
+            display: inline-block;
+            max-width: 100px;
+        }
+        mat-card-title {
+            margin: 10px 5px;
+        }
+        mat-card-header {
+            margin-bottom: 0.5rem;
+        }
+        .header-image{
+            background-size: cover;
+        }
+        .cover-image{
+            margin-right: 5px;
+            background-size: cover;
+            display:inline-block;
+        }
+        
+        .cover-icon{
+            font-size: 40px;
+            margin-right: 15px;
+            display:inline-block;
+        }
+
+        h3 {
+            color: rgba(0,0,0,.54);
+        }
+
+        h4 {
+            display:inline-block;
+            color: rgba(0,0,0,.54);
+            margin-top: 10px;
+            margin-bottom: 0px;
+            vertical-align: top;
+        }
+    }
+}

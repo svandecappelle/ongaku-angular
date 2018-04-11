@@ -1,13 +1,51 @@
-<h1>
-  Library:
-</h1>
+<ul class="library">
+  <li class="artist" *ngFor="let artist of artists">
+      <mat-card class="example-card">
+          <mat-card-header>
+            <div mat-card-avatar class="header-image" [style.background-image]="getImage(artist.image[0])"></div>
+            <mat-card-title>{{artist.artist}}</mat-card-title>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <p>
+              The Shiba Inu is the smallest of the six original and distinct spitz breeds of dog from Japan.
+              A small, agile dog that copes very well with mountainous terrain, the Shiba Inu was originally
+              bred for hunting.
+            </p>
+            <ul>
+              <li *ngFor="let album of artist.albums">
+                <h3>Albums</h3>
+                
+                <div>
+                  <div>
+                    <mat-icon mat-list-icon class="cover-icon" *ngIf="album.cover === '/img/album.jpg'">album</mat-icon>
+                    <div mat-card-avatar class="cover-image" *ngIf="album.cover !== '/img/album.jpg'" [style.background-image]="getImage(album.cover)"></div>
+                    <h4>{{album.title}}</h4>
+                  </div>
+                  <mat-divider mat-line></mat-divider>
+                  
+                  <mat-selection-list>
+                      <mat-list-option *ngFor="let track of album.tracks">
+                        <span mat-line>{{track.title}}</span>
+                      </mat-list-option>
+                  </mat-selection-list>
+                </div>
+              </li>
+            </ul>
 
-<ul>
-  <li *ngFor="let artist of artists">{{artist.artist}}</li>
+          </mat-card-content>
+          <!--<img mat-card-image src="{{artist.image[0]}}" alt="Photo of a Shiba Inu">-->
+          <mat-card-actions>
+            <button mat-button>LIKE</button>
+            <button mat-button>SHARE</button>
+          </mat-card-actions>
+        </mat-card>
+  </li>
+
+
+  <div class="actions-container">
+    <button mat-icon-button (click)="loadMore()">
+      <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
+    </button>
+  </div>
 </ul>
-
-<div class="actions-container">
-  <button mat-icon-button (click)="loadMore()">
-    <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
-  </button>
-</div>
