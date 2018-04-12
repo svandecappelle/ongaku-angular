@@ -1,2 +1,2 @@
 export { AudioService } from './player.service';
-export { IPlayerState, PlayerStateRecord } from './state';
+export { IPlayerState, PlayerStateRecord, playerReducer } from './state';

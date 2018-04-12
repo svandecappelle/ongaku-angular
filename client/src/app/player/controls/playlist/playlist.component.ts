@@ -28,6 +28,7 @@ export class PlaylistComponent implements OnInit {
 
   show () {
     this.dialog.open(PlaylistDialogComponent, {
+      width: '80%',
       data: {
         tracklist: this.tracks
       }
@@ -38,6 +39,7 @@ export class PlaylistComponent implements OnInit {
 @Component({
   selector: 'playlist-dialog',
   templateUrl: 'playlist-dialog.html',
+  styleUrls: ['./playlist-dialog.component.scss']
 })
 export class PlaylistDialogComponent {
   

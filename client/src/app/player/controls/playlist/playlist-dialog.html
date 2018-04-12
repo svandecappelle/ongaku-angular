@@ -1,11 +1,12 @@
 <h2 mat-dialog-title>Playlist</h2>
 <mat-dialog-content>
-    
-    <mat-list>
-      <mat-list-item *ngFor="let track of tracklist">
-        <span mat-line>{{track.title}}</span>
-      </mat-list-item>
-    </mat-list>
+    <mat-grid-list cols="5" rowHeight="25px" *ngFor="let track of tracklist; let i = index">
+      <mat-grid-tile>{{i}}</mat-grid-tile>
+      <mat-grid-tile>{{track.title}}</mat-grid-tile>
+      <mat-grid-tile>{{track.artist}}</mat-grid-tile>
+      <mat-grid-tile>{{track.album}}</mat-grid-tile>
+      <mat-grid-tile>{{track.duration}}</mat-grid-tile>
+    </mat-grid-list>
 
 </mat-dialog-content>
 <mat-dialog-actions>

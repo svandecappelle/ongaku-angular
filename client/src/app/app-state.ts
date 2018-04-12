@@ -1,7 +1,7 @@
 import { ModuleWithProviders } from '@angular/core';
 import { StoreModule, Action } from '@ngrx/store';
 
-import { PlayerStateRecord, IPlayerState } from './player/';
+import { PlayerStateRecord, IPlayerState, playerReducer } from './player/';
 
 export interface IAppState {
   readonly player: IPlayerState;
@@ -48,6 +48,6 @@ export function reducer(state: Object[], action: SongAction) {
 }
 
 export const AppStateModule : ModuleWithProviders = StoreModule.forRoot({
-  player: PlayerStateRecord,
+  player: playerReducer,
   trackList: reducer
 });

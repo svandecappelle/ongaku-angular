@@ -1,7 +1,10 @@
 import { Component, OnInit, ViewChild, ElementRef, Renderer } from '@angular/core';
 import { Store, select } from '@ngrx/store';
 
+import { PlayerStateRecord, IPlayerState } from '../../index';
+
 import { Song, IAppState } from '../../../app-state';
+import { PlayerAction, PlayerActions } from '../../player-actions';
 
 @Component({
   selector: 'app-player-controls',
@@ -17,6 +20,7 @@ export class PlayerControlsComponent implements OnInit {
   private value;
 
   private state = 'stopped';
+  private current;
   private src;
   private play_index: number = 0;
   private tracks: Object[] = [];
@@ -24,7 +28,7 @@ export class PlayerControlsComponent implements OnInit {
   @ViewChild('audio', { read: ElementRef }) player:ElementRef;
   @ViewChild('progress', { read: ElementRef }) progressBar:ElementRef;
 
-  constructor(public renderer: Renderer, private store: Store<IAppState>) { }
+  constructor(public renderer: Renderer, private store: Store<IAppState>/*, private actions: PlayerActions*/) { }
 
   ngOnInit () {
     this.player.nativeElement.addEventListener('loadedmetadata', (el) => {
@@ -51,8 +55,7 @@ export class PlayerControlsComponent implements OnInit {
   }
 
   ensurePlay(){
-    if (!this.src && this.tracks.length > 0){
-      console.log(this.tracks[this.play_index]);
+    if (!this.src && this.tracks.length > 0) {
       this.src = this.link(this.tracks[this.play_index]['uid']);
     }
   }
@@ -60,6 +63,9 @@ export class PlayerControlsComponent implements OnInit {
   play () {
     if (this.state !== 'playing') {
       this.state = 'playing';
+
+      //this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current['uid']));
+
       this.player.nativeElement.play();
     } else {
       this.state = 'paused';
@@ -76,7 +82,8 @@ export class PlayerControlsComponent implements OnInit {
     this.stop();
     if (this.play_index > 0) {
       this.play_index -= 1;
-      this.src = this.link(this.tracks[this.play_index]['uid']);
+      this.current = this.tracks[this.play_index];
+      this.src = this.link(this.current['uid']);
     }
   }
 
@@ -84,7 +91,8 @@ export class PlayerControlsComponent implements OnInit {
     this.stop();
     if (this.tracks.length > this.play_index +1) {
       this.play_index += 1;
-      this.src = this.link(this.tracks[this.play_index]['uid']);
+      this.current = this.tracks[this.play_index];
+      this.src = this.link(this.current['uid']);
     }
   }
 
