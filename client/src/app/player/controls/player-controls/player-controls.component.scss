@@ -1,11 +1,30 @@
 ul {
-    display: inline;
+    display: inline-block;
     list-style-type: none;
     margin: 0px;
     padding: 0px;
     text-align: center;
     
+    height: 40px;
+    line-height: 40px;
+    vertical-align: middle;
+    display: inline-block;
+    margin-top: 5px;
+    
     li {
         display: inline;
+    }
+}
+
+.audio-stepper {
+    cursor: pointer;
+    position: absolute;
+    top: 0;
+
+    transition: linear all 100ms;
+
+    &:hover{
+        height: 10px;
+        top: -5px;
     }
 }

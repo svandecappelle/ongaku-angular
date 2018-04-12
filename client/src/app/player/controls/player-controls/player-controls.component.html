@@ -1,8 +1,9 @@
-<mat-progress-bar class="example-margin"
+<mat-progress-bar #progress class="audio-stepper"
   [color]="color"
   [mode]="buffer"
   [value]="value"
-  [bufferValue]="75">
+  [bufferValue]="75"
+  (click)="onStepperClick($event)">
 </mat-progress-bar>
 
 <audio #audio [src]='src'></audio>
@@ -10,19 +11,23 @@
 <ul>
   <li>
     <button mat-icon-button (click)="previous()">
-      <mat-icon aria-label="Example icon-button with a heart icon">skip_previous</mat-icon>
+      <mat-icon aria-label="Previous track">skip_previous</mat-icon>
     </button>
   </li>
 
   <li>
-    <button mat-icon-button (click)="play()">
-      <mat-icon aria-label="Example icon-button with a heart icon">play_arrow</mat-icon>
+    <button mat-icon-button (click)="play()" *ngIf="state !== 'playing'">
+      <mat-icon aria-label="Play">play_arrow</mat-icon>
+    </button>
+
+    <button mat-icon-button (click)="play()" *ngIf="state === 'playing'">
+      <mat-icon aria-label="Pause">pause</mat-icon>
     </button>
   </li>
   
   <li>
     <button mat-icon-button (click)="next()">
-      <mat-icon aria-label="Example icon-button with a heart icon">skip_next</mat-icon>
+      <mat-icon aria-label="Next track">skip_next</mat-icon>
     </button>
   </li>
   

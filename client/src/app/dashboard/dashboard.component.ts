@@ -53,6 +53,7 @@ export class DashboardComponent implements OnInit {
     //console.log(action, this.selectedOptions[album]);
 
     this.store.dispatch(new Append(this.selectedOptions[album]));
+    this.selectedOptions[album] = [];
   }
 
   onTracksSelectionChanged(tracks){

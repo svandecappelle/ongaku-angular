@@ -31,7 +31,7 @@
               </mat-selection-list>
 
               <p>
-                Options selected: {{tracks.selectedOptions.selected.length}}
+                Tracks selected: {{tracks.selectedOptions.selected.length}}
               </p>
             </div>
           </li>
@@ -40,7 +40,7 @@
         <!--<img mat-card-image src="{{artist.image[0]}}" alt="Photo of a Shiba Inu">-->
       <mat-card-actions>
         <button mat-icon-button (click)="actionFrom('play', artist.artist)">
-          <mat-icon aria-label="play">play_arrow</mat-icon>
+          <mat-icon aria-label="play">playlist_add</mat-icon>
         </button>
         <button mat-icon-button (click)="actionFrom('like', artist.artist)">
           <mat-icon aria-label="like">favorite</mat-icon>

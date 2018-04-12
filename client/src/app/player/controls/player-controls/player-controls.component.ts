@@ -1,4 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, Renderer } from '@angular/core';
+import { Store, select } from '@ngrx/store';
+
+import { Song, IAppState } from '../../../app-state';
 
 @Component({
   selector: 'app-player-controls',
@@ -13,29 +16,45 @@ export class PlayerControlsComponent implements OnInit {
   private currentTime;
   private value;
 
-  private state = 'paused';
-  private src = '/api/audio/stream/c0e63ef59267c94771ee8990540a8d47c61b3b2a';
+  private state = 'stopped';
+  private src;
+  private play_index: number = 0;
+  private tracks: Object[] = [];
 
   @ViewChild('audio', { read: ElementRef }) player:ElementRef;
+  @ViewChild('progress', { read: ElementRef }) progressBar:ElementRef;
 
-  constructor(public renderer: Renderer) { }
+  constructor(public renderer: Renderer, private store: Store<IAppState>) { }
 
   ngOnInit () {
     this.player.nativeElement.addEventListener('loadedmetadata', (el) => {
-      console.log("can play", el.target.duration);
       this.duration = el.target.duration;
       this.value = 0;
       if (this.state === 'stopped') {
-        console.log('launch plays');
         this.play();
       }
     });
 
     this.player.nativeElement.addEventListener('timeupdate', (el) => {
-      // console.log("playing", el.target.currentTime);
       this.currentTime = el.target.currentTime;
       this.value = this.currentTime / this.duration * 100;
     });
+
+    this.player.nativeElement.addEventListener('endded', (el) => {
+      this.next();
+    });
+
+    this.store.select(state => state.trackList).subscribe((val) => {
+      this.tracks = val;
+      this.ensurePlay();
+    });
+  }
+
+  ensurePlay(){
+    if (!this.src && this.tracks.length > 0){
+      console.log(this.tracks[this.play_index]);
+      this.src = this.link(this.tracks[this.play_index]['uid']);
+    }
   }
 
   play () {
@@ -55,12 +74,18 @@ export class PlayerControlsComponent implements OnInit {
 
   previous () {
     this.stop();
-    this.src = this.link('75f929160328f25a1c1d689b2e8706c491ad5cc9');
+    if (this.play_index > 0) {
+      this.play_index -= 1;
+      this.src = this.link(this.tracks[this.play_index]['uid']);
+    }
   }
 
   next () {
     this.stop();
-    this.src = this.link('041a16d7608b67cc22eaaac675c74698740fe587');
+    if (this.tracks.length > this.play_index +1) {
+      this.play_index += 1;
+      this.src = this.link(this.tracks[this.play_index]['uid']);
+    }
   }
 
   change (uid) {
@@ -70,5 +95,10 @@ export class PlayerControlsComponent implements OnInit {
 
   link (uid) {
     return `/api/audio/stream/${uid}`;
+  }
+
+  onStepperClick ($event) {
+    this.currentTime = this.duration * $event.layerX / this.progressBar.nativeElement.clientWidth;
+    this.player.nativeElement.currentTime = this.currentTime;
   }
 }
