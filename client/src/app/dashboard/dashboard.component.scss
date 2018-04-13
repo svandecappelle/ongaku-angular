@@ -14,7 +14,15 @@
 .example-header-image {
     background-size: cover;
 }
-
+.artist-tags {
+    margin: 5px 3px;
+    
+    h3 {
+        color: rgba(0,0,0,.54);
+        font-size: 1.1rem;
+        margin: 5px 3px;
+    }
+}
 ul {
     position: relative;
     left: 0;

@@ -39,7 +39,9 @@ export class DashboardComponent implements OnInit {
   }
 
   getImage (src) {
-    return this._sanitizer.bypassSecurityTrustStyle(`linear-gradient(rgba(29, 29, 29, 0), rgba(16, 16, 23, 0.5)), url(${src})`);;
+    let image = src.image ? src.image[1]['#text'] : "";
+
+    return this._sanitizer.bypassSecurityTrustStyle(`linear-gradient(rgba(29, 29, 29, 0), rgba(16, 16, 23, 0.5)), url(${image})`);;
   }
 
   actionFrom (action, album) {

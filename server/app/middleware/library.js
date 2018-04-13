@@ -272,7 +272,8 @@ class Library {
           logger.warn("artist '" + artist.artist + "' not found");
         } else if (art.image) {
           artist.image = parseLastFm(art.image);
-          this.loadingCoverArtists[artist.artist] = artist.image;
+          artist = _.extend(artist, art);
+          this.loadingCoverArtists[artist.artist] = artist;
           logger.debug("image artist '" + artist.artist + "': " + artist.image);
         }
       });
@@ -303,7 +304,8 @@ class Library {
           logger.warn("[" + artist.artist + "] -> album:: '" + album.title + "' not found");
         } else if (alb.image) {
           album.cover = parseLastFm(alb.image);
-          this.loadingCoverAlbums[artist.artist][album.title] = album.cover;
+          album = _.extend(album, alb);
+          this.loadingCoverAlbums[artist.artist][album.title] = album;
           logger.debug("album cover '" + album.title + "': " + album.cover);
         }
       });
@@ -634,9 +636,9 @@ class Library {
     var output = _.map(groupedResultList, (val, groupObject) => {
       var rootGroupObject = {};
       if (groupbyClause[0] === "artist") {
-        rootGroupObject.image = this.loadingCoverArtists[groupObject];
+        rootGroupObject.artist_info = this.loadingCoverArtists[groupObject];
       } else if (groupbyClause[0] === "album" && this.loadingCoverAlbums[val[0].artist]) {
-        rootGroupObject.cover = this.loadingCoverAlbums[val[0].artist][groupObject];
+        rootGroupObject.album_info = this.loadingCoverAlbums[val[0].artist][groupObject];
       }
 
       if (groupbyClause.length > 1) {
@@ -651,12 +653,12 @@ class Library {
           };
 
           if (groupbyClause[1] === "album" && this.loadingCoverAlbums[groupObject]) {
-            albumObject.cover = this.loadingCoverAlbums[groupObject][albumObject.title];
-            if (!albumObject.cover) {
-              albumObject.cover = '/img/album.jpg';
+            albumObject.album_info = this.loadingCoverAlbums[groupObject][albumObject.title];
+            if (!albumObject.album_info) {
+              albumObject.album_info = {cover: '/img/album.jpg'};
             }
           } else if (groupbyClause[1] === "artist") {
-            albumObject.image = this.loadingCoverArtists[albumObject.title];
+            albumObject.album_info = this.loadingCoverArtists[albumObject.title];
           }
 
           albumObject.tracks = _.sortBy(albumObject.tracks, (element) => {
