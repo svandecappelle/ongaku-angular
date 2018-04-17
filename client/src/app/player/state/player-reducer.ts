@@ -19,10 +19,7 @@ export function playerReducer(state: IPlayerState = initialState, {payload, type
       return state.set('volume', payload.volume) as IPlayerState;
 
     case PlayerActions.PLAY_SELECTED_TRACK:
-      return state.merge({
-        trackId: payload.trackId,
-        tracklistId: payload.tracklistId || state.get('tracklistId')
-      }) as IPlayerState;
+      return state.set('track', payload.track) as IPlayerState;
 
     default:
       return state;

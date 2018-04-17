@@ -1,0 +1,27 @@
+.track {
+    display: block;
+    position: relative;
+
+    margin-left: 50px;
+
+    .track-info {
+        display: inline-block;
+    }
+
+    .tracknum {
+        position: absolute;
+        left: -50px;
+        width: 50px;
+        text-align: right;
+    }
+
+    .track-label-info {
+        width: calc((100% / 3) - 50px);
+        text-align: left;
+    }
+
+    .track-duration {
+        text-align: right;
+        width: 70px;
+    }
+}

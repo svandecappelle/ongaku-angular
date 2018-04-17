@@ -1,16 +1,6 @@
 /*jslint node: true */
 
-var express = require('express');
-
-var router = express.Router();
-
-
-router.get('/list', function (req, res, next) {
-    res.send('ok');
-});
-
-
-
+const express = require('express');
 const logger = require('log4js').getLogger("UsersRoutes");
 const nconf = require("nconf");
 const passport = require("passport");
@@ -19,9 +9,7 @@ const unzip = require("node-unzip-2");
 const path = require("path");
 const Busboy = require('busboy');
 const ffmetadata = require("ffmetadata");
-console.log('ok');
 const library = require("./../../middleware/library");
-console.log('dac');
 const middleware = require("./../../middleware/middleware");
 const exporter = require("./../../middleware/exporter");
 const meta = require("./../../meta");
@@ -37,6 +25,8 @@ const he = require('he');
 const tinycolor = require("tinycolor2");
 // const translator = require("./../../middleware/translator");
 const async = require("async");
+
+var router = express.Router();
 
 try {
     const player = require("./../../middleware/desktop-player");

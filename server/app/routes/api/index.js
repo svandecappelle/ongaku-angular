@@ -1,9 +1,11 @@
 var express = require('express');
 const audio = require('./audio');
+const playlist = require('./playlist');
+
 
 var router = express.Router();
 router.use('/audio', audio);
-
+router.use('/playlist', playlist);
 
 
 router.post("/api/set-color-scheme", (req, res) => {

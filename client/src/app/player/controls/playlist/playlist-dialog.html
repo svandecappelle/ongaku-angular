@@ -1,15 +1,16 @@
 <h2 mat-dialog-title>Playlist</h2>
 <mat-dialog-content>
-    <mat-grid-list cols="5" rowHeight="25px" *ngFor="let track of tracklist; let i = index">
-      <mat-grid-tile>{{i}}</mat-grid-tile>
-      <mat-grid-tile>{{track.title}}</mat-grid-tile>
-      <mat-grid-tile>{{track.artist}}</mat-grid-tile>
-      <mat-grid-tile>{{track.album}}</mat-grid-tile>
-      <mat-grid-tile>{{track.duration}}</mat-grid-tile>
-    </mat-grid-list>
-
+  <div class="track" *ngFor="let track of tracklist; let i = index">
+    <div class="track-info tracknum">
+      <mat-icon *ngIf="current.uid === track.uid" aria-label="playing">play_arrow</mat-icon>
+      {{i}}
+    </div>
+    <div class="track-info track-label-info">{{track.title}}</div>
+    <div class="track-info track-label-info">{{track.artist}}</div>
+    <div class="track-info track-label-info">{{track.album}}</div>
+    <div class="track-info track-duration">{{track.duration}}</div>
+  </div>
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button mat-dialog-close>Close</button>
-  <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
 </mat-dialog-actions>

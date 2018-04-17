@@ -1,14 +1,32 @@
+const express = require('express');
+const _ = require("underscore");
+const nconf = require("nconf");
+const passport = require("passport");
+const unzip = require("node-unzip-2");
+const path = require("path");
+const Busboy = require('busboy');
+const ffmetadata = require("ffmetadata");
+const library = require("./../../middleware/library");
+const middleware = require("./../../middleware/middleware");
+const exporter = require("./../../middleware/exporter");
+const meta = require("./../../meta");
+const communication = require("./../../communication");
+const user = require("./../../model/user");
+const userlib = require("./../../model/library");
+const playlist = require("./../../model/playlist");
 
-router.get('/api/playlist', (req, res) => {
-    logger.debug("get current playlist");
+var router = express.Router();
+
+router.get('/current', (req, res) => {
+    console.debug("get current playlist");
     res.send({ all: _.compact(req.session.playlist), name: req.session.playlistname });
 });
 
-router.post('/api/playlist/add/:uid', (req, res) => {
+router.post('/current/add/:uid', (req, res) => {
     // TODO save playlist
     var uidFile = req.params.uid,
         track = library.getByUid(uidFile);
-    logger.debug("Add file to playlist", uidFile);
+    console.debug("Add file to playlist", uidFile);
     if (req.session.playlist === undefined) {
         req.session.playlist = [];
     }
@@ -20,15 +38,15 @@ router.post('/api/playlist/add/:uid', (req, res) => {
             res.send({ all: req.session.playlist, lastAdded: track });
         });
     } else {
-        logger.warn("A playlist add request returns unknown track for: " + uidFile);
+        console.warn("A playlist add request returns unknown track for: " + uidFile);
         res.send({ all: req.session.playlist, lastAdded: track });
     }
 });
 
 
-router.post('/api/playlist/addgroup', (req, res) => {
+router.post('/current/addgroup', (req, res) => {
     var firstTrack;
-    logger.debug("Add group of file to playlist", req.body.elements);
+    console.debug("Add group of file to playlist", req.body.elements);
     if (req.session.playlist === undefined) {
         req.session.playlist = [];
     }
@@ -49,9 +67,9 @@ router.post('/api/playlist/addgroup', (req, res) => {
     });
 });
 
-router.post('/api/playlist/remove/:id', (req, res) => {
+router.post('/current/remove/:id', (req, res) => {
     var id = req.params.id;
-    logger.debug("Remove file index to playlist: ", id);
+    console.debug("Remove file index to playlist: ", id);
     // TODO remove on saved playlist
     if (req.session.playlist !== undefined) {
         req.session.playlist.slice(id, 1);
@@ -63,17 +81,17 @@ router.post('/api/playlist/remove/:id', (req, res) => {
     });
 });
 
-router.post('/api/playlist/clear', (req, res) => {
+router.post('/current/clear', (req, res) => {
     var id = req.params.id;
     // TODO remove on saved playlist
-    logger.debug("Remove file index to playlist: ", id);
+    console.debug("Remove file index to playlist: ", id);
     req.session.playlist = [];
     req.session.save(function () {
         res.setHeader('Access-Control-Allow-Credentials', 'true');
         res.send({ all: req.session.playlist });
     });
 });
-router.post('/api/user/playlists/new', (req, res) => {
+router.post('/new', (req, res) => {
     helpers.callIfAuthenticated(req, res, () => {
         req.session.playlistname = null;
         req.session.playlist = [];
@@ -85,13 +103,13 @@ router.post('/api/user/playlists/new', (req, res) => {
     });
 });
 
-router.post('/api/playlist/save', (req, res) => {
+router.post('/save', (req, res) => {
     helpers.callIfAuthenticated(req, res, () => {
         var username = req.session.passport.user.username;
         var newplaylistname = req.body.playlistname;
 
         var appendToPlaylist = function () {
-            logger.debug("Add all playlist tracks");
+            console.debug("Add all playlist tracks");
             playlist.push(username, newplaylistname, req.session.playlist, () => {
                 req.session.playlistname = newplaylistname;
 
@@ -115,10 +133,10 @@ router.post('/api/playlist/save', (req, res) => {
 
         if (req.session.playlistname) {
             if (newplaylistname) {
-                logger.debug("rename playlist: ", newplaylistname);
+                console.debug("rename playlist: ", newplaylistname);
             }
 
-            logger.debug("clearing playlist: ", username, req.session.playlistname);
+            console.debug("clearing playlist: ", username, req.session.playlistname);
             playlist.remove(username, req.session.playlistname, () => {
                 appendToPlaylist();
             });
@@ -130,14 +148,14 @@ router.post('/api/playlist/save', (req, res) => {
 
 
 
-router.get("/api/user/:username/playlists", (req, res) => {
+router.get("/all/:username", (req, res) => {
     var username = req.params.username;
     playlist.getPlaylists(username, (err, playlists) => {
         res.json(playlists);
     });
 });
 
-router.get("/api/user/playlists", (req, res) => {
+router.get("/all", (req, res) => {
     if (middleware.isAuthenticated(req)) {
         var username = req.session.passport.user.username;
         playlist.getPlaylists(username, (err, playlists) => {
@@ -148,7 +166,7 @@ router.get("/api/user/playlists", (req, res) => {
     }
 });
 
-router.post("/api/user/playlists/load/:playlist", (req, res) => {
+router.post("/load/:playlist", (req, res) => {
     helpers.callIfAuthenticated(req, res, () => {
         var playlistname = req.params.playlist;
         var username = req.session.passport.user.username;
@@ -171,7 +189,7 @@ router.post("/api/user/playlists/load/:playlist", (req, res) => {
     });
 });
 
-router.post("/api/user/playlists/delete/:playlist", (req, res) => {
+router.post("/delete/:playlist", (req, res) => {
     helpers.callIfAuthenticated(req, res, () => {
         var playlistname = req.params.playlist;
         var username = req.session.passport.user.username;
@@ -188,7 +206,7 @@ router.post("/api/user/playlists/delete/:playlist", (req, res) => {
     });
 });
 
-router.get("/api/user/playlists/:playlist", (req, res) => {
+router.get("/details/:playlist", (req, res) => {
     helpers.callIfAuthenticated(req, res, () => {
         var username = req.session.passport.user.username;
         playlist.getPlaylistContent(username, req.params.playlist, (err, playlistElements) => {
@@ -201,3 +219,6 @@ router.get("/api/user/playlists/:playlist", (req, res) => {
         });
     });
 });
+
+
+module.exports = router;

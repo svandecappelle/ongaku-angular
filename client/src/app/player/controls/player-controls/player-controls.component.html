@@ -7,28 +7,32 @@
 </mat-progress-bar>
 
 <audio #audio [src]='src'></audio>
+<div class="content">
+  <ul>
+    <li>
+      <button mat-icon-button (click)="previous()">
+        <mat-icon aria-label="Previous track">skip_previous</mat-icon>
+      </button>
+    </li>
 
-<ul>
-  <li>
-    <button mat-icon-button (click)="previous()">
-      <mat-icon aria-label="Previous track">skip_previous</mat-icon>
-    </button>
-  </li>
+    <li>
+      <button mat-icon-button (click)="play()" *ngIf="state !== 'playing'">
+        <mat-icon aria-label="Play">play_arrow</mat-icon>
+      </button>
 
-  <li>
-    <button mat-icon-button (click)="play()" *ngIf="state !== 'playing'">
-      <mat-icon aria-label="Play">play_arrow</mat-icon>
-    </button>
+      <button mat-icon-button (click)="play()" *ngIf="state === 'playing'">
+        <mat-icon aria-label="Pause">pause</mat-icon>
+      </button>
+    </li>
+    
+    <li>
+      <button mat-icon-button (click)="next()">
+        <mat-icon aria-label="Next track">skip_next</mat-icon>
+      </button>
+    </li>
+  </ul>
 
-    <button mat-icon-button (click)="play()" *ngIf="state === 'playing'">
-      <mat-icon aria-label="Pause">pause</mat-icon>
-    </button>
-  </li>
-  
-  <li>
-    <button mat-icon-button (click)="next()">
-      <mat-icon aria-label="Next track">skip_next</mat-icon>
-    </button>
-  </li>
-  
-</ul>
+  <span *ngIf="current">
+    {{current.title}}
+  </span>
+</div>

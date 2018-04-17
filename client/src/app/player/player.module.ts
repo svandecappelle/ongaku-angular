@@ -8,6 +8,8 @@ import { PlayerControlsComponent } from './controls/player-controls/player-contr
 import { MaterialModule } from '../modules/material.module';
 
 import { AudioService } from './player.service';
+import { PlayerActions } from './player-actions';
+
 import { PlaylistComponent, PlaylistDialogComponent } from './controls/playlist/playlist.component';
 
 @NgModule({
@@ -29,7 +31,8 @@ import { PlaylistComponent, PlaylistDialogComponent } from './controls/playlist/
       PlayerComponent
     ],
     providers: [
-      AudioService
+      AudioService,
+      PlayerActions
     ]
   })
   export class PlayerModule {}

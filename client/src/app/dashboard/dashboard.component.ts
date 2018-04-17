@@ -44,7 +44,7 @@ export class DashboardComponent implements OnInit {
     return this._sanitizer.bypassSecurityTrustStyle(`linear-gradient(rgba(29, 29, 29, 0), rgba(16, 16, 23, 0.5)), url(${image})`);;
   }
 
-  actionFrom (action, album) {
+  actionFrom (action, artist) {
     switch (action){
       case 'play':
         break;
@@ -52,10 +52,17 @@ export class DashboardComponent implements OnInit {
         break
     }
 
-    //console.log(action, this.selectedOptions[album]);
+    this.store.dispatch(new Append(this.selectedOptions[artist]));
+    this.selectedOptions[artist] = [];
+  }
 
-    this.store.dispatch(new Append(this.selectedOptions[album]));
-    this.selectedOptions[album] = [];
+  selectAll(artist, album){
+    if (!this.selectedOptions[artist] || album.tracks.length > this.selectedOptions[artist].length){
+      this.selectedOptions[artist] = album.tracks;
+    } else {
+      this.selectedOptions[artist] = [];
+    }
+    
   }
 
   onTracksSelectionChanged(tracks){

@@ -70,3 +70,28 @@ ul {
         }
     }
 }
+
+.album-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+
+.track {
+    display: flex;
+    justify-content: space-between;
+    
+    .track-number {
+        width: 20px;
+        text-align: right;
+        margin-right: 20px;
+    }
+
+    .track-title {
+        flex: 1;
+    }
+
+    .track-duration {
+        width: 100px;
+    }
+}

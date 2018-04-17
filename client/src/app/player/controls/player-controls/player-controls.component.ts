@@ -28,13 +28,13 @@ export class PlayerControlsComponent implements OnInit {
   @ViewChild('audio', { read: ElementRef }) player:ElementRef;
   @ViewChild('progress', { read: ElementRef }) progressBar:ElementRef;
 
-  constructor(public renderer: Renderer, private store: Store<IAppState>/*, private actions: PlayerActions*/) { }
+  constructor(public renderer: Renderer, private store: Store<IAppState>, private actions: PlayerActions) { }
 
   ngOnInit () {
     this.player.nativeElement.addEventListener('loadedmetadata', (el) => {
       this.duration = el.target.duration;
       this.value = 0;
-      if (this.state === 'stopped') {
+      if (this.state !== 'playing') {
         this.play();
       }
     });
@@ -44,7 +44,7 @@ export class PlayerControlsComponent implements OnInit {
       this.value = this.currentTime / this.duration * 100;
     });
 
-    this.player.nativeElement.addEventListener('endded', (el) => {
+    this.player.nativeElement.addEventListener('ended', (el) => {
       this.next();
     });
 
@@ -63,8 +63,9 @@ export class PlayerControlsComponent implements OnInit {
   play () {
     if (this.state !== 'playing') {
       this.state = 'playing';
-
-      //this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current['uid']));
+      this.current = this.tracks[this.play_index];
+      console.log(this.current);
+      this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
 
       this.player.nativeElement.play();
     } else {
@@ -89,7 +90,7 @@ export class PlayerControlsComponent implements OnInit {
 
   next () {
     this.stop();
-    if (this.tracks.length > this.play_index +1) {
+    if (this.tracks.length > this.play_index + 1) {
       this.play_index += 1;
       this.current = this.tracks[this.play_index];
       this.src = this.link(this.current['uid']);
@@ -106,7 +107,7 @@ export class PlayerControlsComponent implements OnInit {
   }
 
   onStepperClick ($event) {
-    this.currentTime = this.duration * $event.layerX / this.progressBar.nativeElement.clientWidth;
+    this.currentTime = this.duration * ($event.layerX + 72) / $event.target.offsetWidth;
     this.player.nativeElement.currentTime = this.currentTime;
   }
 }

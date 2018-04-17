@@ -26,13 +26,18 @@
               </div>
               <mat-divider mat-line></mat-divider>
               
+              <div class="album-actions">
+                <button mat-icon-button (click)="selectAll(artist.artist, album)">
+                  <mat-icon aria-label="select all">done_all</mat-icon>
+                </button>
+              </div>
               <mat-selection-list #tracks [(ngModel)]="selectedOptions[artist.artist]" (ngModelChange)="onTracksSelectionChanged($event)">
                   <mat-list-option *ngFor="let track of album.tracks" [value]="track">
-                    <span mat-line>
-                      
-                      {{track.title}}
-
-                    </span>
+                    <div class="track">
+                      <span class="track-number">{{track.metadatas.track}}</span>
+                      <span class="track-title">{{track.title}}</span>
+                      <span class="track-duration">{{track.duration}}</span>
+                    </div>
                   </mat-list-option>
               </mat-selection-list>
 
