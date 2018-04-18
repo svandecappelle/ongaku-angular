@@ -2,7 +2,11 @@
 @import "~@angular/material/prebuilt-themes/indigo-pink.css";
 
 body {
-  margin: 0px
+  margin: 0px;
+  
+  &.no-scroll {
+    overflow: hidden;
+  }
 }
 
 .main-process-card {

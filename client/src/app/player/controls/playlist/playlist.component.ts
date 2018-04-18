@@ -1,10 +1,10 @@
-import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
-import { Song, IAppState } from '../../../app-state';
+import { Component, OnInit, Inject, OnDestroy, Renderer2 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 
+import { Song, IAppState } from '../../../app-state';
 import { Store, select } from '@ngrx/store';
 
-import {MatDialog, MAT_DIALOG_DATA} from '@angular/material';
-
+import {MatDialog, MAT_DIALOG_DATA, MatTableDataSource} from '@angular/material';
 
 @Component({
   selector: 'app-playlist',
@@ -16,7 +16,9 @@ export class PlaylistComponent implements OnInit {
   public tracks: Object[];
   public current: Object;
 
-  constructor(public dialog: MatDialog, private store: Store<IAppState>) {
+  constructor(public dialog: MatDialog, private store: Store<IAppState>, @Inject(DOCUMENT) private document: Document, private renderer: Renderer2) {
+    console.log(this.document);
+
     this.store.select(state => state.trackList).subscribe((val) => {
       this.tracks = val;
     });
@@ -24,20 +26,34 @@ export class PlaylistComponent implements OnInit {
     this.store.select(state => state.player).subscribe((val) => {
       this.current = val.track;
     });
+
+    this.dialog.afterOpen.subscribe(() => {
+      this.renderer.addClass(this.document.body, 'no-scroll');
+    });
+    this.dialog.afterAllClosed.subscribe(() => {
+      this.renderer.removeClass(this.document.body, 'no-scroll');
+    });
   }
 
   ngOnInit() {
   }
 
   show () {
+
+
     this.dialog.open(PlaylistDialogComponent, {
       width: '80%',
+      hasBackdrop: true,
+      panelClass: 'custom-overlay-pane-class',
       data: {
         tracklist: this.tracks, 
         current: this.current,
         store: this.store
       }
     });
+
+    
+
   }
 }
 
@@ -48,13 +64,26 @@ export class PlaylistComponent implements OnInit {
 })
 export class PlaylistDialogComponent implements OnDestroy {
   
-  public tracklist: Object[];
   public current: Object;
   private store: Store<IAppState>;
   private subscription;
+  private dataSource = new MatTableDataSource;
+
+  private displayedColumns = ['index', 'title', 'artist', 'album', 'duration'];
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: any) {
-    this.tracklist = data.tracklist;
+
+    let index = 0;
+    let tracks = data.tracklist.map((track) => {
+      index += 1;
+      track.index = index;
+      return track;
+    });
+
+    this.dataSource = new MatTableDataSource(tracks);
+
+    console.log(this.dataSource);
+
     this.current = data.current;
     this.store = data.store;
 

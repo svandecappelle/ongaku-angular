@@ -1,27 +1,17 @@
-.track {
-    display: block;
+.table-container {
     position: relative;
+    margin-top: 50px;
 
-    margin-left: 50px;
+    .mat-table {
+        max-height: calc(100vh - 400px);
+        overflow-y: auto;
 
-    .track-info {
-        display: inline-block;
-    }
-
-    .tracknum {
-        position: absolute;
-        left: -50px;
-        width: 50px;
-        text-align: right;
-    }
-
-    .track-label-info {
-        width: calc((100% / 3) - 50px);
-        text-align: left;
-    }
-
-    .track-duration {
-        text-align: right;
-        width: 70px;
+        .mat-header-row {
+            position: absolute;
+            top: -50px;
+            left: 0px;
+            right: 18px;
+            background: #fff;
+        }
     }
 }

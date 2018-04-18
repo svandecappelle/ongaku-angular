@@ -1,14 +1,36 @@
 <h2 mat-dialog-title>Playlist</h2>
 <mat-dialog-content>
-  <div class="track" *ngFor="let track of tracklist; let i = index">
-    <div class="track-info tracknum">
-      <mat-icon *ngIf="current.uid === track.uid" aria-label="playing">play_arrow</mat-icon>
-      {{i}}
-    </div>
-    <div class="track-info track-label-info">{{track.title}}</div>
-    <div class="track-info track-label-info">{{track.artist}}</div>
-    <div class="track-info track-label-info">{{track.album}}</div>
-    <div class="track-info track-duration">{{track.duration}}</div>
+  <div class="table-container">
+    <mat-table #table [dataSource]="dataSource">  
+
+      <ng-container matColumnDef="index">
+        <mat-header-cell *matHeaderCellDef> No. </mat-header-cell>
+        <mat-cell *matCellDef="let element"> {{element.index}} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="title">
+        <mat-header-cell *matHeaderCellDef> Title </mat-header-cell>
+        <mat-cell *matCellDef="let element"> {{element.title}} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="artist">
+        <mat-header-cell *matHeaderCellDef> Artist </mat-header-cell>
+        <mat-cell *matCellDef="let element"> {{element.artist}} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="album">
+        <mat-header-cell *matHeaderCellDef> Album </mat-header-cell>
+        <mat-cell *matCellDef="let element"> {{element.album}} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="duration">
+        <mat-header-cell *matHeaderCellDef> Duration </mat-header-cell>
+        <mat-cell *matCellDef="let element"> {{element.duration}} </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
   </div>
 </mat-dialog-content>
 <mat-dialog-actions>
