@@ -40,7 +40,6 @@ export class PlaylistComponent implements OnInit {
 
   show () {
 
-
     this.dialog.open(PlaylistDialogComponent, {
       width: '80%',
       hasBackdrop: true,
@@ -51,8 +50,6 @@ export class PlaylistComponent implements OnInit {
         store: this.store
       }
     });
-
-    
 
   }
 }
@@ -82,14 +79,18 @@ export class PlaylistDialogComponent implements OnDestroy {
 
     this.dataSource = new MatTableDataSource(tracks);
 
-    console.log(this.dataSource);
-
     this.current = data.current;
     this.store = data.store;
 
     this.store.select(state => state.player).subscribe((val) => {
       this.current = val.track;
     });
+  }
+
+  applyFilter(filterValue: string) {
+    filterValue = filterValue.trim(); // Remove whitespace
+    filterValue = filterValue.toLowerCase(); // MatTableDataSource defaults to lowercase matches
+    this.dataSource.filter = filterValue;
   }
 
   ngOnDestroy() {

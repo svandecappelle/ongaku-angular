@@ -1,11 +1,9 @@
 .table-container {
     position: relative;
     margin-top: 50px;
-
     .mat-table {
-        max-height: calc(100vh - 400px);
+        max-height: calc(100vh - 465px);
         overflow-y: auto;
-
         .mat-header-row {
             position: absolute;
             top: -50px;
@@ -13,5 +11,14 @@
             right: 18px;
             background: #fff;
         }
+    }
+}
+
+.filter-header {
+    min-height: 64px;
+    padding: 8px 24px 0;
+    .mat-form-field {
+        font-size: 14px;
+        width: 100%;
     }
 }
