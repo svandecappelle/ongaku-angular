@@ -4,6 +4,8 @@ import { DOCUMENT } from '@angular/common';
 import { Song, IAppState } from '../../../app-state';
 import { Store, select } from '@ngrx/store';
 
+import { PlayerAction, PlayerActions } from '../../player-actions';
+
 import {MatDialog, MAT_DIALOG_DATA, MatTableDataSource} from '@angular/material';
 
 @Component({
@@ -14,17 +16,18 @@ import {MatDialog, MAT_DIALOG_DATA, MatTableDataSource} from '@angular/material'
 export class PlaylistComponent implements OnInit {
 
   public tracks: Object[];
-  public current: Object;
+  public current: Song;
 
   constructor(public dialog: MatDialog, private store: Store<IAppState>, @Inject(DOCUMENT) private document: Document, private renderer: Renderer2) {
-    console.log(this.document);
 
     this.store.select(state => state.trackList).subscribe((val) => {
       this.tracks = val;
     });
 
     this.store.select(state => state.player).subscribe((val) => {
-      this.current = val.track;
+      if (val.track){
+        this.current = val.track;
+      }
     });
 
     this.dialog.afterOpen.subscribe(() => {
@@ -61,19 +64,20 @@ export class PlaylistComponent implements OnInit {
 })
 export class PlaylistDialogComponent implements OnDestroy {
   
-  public current: Object;
+  public current: Song;
   private store: Store<IAppState>;
   private subscription;
   private dataSource = new MatTableDataSource;
 
-  private displayedColumns = ['index', 'title', 'artist', 'album', 'duration'];
+  private displayedColumns = ['state', 'index', 'title', 'artist', 'album', 'duration'];
 
-  constructor(@Inject(MAT_DIALOG_DATA) public data: any) {
-
+  constructor(@Inject(MAT_DIALOG_DATA) public data: any, private actions: PlayerActions) {
+    
     let index = 0;
     let tracks = data.tracklist.map((track) => {
       index += 1;
       track.index = index;
+      track.state = track.uid === data.current.uid ? "playing": "none";
       return track;
     });
 
@@ -91,6 +95,18 @@ export class PlaylistDialogComponent implements OnDestroy {
     filterValue = filterValue.trim(); // Remove whitespace
     filterValue = filterValue.toLowerCase(); // MatTableDataSource defaults to lowercase matches
     this.dataSource.filter = filterValue;
+  }
+
+  play(track) {
+    this.current = track;
+    console.log(this.current);
+    this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
+  }
+
+  pause(track) {
+    this.current = track;
+    console.log(this.current);
+    this.store.select(state => state.player).dispatch(this.actions.audioPaused());
   }
 
   ngOnDestroy() {

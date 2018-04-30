@@ -48,13 +48,27 @@ export class PlayerControlsComponent implements OnInit {
       this.next();
     });
 
+    this.store.select(state => state.player).subscribe((val) => {
+      if (val.track) {
+        this.stop();
+        this.play_index = val.track.index - 1;
+        this.current = val.track;
+        console.log("Change playing track state");
+        console.log(this.current);
+        
+        this.state = 'playing';
+        this.current = this.tracks[this.play_index];
+        this.player.nativeElement.play();
+      }
+    });
+
     this.store.select(state => state.trackList).subscribe((val) => {
       this.tracks = val;
       this.ensurePlay();
     });
   }
 
-  ensurePlay(){
+  ensurePlay () {
     if (!this.src && this.tracks.length > 0) {
       this.src = this.link(this.tracks[this.play_index]['uid']);
     }
@@ -64,7 +78,6 @@ export class PlayerControlsComponent implements OnInit {
     if (this.state !== 'playing') {
       this.state = 'playing';
       this.current = this.tracks[this.play_index];
-      console.log(this.current);
       this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
 
       this.player.nativeElement.play();

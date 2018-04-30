@@ -1,9 +1,10 @@
 import { Map, Record } from 'immutable';
 
+import { Song } from '../../app-state';
 
 export interface IPlayerState extends Map<string,any> {
   isPlaying: boolean;
-  track: Object;
+  track: Song;
   volume: number;
 }
 

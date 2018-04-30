@@ -9,7 +9,15 @@ export interface IAppState {
 }
 
 export interface Song {
-  audio: String;
+  uid: String;
+  album: String;
+  artist: String;
+  file: String;
+  state: String;
+  type: String;
+  title: String;
+  genre: String;
+  index: number;
 }
 
 export enum TrackActionTypes {
