@@ -49,22 +49,22 @@ export class PlayerControlsComponent implements OnInit {
     });
 
     this.store.select(state => state.player).subscribe((val) => {
-      if (val.track) {
-        this.stop();
-        this.play_index = val.track.index - 1;
-        this.current = val.track;
-        console.log("Change playing track state");
-        console.log(this.current);
+      console.log(this.play_index);
+      if (val.track && val.track.index && this.play_index !== val.track.index -1) {
         
-        this.state = 'playing';
-        this.current = this.tracks[this.play_index];
-        this.player.nativeElement.play();
+        this.play_index = val.track.index - 1;
+        
+        this.current = val.track;
+        this.change(this.current.uid);
+        this.ensurePlay();
       }
     });
 
     this.store.select(state => state.trackList).subscribe((val) => {
       this.tracks = val;
-      this.ensurePlay();
+      if (this.play_index == 0){
+        this.ensurePlay();
+      }
     });
   }
 
@@ -76,11 +76,14 @@ export class PlayerControlsComponent implements OnInit {
 
   play () {
     if (this.state !== 'playing') {
-      this.state = 'playing';
-      this.current = this.tracks[this.play_index];
-      this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
+      if (this.tracks[this.play_index]){
+        this.state = 'playing';
+        
+        this.current = this.tracks[this.play_index];
+        this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
 
-      this.player.nativeElement.play();
+        this.player.nativeElement.play();
+      }
     } else {
       this.state = 'paused';
       this.player.nativeElement.pause();      

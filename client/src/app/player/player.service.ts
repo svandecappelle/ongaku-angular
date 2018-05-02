@@ -36,7 +36,7 @@ export class AudioService {
 
   setPlayer(song: Song) {
     this.song.next(song);
-    this.audio.src = song.audio;
+    this.audio.src = song.uid;
     this.audio.oncanplaythrough = () => {
       this.audio.play();
       /*this.fullTime.next(

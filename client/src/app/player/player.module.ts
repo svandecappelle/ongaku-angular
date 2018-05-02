@@ -9,6 +9,7 @@ import { MaterialModule } from '../modules/material.module';
 
 import { AudioService } from './player.service';
 import { PlayerActions } from './player-actions';
+import { PlaylistService } from './controls/playlist/playlist.service';
 
 import { PlaylistComponent, PlaylistDialogComponent } from './controls/playlist/playlist.component';
 
@@ -32,6 +33,7 @@ import { PlaylistComponent, PlaylistDialogComponent } from './controls/playlist/
     ],
     providers: [
       AudioService,
+      PlaylistService,
       PlayerActions
     ]
   })

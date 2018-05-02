@@ -16,12 +16,16 @@
     </li>
 
     <li>
-      <button mat-icon-button (click)="play()" *ngIf="state !== 'playing'">
+      <button mat-icon-button (click)="play()" *ngIf="state === 'paused'">
         <mat-icon aria-label="Play">play_arrow</mat-icon>
       </button>
 
       <button mat-icon-button (click)="play()" *ngIf="state === 'playing'">
         <mat-icon aria-label="Pause">pause</mat-icon>
+      </button>
+
+      <button mat-icon-button *ngIf="state !== 'paused' && state !== 'playing' ">
+        <mat-icon aria-label="Stopped">stop</mat-icon>
       </button>
     </li>
     
