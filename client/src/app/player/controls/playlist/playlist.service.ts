@@ -53,7 +53,7 @@ export class PlaylistService extends DataSource<Song> {
         return Observable.merge(...displayDataChanges).map(() => {
             // Filter data
             this.filteredData = this.tracks.slice().filter((item: Song) => {
-              let searchStr = (item.title).toLowerCase();
+              let searchStr = JSON.stringify(Object.values(item)).toLowerCase();
               return searchStr.indexOf(this.filter.toLowerCase()) != -1;
             });
       

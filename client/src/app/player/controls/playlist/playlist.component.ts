@@ -1,13 +1,20 @@
-import { Component, OnInit, Inject, OnDestroy, Renderer2, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Inject,
+  OnDestroy,
+  Renderer2,
+  ChangeDetectorRef,
+  ViewChild,
+  ElementRef
+} from '@angular/core';
 import { DOCUMENT } from '@angular/common';
+import { Observable } from 'rxjs/Observable';
+import { Store, select } from '@ngrx/store';
+import { MatDialog, MAT_DIALOG_DATA, MatTableDataSource } from '@angular/material';
 
 import { Song, IAppState } from '../../../app-state';
-import { Store, select } from '@ngrx/store';
-
 import { PlayerAction, PlayerActions } from '../../player-actions';
-
-import {MatDialog, MAT_DIALOG_DATA, MatTableDataSource} from '@angular/material';
-
 import { PlaylistService } from './playlist.service';
 
 @Component({
@@ -27,7 +34,7 @@ export class PlaylistComponent implements OnInit {
     });
 
     this.store.select(state => state.player).subscribe((val) => {
-      if (val.track){
+      if (val.track) {
         this.current = val.track;
       }
     });
@@ -43,14 +50,14 @@ export class PlaylistComponent implements OnInit {
   ngOnInit() {
   }
 
-  show () {
+  show() {
 
     this.dialog.open(PlaylistDialogComponent, {
       width: '80%',
       hasBackdrop: true,
       panelClass: 'custom-overlay-pane-class',
       data: {
-        tracklist: this.tracks, 
+        tracklist: this.tracks,
         current: this.current,
         store: this.store
       }
@@ -65,21 +72,22 @@ export class PlaylistComponent implements OnInit {
   styleUrls: ['./playlist-dialog.component.scss']
 })
 export class PlaylistDialogComponent implements OnDestroy {
-  
+
   public current: Song;
   private store: Store<IAppState>;
   private subscription;
   private dataSource: PlaylistService;
 
+  @ViewChild('filter') filter: ElementRef;
+
   private displayedColumns = ['state', 'index', 'title', 'artist', 'album', 'duration'];
 
-  constructor(@Inject(MAT_DIALOG_DATA) public data: any, private actions: PlayerActions) {
+  constructor( @Inject(MAT_DIALOG_DATA) public data: any, private actions: PlayerActions) {
     this.store = this.data.store;
-    
+
     this.dataSource = new PlaylistService();
     this.dataSource.init(this.data.tracklist, this.data.current);
 
-    console.log("nb plays: " + this.data.tracklist.length);
     this.store.select(state => state.player).subscribe((val) => {
       this.current = val.track;
       this.dataSource.playing(this.current);
@@ -89,22 +97,20 @@ export class PlaylistDialogComponent implements OnDestroy {
   applyFilter(filterValue: string) {
     filterValue = filterValue.trim(); // Remove whitespace
     filterValue = filterValue.toLowerCase(); // MatTableDataSource defaults to lowercase matches
-    //this.dataSource.filter = filterValue;
+    this.dataSource.filter = filterValue;
   }
 
   play(track) {
     this.current = track;
-    console.log(this.current);
     this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
   }
 
   pause(track) {
     this.current = track;
-    console.log(this.current);
     this.store.select(state => state.player).dispatch(this.actions.audioPaused());
   }
 
   ngOnDestroy() {
-    
+
   }
 }
