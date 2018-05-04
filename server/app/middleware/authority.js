@@ -1,6 +1,7 @@
 var passport = require('passport'),
 bcrypt = require('bcryptjs'),
 path = require('path'),
+fs = require('fs'),
 _ = require('underscore'),
 nconf = require('nconf'),
 logger = require('log4js').getLogger("authority"),
@@ -40,8 +41,7 @@ class Authority {
     };
 
     authenticate (req, res, next) {
-      console.log("test login");
-
+      
       if (meta.config.allowLocalLogin !== undefined && parseInt(meta.config.allowLocalLogin, 10) === 0) {
         return res.send(404);
       }
@@ -50,8 +50,7 @@ class Authority {
         if (err) {
           return next(err);
         }
-        console.log("test login");
-
+        
         if (!userData) {
           logger.warn("login attempt fails: ", info);
           return res.json(403, info);
@@ -104,13 +103,15 @@ class Authority {
               username: userBean.username
             }
 
-            library.addFolder(folderScanning, (scanResults) => {
-              if ( scanResults.audio ) {
-                req.session.library = scanResults;
-                logger.info(scanResults);
-                middleware.sessionSave(req);
-              }
-            });
+            if (fs.existsSync(folderScanning.path)){
+              library.addFolder(folderScanning, (scanResults) => {
+                if ( scanResults.audio ) {
+                  req.session.library = scanResults;
+                  logger.info(scanResults);
+                  middleware.sessionSave(req);
+                }
+              });
+            }
 
             res.json({
               msg: 'authenticated',
@@ -171,7 +172,6 @@ class Authority {
       if (err) {
         return done(err);
       }
-      console.log(userslug + " uid " + uid);
       if (!uid) {
         // To-do: Even if a user doesn't exist, compare passwords anyway, so we don't immediately return
         return done(null, false, '[[error:no-user]]');

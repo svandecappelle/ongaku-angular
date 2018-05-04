@@ -28,6 +28,7 @@ import { LoginComponent } from './login/login.component';
 
 import { AlertService, AuthenticationService, UserService } from './services/index';
 import { AuthGuard } from './guards/index';
+import { MetadatasComponent } from './home/metadatas/metadatas.component';
 
 @NgModule({
   declarations: [
@@ -39,6 +40,7 @@ import { AuthGuard } from './guards/index';
     UpgradeComponent,
     MenuComponent,
     LoginComponent,
+    MetadatasComponent,
   ],
   imports: [
     BrowserModule,
@@ -50,6 +52,9 @@ import { AuthGuard } from './guards/index';
     HttpClientModule,
     AppStateModule,
     PlayerModule,
+  ],
+  entryComponents: [
+    MetadatasComponent
   ],
   providers: [
     AuthGuard,

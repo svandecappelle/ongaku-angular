@@ -37,6 +37,11 @@
                       <span class="track-number">{{track.metadatas.track}}</span>
                       <span class="track-title">{{track.title}}</span>
                       <span class="track-duration">{{track.duration}}</span>
+                      <span class="track-metadata">
+                        <button mat-icon-button (click)="metadata(track, $event)">
+                          <mat-icon aria-label="details">description</mat-icon>
+                        </button>
+                      </span>
                     </div>
                   </mat-list-option>
               </mat-selection-list>
