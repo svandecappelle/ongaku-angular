@@ -1,18 +1,49 @@
-const express = require('express'),
-  path = require('path'),
-  nconf = require('nconf'),
-  nconfYaml = require('nconf-yaml'),
-  bodyParser = require('body-parser'),
-  cookieParser = require('cookie-parser'),
-  errorhandler = require('errorhandler'),
-  csrf = require('csurf'),
+const express = require('express');
+const path = require('path');
+const nconf = require('nconf');
+const nconfYaml = require('nconf-yaml');
+const winston = require('winston-color');
+
+var logger = new Winston.Logger({
+  transports: [
+      new Winston.transports.Console({
+          level: nconf.get('log-level'),
+          handleExceptions: true,
+          json: false,
+          timestamp: function() {
+            return dateFormat();
+          },
+          formatter: function(options) {
+            // Return string will be passed to logger.
+            return `${options.timestamp().green} [${options.level.toUpperCase().yellow}][${environment.red}] - ${(options.message ? options.message : '')} ${(options.meta && Object.keys(options.meta).length ? '\n'+ JSON.stringify(options.meta, null, ' ') : '' )}`;
+          }
+      })
+  ]
+});
+
+console.error = logger.error;
+console.warn = logger.warn;
+console.log = logger.info;
+console.info = logger.info;
+console.trace = logger.verbose;
+console.debug = logger.debug;
+console.silly = logger.silly;
+
+nconf.file({
+  file: path.resolve(__dirname, './config/application.yml'),
+  format: nconfYaml
+});
+
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const errorhandler = require('errorhandler');
+const csrf = require('csurf');
   // morgan = require('morgan'),
-  winston = require('winston-color'),
-  favicon = require('serve-favicon'),
-  session = require('express-session'),
-  yaml_config = require('node-yaml-config'),
-  dateFormat = require('dateformat'),
-  colors = require('colors'),
+const favicon = require('serve-favicon');
+const session = require('express-session');
+const yaml_config = require('node-yaml-config');
+const dateFormat = require('dateformat');
+const colors = require('colors');
 
   config    = yaml_config.load(path.resolve(__dirname, './config/config.yml')),
   app = express();
@@ -24,35 +55,6 @@ class Server {
 
   constructor () {
     this.running = false;
-    nconf.file({
-      file: path.resolve(__dirname, './config/application.yml'),
-      format: nconfYaml
-    });
-
-    var logger = new Winston.Logger({
-        transports: [
-            new Winston.transports.Console({
-                level: nconf.get('log-level'),
-                handleExceptions: true,
-                json: false,
-                timestamp: function() {
-                  return dateFormat();
-                },
-                formatter: function(options) {
-                  // Return string will be passed to logger.
-                  return `${options.timestamp().green} [${options.level.toUpperCase().yellow}][${environment.red}] - ${(options.message ? options.message : '')} ${(options.meta && Object.keys(options.meta).length ? '\n'+ JSON.stringify(options.meta, null, ' ') : '' )}`;
-                }
-            })
-        ]
-    });
-
-    console.error = logger.error;
-    console.warn = logger.warn;
-    console.log = logger.info;
-    console.trace = logger.verbose;
-    console.debug = logger.debug;
-    console.silly = logger.silly;
-
     // application is full angular now
     // this.initViewEngine();
     this.initExpressMiddleWare();

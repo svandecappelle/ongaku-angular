@@ -1,5 +1,3 @@
-<app-menu></app-menu>
+<app-menu *ngIf="isLoggedIn$ | async"></app-menu>
 <router-outlet></router-outlet>
-<!--<app-player></app-player>-->
-
-<app-player></app-player>
+<app-player *ngIf="isLoggedIn$ | async"></app-player>

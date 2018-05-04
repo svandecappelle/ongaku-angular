@@ -7,6 +7,10 @@ import { User } from '../models/index';
 export class UserService {
     constructor(private http: HttpClient) { }
 
+    isConnected (){
+        return this.http.get('/api/auth');
+    }
+
     getAll() {
         return this.http.get<User[]>('/api/users');
     }

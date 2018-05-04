@@ -10,7 +10,7 @@ import { InstallComponent } from './install/install.component';
 import { UpgradeComponent } from './upgrade/upgrade.component';
 
 const routes: Routes = [
-  { path: 'home', component: HomeComponent/*, canActivate: [AuthGuard] */},
+  { path: 'home', component: HomeComponent, canActivate: [AuthGuard]},
   { path: '', redirectTo: '/home', pathMatch: 'full' },
   { path: 'install', component: InstallComponent },
   { path: 'upgrade', component: UpgradeComponent },

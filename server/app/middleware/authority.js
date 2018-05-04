@@ -25,14 +25,18 @@ class Authority {
         logger.info('[Auth] Session ' + req.sessionID + ' logout (uid: ' + req.session.passport.user + ')');
         req.session.locale = nconf.get("defaultLocale");
 
-        setTimeout(() => {
-          communication.emit(req.session.sessionID, "notification", { message: 'disconnected from application' });
-        }, 1500);
-
+        // TODO reactivate
+        //setTimeout(() => {
+        //  communication.emit(req.session.sessionID, "notification", { message: 'disconnected from application' });
+        //}, 1500);
+        //
         req.logout();
       }
 
-      middleware.redirect('/', res);
+      res.json({
+        msg: 'disconnected',
+        connected: false
+      });
     };
 
     authenticate (req, res, next) {
@@ -80,17 +84,18 @@ class Authority {
             uid: userData.uid,
             username: req.body.username,
             tokenId: userData.security,
-            administrator: userData.administrator
+            administrator: userData.administrator,
+            token: req.passport
           };
           req.logIn(userBean, () => {
             if (userData.uid) {
               //user.logIP(userData.uid, req.ip);
               logger.info("user '" + userData.uid + "' connected on: " + req.ip);
-              communication.setStatus(userBean.username, 'online');
-              setTimeout(function(){
-                communication.emit(req.session.sessionID, 'application:connected', req.sessionID);
-              }, 1500);
-
+              // TODO reactive this
+              // communication.setStatus(userBean.username, 'online');
+              //setTimeout(function(){
+              //  communication.emit(req.session.sessionID, 'application:connected', req.sessionID);
+              //}, 1500);
             }
 
             var folderScanning = {
@@ -107,13 +112,10 @@ class Authority {
               }
             });
 
-            if (req.session.redirectTo !== undefined) {
-              middleware.redirect(req.session.redirectTo, res);
-              req.session.redirectTo = undefined;
-            } else {
-              middleware.redirect('/', res);
-              req.session.redirectTo = undefined;
-            }
+            res.json({
+              msg: 'authenticated',
+              user: userBean
+            });
           });
         });
       })(req, res, next);

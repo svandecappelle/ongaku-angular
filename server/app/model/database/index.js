@@ -7,7 +7,7 @@ var nconf = require('nconf'),
 var primaryDB = require(`./redis`);
 
 primaryDB.init( () => {
-    console.info("well done configured database");
+    console.log("well done configured database");
 });
 
 module.exports = primaryDB;

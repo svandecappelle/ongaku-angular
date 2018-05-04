@@ -1,5 +1,5 @@
 <div>
-  <mat-toolbar color="primary" class="mat-elevation-z6">
+  <mat-toolbar color="primary" class="mat-elevation-z6" *ngIf="isLoggedIn$ | async">
     <span>Ongaku</span>
     <span class="sub-title">Music app</span>
 
@@ -22,6 +22,11 @@
       <mat-icon>more_vert</mat-icon>
     </button>
     <mat-menu #menu="matMenu">
+      <button mat-button (click)="onLogout()" *ngIf="isLoggedIn$ | async">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+
       <button mat-menu-item>
         <mat-icon>dialpad</mat-icon>
         <span>Redial</span>
