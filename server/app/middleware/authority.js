@@ -36,6 +36,8 @@ class Authority {
     };
 
     authenticate (req, res, next) {
+      console.log("test login");
+
       if (meta.config.allowLocalLogin !== undefined && parseInt(meta.config.allowLocalLogin, 10) === 0) {
         return res.send(404);
       }
@@ -44,12 +46,11 @@ class Authority {
         if (err) {
           return next(err);
         }
+        console.log("test login");
 
         if (!userData) {
           logger.warn("login attempt fails: ", info);
-          middleware.redirect('/login?error='.concat(info.code), res);
-          // return res.json(403, info);
-          return;
+          return res.json(403, info);
         }
 
         // Alter user cookie depending on passed-in option
@@ -168,7 +169,7 @@ class Authority {
       if (err) {
         return done(err);
       }
-
+      console.log(userslug + " uid " + uid);
       if (!uid) {
         // To-do: Even if a user doesn't exist, compare passwords anyway, so we don't immediately return
         return done(null, false, '[[error:no-user]]');

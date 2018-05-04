@@ -8,7 +8,7 @@ const api = require('./api');
 const groups = require('./groups');
 const install = require('./install');
 const upgrade = require('./upgrade');
-const authority = require('./authority');
+const authentication = require('./authentication');
 const version = require(path.resolve(__dirname, '../utils/version'));
 
 class Routes {
@@ -48,7 +48,10 @@ class Routes {
       console.error(err);
     }
 
-    app.use(authority);
+    authentication.initialize(app);
+    authentication.load();
+
+    // app.use('/api/auth', authority);
 
     app.use(express.static(path.join(__dirname, '../../../client/dist')));
     app.get('*', (req, res) => {

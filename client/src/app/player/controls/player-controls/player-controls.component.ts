@@ -21,7 +21,7 @@ export class PlayerControlsComponent implements OnInit {
 
   private state = 'stopped';
   private current;
-  private src;
+  private src = '/api/audio/stream/none';
   private play_index: number = 0;
   private tracks: Object[] = [];
 

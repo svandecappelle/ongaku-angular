@@ -117,6 +117,11 @@ class Server {
     process.on('uncaughtException', (err) => {
       if (err) console.log(err, err.stack);
     });
+
+    process.on('unhandledRejection', (reason, p) => {
+      console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+      // application specific logging, throwing an error, or other logic here
+    });
   }
 
   initRoutes () {

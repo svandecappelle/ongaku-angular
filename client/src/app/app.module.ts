@@ -14,26 +14,31 @@ import { AppComponent } from './app.component';
 import { HeaderComponent } from './header/header.component';
 import { ContentComponent } from './content/content.component';
 import { AppRoutingModule } from './app-routing.module';
-import { DashboardComponent } from './dashboard/dashboard.component';
+import { HomeComponent } from './home/home.component';
 import { InstallComponent } from './install/install.component';
 import { UpgradeComponent } from './upgrade/upgrade.component';
 import { MenuComponent } from './menu/menu.component';
 
-import { AudioService } from './dashboard/audio.service';
+import { AudioService } from './home/audio.service';
 import { PlayerModule } from './player/player.module';   // our custom service, see below
 
 import { AppStateModule } from './app-state';
 import { PlayerControlsComponent } from './player/controls/player-controls/player-controls.component';
+import { LoginComponent } from './login/login.component';
+
+import { AlertService, AuthenticationService, UserService } from './services/index';
+import { AuthGuard } from './guards/index';
 
 @NgModule({
   declarations: [
     AppComponent,
     HeaderComponent,
     ContentComponent,
-    DashboardComponent,
+    HomeComponent,
     InstallComponent,
     UpgradeComponent,
     MenuComponent,
+    LoginComponent,
   ],
   imports: [
     BrowserModule,
@@ -46,7 +51,13 @@ import { PlayerControlsComponent } from './player/controls/player-controls/playe
     AppStateModule,
     PlayerModule,
   ],
-  providers: [AudioService],
+  providers: [
+    AuthGuard,
+    AlertService,
+    AuthenticationService,
+    UserService,
+    AudioService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

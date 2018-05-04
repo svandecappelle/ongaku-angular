@@ -153,23 +153,25 @@ class SuccessCall {
 class Helpers {
 
     incrementPlays(mediauid, userSession) {
-        mediauid = mediauid.replace(".mp3", '');
-        statistics.set('plays', mediauid, 'increment', () => {
-            logger.info(`set statistics: ${mediauid}`);
-        });
-        var media = library.getByUid(mediauid);
-        logger.debug(media);
-        var genre = media.metadatas.genre ? media.metadatas.genre : media.metadatas.GENRE;
-        if (genre) {
-            statistics.set('plays-genre', genre, 'increment', () => {
-                logger.debug("set statistics");
+        if (mediauid){
+            mediauid = mediauid.replace(".mp3", '');
+            statistics.set('plays', mediauid, 'increment', () => {
+                logger.info(`set statistics: ${mediauid}`);
+            });
+            var media = library.getByUid(mediauid);
+            logger.debug(media);
+            var genre = media.metadatas.genre ? media.metadatas.genre : media.metadatas.GENRE;
+            if (genre) {
+                statistics.set('plays-genre', genre, 'increment', () => {
+                    logger.debug("set statistics");
+                });
+            }
+            // TODO communication change this.
+            communication.emit(userSession, 'streaming-playing:started', {
+                uuid: mediauid,
+                encoding: library.getAudioById(mediauid).encoding
             });
         }
-        // TODO communication change this.
-        communication.emit(userSession, 'streaming-playing:started', {
-            uuid: mediauid,
-            encoding: library.getAudioById(mediauid).encoding
-        });
     }
 
     redirectIfNotAuthenticated(req, res, callback) {
@@ -323,6 +325,8 @@ router.get('/stream/:media', (req, res) => {
             logger.debug("streaming audio");
             middleware.stream(req, res, req.params.media, "audio");
             resolve(req.params.media);
+        }).catch((error) => {
+            res.status(404).json({"error": "media not found"});
         });
     };
     helpers.checkingAuthorization(req, res, () => {

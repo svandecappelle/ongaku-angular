@@ -332,6 +332,9 @@ class UserRedisModel extends security {
     };
 
     getUidByUsername (username, callback) {
+        this.getUserData("me@mizore.fr", (err, data) => {
+            console.log(data);
+        })
         db.getObjectField('username:uid', username, callback);
     };
 
