@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, Renderer } from '@angular/core';
 import { Store, select } from '@ngrx/store';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 import { PlayerStateRecord, IPlayerState } from '../../index';
 
@@ -21,14 +22,18 @@ export class PlayerControlsComponent implements OnInit {
 
   private state = 'stopped';
   private current;
-  private src = '/api/audio/stream/none';
+
+  private isInit: BehaviorSubject<boolean>;
+  private src;
   private play_index: number = 0;
   private tracks: Object[] = [];
 
   @ViewChild('audio', { read: ElementRef }) player:ElementRef;
   @ViewChild('progress', { read: ElementRef }) progressBar:ElementRef;
 
-  constructor(public renderer: Renderer, private store: Store<IAppState>, private actions: PlayerActions) { }
+  constructor(public renderer: Renderer, private store: Store<IAppState>, private actions: PlayerActions) {
+    this.isInit = new BehaviorSubject(false);
+  }
 
   ngOnInit () {
     this.player.nativeElement.addEventListener('loadedmetadata', (el) => {
@@ -119,7 +124,12 @@ export class PlayerControlsComponent implements OnInit {
   }
 
   link (uid) {
+    this.isInit.next(true);
     return `/api/audio/stream/${uid}`;
+  }
+
+  isInitialized() {
+    return this.isInit.asObservable();
   }
 
   onStepperClick ($event) {
