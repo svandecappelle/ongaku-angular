@@ -10,14 +10,12 @@
         <div *ngIf="artist.artist_info.bio" [innerHTML]="artist.artist_info.bio.summary">
         </div>
         <mat-chip-list *ngIf='artist.artist_info.tags' class='artist-tags'>
-          <h3>Tags:</h3>
+          <h4>Tags:</h4>
           <mat-chip *ngFor='let tag of artist.artist_info.tags.tag' color="primary" selected="true">{{ tag['name'] }}</mat-chip>
         </mat-chip-list>
           
         <ul>
           <li *ngFor="let album of artist.albums">
-            <h3>Albums</h3>
-            
             <div>
               <div>
                 <mat-icon mat-list-icon class="cover-icon" *ngIf="album.album_info.cover === '/img/album.jpg'">album</mat-icon>
