@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
+import { MatDialog } from '@angular/material';
 
 import { Song, IAppState } from '../app-state';
 import {
@@ -8,8 +9,10 @@ import {
 
 import { Store, Action, select } from '@ngrx/store';
 
-import {AudioService} from './audio.service';
-import {Observable} from 'rxjs/Rx';
+import { AudioService } from './audio.service';
+import { Observable } from 'rxjs/Rx';
+
+import { MetadatasComponent } from './metadatas/metadatas.component';
 
 @Component({
   selector: 'app-home',
@@ -22,7 +25,7 @@ export class HomeComponent implements OnInit {
   public _page;
   private selectedOptions = [];
 
-  constructor(private _audioService: AudioService, private _sanitizer: DomSanitizer, private store: Store<IAppState>) { 
+  constructor(private _audioService: AudioService, private _sanitizer: DomSanitizer, private store: Store<IAppState>, public dialog: MatDialog) { 
     this._page = 0;
   }
 
@@ -31,7 +34,6 @@ export class HomeComponent implements OnInit {
   }
 
   loadMore(){
-    console.log("load");
     this._audioService.getArtists(this._page).subscribe(
       data => { this.artists = this.artists.concat(data) },
       err => console.error(err),
@@ -65,7 +67,17 @@ export class HomeComponent implements OnInit {
     } else {
       this.selectedOptions[artist] = [];
     }
-    
+  }
+
+  metadata(track: Song, event:Event){
+    event.preventDefault();
+    event.stopPropagation();
+    this.dialog.open(MetadatasComponent, {
+      width: '80%',
+      hasBackdrop: true,
+      panelClass: 'custom-overlay-pane-class',
+      data: track
+    });
   }
 
   onTracksSelectionChanged(tracks){

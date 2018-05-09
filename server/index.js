@@ -101,6 +101,8 @@ class Server {
 
     // TODO change secret value  and maybe use passport
     app.use(session({
+      resave: false,
+      saveUninitialized: true,
       secret: 'keyboard cat',
       cookie: {}
     }))

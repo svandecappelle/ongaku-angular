@@ -9,6 +9,7 @@
 
 .library {
     margin-bottom: 80px;
+    width: calc(100% - 70px);
 }
 
 .example-header-image {
@@ -83,6 +84,10 @@ ul {
 
 
 .track {
+    span {
+        vertical-align: middle;
+        line-height: 40px;
+    }
     display: flex;
     justify-content: space-between;
     
