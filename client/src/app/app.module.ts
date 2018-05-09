@@ -10,6 +10,8 @@ import { MaterialModule } from './modules/material.module';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';  // replaces previous Http service
 
+import { DragulaModule } from 'ng2-dragula';
+
 import { AppComponent } from './app.component';
 import { HeaderComponent } from './header/header.component';
 import { ContentComponent } from './content/content.component';
@@ -43,6 +45,7 @@ import { AuthGuard } from './guards/index';
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
+    DragulaModule,
     FormsModule,
     ReactiveFormsModule,
     MaterialModule,

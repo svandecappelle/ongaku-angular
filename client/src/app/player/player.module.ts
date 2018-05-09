@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 
 import { BrowserModule } from '@angular/platform-browser';
+import { DragulaModule } from 'ng2-dragula';
 
 import { PlayerComponent } from './player.component';
 import { PlayerControlsComponent } from './controls/player-controls/player-controls.component';
@@ -11,7 +12,7 @@ import { AudioService } from './player.service';
 import { PlayerActions } from './player-actions';
 import { PlaylistService } from './controls/playlist/playlist.service';
 
-import { PlaylistComponent, PlaylistDialogComponent } from './controls/playlist/playlist.component';
+import { PlaylistComponent, PlaylistDialogComponent } from './controls/playlist/';
 
 @NgModule({
     declarations: [
@@ -26,7 +27,8 @@ import { PlaylistComponent, PlaylistDialogComponent } from './controls/playlist/
     ],
     imports: [
       MaterialModule,
-      BrowserModule
+      BrowserModule,
+      DragulaModule
     ],
     exports: [
       PlayerComponent
