@@ -1,3 +1,9 @@
+<div class="filter-header">
+  <mat-form-field>
+    <input matInput (change)="search($event.target.value)" placeholder="Search">
+  </mat-form-field>
+</div>
+
 <ul class="library">
   <li class="artist" *ngFor="let artist of artists">
     <mat-card class="example-card">

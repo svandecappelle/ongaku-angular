@@ -77,7 +77,6 @@ ul {
     justify-content: flex-end;
 }
 
-
 .track {
     span {
         vertical-align: middle;
@@ -98,5 +97,14 @@ ul {
 
     .track-duration {
         width: 100px;
+    }
+}
+
+.filter-header {
+    min-height: 64px;
+    padding: 8px 24px 0;
+    .mat-form-field {
+        font-size: 14px;
+        width: 100%;
     }
 }

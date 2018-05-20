@@ -31,7 +31,7 @@ export class HomeComponent implements OnInit {
   }
 
   loadMore(){
-    this._audioService.getArtists(this._page).subscribe(
+    this._audioService.getPage(this._page).subscribe(
       data => { this.artists = this.artists.concat(data) },
       err => console.error(err),
       () => console.log('done loading artists')
@@ -80,5 +80,12 @@ export class HomeComponent implements OnInit {
   onTracksSelectionChanged(tracks){
     // console.log(tracks);
     // console.log(this.selectedOptions)
+  }
+
+  search(criterion) {
+    this._page = 0;
+    this.artists = [];
+    this._audioService.filter = criterion;
+    this.loadMore();
   }
 }
