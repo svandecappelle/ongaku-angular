@@ -2,7 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
 import { MatDialog } from '@angular/material';
 
-import { Song, IAppState, Append } from '../app-state';
+import { Song, IAppState } from '../app-state';
+import {
+  AppendPlaylist
+} from '../player/state'
 
 import { Store, Action, select } from '@ngrx/store';
 
@@ -54,7 +57,7 @@ export class HomeComponent implements OnInit {
         break
     }
 
-    this.store.dispatch(new Append(this.selectedOptions[artist]));
+    this.store.dispatch(new AppendPlaylist(this.selectedOptions[artist]));
     this.selectedOptions[artist] = [];
   }
 

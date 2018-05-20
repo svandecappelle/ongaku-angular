@@ -16,6 +16,7 @@ import { MatDialog, MAT_DIALOG_DATA, MatTableDataSource } from '@angular/materia
 import { Song, IAppState } from '../../../app-state';
 import { PlayerAction, PlayerActions } from '../../player-actions';
 import { PlaylistService } from './playlist.service';
+import { PlaylistDialogComponent } from './playlist-dialog.component';
 
 @Component({
   selector: 'app-playlist',
@@ -62,55 +63,6 @@ export class PlaylistComponent implements OnInit {
         store: this.store
       }
     });
-
-  }
-}
-
-@Component({
-  selector: 'playlist-dialog',
-  templateUrl: 'playlist-dialog.html',
-  styleUrls: ['./playlist-dialog.component.scss']
-})
-export class PlaylistDialogComponent implements OnDestroy {
-
-  public current: Song;
-  private store: Store<IAppState>;
-  private subscription;
-  private dataSource: PlaylistService;
-
-  @ViewChild('filter') filter: ElementRef;
-
-  private displayedColumns = ['state', 'index', 'title', 'artist', 'album', 'duration'];
-
-  constructor( @Inject(MAT_DIALOG_DATA) public data: any, private actions: PlayerActions) {
-    this.store = this.data.store;
-
-    this.dataSource = new PlaylistService();
-    this.dataSource.init(this.data.tracklist, this.data.current);
-
-    this.store.select(state => state.player).subscribe((val) => {
-      this.current = val.track;
-      this.dataSource.playing(this.current);
-    });
-  }
-
-  applyFilter(filterValue: string) {
-    filterValue = filterValue.trim(); // Remove whitespace
-    filterValue = filterValue.toLowerCase(); // MatTableDataSource defaults to lowercase matches
-    this.dataSource.filter = filterValue;
-  }
-
-  play(track) {
-    this.current = track;
-    this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
-  }
-
-  pause(track) {
-    this.current = track;
-    this.store.select(state => state.player).dispatch(this.actions.audioPaused());
-  }
-
-  ngOnDestroy() {
 
   }
 }

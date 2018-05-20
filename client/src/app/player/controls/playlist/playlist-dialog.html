@@ -8,8 +8,7 @@
 
   <div class="table-container">
   
-    <mat-table #table [dataSource]="dataSource">  
-
+    <mat-table #table [dataSource]="dataSource" [dragula]='"first-bag"'>  
       <ng-container matColumnDef="state">
         <mat-header-cell *matHeaderCellDef>State</mat-header-cell>
         <mat-cell *matCellDef="let element">
@@ -48,7 +47,7 @@
       </ng-container>
 
       <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+      <mat-row id="{{row.index}}" *matRowDef="let row; columns: displayedColumns;"></mat-row>
     </mat-table>
   </div>
 </mat-dialog-content>
