@@ -5,7 +5,7 @@ import { MatDialog } from '@angular/material';
 import { Song, IAppState } from '../app-state';
 import {
   AppendPlaylist
-} from '../player/state'
+} from '../player/state';
 
 import { Store, Action, select } from '@ngrx/store';
 
@@ -25,7 +25,10 @@ export class HomeComponent implements OnInit {
   public _page;
   private selectedOptions = [];
 
-  constructor(private _audioService: AudioService, private _sanitizer: DomSanitizer, private store: Store<IAppState>, public dialog: MatDialog) { 
+  constructor(private _audioService: AudioService,
+    private _sanitizer: DomSanitizer,
+    private store: Store<IAppState>,
+    public dialog: MatDialog) {
     this._page = 0;
   }
 
@@ -33,43 +36,43 @@ export class HomeComponent implements OnInit {
     this.loadMore();
   }
 
-  loadMore(){
+  loadMore () {
     this._audioService.getPage(this._page).subscribe(
-      data => { this.artists = this.artists.concat(data) },
+      data => { this.artists = this.artists.concat(data); },
       err => console.error(err),
       () => console.log('done loading artists')
     );
 
-    this._page +=1;
+    this._page += 1;
   }
 
   getImage (src) {
-    let image = src.image ? src.image[1]['#text'] : "";
+    const image = src.image ? src.image[1]['#text'] : '';
 
-    return this._sanitizer.bypassSecurityTrustStyle(`linear-gradient(rgba(29, 29, 29, 0), rgba(16, 16, 23, 0.5)), url(${image})`);;
+    return this._sanitizer.bypassSecurityTrustStyle(`linear-gradient(rgba(29, 29, 29, 0), rgba(16, 16, 23, 0.5)), url(${image})`);
   }
 
   actionFrom (action, artist) {
-    switch (action){
+    switch (action) {
       case 'play':
         break;
       case 'like':
-        break
+        break;
     }
 
     this.store.dispatch(new AppendPlaylist(this.selectedOptions[artist]));
     this.selectedOptions[artist] = [];
   }
 
-  selectAll(artist, album){
-    if (!this.selectedOptions[artist] || album.tracks.length > this.selectedOptions[artist].length){
+  selectAll(artist, album) {
+    if (!this.selectedOptions[artist] || album.tracks.length > this.selectedOptions[artist].length) {
       this.selectedOptions[artist] = album.tracks;
     } else {
       this.selectedOptions[artist] = [];
     }
   }
 
-  metadata(track: Song, event:Event){
+  metadata(track: Song, event: Event) {
     event.preventDefault();
     event.stopPropagation();
     this.dialog.open(MetadatasComponent, {
@@ -80,7 +83,7 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  onTracksSelectionChanged(tracks){
+  onTracksSelectionChanged(tracks) {
     // console.log(tracks);
     // console.log(this.selectedOptions)
   }
