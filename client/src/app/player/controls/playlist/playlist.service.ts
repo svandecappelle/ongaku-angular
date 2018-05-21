@@ -33,10 +33,7 @@ export class PlaylistService extends DataSource<Song> {
     init(data: Song[], current: Song) {
         this.current = current;
 
-        let index = 0;
         this.tracks = data.map((track) => {
-            index += 1;
-            track.index = index;
             track.state = track.uid === current.uid ? "playing" : "none";
             return track;
         });
@@ -57,10 +54,10 @@ export class PlaylistService extends DataSource<Song> {
         })
 
         if (fromPosition > toPosition) {
-            this.tracks[fromPosition - 1].index = toPosition;
+            this.tracks[fromPosition].index = toPosition;
         } else {
-            this.tracks[toPosition - 1].index += 1;
-            this.tracks[fromPosition - 1].index = toPosition - 1;
+            this.tracks[toPosition].index += 1;
+            this.tracks[fromPosition].index = toPosition - 1;
         }
 
         this.tracks.sort((a: any, b: any) => {

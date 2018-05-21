@@ -54,14 +54,14 @@ export class PlayerControlsComponent implements OnInit {
     });
 
     this.store.select(state => state.player).subscribe((val) => {
-      console.log(this.play_index);
-      if (val.track && val.track.index && this.play_index !== val.track.index -1) {
+      
+      if (val.track) {
         
-        this.play_index = val.track.index - 1;
+        this.play_index = val.track.index;
         
         this.current = val.track;
+        this.stop();
         this.change(this.current.uid);
-        this.ensurePlay();
       }
     });
 

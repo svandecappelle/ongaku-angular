@@ -12,6 +12,7 @@ import { Store, Action, select } from '@ngrx/store';
 import { AudioService } from './audio.service';
 import { Observable } from 'rxjs/Rx';
 
+import { PlayerActions } from '../player/player-actions';
 import { MetadatasComponent } from './metadatas/metadatas.component';
 
 @Component({
@@ -25,15 +26,21 @@ export class HomeComponent implements OnInit {
   public _page;
   private selectedOptions = [];
 
+  public tracklist = [];
+
   constructor(private _audioService: AudioService,
     private _sanitizer: DomSanitizer,
     private store: Store<IAppState>,
-    public dialog: MatDialog) {
+    public dialog: MatDialog,
+    private actions: PlayerActions) {
     this._page = 0;
   }
 
   ngOnInit() {
     this.loadMore();
+    this.store.select(state => state.trackList).subscribe((val) => {
+      this.tracklist = val;
+    });
   }
 
   loadMore () {
@@ -55,13 +62,27 @@ export class HomeComponent implements OnInit {
   actionFrom (action, artist) {
     switch (action) {
       case 'play':
+        this.store.dispatch(new AppendPlaylist(this.selectedOptions[artist]));
+        this.selectedOptions[artist] = [];
         break;
       case 'like':
         break;
     }
+  }
 
-    this.store.dispatch(new AppendPlaylist(this.selectedOptions[artist]));
-    this.selectedOptions[artist] = [];
+  appendToPlaylist (track: Song, event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    track.index = this.tracklist.length;
+    this.store.dispatch(new AppendPlaylist(track));
+  }
+
+  playNow (track: Song, event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    track.index = this.tracklist.length;
+    this.store.dispatch(new AppendPlaylist(track));
+    this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(track));
   }
 
   selectAll(artist, album) {
