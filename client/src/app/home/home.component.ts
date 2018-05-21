@@ -62,6 +62,12 @@ export class HomeComponent implements OnInit {
   actionFrom (action, artist) {
     switch (action) {
       case 'play':
+        let index = this.tracklist.length;
+        this.selectedOptions[artist].forEach(track => {
+          track.index = index;
+          index += 1;
+        });
+
         this.store.dispatch(new AppendPlaylist(this.selectedOptions[artist]));
         this.selectedOptions[artist] = [];
         break;

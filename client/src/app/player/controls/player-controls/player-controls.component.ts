@@ -62,6 +62,7 @@ export class PlayerControlsComponent implements OnInit {
         this.current = val.track;
         this.stop();
         this.change(this.current.uid);
+        this.state = 'playing';
       }
     });
 

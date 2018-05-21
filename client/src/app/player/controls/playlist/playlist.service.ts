@@ -39,35 +39,44 @@ export class PlaylistService extends DataSource<Song> {
         });
     }
 
+    reorderArray(event, originalArray) {
+        const movedItem = originalArray.find((item, index) => index === event.oldIndex);
+        const remainingItems = originalArray.filter((item, index) => index !== event.oldIndex);
+      
+        const reorderedItems = [
+            ...remainingItems.slice(0, event.newIndex),
+            movedItem,
+            ...remainingItems.slice(event.newIndex)
+        ];
+      
+        return reorderedItems;
+    }
+
     switch(fromPosition, toPosition) {
-        if (!toPosition) {
-            toPosition = this.tracks.length;
+        if ( toPosition === null ) {
+            toPosition = this.tracks.length - 1;
         }
+
+        if ( toPosition < 0 ) {
+            toPosition = 0;
+        }
+
         // console.log("moved index: " + fromPosition + " to " + toPosition);
 
+        let from = this.tracks[fromPosition];
+        let to = this.tracks[toPosition];
+
+        this.tracks = this.reorderArray({
+            oldIndex: fromPosition,
+            newIndex: toPosition
+        }, this.tracks);
+        
+        // console.log(this.tracks);
+
+        let index = 0;
         this.tracks.forEach((track) => {
-            if (track.index > fromPosition && track.index <= toPosition) {
-                track.index -= 1;
-            } else if (track.index < fromPosition && fromPosition > toPosition && track.index >= toPosition) {
-                track.index += 1;
-            }
-        })
-
-        if (fromPosition > toPosition) {
-            this.tracks[fromPosition].index = toPosition;
-        } else {
-            this.tracks[toPosition].index += 1;
-            this.tracks[fromPosition].index = toPosition - 1;
-        }
-
-        this.tracks.sort((a: any, b: any) => {
-            if (a.index < b.index) {
-                return -1;
-            } else if (a.index > b.index) {
-                return 1;
-            } else {
-                return 0;
-            }
+           track.index = index;
+           index += 1;
         });
 
         this.store.dispatch(new SetPlaylist(this.tracks));

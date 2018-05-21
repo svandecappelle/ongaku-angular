@@ -71,7 +71,7 @@ export class PlaylistDialogComponent implements OnDestroy {
     private onDrop(args: any): void {
         let [e] = args;
         // console.log("moved index: " + args[0].id + " to " + (args[3] ? args[3].id.toString() : 'last'));
-        this.dataSource.switch(parseInt(args[0].id), (args[3] ? parseInt(args[3].id) : null));
+        this.dataSource.switch(parseInt(args[0].id), (args[3] ? parseInt(args[3].id) - 1 : null));
         // TODO fire change event on tracklist to set tracklist in appstate
         this.addClass(e, 'ex-moved');
     }
