@@ -9,22 +9,19 @@
   <div class="table-container">
   
     <mat-table #table [dataSource]="dataSource" [dragula]='"playlist-bag"'>  
-      <ng-container matColumnDef="state">
-        <mat-header-cell *matHeaderCellDef>State</mat-header-cell>
+
+      <ng-container matColumnDef="action">
+        <mat-header-cell *matHeaderCellDef>Action</mat-header-cell>
         <mat-cell *matCellDef="let element">
+          <button mat-icon-button class="handle">
+            <mat-icon aria-label="change_position" class="handle">drag_indicator</mat-icon>
+          </button>
           <button mat-icon-button (click)="play(element)" *ngIf="element.state !== 'playing'">
             <mat-icon aria-label="Play">play_arrow</mat-icon>
           </button>
           <button mat-icon-button (click)="pause(element)" *ngIf="element.state === 'playing'">
-              <mat-icon aria-label="Pause">pause_arrow</mat-icon>
-            </button>
-        </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="handle">
-        <mat-header-cell *matHeaderCellDef></mat-header-cell>
-        <mat-cell *matCellDef="let element" class="handle">
-          <mat-icon aria-label="change_position" class="handle">drag_indicator</mat-icon>
+            <mat-icon aria-label="Pause">pause_arrow</mat-icon>
+          </button>
         </mat-cell>
       </ng-container>
 
