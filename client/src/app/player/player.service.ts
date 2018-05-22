@@ -9,13 +9,6 @@ import { AudioSource } from './audio-source';
 import { Subject } from 'rxjs/Subject';
 import { Song } from '../app-state';
 
-import * as moment from "moment";
-import * as momentDurationFormat from "moment-duration-format";
-
-interface IDuration extends moment.Duration {
-  format(template:string): string;
-}
-
 class UtilityService {
   
 }
