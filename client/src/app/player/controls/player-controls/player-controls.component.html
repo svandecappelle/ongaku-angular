@@ -1,4 +1,4 @@
-<mat-progress-bar #progress class="audio-stepper"
+<mat-progress-bar #progress *ngIf="metadataLoaded" class="audio-stepper"
   [color]="color"
   [mode]="buffer"
   [value]="value"
@@ -6,8 +6,15 @@
   (click)="onStepperClick($event)">
 </mat-progress-bar>
 
+<mat-progress-bar *ngIf="!metadataLoaded" class="audio-stepper"
+[mode]="'indeterminate'">
+</mat-progress-bar>
+
 <audio #audio [src]='src'></audio>
 <div class="content">
+
+
+
   <ul>
     <li>
       <button mat-icon-button (click)="previous()">

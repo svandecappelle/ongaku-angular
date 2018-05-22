@@ -22,6 +22,7 @@ export class PlayerControlsComponent implements OnInit {
 
   private state = 'stopped';
   private current;
+  private metadataLoaded:boolean = true;
 
   private isInit: BehaviorSubject<boolean>;
   private src;
@@ -37,6 +38,7 @@ export class PlayerControlsComponent implements OnInit {
 
   ngOnInit() {
     this.player.nativeElement.addEventListener('loadedmetadata', (el) => {
+      this.metadataLoaded = true;
       this.duration = el.target.duration;
       this.value = 0;
       if (this.state !== 'playing') {
@@ -123,6 +125,7 @@ export class PlayerControlsComponent implements OnInit {
 
   change(uid) {
     this.stop();
+    this.metadataLoaded = false;
     this.src = this.link(uid);
   }
 
