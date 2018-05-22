@@ -14,7 +14,7 @@ import { PlayerAction, PlayerActions } from '../../player-actions';
 })
 export class PlayerControlsComponent implements OnInit {
 
-  private color = "accent";
+  private color = 'accent';
 
   private duration;
   private currentTime;
@@ -25,17 +25,17 @@ export class PlayerControlsComponent implements OnInit {
 
   private isInit: BehaviorSubject<boolean>;
   private src;
-  private play_index: number = 0;
+  private play_index = 0;
   private tracks: Object[] = [];
 
-  @ViewChild('audio', { read: ElementRef }) player:ElementRef;
-  @ViewChild('progress', { read: ElementRef }) progressBar:ElementRef;
+  @ViewChild('audio', { read: ElementRef }) player: ElementRef;
+  @ViewChild('progress', { read: ElementRef }) progressBar: ElementRef;
 
   constructor(public renderer: Renderer, private store: Store<IAppState>, private actions: PlayerActions) {
     this.isInit = new BehaviorSubject(false);
   }
 
-  ngOnInit () {
+  ngOnInit() {
     this.player.nativeElement.addEventListener('loadedmetadata', (el) => {
       this.duration = el.target.duration;
       this.value = 0;
@@ -54,11 +54,10 @@ export class PlayerControlsComponent implements OnInit {
     });
 
     this.store.select(state => state.player).subscribe((val) => {
-      
       if (val.track) {
-        
+
         this.play_index = val.track.index;
-        
+
         this.current = val.track;
         this.stop();
         this.change(this.current.uid);
@@ -68,23 +67,23 @@ export class PlayerControlsComponent implements OnInit {
 
     this.store.select(state => state.trackList).subscribe((val) => {
       this.tracks = val;
-      if (this.play_index == 0){
+      if (this.play_index === 0) {
         this.ensurePlay();
       }
     });
   }
 
-  ensurePlay () {
+  ensurePlay() {
     if (!this.src && this.tracks.length > 0) {
       this.src = this.link(this.tracks[this.play_index]['uid']);
     }
   }
 
-  play () {
+  play() {
     if (this.state !== 'playing') {
-      if (this.tracks[this.play_index]){
+      if (this.tracks[this.play_index]) {
         this.state = 'playing';
-        
+
         this.current = this.tracks[this.play_index];
         this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
 
@@ -92,16 +91,16 @@ export class PlayerControlsComponent implements OnInit {
       }
     } else {
       this.state = 'paused';
-      this.player.nativeElement.pause();      
+      this.player.nativeElement.pause();
     }
   }
 
-  stop () {
+  stop() {
     this.state = 'stopped';
     this.player.nativeElement.pause();
   }
 
-  previous () {
+  previous() {
     this.stop();
     if (this.play_index > 0) {
       this.play_index -= 1;
@@ -110,7 +109,7 @@ export class PlayerControlsComponent implements OnInit {
     }
   }
 
-  next () {
+  next() {
     this.stop();
     if (this.tracks.length > this.play_index + 1) {
       this.play_index += 1;
@@ -119,12 +118,12 @@ export class PlayerControlsComponent implements OnInit {
     }
   }
 
-  change (uid) {
+  change(uid) {
     this.stop();
     this.src = this.link(uid);
   }
 
-  link (uid) {
+  link(uid) {
     this.isInit.next(true);
     return `/api/audio/stream/${uid}`;
   }
@@ -133,8 +132,8 @@ export class PlayerControlsComponent implements OnInit {
     return this.isInit.asObservable();
   }
 
-  onStepperClick ($event) {
-    this.currentTime = this.duration * ($event.layerX + 72) / $event.target.offsetWidth;
+  onStepperClick($event) {
+    this.currentTime = this.duration * ($event.clientX - 72) / $event.target.offsetWidth;
     this.player.nativeElement.currentTime = this.currentTime;
   }
 }

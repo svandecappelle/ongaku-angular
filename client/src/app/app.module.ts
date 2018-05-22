@@ -11,6 +11,7 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';  // replaces previous Http service
 
 import { DragulaModule } from 'ng2-dragula';
+import { MomentModule } from 'ngx-moment';
 
 import { AppComponent } from './app.component';
 import { HeaderComponent } from './header/header.component';
@@ -48,6 +49,7 @@ import { MetadatasComponent } from './home/metadatas/metadatas.component';
     BrowserModule,
     BrowserAnimationsModule,
     DragulaModule,
+    MomentModule,
     FormsModule,
     ReactiveFormsModule,
     MaterialModule,

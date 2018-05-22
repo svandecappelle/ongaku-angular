@@ -1,7 +1,11 @@
-import { NgModule } from '@angular/core';
+import { NgModule, Pipe, PipeTransform } from '@angular/core';
 
 import { BrowserModule } from '@angular/platform-browser';
 import { DragulaModule } from 'ng2-dragula';
+import { MomentModule } from 'ngx-moment';
+
+import * as moment from 'moment';
+import 'moment-duration-format';
 
 import { PlayerComponent } from './player.component';
 import { PlayerControlsComponent } from './controls/player-controls/player-controls.component';
@@ -14,13 +18,24 @@ import { PlaylistService } from './controls/playlist/playlist.service';
 
 import { PlaylistComponent, PlaylistDialogComponent } from './controls/playlist/';
 
+@Pipe({
+  name: 'duration'
+})
+class DurationPipe implements PipeTransform {
+  transform(value: string, fallback: string): string {
+    const result: string = moment.duration(value, 'seconds').format('mm:ss');
+    return result;
+  }
+}
+
 @NgModule({
     declarations: [
       // components
       PlayerComponent,
       PlayerControlsComponent,
       PlaylistComponent,
-      PlaylistDialogComponent
+      PlaylistDialogComponent,
+      DurationPipe
     ],
     entryComponents: [
       PlaylistDialogComponent
@@ -28,7 +43,8 @@ import { PlaylistComponent, PlaylistDialogComponent } from './controls/playlist/
     imports: [
       MaterialModule,
       BrowserModule,
-      DragulaModule
+      DragulaModule,
+      MomentModule
     ],
     exports: [
       PlayerComponent
@@ -39,5 +55,4 @@ import { PlaylistComponent, PlaylistDialogComponent } from './controls/playlist/
       PlayerActions
     ]
   })
-  export class PlayerModule {}
-  
+export class PlayerModule {}

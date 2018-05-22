@@ -31,7 +31,7 @@ export class PlaylistDialogComponent implements OnDestroy {
 
     private displayedColumns = ['state', 'index', 'title', 'artist', 'album', 'duration'];
 
-    constructor( @Inject(MAT_DIALOG_DATA) public data: any, private actions: PlayerActions, private dragulaService: DragulaService) {
+    constructor(@Inject(MAT_DIALOG_DATA) public data: any, private actions: PlayerActions, private dragulaService: DragulaService) {
         this.store = this.data.store;
 
         this.dataSource = new PlaylistService(this.store);

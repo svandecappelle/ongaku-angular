@@ -39,4 +39,16 @@
   <span *ngIf="current">
     {{current.title}}
   </span>
+
+  <ul>
+    <li>
+      <small>{{ currentTime | duration }}</small>
+    </li>
+    <li>
+      <small>/</small>
+    </li>
+    <li>
+      <small>{{ duration | duration }}</small>
+    </li>
+  </ul>
 </div>

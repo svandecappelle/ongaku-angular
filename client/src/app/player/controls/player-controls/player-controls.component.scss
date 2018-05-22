@@ -24,6 +24,15 @@ ul {
     }
 }
 
+span {
+    vertical-align: middle;
+}
+
+small {
+    vertical-align: baseline;
+    font-size: 0.5em;
+}
+
 .audio-stepper {
     cursor: pointer;
     position: absolute;
