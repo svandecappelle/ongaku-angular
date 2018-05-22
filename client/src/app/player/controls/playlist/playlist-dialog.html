@@ -8,7 +8,7 @@
 
   <div class="table-container">
   
-    <mat-table #table [dataSource]="dataSource" [dragula]='"first-bag"'>  
+    <mat-table #table [dataSource]="dataSource" [dragula]='"playlist-bag"'>  
       <ng-container matColumnDef="state">
         <mat-header-cell *matHeaderCellDef>State</mat-header-cell>
         <mat-cell *matCellDef="let element">
@@ -21,9 +21,16 @@
         </mat-cell>
       </ng-container>
 
+      <ng-container matColumnDef="handle">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let element" class="handle">
+          <mat-icon aria-label="change_position" class="handle">drag_indicator</mat-icon>
+        </mat-cell>
+      </ng-container>
+
       <ng-container matColumnDef="index">
         <mat-header-cell *matHeaderCellDef> No. </mat-header-cell>
-        <mat-cell *matCellDef="let element"> {{element.index + 1}} </mat-cell>
+        <mat-cell *matCellDef="let element" class="handle"> {{element.index + 1}} </mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="title">

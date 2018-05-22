@@ -29,7 +29,7 @@ export class PlaylistDialogComponent implements OnDestroy {
 
     @ViewChild('filter') filter: ElementRef;
 
-    private displayedColumns = ['state', 'index', 'title', 'artist', 'album', 'duration'];
+    private displayedColumns = ['handle', 'state', 'index', 'title', 'artist', 'album', 'duration'];
 
     constructor(@Inject(MAT_DIALOG_DATA) public data: any, private actions: PlayerActions, private dragulaService: DragulaService) {
         this.store = this.data.store;
@@ -41,6 +41,16 @@ export class PlaylistDialogComponent implements OnDestroy {
             this.current = val.track;
             this.dataSource.playing(this.current);
         });
+        
+        const bag: any = this.dragulaService.find('playlist-bag'); if (bag !== undefined) { this.dragulaService.destroy('playlist-bag'); };
+
+        dragulaService.setOptions('playlist-bag', {
+            moves: function (el, container, handle) {
+                console.log(handle);
+                return handle.className.match('.*handle.*');
+            }
+        });
+
         dragulaService.drop.subscribe((value: any) => {
             // console.log(`drop: ${value[0]}`);
             this.onDrop(value.slice(1));
@@ -93,6 +103,6 @@ export class PlaylistDialogComponent implements OnDestroy {
     }
 
     ngOnDestroy() {
-
+        this.dragulaService.destroy("playlist-bag");
     }
 }

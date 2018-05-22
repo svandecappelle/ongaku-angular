@@ -81,7 +81,10 @@ export class PlayerControlsComponent implements OnInit {
 
   play() {
     if (this.state !== 'playing') {
-      if (this.tracks[this.play_index]) {
+      if (this.state === 'paused') {
+        this.state = 'playing';
+        this.player.nativeElement.play();
+      } else if (this.tracks[this.play_index]) {
         this.state = 'playing';
 
         this.current = this.tracks[this.play_index];
@@ -111,9 +114,10 @@ export class PlayerControlsComponent implements OnInit {
 
   next() {
     this.stop();
-    if (this.tracks.length > this.play_index + 1) {
-      this.play_index += 1;
-      this.current = this.tracks[this.play_index];
+    const newIndex =  this.current ? this.current.index + 1: this.play_index + 1;
+    if (this.tracks.length > newIndex) {
+      this.play_index = newIndex;
+      this.current = this.tracks[newIndex];
       this.src = this.link(this.current['uid']);
     }
   }
