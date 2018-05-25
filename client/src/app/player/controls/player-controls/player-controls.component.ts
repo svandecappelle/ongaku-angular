@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, Renderer } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, Renderer, ChangeDetectorRef } from '@angular/core';
 import { Store, select } from '@ngrx/store';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
@@ -32,13 +32,15 @@ export class PlayerControlsComponent implements OnInit {
   @ViewChild('audio', { read: ElementRef }) player: ElementRef;
   @ViewChild('progress', { read: ElementRef }) progressBar: ElementRef;
 
-  constructor(public renderer: Renderer, private store: Store<IAppState>, private actions: PlayerActions) {
+  constructor(private ref: ChangeDetectorRef, public renderer: Renderer, private store: Store<IAppState>, private actions: PlayerActions) {
     this.isInit = new BehaviorSubject(false);
   }
 
   ngOnInit() {
     this.player.nativeElement.addEventListener('loadedmetadata', (el) => {
       this.metadataLoaded = true;
+      this.ref.markForCheck();
+      this.ref.detectChanges();
       this.duration = el.target.duration;
       this.value = 0;
       if (this.state !== 'playing') {
@@ -56,6 +58,7 @@ export class PlayerControlsComponent implements OnInit {
     });
 
     this.store.select(state => state.player).subscribe((val) => {
+      
       if (val.track) {
 
         this.play_index = val.track.index;
@@ -81,16 +84,16 @@ export class PlayerControlsComponent implements OnInit {
   }
 
   play() {
-    if (this.state !== 'playing') {
-      if (this.state === 'paused') {
-        this.state = 'playing';
-        this.player.nativeElement.play();
-      } else if (this.tracks[this.play_index]) {
+    if (this.state !== 'playing') {  
+      if (this.tracks[this.play_index] === 'stopped') {
         this.state = 'playing';
 
         this.current = this.tracks[this.play_index];
         this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
 
+        this.player.nativeElement.play();
+      } else {
+        this.state = 'playing';
         this.player.nativeElement.play();
       }
     } else {
@@ -104,28 +107,35 @@ export class PlayerControlsComponent implements OnInit {
     this.player.nativeElement.pause();
   }
 
+  switching() {
+    this.state = 'loading';
+    this.player.nativeElement.pause();
+  }
+
   previous() {
-    this.stop();
+    this.switching();
     if (this.play_index > 0) {
       this.play_index -= 1;
       this.current = this.tracks[this.play_index];
-      this.src = this.link(this.current['uid']);
+      this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
     }
   }
 
   next() {
-    this.stop();
+    this.switching();
     const newIndex =  this.current ? this.current.index + 1: this.play_index + 1;
     if (this.tracks.length > newIndex) {
       this.play_index = newIndex;
       this.current = this.tracks[newIndex];
-      this.src = this.link(this.current['uid']);
+      this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
     }
   }
 
   change(uid) {
-    this.stop();
     this.metadataLoaded = false;
+    this.ref.markForCheck();
+    this.ref.detectChanges();
+    this.switching();
     this.src = this.link(uid);
   }
 

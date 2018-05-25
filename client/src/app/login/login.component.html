@@ -17,8 +17,10 @@
               Please inform your password
             </mat-error>
           </mat-input-container>
+          
           <button mat-raised-button color="primary" type="submit">Login</button>
         </form>
+        <mat-progress-bar class="login-in-progress" [mode]="'indeterminate'" *ngIf="loginInProgress"></mat-progress-bar>
       </mat-card-content>
     </mat-card>
   </div>

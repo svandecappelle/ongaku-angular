@@ -33,6 +33,11 @@ button {
 
 .handle {
     flex: 0 0 25px;
+    cursor: grab;
+}
+
+.gu-transit .handle {
+    cursor: grabbing;
 }
 
 .mat-column-duration {
