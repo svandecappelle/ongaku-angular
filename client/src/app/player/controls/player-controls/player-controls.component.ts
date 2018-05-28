@@ -22,9 +22,9 @@ export class PlayerControlsComponent implements OnInit {
 
   private state = 'stopped';
   private current;
-  private metadataLoaded:boolean = true;
+  private metadataLoaded: Boolean = true;
 
-  private isInit: BehaviorSubject<boolean>;
+  private isInit: Boolean;
   private src;
   private play_index = 0;
   private tracks: Object[] = [];
@@ -33,7 +33,7 @@ export class PlayerControlsComponent implements OnInit {
   @ViewChild('progress', { read: ElementRef }) progressBar: ElementRef;
 
   constructor(private ref: ChangeDetectorRef, public renderer: Renderer, private store: Store<IAppState>, private actions: PlayerActions) {
-    this.isInit = new BehaviorSubject(false);
+    this.isInit = false;
   }
 
   ngOnInit() {
@@ -58,7 +58,7 @@ export class PlayerControlsComponent implements OnInit {
     });
 
     this.store.select(state => state.player).subscribe((val) => {
-      
+
       if (val.track) {
 
         this.play_index = val.track.index;
@@ -72,6 +72,7 @@ export class PlayerControlsComponent implements OnInit {
     this.store.select(state => state.trackList).subscribe((val) => {
       this.tracks = val;
       if (this.play_index === 0) {
+        this.current = val[0];
         this.ensurePlay();
       }
     });
@@ -84,7 +85,7 @@ export class PlayerControlsComponent implements OnInit {
   }
 
   play() {
-    if (this.state !== 'playing') {  
+    if (this.state !== 'playing') {
       if (this.tracks[this.play_index] === 'stopped') {
         this.state = 'playing';
 
@@ -100,8 +101,6 @@ export class PlayerControlsComponent implements OnInit {
       this.state = 'paused';
       this.player.nativeElement.pause();
     }
-
-    console.log(this.current);
   }
 
   stop() {
@@ -125,7 +124,7 @@ export class PlayerControlsComponent implements OnInit {
 
   next() {
     this.switching();
-    const newIndex =  this.current ? this.current.index + 1: this.play_index + 1;
+    const newIndex =  this.current ? this.current.index + 1 : this.play_index + 1;
     if (this.tracks.length > newIndex) {
       this.play_index = newIndex;
       this.current = this.tracks[newIndex];
@@ -142,12 +141,12 @@ export class PlayerControlsComponent implements OnInit {
   }
 
   link(uid) {
-    this.isInit.next(true);
+    this.isInit = true;
     return `/api/audio/stream/${uid}`;
   }
 
   isInitialized() {
-    return this.isInit.asObservable();
+    return this.isInit;
   }
 
   onStepperClick($event) {

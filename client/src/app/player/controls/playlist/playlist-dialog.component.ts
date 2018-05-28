@@ -35,13 +35,14 @@ export class PlaylistDialogComponent implements OnDestroy {
         this.store = this.data.store;
 
         this.dataSource = new PlaylistService(this.store);
+        console.log(this.data);
         this.dataSource.init(this.data.tracklist, this.data.current);
 
         this.store.select(state => state.player).subscribe((val) => {
             this.current = val.track;
             this.dataSource.playing(this.current);
         });
-        
+
         const bag: any = this.dragulaService.find('playlist-bag'); if (bag !== undefined) { this.dragulaService.destroy('playlist-bag'); };
 
         dragulaService.setOptions('playlist-bag', {

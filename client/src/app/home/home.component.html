@@ -76,9 +76,20 @@
     </mat-card>
   </li>
 
-
   <div class="actions-container">
-    <button mat-icon-button color="accent" (click)="loadMore()">
+    <div class="loader-lib" *ngIf="loading">
+      <span class="loader-block"></span>
+      <span class="loader-block"></span>
+      <span class="loader-block"></span>
+      <span class="loader-block"></span>
+      <span class="loader-block"></span>
+      <span class="loader-block"></span>
+      <span class="loader-block"></span>
+      <span class="loader-block"></span>
+      <span class="loader-block"></span>
+    </div>
+    
+    <button mat-icon-button color="accent" (click)="loadMore()" *ngIf="!loading">
       <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
     </button>
   </div>

@@ -341,7 +341,7 @@ router.get('/stream/:media', (req, res) => {
 
 router.get("/song-image/:songid", (req, res) => {
     var albumart = library.getAlbumArtImage(req.params.songid);
-    if (albumart) {
+    if (albumart && albumart.cover) {
         if (req.query.quality === 'best') {
             albumart = _.last(albumart);
         }

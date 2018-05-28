@@ -34,7 +34,7 @@ export class PlaylistService extends DataSource<Song> {
         this.current = current;
 
         this.tracks = data.map((track) => {
-            track.state = track.uid === current.uid ? "playing" : "none";
+            track.state = track.uid === current.uid ? 'playing' : 'none';
             return track;
         });
     }
@@ -42,13 +42,13 @@ export class PlaylistService extends DataSource<Song> {
     reorderArray(event, originalArray) {
         const movedItem = originalArray.find((item, index) => index === event.oldIndex);
         const remainingItems = originalArray.filter((item, index) => index !== event.oldIndex);
-      
+
         const reorderedItems = [
             ...remainingItems.slice(0, event.newIndex),
             movedItem,
             ...remainingItems.slice(event.newIndex)
         ];
-      
+
         return reorderedItems;
     }
 
@@ -70,7 +70,7 @@ export class PlaylistService extends DataSource<Song> {
             oldIndex: fromPosition,
             newIndex: toPosition
         }, this.tracks);
-        
+
         // console.log(this.tracks);
 
         let index = 0;

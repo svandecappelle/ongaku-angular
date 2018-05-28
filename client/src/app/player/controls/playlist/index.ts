@@ -4,4 +4,4 @@ export {
     AppendPlaylist,
     SetPlaylist,
     PlaylistReducer
-} from './playlist-state'
+} from './playlist-state';

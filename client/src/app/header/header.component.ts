@@ -19,17 +19,17 @@ import { Store, Action, select } from '@ngrx/store';
 })
 export class HeaderComponent implements OnInit {
   isLoggedIn$: Observable<boolean>;
-  
+
   constructor(private authService: AuthenticationService, private store: Store<IAppState>) { }
 
   ngOnInit() {
-    this.isLoggedIn$ = this.authService.isLoggedIn; // {2}
+    this.isLoggedIn$ = this.authService.isLoggedIn;
   }
 
-  onLogout(){
-    this.authService.logout();                      // {3}
+  onLogout() {
+    this.authService.logout();
   }
-  
+
   search(criterion: String) {
     this.store.dispatch(new SearchLibraryAction(criterion));
   }

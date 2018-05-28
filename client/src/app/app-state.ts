@@ -1,17 +1,17 @@
 import { ModuleWithProviders } from '@angular/core';
 import { StoreModule, Action } from '@ngrx/store';
 
-import { 
-  PlayerStateRecord, 
-  IPlayerState, 
-  playerReducer 
+import {
+  PlayerStateRecord,
+  IPlayerState,
+  playerReducer
 } from './player/';
 
 import {
   searchReducer
 } from './header/search-reducer';
 
-import { 
+import {
   PlaylistReducer
 } from './player/controls/playlist/playlist-state';
 
@@ -19,7 +19,7 @@ import {
 export interface IAppState {
   readonly search: String;
   readonly player: IPlayerState;
-  readonly trackList: Object[];
+  readonly trackList: Song[];
 }
 
 export interface Song {
@@ -34,7 +34,7 @@ export interface Song {
   index: number;
 }
 
-export const AppStateModule : ModuleWithProviders = StoreModule.forRoot({
+export const AppStateModule: ModuleWithProviders = StoreModule.forRoot({
   search: searchReducer,
   player: playerReducer,
   trackList: PlaylistReducer

@@ -15,7 +15,6 @@ import { MatDialog, MAT_DIALOG_DATA, MatTableDataSource } from '@angular/materia
 
 import { Song, IAppState } from '../../../app-state';
 import { PlayerAction, PlayerActions } from '../../player-actions';
-import { PlaylistService } from './playlist.service';
 import { PlaylistDialogComponent } from './playlist-dialog.component';
 
 @Component({
@@ -25,19 +24,30 @@ import { PlaylistDialogComponent } from './playlist-dialog.component';
 })
 export class PlaylistComponent implements OnInit {
 
-  public tracks: Object[];
+  public tracks: Song[];
   public current: Song;
 
-  constructor(public dialog: MatDialog, private store: Store<IAppState>, @Inject(DOCUMENT) private document: Document, private renderer: Renderer2) {
+  /**
+   * Constructor
+   * @param dialog material details dialog
+   * @param store ngrx datastore
+   * @param document html document
+   * @param renderer html renderer
+   */
+  constructor(public dialog: MatDialog,
+    private store: Store<IAppState>,
+    @Inject(DOCUMENT) private document: Document,
+    private renderer: Renderer2) {
 
     this.store.select(state => state.trackList).subscribe((val) => {
+      if (!this.tracks) {
+        this.current = val[0];
+      }
       this.tracks = val;
     });
 
     this.store.select(state => state.player).subscribe((val) => {
-      if (val.track) {
-        this.current = val.track;
-      }
+      this.current = val.track;
     });
 
     this.dialog.afterOpen.subscribe(() => {
@@ -48,11 +58,18 @@ export class PlaylistComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
-  }
+  /**
+   * Init components
+   */
+  ngOnInit() { }
 
+  /**
+   * Show playlist details.
+   */
   show() {
-
+    if (!this.current) {
+      this.current = this.tracks[0];
+    }
     this.dialog.open(PlaylistDialogComponent, {
       width: '80%',
       hasBackdrop: true,
@@ -63,6 +80,5 @@ export class PlaylistComponent implements OnInit {
         store: this.store
       }
     });
-
   }
 }

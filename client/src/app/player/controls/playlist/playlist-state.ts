@@ -1,5 +1,7 @@
 import { Action } from '@ngrx/store';
 
+import { Song } from '../../../app-state';
+
 export enum TrackActionTypes {
     APPEND = '[Tracklist] Append',
     SET = '[Tracklist] Set'
@@ -8,7 +10,7 @@ export enum TrackActionTypes {
 export class SongAction implements Action {
     readonly type;
 
-    constructor(public tracks) { };
+    constructor(public tracks) { }
 }
 
 export class AppendPlaylist extends SongAction {
@@ -24,7 +26,7 @@ export type TrackActionsUnion =
     | SetPlaylist;
 
 
-export function PlaylistReducer(state: Object[], action: SongAction) {
+export function PlaylistReducer(state: Song[], action: SongAction) {
 
     if (!state) {
         state = [];

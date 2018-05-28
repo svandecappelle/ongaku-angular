@@ -26,6 +26,7 @@ export class HomeComponent implements OnInit {
   public artists = [];
   public _page;
   private selectedOptions = [];
+  private loading: Boolean = true;
 
   public tracklist = [];
 
@@ -49,10 +50,17 @@ export class HomeComponent implements OnInit {
   }
 
   loadMore () {
+    this.loading = true;
     this._audioService.getPage(this._page).subscribe(
-      data => { this.artists = this.artists.concat(data); },
-      err => console.error(err),
-      () => console.log('done loading artists')
+      data => {
+        this.loading = false;
+        this.artists = this.artists.concat(data);
+      },
+      err => {
+        this.loading = false;
+        console.error(err);
+      },
+      () => this.loading = false
     );
 
     this._page += 1;
@@ -123,6 +131,7 @@ export class HomeComponent implements OnInit {
   search(criterion) {
     this._page = 0;
     this.artists = [];
+    console.log(criterion);
     this._audioService.filter = criterion;
     this.loadMore();
   }
