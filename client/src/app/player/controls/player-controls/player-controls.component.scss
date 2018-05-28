@@ -4,7 +4,7 @@
 }
 
 .content {
-    margin-top: 10px;
+    margin-top: 5px;
 }
 
 ul {
@@ -14,18 +14,25 @@ ul {
     padding: 0px;
     text-align: center;
     
-    height: 40px;
-    line-height: 40px;
-    vertical-align: middle;
+    height: 60px;
+    line-height: 60px;
+    vertical-align: top;
     display: inline-block;
     
     li {
-        display: inline;
+        display: inline-block;
+        vertical-align: top;
     }
+}
+
+img.track-art {
+    height: 60px;
+    display: inline-block;
 }
 
 span {
     vertical-align: middle;
+    line-height: 60px;
 }
 
 small {
@@ -39,6 +46,7 @@ small {
     top: 0;
 
     transition: linear all 100ms;
+    box-shadow: 0px 0px 1px #FFF;
 
     &:hover{
         height: 10px;

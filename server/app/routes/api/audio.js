@@ -153,7 +153,7 @@ class SuccessCall {
 class Helpers {
 
     incrementPlays(mediauid, userSession) {
-        if (mediauid){
+        if (mediauid) {
             mediauid = mediauid.replace(".mp3", '');
             statistics.set('plays', mediauid, 'increment', () => {
                 logger.info(`set statistics: ${mediauid}`);
@@ -326,7 +326,7 @@ router.get('/stream/:media', (req, res) => {
             middleware.stream(req, res, req.params.media, "audio");
             resolve(req.params.media);
         }).catch((error) => {
-            res.status(404).json({"error": "media not found"});
+            res.status(404).json({ "error": "media not found" });
         });
     };
     helpers.checkingAuthorization(req, res, () => {
@@ -338,6 +338,20 @@ router.get('/stream/:media', (req, res) => {
         });
     });
 });
+
+router.get("/song-image/:songid", (req, res) => {
+    var albumart = library.getAlbumArtImage(req.params.songid);
+    if (albumart) {
+        if (req.query.quality === 'best') {
+            albumart = _.last(albumart);
+        }
+        res.redirect(albumart.cover[0]);
+    } else {
+        res.redirect("/img/album.jpg");
+    }
+});
+
+
 
 
 router.get('/api/user/:username/library/:page', (req, res) => {
@@ -431,13 +445,6 @@ router.get("/api/featured", (req, res) => {
         middleware.json(req, res, { stats: entries });
     });
 });
-
-
-
-
-
-
-
 
 
 module.exports = router;

@@ -19,7 +19,6 @@
     margin: 5px 3px;
     
     h3 {
-        color: rgba(0,0,0,.54);
         font-size: 1.1rem;
         margin: 5px 3px;
     }
@@ -63,16 +62,17 @@ ul {
             display:inline-block;
         }
 
-        h3 {
-            color: rgba(0,0,0,.54);
-        }
-
         h4 {
             display:inline-block;
-            color: rgba(0,0,0,.54);
             margin-top: 10px;
             margin-bottom: 0px;
             vertical-align: top;
+        }
+        
+        .artist-bio {
+            a {
+                color: #CECECE !important;
+            }
         }
     }
 }

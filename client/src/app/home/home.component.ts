@@ -14,6 +14,7 @@ import { Observable } from 'rxjs/Rx';
 
 import { PlayerActions } from '../player/player-actions';
 import { MetadatasComponent } from './metadatas/metadatas.component';
+import { searchReducer } from '../header/search-reducer';
 
 @Component({
   selector: 'app-home',
@@ -40,6 +41,10 @@ export class HomeComponent implements OnInit {
     this.loadMore();
     this.store.select(state => state.trackList).subscribe((val) => {
       this.tracklist = val;
+    });
+
+    this.store.select(state => state.search).subscribe((val) => {
+      this.search(val);
     });
   }
 

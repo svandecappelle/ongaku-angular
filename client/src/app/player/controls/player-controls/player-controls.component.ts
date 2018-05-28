@@ -100,6 +100,8 @@ export class PlayerControlsComponent implements OnInit {
       this.state = 'paused';
       this.player.nativeElement.pause();
     }
+
+    console.log(this.current);
   }
 
   stop() {

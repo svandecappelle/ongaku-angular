@@ -7,12 +7,17 @@ import {
   playerReducer 
 } from './player/';
 
+import {
+  searchReducer
+} from './header/search-reducer';
+
 import { 
   PlaylistReducer
 } from './player/controls/playlist/playlist-state';
 
 
 export interface IAppState {
+  readonly search: String;
   readonly player: IPlayerState;
   readonly trackList: Object[];
 }
@@ -30,6 +35,7 @@ export interface Song {
 }
 
 export const AppStateModule : ModuleWithProviders = StoreModule.forRoot({
+  search: searchReducer,
   player: playerReducer,
   trackList: PlaylistReducer
 });

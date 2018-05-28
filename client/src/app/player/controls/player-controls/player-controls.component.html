@@ -11,11 +11,13 @@
 </mat-progress-bar>
 
 <audio #audio [src]='src'></audio>
-<div class="content">
-
-
-
+<div class="content" *ngIf="current">
   <ul>
+
+    <li>
+      <img class="track-art" src="/api/audio/song-image/{{current.uid}}"/>
+    </li>
+
     <li>
       <button mat-icon-button (click)="previous()">
         <mat-icon aria-label="Previous track">skip_previous</mat-icon>
