@@ -12,10 +12,14 @@ import {
 import { DOCUMENT } from '@angular/common';
 import { Observable } from 'rxjs/Observable';
 import { MatDialog, MAT_DIALOG_DATA, MatTableDataSource } from '@angular/material';
-import { DataSource } from "@angular/cdk/collections";
+import { DataSource } from '@angular/cdk/collections';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Store, select } from '@ngrx/store';
 
+import { PlayerActions } from '../../../player-actions';
 import { Song, IAppState } from '../../../../app-state';
+
+import { PlayerControlsComponent } from '../player-controls.component';
 
 interface Metadata {
   key: string;
@@ -69,19 +73,29 @@ class MetadatasDatabase {
 })
 export class FullscreenComponent implements OnInit {
 
+  private currentTime: number;
+  private duration: number;
+  private percent: number;
+  private state: String;
+
+  private player: PlayerControlsComponent;
+
   private current: Song;
   private visible: Boolean = false;
 
   private dataSource: MetadatasDataSource | null;
-  private metadatasDatabase:MetadatasDatabase;
+  private metadatasDatabase: MetadatasDatabase;
   private columns = [
     { columnDef: 'key', header: 'Key', cell: (row: Metadata) => `${row.key}`},
-    { columnDef: 'value', header: 'Value', cell: (row: Metadata) => `${row.value}`},  
+    { columnDef: 'value', header: 'Value', cell: (row: Metadata) => `${row.value}`},
   ];
-  private displayedColumns:String[] = [];
-  
-  constructor(@Inject(DOCUMENT) private document: Document,
-  private renderer: Renderer2) { }
+  private displayedColumns: String[] = [];
+
+  constructor(private store: Store<IAppState>,
+    private actions: PlayerActions,
+    @Inject(DOCUMENT) private document: Document,
+    private renderer: Renderer2) {
+  }
 
   ngOnInit() {
   }
@@ -90,13 +104,13 @@ export class FullscreenComponent implements OnInit {
     this.current = song;
 
     this.renderer.addClass(this.document.body, 'no-scroll');
-    let metadatas = [];
-    
+    const metadatas = [];
+
     Object.keys(this.current.metadatas).forEach((key) => {
       metadatas.push({
         key: key,
         value: this.current.metadatas[key]
-      });     
+      });
     });
 
     this.displayedColumns = this.columns.map(x => x.columnDef);
@@ -104,12 +118,52 @@ export class FullscreenComponent implements OnInit {
     this.dataSource = new MetadatasDataSource(this.metadatasDatabase);
   }
 
-  open() {
+  setState(state: String) {
+    this.state = state;
+  }
+
+  open(player: PlayerControlsComponent) {
+    this.player = player;
     this.visible = true;
   }
 
   close() {
     this.visible = false;
     this.renderer.removeClass(this.document.body, 'no-scroll');
+  }
+
+  time(time: number, duration: number) {
+    this.currentTime = time;
+    this.duration = duration;
+    this.percent = this.currentTime / this.duration * 100;
+  }
+
+  // TODO find why store doesn't works in this context and
+  // use it instead of direct reference
+
+  play() {
+    this.player.play();
+    // this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
+  }
+
+  pause() {
+    this.player.play();
+    // this.store.select(state => state.player).dispatch(this.actions.audioPaused());
+  }
+
+  next() {
+    this.player.next();
+  }
+
+  previous() {
+    this.player.previous();
+  }
+
+  onStepperClick($event) {
+    console.log($event);
+    const time = this.duration * $event.layerX / $event.target.offsetWidth;
+
+    console.log(time);
+    this.player.goTo(time);
   }
 }

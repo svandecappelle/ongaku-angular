@@ -55,6 +55,8 @@ export class PlayerControlsComponent implements OnInit {
     this.player.nativeElement.addEventListener('timeupdate', (el) => {
       this.currentTime = el.target.currentTime;
       this.value = this.currentTime / this.duration * 100;
+
+      this.fullscreener.time(this.value, this.duration);
     });
 
     this.player.nativeElement.addEventListener('ended', (el) => {
@@ -68,8 +70,8 @@ export class PlayerControlsComponent implements OnInit {
         this.play_index = val.track.index;
 
         this.current = val.track;
-        if (this.fullscreener){
-          this.fullscreener.setCurrent(this.current);  
+        if (this.fullscreener) {
+          this.fullscreener.setCurrent(this.current);
         }
         this.stop();
         this.change(this.current.uid);
@@ -80,9 +82,9 @@ export class PlayerControlsComponent implements OnInit {
       this.tracks = val;
       if (this.play_index === 0) {
         this.current = val[0];
-        
-        if (this.fullscreener){
-          this.fullscreener.setCurrent(this.current);  
+
+        if (this.fullscreener) {
+          this.fullscreener.setCurrent(this.current);
         }
         this.ensurePlay();
       }
@@ -101,9 +103,9 @@ export class PlayerControlsComponent implements OnInit {
         this.state = 'playing';
 
         this.current = this.tracks[this.play_index];
-        
-        if (this.fullscreener){
-          this.fullscreener.setCurrent(this.current);  
+
+        if (this.fullscreener) {
+          this.fullscreener.setCurrent(this.current);
         }
         this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
 
@@ -116,6 +118,8 @@ export class PlayerControlsComponent implements OnInit {
       this.state = 'paused';
       this.player.nativeElement.pause();
     }
+
+    this.fullscreener.setState(this.state);
   }
 
   stop() {
@@ -133,9 +137,8 @@ export class PlayerControlsComponent implements OnInit {
     if (this.play_index > 0) {
       this.play_index -= 1;
       this.current = this.tracks[this.play_index];
-      
-      if (this.fullscreener){
-        this.fullscreener.setCurrent(this.current);  
+      if (this.fullscreener) {
+        this.fullscreener.setCurrent(this.current);
       }
       this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
     }
@@ -147,9 +150,8 @@ export class PlayerControlsComponent implements OnInit {
     if (this.tracks.length > newIndex) {
       this.play_index = newIndex;
       this.current = this.tracks[newIndex];
-      
-      if (this.fullscreener){
-        this.fullscreener.setCurrent(this.current);  
+      if (this.fullscreener) {
+        this.fullscreener.setCurrent(this.current);
       }
       this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
     }
@@ -177,10 +179,15 @@ export class PlayerControlsComponent implements OnInit {
     this.player.nativeElement.currentTime = this.currentTime;
   }
 
+  goTo(time) {
+    this.currentTime = time;
+    this.player.nativeElement.currentTime = this.currentTime;
+  }
+
   fullscreen() {
-    if (this.fullscreener){
-      this.fullscreener.setCurrent(this.current);  
+    if (this.fullscreener) {
+      this.fullscreener.setCurrent(this.current);
     }
-    this.fullscreener.open();
+    this.fullscreener.open(this);
   }
 }

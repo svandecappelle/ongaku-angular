@@ -27,3 +27,7 @@ $my-app-theme: mat-dark-theme($my-app-primary, $my-app-accent, $my-app-warn);
 .mat-form-field-ripple {
   background-color: mat-color($my-app-accent) !important;
 }
+
+a {
+  color: mat-color($my-app-accent);
+}

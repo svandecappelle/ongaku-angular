@@ -71,7 +71,8 @@ export class PlaylistComponent implements OnInit {
       this.current = this.tracks[0];
     }
     this.dialog.open(PlaylistDialogComponent, {
-      width: '80%',
+      width: '90%',
+      height: '80%',
       hasBackdrop: true,
       panelClass: 'custom-overlay-pane-class',
       data: {

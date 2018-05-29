@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 
-import { CollectionViewer, DataSource } from "@angular/cdk/collections";
+import { CollectionViewer, DataSource } from '@angular/cdk/collections';
 
 import { Song, IAppState } from '../../../app-state';
 import { Observable } from 'rxjs/Observable';
@@ -9,8 +9,8 @@ import { forEach } from '@angular/router/src/utils/collection';
 
 import { Store, select } from '@ngrx/store';
 import {
-    SetPlaylist
-} from './playlist-state'
+    SetPlaylist, SongAction
+} from './playlist-state';
 
 @Injectable()
 export class PlaylistService extends DataSource<Song> {
@@ -63,8 +63,8 @@ export class PlaylistService extends DataSource<Song> {
 
         // console.log("moved index: " + fromPosition + " to " + toPosition);
 
-        let from = this.tracks[fromPosition];
-        let to = this.tracks[toPosition];
+        const from = this.tracks[fromPosition];
+        const to = this.tracks[toPosition];
 
         this.tracks = this.reorderArray({
             oldIndex: fromPosition,
@@ -85,12 +85,12 @@ export class PlaylistService extends DataSource<Song> {
     playing(current: Song) {
         this.current = current;
         this.renderedData.forEach(track => {
-            track.state = track.uid === current.uid ? "playing" : "none";
+            track.state = track.uid === current.uid ? 'playing' : 'none';
         });
     }
 
     connect(collectionViewer: CollectionViewer): Observable<Song[]> {
-        //return this.tracksSubject.asObservable();
+        // return this.tracksSubject.asObservable();
         const displayDataChanges = [
             this.tracks,
             this._filterChange
@@ -99,8 +99,23 @@ export class PlaylistService extends DataSource<Song> {
         return Observable.merge(...displayDataChanges).map(() => {
             // Filter data
             this.filteredData = this.tracks.slice().filter((item: Song) => {
-                let searchStr = JSON.stringify(Object.values(item)).toLowerCase();
-                return searchStr.indexOf(this.filter.toLowerCase()) != -1;
+                const simplifiedSong: Song = {
+                    uid: item.uid,
+                    album: item.album,
+                    artist: item.artist,
+                    file: item.file,
+                    index: item.index,
+                    genre: item.genre,
+                    metadatas: item.metadatas,
+                    title: item.title,
+                    type: item.type,
+                    state: item.state,
+                   artistDetails: null
+                };
+
+                const searchStr = JSON.stringify(Object.values(simplifiedSong)).toLowerCase();
+
+                return searchStr.indexOf(this.filter.toLowerCase()) !== -1;
             });
 
             // Grab the page's slice of the filtered sorted data.

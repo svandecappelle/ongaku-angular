@@ -76,30 +76,33 @@ export class HomeComponent implements OnInit {
     switch (action) {
       case 'play':
         let index = this.tracklist.length;
-        this.selectedOptions[artist].forEach(track => {
+        this.selectedOptions[artist.artist].forEach(track => {
           track.index = index;
+          track.artistDetails = artist;
           index += 1;
         });
 
-        this.store.dispatch(new AppendPlaylist(this.selectedOptions[artist]));
-        this.selectedOptions[artist] = [];
+        this.store.dispatch(new AppendPlaylist(this.selectedOptions[artist.artist]));
+        this.selectedOptions[artist.artist] = [];
         break;
       case 'like':
         break;
     }
   }
 
-  appendToPlaylist (track: Song, event: Event) {
+  appendToPlaylist (track: Song, artist, event: Event) {
     event.preventDefault();
     event.stopPropagation();
     track.index = this.tracklist.length;
+    track.artistDetails = artist;
     this.store.dispatch(new AppendPlaylist(track));
   }
 
-  playNow (track: Song, event: Event) {
+  playNow (track: Song, artist, event: Event) {
     event.preventDefault();
     event.stopPropagation();
     track.index = this.tracklist.length;
+    track.artistDetails = artist;
     this.store.dispatch(new AppendPlaylist(track));
     this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(track));
   }
@@ -112,9 +115,10 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  metadata(track: Song, event: Event) {
+  metadata(track: Song, artist, event: Event) {
     event.preventDefault();
     event.stopPropagation();
+    track.artistDetails = artist;
     this.dialog.open(MetadatasComponent, {
       width: '80%',
       hasBackdrop: true,
@@ -131,7 +135,6 @@ export class HomeComponent implements OnInit {
   search(criterion) {
     this._page = 0;
     this.artists = [];
-    console.log(criterion);
     this._audioService.filter = criterion;
     this.loadMore();
   }
