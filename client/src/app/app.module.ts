@@ -43,7 +43,7 @@ import { MetadatasComponent } from './home/metadatas/metadatas.component';
     UpgradeComponent,
     MenuComponent,
     LoginComponent,
-    MetadatasComponent,
+    MetadatasComponent
   ],
   imports: [
     BrowserModule,

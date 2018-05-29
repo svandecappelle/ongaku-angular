@@ -17,6 +17,7 @@ import { PlayerActions } from './player-actions';
 import { PlaylistService } from './controls/playlist/playlist.service';
 
 import { PlaylistComponent, PlaylistDialogComponent } from './controls/playlist/';
+import { FullscreenComponent } from './controls/player-controls/fullscreen/fullscreen.component';
 
 @Pipe({
   name: 'duration'
@@ -35,7 +36,8 @@ class DurationPipe implements PipeTransform {
       PlayerControlsComponent,
       PlaylistComponent,
       PlaylistDialogComponent,
-      DurationPipe
+      DurationPipe,
+      FullscreenComponent
     ],
     entryComponents: [
       PlaylistDialogComponent

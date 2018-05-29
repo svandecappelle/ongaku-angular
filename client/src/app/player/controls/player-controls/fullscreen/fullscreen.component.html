@@ -1,0 +1,21 @@
+<div class="fullscreener" *ngIf="visible && current">
+  <img class="track-art" src="/api/audio/song-image/{{current.uid}}" (click)="close()"/>
+  <div class="track-playing">
+    <div class="track-info">
+      <span class="track-album">{{current.album}}</span> --- <span class="track-artist">{{current.artist}}</span>
+    </div>
+  </div>
+  <div class="track-details">
+    
+      <mat-table #table [dataSource]="dataSource">  
+        <ng-container *ngFor="let column of columns" [cdkColumnDef]="column.columnDef">
+          <mat-header-cell *cdkHeaderCellDef style="display: none">{{ column.header }}</mat-header-cell>
+          <mat-cell *cdkCellDef="let row">{{ column.cell(row) }}</mat-cell>
+        </ng-container>
+  
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+      </mat-table>
+
+  </div>
+</div>

@@ -32,6 +32,7 @@ export interface Song {
   title: String;
   genre: String;
   index: number;
+  metadatas: Object;
 }
 
 export const AppStateModule: ModuleWithProviders = StoreModule.forRoot({

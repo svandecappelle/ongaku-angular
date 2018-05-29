@@ -14,7 +14,7 @@
 <div class="content" *ngIf="isInit">
   <ul>
 
-    <li>
+    <li (click)="fullscreen()">
       <img class="track-art" src="/api/audio/song-image/{{current.uid}}"/>
     </li>
 
@@ -60,4 +60,6 @@
       <small>{{ duration | duration }}</small>
     </li>
   </ul>
+
+  <app-fullscreen #fullscreener></app-fullscreen>
 </div>
