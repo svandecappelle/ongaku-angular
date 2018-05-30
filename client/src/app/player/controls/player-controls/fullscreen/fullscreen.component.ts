@@ -103,7 +103,6 @@ export class FullscreenComponent implements OnInit {
   setCurrent(song: Song) {
     this.current = song;
 
-    this.renderer.addClass(this.document.body, 'no-scroll');
     const metadatas = [];
 
     Object.keys(this.current.metadatas).forEach((key) => {
@@ -125,6 +124,7 @@ export class FullscreenComponent implements OnInit {
   open(player: PlayerControlsComponent) {
     this.player = player;
     this.visible = true;
+    this.renderer.addClass(this.document.body, 'no-scroll');
   }
 
   close() {
