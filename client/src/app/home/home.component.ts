@@ -39,7 +39,6 @@ export class HomeComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.loadMore();
     this.store.select(state => state.trackList).subscribe((val) => {
       this.tracklist = val;
     });
