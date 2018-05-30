@@ -1,4 +1,4 @@
-<mat-toolbar color="primary">
+<mat-toolbar color="primary" [class.initialized]="initialized" [class.hidden]="!initialized">
     <app-player-controls></app-player-controls>
     <app-playlist></app-playlist>
 </mat-toolbar>

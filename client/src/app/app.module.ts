@@ -32,6 +32,7 @@ import { LoginComponent } from './login/login.component';
 import { AlertService, AuthenticationService, UserService } from './services/index';
 import { AuthGuard } from './guards/index';
 import { MetadatasComponent } from './home/metadatas/metadatas.component';
+import { AdminComponent } from './admin/admin.component';
 
 @NgModule({
   declarations: [
@@ -43,7 +44,8 @@ import { MetadatasComponent } from './home/metadatas/metadatas.component';
     UpgradeComponent,
     MenuComponent,
     LoginComponent,
-    MetadatasComponent
+    MetadatasComponent,
+    AdminComponent
   ],
   imports: [
     BrowserModule,

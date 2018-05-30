@@ -27,19 +27,22 @@ export class PlayerComponent implements OnInit, OnDestroy {
     private color = "accent";
 
     private tracklist = Observable;
-  
+    private initialized: Boolean;
+    
     constructor(private _playerService: AudioService, private store: Store<IAppState>) {
-      /*this.store.select(state => state.trackList).subscribe((val) => {
-        console.log("tracklist changed");
-        console.log(val);
-      });*/
+      this.store.select(state => state.trackList).subscribe((val) => {
+        if (val && val.length > 0) {
+          this.initialized = true;
+        } else {
+          this.initialized = false;
+        }
+      });
     }
   
     ngOnInit() {
       this.songSubscription = this._playerService.song.subscribe(data => this.song = data);
       this.currentTimeSubscription = this._playerService.currentTime.subscribe(data => this.currentTime = data);
       this.fullTimeSubscription = this._playerService.fullTime.subscribe(data => this.fullTime = data);
-      console.log("Player subscription initialized");
     }
   
     toggleAudio() {
@@ -50,7 +53,6 @@ export class PlayerComponent implements OnInit, OnDestroy {
       this.songSubscription.unsubscribe();
       this.currentTimeSubscription.unsubscribe();
       this.fullTimeSubscription.unsubscribe();
-      console.log("Player subscription destroyed");
     }
 
 }

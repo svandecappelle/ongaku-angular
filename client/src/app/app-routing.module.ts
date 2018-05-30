@@ -8,12 +8,15 @@ import { AuthGuard } from './guards/index';
 
 import { InstallComponent } from './install/install.component';
 import { UpgradeComponent } from './upgrade/upgrade.component';
+import { AdminComponent } from './admin/admin.component';
 
 const routes: Routes = [
   { path: 'home', component: HomeComponent, canActivate: [AuthGuard]},
   { path: '', redirectTo: '/home', pathMatch: 'full' },
   { path: 'install', component: InstallComponent },
   { path: 'upgrade', component: UpgradeComponent },
+
+  { path: 'admin', component: AdminComponent },
   
   { path: 'login', component: LoginComponent },
 ];

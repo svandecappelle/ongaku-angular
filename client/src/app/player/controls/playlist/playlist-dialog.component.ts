@@ -35,7 +35,6 @@ export class PlaylistDialogComponent implements OnDestroy {
         this.store = this.data.store;
 
         this.dataSource = new PlaylistService(this.store);
-        console.log(this.data);
         this.dataSource.init(this.data.tracklist, this.data.current);
 
         this.store.select(state => state.player).subscribe((val) => {
@@ -47,13 +46,11 @@ export class PlaylistDialogComponent implements OnDestroy {
 
         dragulaService.setOptions('playlist-bag', {
             moves: function (el, container, handle) {
-                console.log(handle);
                 return handle.className.match('.*handle.*');
             }
         });
 
         dragulaService.drop.subscribe((value: any) => {
-            // console.log(`drop: ${value[0]}`);
             this.onDrop(value.slice(1));
         });
     }
