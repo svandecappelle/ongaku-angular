@@ -52,26 +52,37 @@
                       </span>
                     </div>
                   </mat-list-option>
+                  <p>
+                    Tracks selected: {{tracks.selectedOptions.selected.length}}
+                  </p>
               </mat-selection-list>
-
-              <p>
-                Tracks selected: {{tracks.selectedOptions.selected.length}}
-              </p>
             </div>
+            <button mat-icon-button (click)="actionFrom('play', artist)">
+              <mat-icon aria-label="play">playlist_add</mat-icon>
+            </button>
+            <button mat-icon-button (click)="actionFrom('like', artist)">
+              <mat-icon aria-label="like">favorite</mat-icon>
+            </button>
+            <button mat-icon-button (click)="actionFrom('share', artist)">
+              <mat-icon aria-label="share">share</mat-icon>
+            </button>
           </li>
         </ul>
       </mat-card-content>
-        <!--<img mat-card-image src="{{artist.image[0]}}" alt="Photo of a Shiba Inu">-->
+        <div *ngIf="artist.albums && artist.albums.length > 1">
+          <!--<img mat-card-image src="{{artist.image[0]}}" alt="Photo of a Shiba Inu">-->
+          <button mat-icon-button (click)="actionFrom('play', artist)">
+            <mat-icon aria-label="play">playlist_add</mat-icon>
+          </button>
+          <button mat-icon-button (click)="actionFrom('like', artist)">
+            <mat-icon aria-label="like">favorite</mat-icon>
+          </button>
+          <button mat-icon-button (click)="actionFrom('share', artist)">
+            <mat-icon aria-label="share">share</mat-icon>
+          </button>
+        </div>
       <mat-card-actions>
-        <button mat-icon-button (click)="actionFrom('play', artist)">
-          <mat-icon aria-label="play">playlist_add</mat-icon>
-        </button>
-        <button mat-icon-button (click)="actionFrom('like', artist)">
-          <mat-icon aria-label="like">favorite</mat-icon>
-        </button>
-        <button mat-icon-button (click)="actionFrom('share', artist)">
-          <mat-icon aria-label="share">share</mat-icon>
-        </button>
+        
       </mat-card-actions>
     </mat-card>
   </li>
