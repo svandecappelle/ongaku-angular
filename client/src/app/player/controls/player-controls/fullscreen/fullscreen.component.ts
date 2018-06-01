@@ -91,6 +91,8 @@ export class FullscreenComponent implements OnInit {
   ];
   private displayedColumns: String[] = [];
 
+  @ViewChild('animatedArt', { read: ElementRef }) animationElement: ElementRef;
+
   constructor(private store: Store<IAppState>,
     private actions: PlayerActions,
     @Inject(DOCUMENT) private document: Document,
@@ -119,12 +121,31 @@ export class FullscreenComponent implements OnInit {
 
   setState(state: String) {
     this.state = state;
+
+    if (this.state === 'playing') {
+      this.animationElement.nativeElement.style.animationPlayState = 'running';
+      this.animationElement.nativeElement.style.webkitAnimationPlayState = 'running';
+    } else {
+      this.animationElement.nativeElement.style.animationPlayState = 'paused';
+      this.animationElement.nativeElement.style.webkitAnimationPlayState = 'paused';
+    }
   }
 
   open(player: PlayerControlsComponent) {
     this.player = player;
     this.visible = true;
     this.renderer.addClass(this.document.body, 'no-scroll');
+    setTimeout(() => {
+      // The timeout is because the animation playstate has no effect until the image
+      // had been rendered by browser.
+      if (this.state === 'playing') {
+        this.animationElement.nativeElement.style.animationPlayState = 'running';
+        this.animationElement.nativeElement.style.webkitAnimationPlayState = 'running';
+      } else {
+        this.animationElement.nativeElement.style.animationPlayState = 'paused';
+        this.animationElement.nativeElement.style.webkitAnimationPlayState = 'paused';
+      }
+    }, 100);
   }
 
   close() {

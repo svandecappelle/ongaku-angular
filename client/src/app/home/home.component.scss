@@ -30,7 +30,37 @@
     padding: 3px 8px;
 }
 
-ul {
+.discover-container {
+    position: relative;
+    height: 490px;
+    left: 0;
+    right: 0;
+    margin-bottom: 1em;
+
+    ul.discover {
+        position: absolute;
+        left: 0;
+        right: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        height: 490px;
+        white-space: nowrap;
+
+        li {
+            list-style-type: none;
+            margin-bottom: 2rem;
+            display: inline-block;
+            
+        }
+
+        mat-card {
+            max-width: 400px;
+            margin-right: 1em;
+        }
+    }
+}
+
+ul.library {
     position: relative;
     left: 0;
     right: 0;

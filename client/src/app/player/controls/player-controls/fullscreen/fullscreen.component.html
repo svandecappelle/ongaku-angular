@@ -1,7 +1,10 @@
 <div class="fullscreener" *ngIf="visible && current">
+  <img class="track-art-background" src="/api/audio/song-image/{{current.uid}}"/>
+  
   <button class="close-button" mat-icon-button (click)="close()">
     <mat-icon aria-label="close">close</mat-icon>
   </button>
+  <img #animatedArt class="track-art-animated" [class.playing]="state === 'playing'" src="/api/audio/song-image/{{current.uid}}"/>
   <img class="track-art" src="/api/audio/song-image/{{current.uid}}"/>
   <div class="track-playing">
 
@@ -38,14 +41,10 @@
           </button>
         </div>
       </div>
-
-      <br/>
-
-      <p [innerHTML]="current.artistDetails.artist_info.bio.content"></p>
     </div>
   </div>
-  <div class="track-details">
-    
+
+  <div class="track-details">  
       <mat-table #table [dataSource]="dataSource">  
         <ng-container *ngFor="let column of columns" [cdkColumnDef]="column.columnDef">
           <mat-header-cell *cdkHeaderCellDef style="display: none">{{ column.header }}</mat-header-cell>
@@ -55,6 +54,9 @@
         <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
         <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
       </mat-table>
+  </div>
 
+  <div class="track-details">
+      <p [innerHTML]="current.artistDetails.artist_info.bio.content"></p>
   </div>
 </div>
