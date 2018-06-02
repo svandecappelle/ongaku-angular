@@ -1,6 +1,6 @@
-<div class="track-art-background" *ngIf="visible && current" [style.backgroundImage]="'url(/api/audio/song-image/' + current.uid + ')'"></div>
+<div #fullscreenerBackground class="track-art-background" *ngIf="current" [style.backgroundImage]="'url(/api/audio/song-image/' + current.uid + ')'"></div>
 
-<div class="fullscreener" *ngIf="visible && current">
+<div #fullscreener class="fullscreener" *ngIf="current">
   
   <button class="close-button" mat-icon-button (click)="close()">
     <mat-icon aria-label="close">close</mat-icon>

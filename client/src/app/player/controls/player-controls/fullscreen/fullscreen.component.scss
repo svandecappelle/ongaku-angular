@@ -1,22 +1,33 @@
 .track-art-background {
     position: fixed;
     background-size: cover;
-    top: 0;
     left: 0;
     right: 0;
+    top: 100%;
     bottom: 0;
     filter: blur(5px) brightness(50%) grayscale(100%);
+    transition: all linear 500ms;
+    &.open {
+        top: 0;
+        bottom: 0;
+    }
 }
 
 .fullscreener {
     position: fixed;
     overflow: auto;
-    top: 0;
+    top: 100%;
     bottom: 0;
     left: 0;
     right: 0;
     padding-bottom: 1em;
     background-color: rgba(0,0,0,0.25);
+    transition: all linear 500ms;
+
+    &.open {
+        top: 0;
+        bottom: 0;
+    }
 
     .player-action {
         position: relative;

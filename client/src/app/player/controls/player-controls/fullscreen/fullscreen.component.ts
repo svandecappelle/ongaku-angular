@@ -92,6 +92,8 @@ export class FullscreenComponent implements OnInit {
   private displayedColumns: String[] = [];
 
   @ViewChild('animatedArt', { read: ElementRef }) animationElement: ElementRef;
+  @ViewChild('fullscreener', { read: ElementRef }) fullscreener: ElementRef;
+  @ViewChild('fullscreenerBackground', { read: ElementRef }) background: ElementRef;
 
   constructor(private store: Store<IAppState>,
     private actions: PlayerActions,
@@ -121,6 +123,9 @@ export class FullscreenComponent implements OnInit {
 
   setState(state: String) {
     this.state = state;
+    if (!this.animationElement) {
+      return;
+    }
 
     if (this.state === 'playing') {
       this.animationElement.nativeElement.style.animationPlayState = 'running';
@@ -133,9 +138,12 @@ export class FullscreenComponent implements OnInit {
 
   open(player: PlayerControlsComponent) {
     this.player = player;
-    this.visible = true;
     this.renderer.addClass(this.document.body, 'no-scroll');
     setTimeout(() => {
+      this.renderer.addClass(this.fullscreener.nativeElement, 'open');
+      this.renderer.addClass(this.background.nativeElement, 'open');
+      this.visible = true;
+
       // The timeout is because the animation playstate has no effect until the image
       // had been rendered by browser.
       if (this.state === 'playing') {
@@ -151,12 +159,16 @@ export class FullscreenComponent implements OnInit {
   close() {
     this.visible = false;
     this.renderer.removeClass(this.document.body, 'no-scroll');
+    this.renderer.removeClass(this.fullscreener.nativeElement, 'open');
+    this.renderer.removeClass(this.background.nativeElement, 'open');
   }
 
   time(time: number, duration: number) {
-    this.currentTime = time;
-    this.duration = duration;
-    this.percent = this.currentTime / this.duration * 100;
+    if (this.visible) {
+      this.currentTime = time;
+      this.duration = duration;
+      this.percent = this.currentTime / this.duration * 100;
+    }
   }
 
   // TODO find why store doesn't works in this context and
