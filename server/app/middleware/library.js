@@ -693,7 +693,7 @@ class Library {
               return parseInt(element.metadatas.track.no);
             } else {
               if (element.metadatas.track.indexOf('/')) {
-                return parseIn(telement.metadatas.track.split('/')[0]);
+                return parseInt(element.metadatas.track.split('/')[0]);
               }
               return parseInt(element.metadatas.track);
             }

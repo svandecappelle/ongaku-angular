@@ -22,7 +22,7 @@ import { InstallComponent } from './install/install.component';
 import { UpgradeComponent } from './upgrade/upgrade.component';
 import { MenuComponent } from './menu/menu.component';
 
-import { AudioService } from './home/audio.service';
+import { AudioService } from './audio.service';
 import { PlayerModule } from './player/player.module';   // our custom service, see below
 
 import { AppStateModule } from './app-state';
@@ -31,8 +31,9 @@ import { LoginComponent } from './login/login.component';
 
 import { AlertService, AuthenticationService, UserService } from './services/index';
 import { AuthGuard } from './guards/index';
-import { MetadatasComponent } from './home/metadatas/metadatas.component';
+import { MetadatasComponent } from './metadatas/metadatas.component';
 import { AdminComponent } from './admin/admin.component';
+import { SearchComponent } from './search/search.component';
 
 @NgModule({
   declarations: [
@@ -45,7 +46,8 @@ import { AdminComponent } from './admin/admin.component';
     MenuComponent,
     LoginComponent,
     MetadatasComponent,
-    AdminComponent
+    AdminComponent,
+    SearchComponent
   ],
   imports: [
     BrowserModule,

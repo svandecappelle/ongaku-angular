@@ -319,6 +319,88 @@ router.get('/library/:page', (req, res) => {
     middleware.json(req, res, libraryDatas);
 });
 
+router.get('/artists/library/:page', (req, res) => {
+    // load by page of 3 artists.
+    var groupby = ['artist'];
+    var sortby = ['artist'];
+
+    logger.debug("Get all one page of library ".concat(req.params.page));
+    var libraryDatas = null;
+
+    if (req.params.page === "all") {
+        libraryDatas = library.getAudio(groupby, sortby);
+    } else {
+        libraryDatas = library.getAudio(req.params.page, 3, groupby, sortby);
+    }
+    middleware.json(req, res, libraryDatas);
+});
+
+router.get('/albums/library/:page', (req, res) => {
+    // load by page of 3 artists.
+    var groupby = ['album'];
+    var sortby = ['album'];
+
+    logger.debug("Get all one page of library ".concat(req.params.page));
+    var libraryDatas = null;
+
+    if (req.params.page === "all") {
+        libraryDatas = library.getAudio(groupby, sortby);
+    } else {
+        libraryDatas = library.getAudio(req.params.page, 3, groupby, sortby);
+    }
+    middleware.json(req, res, libraryDatas);
+});
+
+
+router.get('/artists/library/filter/:search/:page', (req, res) => {
+    logger.debug("Search filtering audio library");
+
+    var groupby = ['artist'];
+    var sortby = ['artist'];
+
+    var libraryDatas;
+    var opts = {
+        filter: req.params.search,
+        type: 'audio',
+        groupby: groupby,
+        sortby: sortby
+    };
+    if (req.params.page === "all") {
+        libraryDatas = library.search(opts);
+    } else {
+        opts.page = req.params.page;
+        opts.lenght = 3;
+        libraryDatas = library.searchPage(opts);
+    }
+
+    middleware.json(req, res, libraryDatas);
+});
+
+
+router.get('/albums/library/filter/:search/:page', (req, res) => {
+    logger.debug("Search filtering audio library");
+
+    var groupby = ['album'];
+    var sortby = ['album'];
+
+    var libraryDatas;
+    var opts = {
+        filter: req.params.search,
+        type: 'audio',
+        groupby: groupby,
+        sortby: sortby
+    };
+    if (req.params.page === "all") {
+        libraryDatas = library.search(opts);
+    } else {
+        opts.page = req.params.page;
+        opts.lenght = 3;
+        libraryDatas = library.searchPage(opts);
+    }
+
+    middleware.json(req, res, libraryDatas);
+});
+
 router.get('/stream/:media', (req, res) => {
     var stream = function () {
         return new Promise((resolve, reject) => {
