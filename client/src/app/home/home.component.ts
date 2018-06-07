@@ -27,7 +27,7 @@ export class HomeComponent implements OnInit {
 
   public artists = [];
   public albums = [];
-  
+
   public _page = {
     artist: 0,
     album: 0
@@ -36,7 +36,7 @@ export class HomeComponent implements OnInit {
   private loading: Object = {
     artist: true,
     album: true
-  }
+  };
   private images = {
     artists: Object,
     albums: Object
@@ -51,7 +51,6 @@ export class HomeComponent implements OnInit {
     private actions: PlayerActions) {
     this._page.artist = 0;
     this._page.album = 0;
-    
   }
 
   ngOnInit() {
@@ -69,17 +68,17 @@ export class HomeComponent implements OnInit {
         switch (type) {
           case 'artist':
             data.forEach(artist => {
-              this.images.artists[artist.artist_info.name] = this.getImageSrc(artist.artist_info);
+              this.images.artists[artist.name] = this.getImageSrc(artist.info);
             });
             this.artists = this.artists.concat(data);
             break;
           case 'album':
             data.forEach(album => {
-              this.images.artists[album.album_info.title] = this.getImageSrc(album.album_info);
+              this.images.albums[album.name] = this.getImageSrc(album.info);
             });
             this.albums = this.albums.concat(data);
             break;
-        }        
+        }
       },
       err => {
         this.loading[type] = false;
@@ -93,7 +92,7 @@ export class HomeComponent implements OnInit {
 
   getImageSrc(src) {
     const image = src.image ? src.image[3]['#text'] : '';
-    
+
     return this._sanitizer.bypassSecurityTrustUrl(`${image}`);
   }
 
@@ -103,11 +102,9 @@ export class HomeComponent implements OnInit {
 
     this.artists = [];
     this.albums = [];
-    
     this._audioService.filter = criterion;
     this.loadMore('artist');
     this.loadMore('album');
-    
   }
 
 }

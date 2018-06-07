@@ -66,6 +66,7 @@ class Library {
 
     this.loadingCoverAlbums = [];
     this.loadingCoverArtists = [];
+    this.loadingCoversAlbumsFlatten = [];
 
     scan.on('decoded', (song, type) => {
       logger.debug("decoded", song, type);
@@ -295,6 +296,8 @@ class Library {
 
     if (!alreadyScanned) {
       this.loadingCoverAlbums[artist.artist][album.title] = "/img/album.jpg";
+      this.loadingCoversAlbumsFlatten[album.title] = "/img/album.jpg";
+      
 
       lfm.album.getInfo({
         'artist': artist.artist.trim(),
@@ -306,6 +309,7 @@ class Library {
           album.cover = parseLastFm(alb.image);
           album = _.extend(album, alb);
           this.loadingCoverAlbums[artist.artist][album.title] = album;
+          this.loadingCoversAlbumsFlatten[album.title] = album;
           logger.debug("album cover '" + album.title + "': " + album.cover);
         }
       });
@@ -467,6 +471,50 @@ class Library {
     audios = _.first(_.rest(audios, page * lenght), lenght);
     return audios;
   };
+
+  getArtists(page, lenght, asc) {
+    var artists;
+    artists = _.sortBy(_.uniq(_.map(this.flatten, (track) => {
+        return track.artist;
+      })), (name) => {
+      return name;
+    });
+
+    artists = _.map(artists, (name) => {
+      return {
+        name: name,
+        info: this.loadingCoverArtists[name]
+      }
+    });
+
+    if (page) {
+      artists = _.first(_.rest(artists, page * lenght), lenght);
+    }
+    // this.loadingCoverAlbums[val[0].artist]
+    return artists;
+  }
+
+  getLibAlbums(page, lenght, asc) {
+    var albums;
+    albums = _.sortBy(_.uniq(_.map(this.flatten, (track) => {
+        return track.album;
+      })), (name) => {
+      return name;
+    });
+
+    albums = _.map(albums, (name) => {
+      return {
+        name: name,
+        info: this.loadingCoversAlbumsFlatten[name]
+      };
+    });
+
+    if (page) {
+      albums = _.first(_.rest(albums, page * lenght), lenght);
+    }
+    return albums
+  }
+
   /*
     getVideo () {
       return this.data.video;

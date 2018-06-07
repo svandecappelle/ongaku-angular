@@ -4,28 +4,29 @@
     <mat-grid-tile *ngFor="let artist of artists">
       <mat-card class="example-card">
         <mat-card-header>
-          <mat-card-title>{{artist.artist}}</mat-card-title>
+          <mat-card-title>{{artist.name}}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <img [src]="images.artists[artist.artist_info.name]" />
+          <img [src]="images.artists[artist.name]" />
         </mat-card-content>
       </mat-card>
     </mat-grid-tile>
+    <mat-grid-tile *ngIf="loading.artist">
+      <div class="loader-lib">
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+      </div>
+    </mat-grid-tile>
   </mat-grid-list>
   <div class="actions-container">
-    <div class="loader-lib" *ngIf="loading['artists']">
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-    </div>
-
-    <button mat-icon-button color="accent" (click)="loadMore('artist')" *ngIf="!loading['artists']">
+    <button mat-icon-button color="accent" (click)="loadMore('artist')" *ngIf="!loading.artist">
       <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
     </button>
   </div>
@@ -37,28 +38,29 @@
     <mat-grid-tile *ngFor="let album of albums">
       <mat-card class="example-card">
         <mat-card-header>
-          <mat-card-title>{{album.album}}</mat-card-title>
+          <mat-card-title>{{album.name}}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <img [src]="images.albums[album.album_info.title]" />
+          <img [src]="images.albums[album.name]" />
         </mat-card-content>
       </mat-card>
     </mat-grid-tile>
+    <mat-grid-tile *ngIf="loading.album">
+      <div class="loader-lib">
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+      </div>
+    </mat-grid-tile>
   </mat-grid-list>
   <div class="actions-container">
-    <div class="loader-lib" *ngIf="loading['albums']">
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-    </div>
-
-    <button mat-icon-button color="accent" (click)="loadMore('album')" *ngIf="!loading['albums']">
+    <button mat-icon-button color="accent" (click)="loadMore('album')" *ngIf="!loading.album">
       <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
     </button>
   </div>

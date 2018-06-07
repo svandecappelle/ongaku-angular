@@ -335,6 +335,34 @@ router.get('/artists/library/:page', (req, res) => {
     middleware.json(req, res, libraryDatas);
 });
 
+router.get('/artists/:page', (req, res) => {
+    // load by page of 3 artists.
+   
+    logger.debug("Get all one page of artists ".concat(req.params.page));
+    var libraryDatas = null;
+
+    if (req.params.page === "all") {
+        libraryDatas = library.getArtists();
+    } else {
+        libraryDatas = library.getArtists(req.params.page, 3);
+    }
+    middleware.json(req, res, libraryDatas);
+});
+
+router.get('/albums/:page', (req, res) => {
+    // load by page of 3 artists.
+   
+    logger.debug("Get all one page of artists ".concat(req.params.page));
+    var libraryDatas = null;
+
+    if (req.params.page === "all") {
+        libraryDatas = library.getLibAlbums();
+    } else {
+        libraryDatas = library.getLibAlbums(req.params.page, 3);
+    }
+    middleware.json(req, res, libraryDatas);
+});
+
 router.get('/albums/library/:page', (req, res) => {
     // load by page of 3 artists.
     var groupby = ['album'];

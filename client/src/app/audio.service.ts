@@ -30,11 +30,11 @@ export class AudioService {
 
   filter: String;
 
-  constructor(private http:HttpClient) { }
+  constructor(private http: HttpClient) { }
 
 
   get (type, page): Observable<any[]> {
-    switch (type){
+    switch (type) {
       case 'artist':
       return this.getArtists(page);
       case 'album':
@@ -47,30 +47,30 @@ export class AudioService {
   getPage (page): Observable<PageElement[]> {
     if (this.filter && this.filter !== '') {
       return this.http.get(`/api/audio/library/filter/${this.filter}/${page}`).map((page) => page)
-        .catch((error:any) => Observable.throw(error || 'Server error'));
+        .catch((error: any) => Observable.throw(error || 'Server error'));
     } else {
       return this.http.get(`/api/audio/library/${page}`).map((page) => page)
-        .catch((error:any) => Observable.throw(error || 'Server error'));;
+        .catch((error: any) => Observable.throw(error || 'Server error'));
     }
   }
 
   getArtists (page): Observable<PageElement[]> {
     if (this.filter && this.filter !== '') {
-      return this.http.get(`/api/audio/artists/library/filter/${this.filter}/${page}`).map((page) => page)
-        .catch((error:any) => Observable.throw(error || 'Server error'));
+      return this.http.get(`/api/audio/artists/filter/${this.filter}/${page}`).map((page) => page)
+        .catch((error: any) => Observable.throw(error || 'Server error'));
     } else {
-      return this.http.get(`/api/audio/artists/library/${page}`).map((page) => page)
-        .catch((error:any) => Observable.throw(error || 'Server error'));;
+      return this.http.get(`/api/audio/artists/${page}`).map((page) => page)
+        .catch((error: any) => Observable.throw(error || 'Server error'));
     }
   }
 
   getAlbums (page): Observable<PageElement[]> {
     if (this.filter && this.filter !== '') {
-      return this.http.get(`/api/audio/albums/library/filter/${this.filter}/${page}`).map((page) => page)
-        .catch((error:any) => Observable.throw(error || 'Server error'));
+      return this.http.get(`/api/audio/albums/filter/${this.filter}/${page}`).map((page) => page)
+        .catch((error: any) => Observable.throw(error || 'Server error'));
     } else {
-      return this.http.get(`/api/audio/albums/library/${page}`).map((page) => page)
-        .catch((error:any) => Observable.throw(error || 'Server error'));;
+      return this.http.get(`/api/audio/albums/${page}`).map((page) => page)
+        .catch((error: any) => Observable.throw(error || 'Server error'));
     }
   }
 }
