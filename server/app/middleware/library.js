@@ -472,13 +472,19 @@ class Library {
     return audios;
   };
 
-  getArtists(page, lenght, asc) {
+  getArtists(page, lenght, search, sort) {
     var artists;
     artists = _.sortBy(_.uniq(_.map(this.flatten, (track) => {
         return track.artist;
       })), (name) => {
       return name;
     });
+
+    if (search) {
+      artists = _.filter(artists, (name) => {
+        return name.toLowerCase().match(`.*${search.toLowerCase()}.*`);
+      });
+    }
 
     artists = _.map(artists, (name) => {
       return {
@@ -494,13 +500,19 @@ class Library {
     return artists;
   }
 
-  getLibAlbums(page, lenght, asc) {
+  getLibAlbums(page, lenght, search, asc) {
     var albums;
     albums = _.sortBy(_.uniq(_.map(this.flatten, (track) => {
         return track.album;
       })), (name) => {
       return name;
     });
+
+    if (search) {
+      albums = _.filter(albums, (name) => {
+        return name.toLowerCase().match(`.*${search.toLowerCase()}.*`);
+      });
+    }
 
     albums = _.map(albums, (name) => {
       return {

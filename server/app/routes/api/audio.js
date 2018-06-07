@@ -319,21 +319,6 @@ router.get('/library/:page', (req, res) => {
     middleware.json(req, res, libraryDatas);
 });
 
-router.get('/artists/library/:page', (req, res) => {
-    // load by page of 3 artists.
-    var groupby = ['artist'];
-    var sortby = ['artist'];
-
-    logger.debug("Get all one page of library ".concat(req.params.page));
-    var libraryDatas = null;
-
-    if (req.params.page === "all") {
-        libraryDatas = library.getAudio(groupby, sortby);
-    } else {
-        libraryDatas = library.getAudio(req.params.page, 3, groupby, sortby);
-    }
-    middleware.json(req, res, libraryDatas);
-});
 
 router.get('/artists/:page', (req, res) => {
     // load by page of 3 artists.
@@ -344,7 +329,7 @@ router.get('/artists/:page', (req, res) => {
     if (req.params.page === "all") {
         libraryDatas = library.getArtists();
     } else {
-        libraryDatas = library.getArtists(req.params.page, 3);
+        libraryDatas = library.getArtists(req.params.page, 4);
     }
     middleware.json(req, res, libraryDatas);
 });
@@ -358,74 +343,36 @@ router.get('/albums/:page', (req, res) => {
     if (req.params.page === "all") {
         libraryDatas = library.getLibAlbums();
     } else {
-        libraryDatas = library.getLibAlbums(req.params.page, 3);
+        libraryDatas = library.getLibAlbums(req.params.page, 4);
     }
     middleware.json(req, res, libraryDatas);
 });
 
-router.get('/albums/library/:page', (req, res) => {
+router.get('/artists/filter/:search/:page', (req, res) => {
     // load by page of 3 artists.
-    var groupby = ['album'];
-    var sortby = ['album'];
-
-    logger.debug("Get all one page of library ".concat(req.params.page));
+   
+    logger.debug("Get all one page of artists ".concat(req.params.page));
     var libraryDatas = null;
 
     if (req.params.page === "all") {
-        libraryDatas = library.getAudio(groupby, sortby);
+        libraryDatas = library.getArtists(null, null, req.params.search);
     } else {
-        libraryDatas = library.getAudio(req.params.page, 3, groupby, sortby);
+        libraryDatas = library.getArtists(req.params.page, 4, req.params.search);
     }
     middleware.json(req, res, libraryDatas);
 });
 
+router.get('/albums/filter/:search/:page', (req, res) => {
+    // load by page of 3 artists.
+   
+    logger.debug("Get all one page of albums ".concat(req.params.page));
+    var libraryDatas = null;
 
-router.get('/artists/library/filter/:search/:page', (req, res) => {
-    logger.debug("Search filtering audio library");
-
-    var groupby = ['artist'];
-    var sortby = ['artist'];
-
-    var libraryDatas;
-    var opts = {
-        filter: req.params.search,
-        type: 'audio',
-        groupby: groupby,
-        sortby: sortby
-    };
     if (req.params.page === "all") {
-        libraryDatas = library.search(opts);
+        libraryDatas = library.getLibAlbums(null, null, req.params.search);
     } else {
-        opts.page = req.params.page;
-        opts.lenght = 3;
-        libraryDatas = library.searchPage(opts);
+        libraryDatas = library.getLibAlbums(req.params.page, 4, req.params.search);
     }
-
-    middleware.json(req, res, libraryDatas);
-});
-
-
-router.get('/albums/library/filter/:search/:page', (req, res) => {
-    logger.debug("Search filtering audio library");
-
-    var groupby = ['album'];
-    var sortby = ['album'];
-
-    var libraryDatas;
-    var opts = {
-        filter: req.params.search,
-        type: 'audio',
-        groupby: groupby,
-        sortby: sortby
-    };
-    if (req.params.page === "all") {
-        libraryDatas = library.search(opts);
-    } else {
-        opts.page = req.params.page;
-        opts.lenght = 3;
-        libraryDatas = library.searchPage(opts);
-    }
-
     middleware.json(req, res, libraryDatas);
 });
 
