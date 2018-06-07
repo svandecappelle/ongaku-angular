@@ -1,0 +1,40 @@
+:host {
+    color: white;
+}
+
+h1 {
+    color: white;
+}
+
+img.artist {
+    width: 120px;
+    border: 2px solid white;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.content {
+    padding: 1em;
+    background-color: rgba(0, 0, 0, 0.75);
+}
+
+.tab-content{
+    padding: 1em;
+}
+
+.background {
+    position: absolute;
+    background-size: cover;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    filter: blur(5px) brightness(50%) grayscale(100%);
+    transition: all linear 500ms;
+    z-index: -1;
+    width: 100%;
+}
+
+mat-ink-bar {
+    background-color: #009688;    
+}

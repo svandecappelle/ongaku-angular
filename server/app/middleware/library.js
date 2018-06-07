@@ -310,7 +310,7 @@ class Library {
           album = _.extend(album, alb);
           this.loadingCoverAlbums[artist.artist][album.title] = album;
           this.loadingCoversAlbumsFlatten[album.title] = album;
-          logger.debug("album cover '" + album.title + "': " + album.cover);
+          console.log("album cover '" + album.title + "': " + album.cover);
         }
       });
     }
@@ -471,6 +471,19 @@ class Library {
     audios = _.first(_.rest(audios, page * lenght), lenght);
     return audios;
   };
+
+  getArtistDetails(name) {
+    const tracks = _.filter(this.flatten, (element) => {
+      return name.trim().toLowerCase() === element.artist.trim().toLowerCase();
+    });
+    const albums = this.groupby(tracks, ["album"]);
+    const infos = this.loadingCoverArtists[name.trim()];
+    return {
+      name: name,
+      info: infos,
+      albums: albums
+    };
+  }
 
   getArtists(page, lenght, search, sort) {
     var artists;

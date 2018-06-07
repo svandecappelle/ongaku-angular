@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 
 import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
+import { Router }  from '@angular/router';
+
 import { MatDialog } from '@angular/material';
 
 import { Song, IAppState } from '../app-state';
@@ -48,7 +50,8 @@ export class HomeComponent implements OnInit {
     private _sanitizer: DomSanitizer,
     private store: Store<IAppState>,
     public dialog: MatDialog,
-    private actions: PlayerActions) {
+    private actions: PlayerActions,
+    private router: Router) {
     this._page.artist = 0;
     this._page.album = 0;
   }
@@ -105,6 +108,10 @@ export class HomeComponent implements OnInit {
     this._audioService.filter = criterion;
     this.loadMore('artist');
     this.loadMore('album');
+  }
+
+  openArtistDetail(artist) {
+    this.router.navigate(['artist', artist]);
   }
 
 }

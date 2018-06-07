@@ -15,14 +15,12 @@
         height: 300px;
     }
 
-    ul.discover {
+    mat-card {
+        width: 100%;
+        cursor: pointer;
 
-        mat-card {
+        img {
             width: 100%;
-
-            img {
-                width: 100%;
-            }
         }
     }
 }

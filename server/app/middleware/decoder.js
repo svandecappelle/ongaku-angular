@@ -53,15 +53,17 @@ class Decoder {
 
     var artist = metadatas.artist ? metadatas.artist : metadatas.ARTIST ? metadatas.ARTIST : metadatas.artistalbum ? metadatas.artistalbum : "Unknown artist";
     if (Array.isArray(artist) && artist.length === 1) {
-      artist = artist[0];
+      artist = artist[0].trim();
+    } else {
+      artist = artist.trim();
     }
 
     if (metadatas.ALBUM) {
-      metadatas.album = metadatas.ALBUM;
+      metadatas.album = metadatas.ALBUM.trim();
     }
 
     if (metadatas.TITLE) {
-      metadatas.title = metadatas.TITLE;
+      metadatas.title = metadatas.TITLE.trim();
     }
 
     if ((metadatas.disk && metadatas.disk.of > 1) || metadatas.TPA) {

@@ -2,7 +2,7 @@
 <div class="discover-container">
   <mat-grid-list cols="5">
     <mat-grid-tile *ngFor="let artist of artists">
-      <mat-card class="example-card">
+      <mat-card class="example-card" (click)="openArtistDetail(artist.name)">
         <mat-card-header>
           <mat-card-title>{{artist.name}}</mat-card-title>
         </mat-card-header>

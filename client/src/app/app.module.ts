@@ -34,6 +34,7 @@ import { AuthGuard } from './guards/index';
 import { MetadatasComponent } from './metadatas/metadatas.component';
 import { AdminComponent } from './admin/admin.component';
 import { SearchComponent } from './search/search.component';
+import { ArtistComponent, ArtistService } from './artist';
 
 @NgModule({
   declarations: [
@@ -47,7 +48,8 @@ import { SearchComponent } from './search/search.component';
     LoginComponent,
     MetadatasComponent,
     AdminComponent,
-    SearchComponent
+    SearchComponent,
+    ArtistComponent
   ],
   imports: [
     BrowserModule,
@@ -70,7 +72,8 @@ import { SearchComponent } from './search/search.component';
     AlertService,
     AuthenticationService,
     UserService,
-    AudioService
+    AudioService,
+    ArtistService
   ],
   bootstrap: [AppComponent]
 })

@@ -10,9 +10,13 @@ import { InstallComponent } from './install/install.component';
 import { UpgradeComponent } from './upgrade/upgrade.component';
 import { AdminComponent } from './admin/admin.component';
 
+import { ArtistComponent } from './artist/artist.component';
+
 const routes: Routes = [
   { path: 'home', component: HomeComponent, canActivate: [AuthGuard]},
   { path: '', redirectTo: '/home', pathMatch: 'full' },
+  { path: 'artist/:artist', component: ArtistComponent },
+  
   { path: 'install', component: InstallComponent },
   { path: 'upgrade', component: UpgradeComponent },
 
