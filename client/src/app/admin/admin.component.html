@@ -1,21 +1,126 @@
 <div class="content">
-  <h1>Administration panel - WIP</h1>
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    
-    <mat-slide-toggle
-      [color]="accent"
-      [checked]="checked"
-      [disabled]="disabled">
-      Allow regirsteration
-    </mat-slide-toggle>
 
-    <mat-input-container>
-      <input matInput placeholder="Max number of users" type="number">
-      <mat-icon matSuffix>users</mat-icon>
-    </mat-input-container>
+  <mat-grid-list cols="2" rowHeight="3:1">
+    <mat-grid-tile>
+      <mat-card>
+        <mat-card-title>
+          <h2 class="example-h2">Administration configuration</h2>
+        </mat-card-title>
+        <mat-card-content>
+          <section class="example-section">
+            <label class="example-margin">Allow user register</label>
+            <mat-input-container>
+              <input matInput placeholder="User count" type="number" />
+            </mat-input-container>
+          </section>
 
-    <div class="actions">
-      <button mat-raised-button color="primary" type="submit">Save</button>        
-    </div>
-  </form>
+          <section class="example-section">
+            <mat-slide-toggle class="example-margin" [color]="warn" [checked]="checked">
+              Allow register
+            </mat-slide-toggle>
+          </section>
+
+          <section class="example-section">
+            <mat-slide-toggle class="example-margin" [color]="warn" [checked]="checked">
+              Require authentication to stream
+            </mat-slide-toggle>
+          </section>
+
+          <section class="example-section">
+            <mat-slide-toggle class="example-margin" [color]="warn" [checked]="checked">
+              Allow user upload
+            </mat-slide-toggle>
+          </section>
+
+          <section class="example-section">
+            <mat-slide-toggle class="example-margin" [color]="warn" [checked]="checked">
+              Allow user download
+            </mat-slide-toggle>
+          </section>
+
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+    <mat-grid-tile>
+      <mat-card>
+        <mat-card-title>
+          <h2 class="example-h2">Statistics</h2>
+        </mat-card-title>
+        <mat-card-content>
+          <ul>
+            <li>
+                Users count: 0
+            </li>
+            <li>
+                Library album count: 0
+            </li>
+            <li>
+                Library tracks count: 0
+            </li>
+            <li>
+                Library storage space: 0
+            </li>
+          </ul>
+          
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+
+    <mat-grid-tile [rowspan]=2>
+      <mat-card>
+        <mat-card-title>
+          <h2 class="example-h2">Users access</h2>
+        </mat-card-title>
+        <mat-card-content>
+          <span>Graph of user activity</span>
+          <canvas baseChart width="100%" height="50"
+                [datasets]="lineChartData"
+                [labels]="lineChartLabels"
+                [options]="lineChartOptions"
+                [colors]="lineChartColors"
+                [legend]="lineChartLegend"
+                [chartType]="lineChartType"></canvas>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+
+    <mat-grid-tile [rowspan]=2>
+      <mat-card>
+        <mat-card-title>
+          <h2 class="example-h2">Plays statistics</h2>
+        </mat-card-title>
+        <mat-card-content>
+          <span>Graph of plays activity</span>
+          <canvas baseChart width="100%" height="50"
+                [datasets]="lineChartData"
+                [labels]="lineChartLabels"
+                [options]="lineChartOptions"
+                [colors]="lineChartColors"
+                [legend]="lineChartLegend"
+                [chartType]="lineChartType"></canvas>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+
+    <mat-grid-tile [colspan]=2 [rowspan]=2>
+      <mat-card>
+        <mat-card-title>
+          <h2 class="example-h2">Other statistics</h2>
+        </mat-card-title>
+        <mat-card-content>
+          <span>Graph of other</span>
+          
+          <div style="display: block">          
+            <canvas baseChart
+                [datasets]="lineChartData"
+                [labels]="lineChartLabels"
+                [options]="lineChartOptions"
+                [colors]="lineChartColors"
+                [legend]="lineChartLegend"
+                [chartType]="lineChartType"></canvas>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+  </mat-grid-list>
 </div>

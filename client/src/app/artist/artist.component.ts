@@ -129,8 +129,8 @@ export class ArtistComponent implements OnInit {
   }
 
   scrollLink(target) {
-    if (target){
-      return target.replace(new RegExp(' ', 'g'), '_');      
+    if (target) {
+      return target.replace(new RegExp(' ', 'g'), '_');
     }
 
     this._albumsIdCounter += 1;

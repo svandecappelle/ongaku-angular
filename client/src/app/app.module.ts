@@ -13,6 +13,7 @@ import { HttpClientModule } from '@angular/common/http';  // replaces previous H
 import { DragulaModule } from 'ng2-dragula';
 import { MomentModule } from 'ngx-moment';
 import { Ng2PageScrollModule } from 'ng2-page-scroll';
+import { ChartsModule } from 'ng2-charts/ng2-charts';
 
 import { AppComponent } from './app.component';
 import { HeaderComponent } from './header/header.component';
@@ -58,6 +59,7 @@ import { ArtistComponent, ArtistService } from './artist';
     DragulaModule,
     MomentModule,
     Ng2PageScrollModule,
+    ChartsModule,
     FormsModule,
     ReactiveFormsModule,
     MaterialModule,
