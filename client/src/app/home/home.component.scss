@@ -29,11 +29,13 @@
     max-width: 300px;
 }
 
-h1 {
+:host {
     color: white;
 }
 
-
+.content {
+  padding: 1em;
+}
 
 // Loader animations
 

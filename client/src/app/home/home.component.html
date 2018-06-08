@@ -1,70 +1,76 @@
-<h1 class="mat-h1">Artists</h1>
-<div class="discover-container">
-  <mat-grid-list cols="5">
-    <mat-grid-tile *ngFor="let artist of artists">
-      <mat-card class="example-card" (click)="openArtistDetail(artist.name)">
-        <mat-card-header>
-          <mat-card-title>{{artist.name}}</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <img [src]="images.artists[artist.name]" />
-        </mat-card-content>
-      </mat-card>
-    </mat-grid-tile>
-    <mat-grid-tile *ngIf="loading.artist">
-      <div class="loader-lib">
-        <span class="loader-block"></span>
-        <span class="loader-block"></span>
-        <span class="loader-block"></span>
-        <span class="loader-block"></span>
-        <span class="loader-block"></span>
-        <span class="loader-block"></span>
-        <span class="loader-block"></span>
-        <span class="loader-block"></span>
-        <span class="loader-block"></span>
-      </div>
-    </mat-grid-tile>
-  </mat-grid-list>
-  <div class="actions-container">
-    <button mat-icon-button color="accent" (click)="loadMore('artist')" *ngIf="!loading.artist">
-      <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
-    </button>
-  </div>
-</div>
+<div class="content">
+  <h1 class="mat-h1">Artists</h1>
+  <div class="discover-container">
 
-<h1 class="mat-h1">Albums</h1>
-<div class="discover-container">
-  <mat-grid-list cols="5">
-    <mat-grid-tile *ngFor="let album of albums">
-      <mat-card class="example-card">
-        <mat-card-header>
-          <mat-card-title>{{album.name}}</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <img [src]="images.albums[album.name]" />
-        </mat-card-content>
-      </mat-card>
-    </mat-grid-tile>
-    <mat-grid-tile *ngIf="loading.album">
-      <div class="loader-lib">
-        <span class="loader-block"></span>
-        <span class="loader-block"></span>
-        <span class="loader-block"></span>
-        <span class="loader-block"></span>
-        <span class="loader-block"></span>
-        <span class="loader-block"></span>
-        <span class="loader-block"></span>
-        <span class="loader-block"></span>
-        <span class="loader-block"></span>
-      </div>
-    </mat-grid-tile>
-  </mat-grid-list>
-  <div class="actions-container">
-    <button mat-icon-button color="accent" (click)="loadMore('album')" *ngIf="!loading.album">
-      <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
-    </button>
+    <span *ngIf="!artists || artists.length === 0">No results</span>
+    <mat-grid-list cols="5" *ngIf="artists && artists.length > 0">
+      <mat-grid-tile *ngFor="let artist of artists">
+        <mat-card class="example-card" (click)="openArtistDetail(artist.name)">
+          <mat-card-header>
+            <mat-card-title>{{artist.name}}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <img [src]="images.artists[artist.name]" />
+          </mat-card-content>
+        </mat-card>
+      </mat-grid-tile>
+      <mat-grid-tile *ngIf="loading.artist">
+        <div class="loader-lib">
+          <span class="loader-block"></span>
+          <span class="loader-block"></span>
+          <span class="loader-block"></span>
+          <span class="loader-block"></span>
+          <span class="loader-block"></span>
+          <span class="loader-block"></span>
+          <span class="loader-block"></span>
+          <span class="loader-block"></span>
+          <span class="loader-block"></span>
+        </div>
+      </mat-grid-tile>
+    </mat-grid-list>
+    <div class="actions-container" *ngIf="artists && artists.length > 0">
+      <button mat-icon-button color="accent" (click)="loadMore('artist')" *ngIf="!loading.artist">
+        <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
+      </button>
+    </div>
   </div>
-</div>
 
-<h1 class="mat-h1">Library</h1>
-<app-search></app-search>
+  <h1 class="mat-h1">Albums</h1>
+  <div class="discover-container">
+
+    <span *ngIf="!albums || albums.length === 0">No results</span>
+    <mat-grid-list cols="5" *ngIf="albums && albums.length > 0">
+      <mat-grid-tile *ngFor="let album of albums">
+        <mat-card class="example-card">
+          <mat-card-header>
+            <mat-card-title>{{album.name}}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <img [src]="images.albums[album.name]" />
+          </mat-card-content>
+        </mat-card>
+      </mat-grid-tile>
+      <mat-grid-tile *ngIf="loading.album">
+        <div class="loader-lib">
+          <span class="loader-block"></span>
+          <span class="loader-block"></span>
+          <span class="loader-block"></span>
+          <span class="loader-block"></span>
+          <span class="loader-block"></span>
+          <span class="loader-block"></span>
+          <span class="loader-block"></span>
+          <span class="loader-block"></span>
+          <span class="loader-block"></span>
+        </div>
+      </mat-grid-tile>
+    </mat-grid-list>
+    <div class="actions-container" *ngIf="albums && albums.length > 0">
+      <button mat-icon-button color="accent" (click)="loadMore('album')" *ngIf="!loading.album">
+        <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <h1 class="mat-h1">Library</h1>
+  <app-search></app-search>
+</div>
