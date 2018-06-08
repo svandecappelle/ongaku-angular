@@ -497,7 +497,10 @@ class Library {
 
     if (search) {
       artists = _.filter(artists, (name) => {
-        return name.toLowerCase().match(`.*${search.toLowerCase()}.*`);
+        if (name){
+          return name.trim().toLowerCase().match(`.*${search.toLowerCase()}.*`);          
+        }
+        return false;
       });
     }
 
