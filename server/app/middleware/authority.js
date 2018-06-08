@@ -63,7 +63,7 @@ class Authority {
           req.session.cookie.maxAge = duration;
           logger.warn("Saving session for: " + duration + "ms");
         } else {
-          duration = 1000 * 60 * 60;
+          duration = 1000 * 60 * 60 * 8;
           req.session.cookie.maxAge = duration;
         }
         logger.info("Connecting: " , userData);
