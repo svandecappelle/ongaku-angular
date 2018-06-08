@@ -76,14 +76,14 @@ export class ArtistComponent implements OnInit {
     switch (action) {
       case 'play':
         let index = this.tracklist.length;
-        this.selectedOptions[artist.artist].forEach(track => {
+        this.selectedOptions[artist].forEach(track => {
           track.index = index;
-          track.artistDetails = artist;
+          track.artistDetails = this.details;
           index += 1;
         });
 
-        this.store.dispatch(new AppendPlaylist(this.selectedOptions[artist.artist]));
-        this.selectedOptions[artist.artist] = [];
+        this.store.dispatch(new AppendPlaylist(this.selectedOptions[artist]));
+        this.selectedOptions[artist] = [];
         break;
       case 'like':
         break;
@@ -94,7 +94,7 @@ export class ArtistComponent implements OnInit {
     event.preventDefault();
     event.stopPropagation();
     track.index = this.tracklist.length;
-    track.artistDetails = artist;
+    track.artistDetails = this.details;
     this.store.dispatch(new AppendPlaylist(track));
   }
 
@@ -102,7 +102,7 @@ export class ArtistComponent implements OnInit {
     event.preventDefault();
     event.stopPropagation();
     track.index = this.tracklist.length;
-    track.artistDetails = artist;
+    track.artistDetails = this.details;
     this.store.dispatch(new AppendPlaylist(track));
     this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(track));
   }
@@ -118,7 +118,7 @@ export class ArtistComponent implements OnInit {
   metadata(track: Song, artist, event: Event) {
     event.preventDefault();
     event.stopPropagation();
-    track.artistDetails = artist;
+    track.artistDetails = this.details;
     this.dialog.open(MetadatasComponent, {
       width: '80%',
       hasBackdrop: true,
