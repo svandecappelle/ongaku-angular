@@ -19,8 +19,7 @@ import { ArtistService } from './artist.service';
 @Component({
   selector: 'app-artist',
   templateUrl: './artist.component.html',
-  styleUrls: ['./artist.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  styleUrls: ['./artist.component.scss']
 })
 export class ArtistComponent implements OnInit {
 
