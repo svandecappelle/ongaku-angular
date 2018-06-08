@@ -13,15 +13,14 @@ import { AdminComponent } from './admin/admin.component';
 import { ArtistComponent } from './artist/artist.component';
 
 const routes: Routes = [
-  { path: 'home', component: HomeComponent, canActivate: [AuthGuard]},
-  { path: '', redirectTo: '/home', pathMatch: 'full' },
-  { path: 'artist/:artist', component: ArtistComponent },
-  
+  { path: 'artist/:artist', component: ArtistComponent, canActivate: [AuthGuard]},
+  { path: '', component: HomeComponent, canActivate: [AuthGuard] },
+
   { path: 'install', component: InstallComponent },
   { path: 'upgrade', component: UpgradeComponent },
 
   { path: 'admin', component: AdminComponent },
-  
+
   { path: 'login', component: LoginComponent },
 ];
 

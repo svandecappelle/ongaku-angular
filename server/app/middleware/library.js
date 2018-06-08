@@ -310,7 +310,6 @@ class Library {
           album = _.extend(album, alb);
           this.loadingCoverAlbums[artist.artist][album.title] = album;
           this.loadingCoversAlbumsFlatten[album.title] = album;
-          console.log("album cover '" + album.title + "': " + album.cover);
         }
       });
     }

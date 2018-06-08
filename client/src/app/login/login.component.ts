@@ -19,14 +19,14 @@ export class LoginComponent implements OnInit {
       private fb: FormBuilder,         // {3}
       private authService: AuthenticationService // {4}
     ) {}
-  
+
     ngOnInit() {
       this.form = this.fb.group({     // {5}
         userName: ['', Validators.required],
         password: ['', Validators.required]
       });
     }
-  
+
     isFieldInvalid(field: string) { // {6}
       this.loginInProgress = false;
       return (
@@ -34,8 +34,8 @@ export class LoginComponent implements OnInit {
         (this.form.get(field).untouched && this.formSubmitAttempt)
       );
     }
-  
-    onSubmit() {      
+
+    onSubmit() {
       this.loginInProgress = true;
       this.ref.markForCheck();
       if (this.form.valid) {
@@ -45,4 +45,4 @@ export class LoginComponent implements OnInit {
       this.formSubmitAttempt = true;             // {8}
     }
   }
-  
+

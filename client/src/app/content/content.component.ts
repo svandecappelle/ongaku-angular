@@ -14,7 +14,7 @@ export class ContentComponent implements OnInit {
   constructor(private authService: AuthenticationService) { }
 
   ngOnInit() {
-    this.isLoggedIn$ = this.authService.isLoggedIn; // {2}
+    this.isLoggedIn$ = this.authService.isLoggedIn(); // {2}
   }
 
 }

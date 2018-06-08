@@ -61,10 +61,10 @@ export class SearchComponent implements OnInit {
         data.forEach(artist => {
           this.images.artists[artist.artist_info.name] = this.getImageSrc(artist.artist_info);
           artist.albums.forEach(album => {
-            this.images.albums[album.title] = this.getImageSrc(album.album_info);  
+            this.images.albums[album.title] = this.getImageSrc(album.album_info);
           });
         });
-        
+
         this.artists = this.artists.concat(data);
       },
       err => {
@@ -79,7 +79,7 @@ export class SearchComponent implements OnInit {
 
   getImageSrc(src) {
     const image = src.image ? src.image[3]['#text'] : '';
-    
+
     return this._sanitizer.bypassSecurityTrustUrl(`${image}`);
   }
 

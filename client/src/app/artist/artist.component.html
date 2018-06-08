@@ -7,14 +7,19 @@
   </h1>
 
   <div *ngIf="details">
-    <mat-tab-group>
+    <mat-tab-group color="accent">
       <mat-tab label="Discography">
         <div class="tab-content">
+          <h3>Most played tracks</h3>
+
+          <hr/>
+
+          <h3>Albums</h3>
           <mat-grid-list cols="5" >
             <mat-grid-tile *ngFor="let album of details.albums">
               <mat-card class="example-card" *ngIf="album">
                 <mat-card-header>
-                  <mat-card-title>{{album.album}}</mat-card-title>
+                  <mat-card-title><a pageScroll href="#{{scrollLink(album.album)}}">{{album.album}}</a></mat-card-title>
                 </mat-card-header>
                 <mat-card-content>
                   <img [src]="covers[album.album]" />
@@ -22,6 +27,64 @@
               </mat-card>
             </mat-grid-tile>
           </mat-grid-list>
+
+
+          <hr/>
+          <h3>Tracks</h3>
+          <ul>
+            <li *ngFor="let album of details.albums">
+              <div>
+                <div>
+                  <mat-icon mat-list-icon class="cover-icon" *ngIf="album.album_info.cover === '/img/album.jpg'">album</mat-icon>
+                  <div mat-card-avatar class="cover-image" *ngIf="album.album_info.cover !== '/img/album.jpg'" [style.background-image]="getArtistBackground(album.album_info)"></div>
+                  <h4 id="{{scrollLink(album.album_info.title)}}">{{album.album_info.title}}</h4>
+                </div>
+                <mat-divider mat-line></mat-divider>
+                
+                <div class="album-actions">
+                  <button mat-icon-button (click)="selectAll(details.name, album)">
+                    <mat-icon aria-label="select all">done_all</mat-icon>
+                  </button>
+                </div>
+                <mat-selection-list #tracks [(ngModel)]="selectedOptions[details.name]">
+                    <mat-list-option *ngFor="let track of album.tracks" [value]="track">
+                      <div class="track">
+                        <span>
+                          <button mat-icon-button (click)="playNow(track, artist, $event)">
+                            <mat-icon aria-label="play now">play_arrow</mat-icon>
+                          </button>
+                        </span>
+                        <span>
+                          <button mat-icon-button (click)="appendToPlaylist(track, artist, $event)">
+                            <mat-icon aria-label="Append to playlist">playlist_add</mat-icon>
+                          </button>
+                        </span>
+                        <span class="track-number">{{track.metadatas.track}}</span>
+                        <span class="track-title">{{track.title}}</span>
+                        <span class="track-duration">{{track.duration}}</span>
+                        <span class="track-metadata">
+                          <button mat-icon-button (click)="metadata(track, artist, $event)">
+                            <mat-icon aria-label="details">description</mat-icon>
+                          </button>
+                        </span>
+                      </div>
+                    </mat-list-option>
+                    <p>
+                      Tracks selected: {{tracks.selectedOptions.selected.length}}
+                    </p>
+                </mat-selection-list>
+              </div>
+              <button mat-icon-button (click)="actionFrom('play', artist)">
+                <mat-icon aria-label="play">playlist_add</mat-icon>
+              </button>
+              <button mat-icon-button (click)="actionFrom('like', artist)">
+                <mat-icon aria-label="like">favorite</mat-icon>
+              </button>
+              <button mat-icon-button (click)="actionFrom('share', artist)">
+                <mat-icon aria-label="share">share</mat-icon>
+              </button>
+            </li>
+          </ul>
         </div>
       </mat-tab>
       <mat-tab label="Biography">

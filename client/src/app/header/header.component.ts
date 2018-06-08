@@ -23,7 +23,7 @@ export class HeaderComponent implements OnInit {
   constructor(private authService: AuthenticationService, private store: Store<IAppState>) { }
 
   ngOnInit() {
-    this.isLoggedIn$ = this.authService.isLoggedIn;
+    this.isLoggedIn$ = this.authService.isLoggedIn();
   }
 
   onLogout() {

@@ -15,7 +15,7 @@ img.artist {
 
 .content {
     padding: 1em;
-    background-color: rgba(0, 0, 0, 0.75);
+    background-color: rgba(0, 0, 0, 0.55);
 }
 
 .tab-content{
@@ -23,7 +23,7 @@ img.artist {
 }
 
 .background {
-    position: absolute;
+    position: fixed;
     background-size: cover;
     left: 0;
     right: 0;
@@ -35,6 +35,83 @@ img.artist {
     width: 100%;
 }
 
-mat-ink-bar {
-    background-color: #009688;    
+mat-tab-body.mat-tab-body-active {
+    z-index: 0;
+}
+
+ul {
+    position: relative;
+    left: 0;
+    right: 0;
+
+    li {
+        list-style-type: none;
+        margin-bottom: 2rem;
+
+        .mat-card-image {
+            display: inline-block;
+            max-width: 100px;
+        }
+        mat-card-title {
+            margin: 10px 5px;
+        }
+        mat-card-header {
+            margin-bottom: 0.5rem;
+        }
+        .header-image{
+            background-size: cover;
+        }
+        .cover-image{
+            margin-right: 5px;
+            background-size: cover;
+            display:inline-block;
+        }
+        
+        .cover-icon{
+            font-size: 40px;
+            margin-right: 15px;
+            display:inline-block;
+        }
+
+        h4 {
+            display:inline-block;
+            margin-top: 10px;
+            margin-bottom: 0px;
+            vertical-align: top;
+        }
+        
+        .artist-bio {
+            a {
+                color: #CECECE !important;
+            }
+        }
+    }
+}
+
+.album-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.track {
+    span {
+        vertical-align: middle;
+        line-height: 40px;
+    }
+    display: flex;
+    justify-content: space-between;
+    
+    .track-number {
+        width: 25px;
+        text-align: right;
+        margin-right: 25px;
+    }
+
+    .track-title {
+        flex: 1;
+    }
+
+    .track-duration {
+        width: 100px;
+    }
 }

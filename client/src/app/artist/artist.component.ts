@@ -1,7 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
 import { Router, ActivatedRoute, Params } from '@angular/router';
+import { MatDialog } from '@angular/material';
 
+import { Song, IAppState } from '../app-state';
+import {
+  AppendPlaylist
+} from '../player/state';
+
+import { Store, Action, select } from '@ngrx/store';
+import { Observable } from 'rxjs/Rx';
+
+import { PlayerActions } from '../player/player-actions';
+import { MetadatasComponent } from '../metadatas/metadatas.component';
 
 import { ArtistService } from './artist.service';
 
@@ -16,18 +27,24 @@ export class ArtistComponent implements OnInit {
   private details: Object;
   private image;
 
+  public tracklist = [];
+
+  private selectedOptions = [];
   private covers: Object = {};
 
   constructor(
-    private activatedRoute: ActivatedRoute, 
+    private activatedRoute: ActivatedRoute,
     private service: ArtistService,
-    private _sanitizer: DomSanitizer) { }
+    private _sanitizer: DomSanitizer,
+    private store: Store<IAppState>,
+    public dialog: MatDialog,
+    private actions: PlayerActions) { }
 
   ngOnInit() {
     // subscribe to router event
     this.activatedRoute.params.subscribe((params: Params) => {
       this.artist = params['artist'];
-      
+
       this.service.get(this.artist).subscribe((details) => {
         this.details = details;
         if (details) {
@@ -50,5 +67,65 @@ export class ArtistComponent implements OnInit {
     const image = src.image ? src.image[3]['#text'] : '';
 
     return this._sanitizer.bypassSecurityTrustUrl(`${image}`);
+  }
+
+
+  actionFrom (action, artist) {
+    switch (action) {
+      case 'play':
+        let index = this.tracklist.length;
+        this.selectedOptions[artist.artist].forEach(track => {
+          track.index = index;
+          track.artistDetails = artist;
+          index += 1;
+        });
+
+        this.store.dispatch(new AppendPlaylist(this.selectedOptions[artist.artist]));
+        this.selectedOptions[artist.artist] = [];
+        break;
+      case 'like':
+        break;
+    }
+  }
+
+  appendToPlaylist (track: Song, artist, event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    track.index = this.tracklist.length;
+    track.artistDetails = artist;
+    this.store.dispatch(new AppendPlaylist(track));
+  }
+
+  playNow (track: Song, artist, event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    track.index = this.tracklist.length;
+    track.artistDetails = artist;
+    this.store.dispatch(new AppendPlaylist(track));
+    this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(track));
+  }
+
+  selectAll(artist, album) {
+    if (!this.selectedOptions[artist] || album.tracks.length > this.selectedOptions[artist].length) {
+      this.selectedOptions[artist] = album.tracks;
+    } else {
+      this.selectedOptions[artist] = [];
+    }
+  }
+
+  metadata(track: Song, artist, event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    track.artistDetails = artist;
+    this.dialog.open(MetadatasComponent, {
+      width: '80%',
+      hasBackdrop: true,
+      panelClass: 'custom-overlay-pane-class',
+      data: track
+    });
+  }
+
+  scrollLink(target) {
+    return target.replace(new RegExp(' ', 'g'), '_');
   }
 }

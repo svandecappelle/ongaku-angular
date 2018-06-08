@@ -7,20 +7,14 @@ import { AuthenticationService } from './../services/authentication.service';
 @Injectable()
 export class AuthGuard implements CanActivate {
 
-    constructor(private router: Router, private authService: AuthenticationService) { 
-        this.authService.isLoggedIn.subscribe((connected) => {
-            console.log(connected);
+    constructor(private router: Router, private authService: AuthenticationService) {}
+
+    canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean>|boolean {
+        this.authService.isLoggedIn().subscribe((connected) => {
             if (!connected) {
-                localStorage.removeItem('currentUser');
-                this.router.navigate(['/login']);
-            } else {
-                this.router.navigate(['/']);
+                this.router.navigate(['login']);
             }
-        })
-
-    }
-
-    canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot):Observable<boolean>|boolean {
-        return this.authService.isLoggedIn;
+        });
+        return this.authService.isLoggedIn();
     }
 }
