@@ -473,7 +473,7 @@ class Library {
 
   getArtistDetails(name) {
     const tracks = _.filter(this.flatten, (element) => {
-      if (element){
+      if (element && element.artist && name) {
         return name.trim().toLowerCase() === element.artist.trim().toLowerCase();
       }
       return false;
