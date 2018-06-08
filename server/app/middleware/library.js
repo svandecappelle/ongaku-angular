@@ -473,7 +473,10 @@ class Library {
 
   getArtistDetails(name) {
     const tracks = _.filter(this.flatten, (element) => {
-      return name.trim().toLowerCase() === element.artist.trim().toLowerCase();
+      if (element){
+        return name.trim().toLowerCase() === element.artist.trim().toLowerCase();
+      }
+      return false;
     });
     const albums = this.groupby(tracks, ["album"]);
     const infos = this.loadingCoverArtists[name.trim()];
