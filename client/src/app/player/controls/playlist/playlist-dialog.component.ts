@@ -14,6 +14,7 @@ import { DragulaService } from 'ng2-dragula';
 import { Song, IAppState } from '../../../app-state';
 import { PlayerActions } from '../../player-actions';
 import { PlaylistService } from './playlist.service';
+import { Subscription } from 'rxjs/Subscription';
 
 @Component({
     selector: 'playlist-dialog',
@@ -27,6 +28,8 @@ export class PlaylistDialogComponent implements OnDestroy {
     private subscription;
     private dataSource: PlaylistService;
 
+    private _storeSubscription: Subscription;
+
     @ViewChild('filter') filter: ElementRef;
 
     private displayedColumns = ['action', 'index', 'title', 'artist', 'album', 'duration'];
@@ -37,7 +40,7 @@ export class PlaylistDialogComponent implements OnDestroy {
         this.dataSource = new PlaylistService(this.store);
         this.dataSource.init(this.data.tracklist, this.data.current);
 
-        this.store.select(state => state.player).subscribe((val) => {
+        this._storeSubscription = this.store.select(state => state.player).subscribe((val) => {
             this.current = val.track;
             this.dataSource.playing(this.current);
         });
@@ -102,5 +105,6 @@ export class PlaylistDialogComponent implements OnDestroy {
 
     ngOnDestroy() {
         this.dragulaService.destroy("playlist-bag");
+        this._storeSubscription.unsubscribe();
     }
 }

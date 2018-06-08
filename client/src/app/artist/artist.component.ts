@@ -48,6 +48,7 @@ export class ArtistComponent implements OnInit {
       this.artist = params['artist'];
 
       this.service.get(this.artist).subscribe((details) => {
+        details.artist_info = details.info;
         this.details = details;
         if (details) {
           this.image = this.getImageSrc(details.info);
