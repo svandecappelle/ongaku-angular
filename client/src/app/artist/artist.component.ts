@@ -32,6 +32,8 @@ export class ArtistComponent implements OnInit {
   private selectedOptions = [];
   private covers: Object = {};
 
+  private _albumsIdCounter: number = 0;
+
   constructor(
     private activatedRoute: ActivatedRoute,
     private service: ArtistService,
@@ -126,6 +128,11 @@ export class ArtistComponent implements OnInit {
   }
 
   scrollLink(target) {
-    return target.replace(new RegExp(' ', 'g'), '_');
+    if (target){
+      return target.replace(new RegExp(' ', 'g'), '_');      
+    }
+
+    this._albumsIdCounter += 1;
+    return this._albumsIdCounter.toString();
   }
 }

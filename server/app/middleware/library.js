@@ -525,7 +525,10 @@ class Library {
 
     if (search) {
       albums = _.filter(albums, (name) => {
-        return name.toLowerCase().match(`.*${search.toLowerCase()}.*`);
+        if (name) {
+          return name.trim().toLowerCase().match(`.*${search.toLowerCase()}.*`);          
+        }
+        return false;
       });
     }
 
