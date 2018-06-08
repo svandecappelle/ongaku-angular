@@ -13,21 +13,21 @@
           <h3>Most played tracks</h3>
 
           <hr/>
-
           <h3>Albums</h3>
           <mat-grid-list cols="5" >
             <mat-grid-tile *ngFor="let album of details.albums">
-              <mat-card class="example-card" *ngIf="album">
-                <mat-card-header>
-                  <mat-card-title><a pageScroll href="#{{scrollLink(album.album)}}">{{album.album}}</a></mat-card-title>
-                </mat-card-header>
+              <mat-card class="album" *ngIf="album">
+                <a pageScroll href="#{{scrollLink(album.album)}}">
+                  <mat-card-header>
+                    <mat-card-title>{{album.album}}</mat-card-title>
+                  </mat-card-header>
+                </a>
                 <mat-card-content>
                   <img [src]="covers[album.album]" />
                 </mat-card-content>
               </mat-card>
             </mat-grid-tile>
           </mat-grid-list>
-
 
           <hr/>
           <h3>Tracks</h3>

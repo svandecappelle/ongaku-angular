@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
-import { Router }  from '@angular/router';
+import { Router } from '@angular/router';
 
 import { MatDialog } from '@angular/material';
 
@@ -23,7 +23,7 @@ import { searchReducer } from '../header/search-reducer';
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
+  styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent implements OnInit {
 
