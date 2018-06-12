@@ -192,19 +192,6 @@ class Helpers {
         }
     };
 
-    renderLibraryPage(username, req, res) {
-        userlib.get(username, function (err, uids) {
-            var libraryDatas = null;
-            if (req.params.page === "all") {
-                libraryDatas = library.getUserLibrary(uids, null, null, username, req.params.search);
-            } else {
-                libraryDatas = library.getUserLibrary(uids, req.params.page, 3, username, req.params.search);
-            }
-
-            middleware.json(req, res, libraryDatas);
-        });
-    };
-
     checkingAuthorization(req, res, callback) {
         if (nconf.get('type') === 'desktop') {
             logger.info("desktop mode all access granted");
@@ -417,19 +404,7 @@ router.get("/song-image/:songid", (req, res) => {
 
 
 
-
-router.get('/api/user/:username/library/:page', (req, res) => {
-    var username = req.params.username;
-    helpers.renderLibraryPage(username, req, res);
-});
-
-router.get('/api/user/:username/library/filter/:search/:page', (req, res) => {
-    logger.debug("Search filtering audio library");
-    var username = req.params.username;
-    helpers.renderLibraryPage(username, req, res);
-});
-
-router.post('/api/metadata/set/:id', (req, res) => {
+router.post('/metadata/set/:id', (req, res) => {
     var id = req.params.id;
     var data = req.body;
     var metadata = req.body.metadatas;
@@ -448,7 +423,7 @@ router.post('/api/metadata/set/:id', (req, res) => {
 
 });
 
-router.post('/api/metadata/selection/set/', (req, res) => {
+router.post('/metadata/selection/set/', (req, res) => {
     var ids = req.body.ids;
     var metadata = req.body.metadatas;
 
