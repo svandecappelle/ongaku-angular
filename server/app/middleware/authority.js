@@ -1,20 +1,23 @@
-var passport = require('passport'),
-bcrypt = require('bcryptjs'),
-path = require('path'),
-fs = require('fs'),
-_ = require('underscore'),
-nconf = require('nconf'),
-logger = require('log4js').getLogger("authority"),
-async = require("async"),
+const passport = require('passport');
+const bcrypt = require('bcryptjs');
+const path = require('path');
+const fs = require('fs');
+const _ = require('underscore');
+const nconf = require('nconf');
+const logger = require('log4js').getLogger("authority");
+const async = require("async");
+const moment = require("moment");
 
-middleware = require("./middleware"),
-communication = require("./../communication"),
-meta = require('./../meta'),
-user = require('./../model/user'),
-db = require('./../model/database'),
-library = require('./library'),
-security = require('./../model/security'),
-utils = require('./../utils');
+const middleware = require("./middleware");
+const communication = require("./../communication");
+const meta = require('./../meta');
+const user = require('./../model/user');
+const db = require('./../model/database');
+const library = require('./library');
+const security = require('./../model/security');
+const statistics = require('./../model/statistics');
+
+const utils = require('./../utils');
 
 
 const USERS_IMAGE_DIRECTORY = path.join(__dirname, "/../../../public/user/");
@@ -95,6 +98,10 @@ class Authority {
               //setTimeout(function(){
               //  communication.emit(req.session.sessionID, 'application:connected', req.sessionID);
               //}, 1500);
+              
+              statistics.set('logins', moment().startOf('day').format('x'), 'increment', () => {
+                console.debug("Stats saved");
+              });
             }
 
             var folderScanning = {

@@ -1,24 +1,22 @@
 var express = require('express');
 const audio = require('./audio');
+const user = require('./user');
+const admin = require('./admin');
+const downloader = require('./downloader');
+const uploader = require('./uploader');
 const playlist = require('./playlist');
+const statistics = require('./statistics');
 
 
 var router = express.Router();
 router.use('/audio', audio);
 router.use('/playlist', playlist);
+router.use('/downloader', downloader);
+router.use('/uploader', uploader);
+router.use('/statistics', statistics);
 
-
-router.post("/api/set-color-scheme", (req, res) => {
-    helpers.callIfAuthenticated(req, res, () => {
-        user.setSingleSetting(req.session.passport.user.uid, 'color-scheme', req.body.color, () => {
-            req.session.user['color-scheme'] = req.body.color
-            req.session.save(function () {
-                logger.info(`Setting theme ${req.body.color} saved to db`);
-                res.status(200).send("OK");
-            });
-        });
-    });
-});
+router.use('/user', user);
+router.use('/admin', admin);
 
 router.post("/api/files/set-properties/imported/:filename(*)", (req, res) => {
     if (nconf.get("allowUpload") === 'true') {
@@ -61,114 +59,6 @@ router.post("/api/files/set-properties/imported/:filename(*)", (req, res) => {
     }
 });
 
-
-router.get("/api/download/:search/:page", (req, res) => {
-    helpers.callIfAuthenticated(req, res, () => {
-        var groupby = req.session.groupby;
-        var username = req.session.passport.user.username;
-
-        groupby = ["artist", "album"];
-
-        var libraryDatas;
-        var opts = {
-            filter: req.params.search,
-            type: 'audio',
-            groupby: groupby
-        };
-        if (req.params.page === "all") {
-            libraryDatas = library.search(opts);
-        } else {
-            opts.page = req.params.page;
-            opts.lenght = 3;
-            libraryDatas = library.searchPage(opts);
-        }
-
-        exporter.toZip(libraryDatas, username).then((filename) => {
-            res.download(filename);
-        });
-    });
-});
-
-router.get("/api/album-download/:artist/:album", (req, res) => {
-
-    var download = function (req, res) {
-        var groupby = req.session.groupby;
-        //var username = req.session.passport.user.username;
-
-        groupby = ["artist", "album"];
-
-        var libraryDatas,
-            zipName = req.params.artist;
-        if (req.params.album === "all") {
-            libraryDatas = library.getAlbums(req.params.artist);
-        } else {
-            zipName += " - ".concat(req.params.album);
-            libraryDatas = library.getAlbum(req.params.artist, req.params.album);
-        }
-        exporter.toZip(libraryDatas, zipName).then((filename) => {
-            res.download(filename);
-        });
-    };
-
-    if (req.query.key) {
-        security.isAllowed(req.query.key, (err, access_ganted) => {
-            if (err) {
-                return res.json({});
-            }
-
-            if (access_ganted) {
-                download(req, res);
-            } else {
-                res.status(403).json({ message: 'access forbidden without a valid key' });
-            }
-        });
-
-    } else {
-        helpers.callIfAuthenticated(req, res, () => {
-            download(req, res);
-        });
-    }
-
-});
-
-
-router.get("/api/track-download/:uid", (req, res) => {
-    helpers.callIfAuthenticated(req, res, () => {
-        res.download(library.getFile(req.params.uid));
-    });
-});
-
-
-router.get("/waveform/:uid", (req, res) => {
-    try {
-        var src = library.getRelativePath(path.basename(req.params.uid));
-        var color = 'white';
-
-
-        if (req.session.theme && _.contains(lights_themes, req.session.theme)) {
-            color = '#929292';
-        }
-
-        if (req.query.color) {
-            color = req.query.color;
-        }
-        var options = {
-            waveColor: color,
-            backgroundColor: "rgba(0,0,0,0)"
-        };
-        var Waveform = require('node-wave');
-
-        res.writeHead(200, { 'Content-Type': 'image/png' });
-
-        Waveform(src, options, (err, buffer) => {
-            res.write(buffer);
-            res.end();
-        });
-    } catch (error) {
-        res.status(500).send("");
-        logger.warn("Not compatible canvas generation wave.");
-    }
-});
 
 
 
