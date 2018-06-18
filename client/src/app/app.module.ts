@@ -37,6 +37,7 @@ import { MetadatasComponent } from './metadatas/metadatas.component';
 import { AdminComponent } from './admin/admin.component';
 import { SearchComponent } from './search/search.component';
 import { ArtistComponent, ArtistService } from './artist';
+import { AlbumComponent, AlbumService } from './artist/album/';
 
 @NgModule({
   declarations: [
@@ -51,7 +52,8 @@ import { ArtistComponent, ArtistService } from './artist';
     MetadatasComponent,
     AdminComponent,
     SearchComponent,
-    ArtistComponent
+    ArtistComponent,
+    AlbumComponent
   ],
   imports: [
     BrowserModule,
@@ -77,7 +79,8 @@ import { ArtistComponent, ArtistService } from './artist';
     AuthenticationService,
     UserService,
     AudioService,
-    ArtistService
+    ArtistService,
+    AlbumService
   ],
   bootstrap: [AppComponent]
 })

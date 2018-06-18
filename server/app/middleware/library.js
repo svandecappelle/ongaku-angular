@@ -909,10 +909,14 @@ class Library {
     if (artist === "all") {
       arrayResults = this.groupby(this.flatten, ["album"]);
       arrayResults = _.where(arrayResults, { album: album });
+      const artists = [];
+      _.each(arrayResults, (album) => {
+        artists.push(album.album_info.artist);
+      });
       var albumsObject = [];
       _.each(arrayResults, (album) => {
         albumsObject.push({
-          artist: "",
+          artists: artists,
           albums: arrayResults,
         });
       });

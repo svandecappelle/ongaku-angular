@@ -13,7 +13,7 @@ import {
 import { Store, Action, select } from '@ngrx/store';
 
 import { AudioService } from '../audio.service';
-import { Observable } from 'rxjs/Rx';
+import { Observable, Subscription } from 'rxjs/Rx';
 
 import { PlayerActions } from '../player/player-actions';
 import { MetadatasComponent } from '../metadatas/metadatas.component';
@@ -45,6 +45,7 @@ export class HomeComponent implements OnInit {
   };
 
   public tracklist = [];
+  public subscriptions = new Array<Subscription>();
 
   constructor(private _audioService: AudioService,
     private _sanitizer: DomSanitizer,
@@ -57,8 +58,14 @@ export class HomeComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.store.select(state => state.search).subscribe((val) => {
+    this.subscriptions.push(this.store.select(state => state.search).subscribe((val) => {
       this.search(val);
+    }));
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(subscribe => {
+      subscribe.unsubscribe();
     });
   }
 
@@ -112,6 +119,10 @@ export class HomeComponent implements OnInit {
 
   openArtistDetail(artist) {
     this.router.navigate(['artist', artist]);
+  }
+
+  openAlbumDetail(album) {
+    this.router.navigate(['album', album.info && album.info.mbid ? album.name : album.name]);
   }
 
 }

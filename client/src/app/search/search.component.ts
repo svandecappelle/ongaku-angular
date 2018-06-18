@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
 import { MatDialog } from '@angular/material';
 
@@ -10,7 +10,7 @@ import {
 import { Store, Action, select } from '@ngrx/store';
 
 import { AudioService } from '../audio.service';
-import { Observable } from 'rxjs/Rx';
+import { Observable, Subscription } from 'rxjs/Rx';
 
 import { PlayerActions } from '../player/player-actions';
 import { MetadatasComponent } from '../metadatas/metadatas.component';
@@ -21,7 +21,7 @@ import { searchReducer } from '../header/search-reducer';
   templateUrl: './search.component.html',
   styleUrls: ['./search.component.scss']
 })
-export class SearchComponent implements OnInit {
+export class SearchComponent implements OnInit, OnDestroy {
 
   public artists = [];
   public _page;
@@ -35,6 +35,8 @@ export class SearchComponent implements OnInit {
 
   public tracklist = [];
 
+  public subscriptions = new Array<Subscription>();
+
   constructor(private _audioService: AudioService,
     private _sanitizer: DomSanitizer,
     private store: Store<IAppState>,
@@ -44,12 +46,18 @@ export class SearchComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.store.select(state => state.trackList).subscribe((val) => {
+    this.subscriptions.push(this.store.select(state => state.trackList).subscribe((val) => {
       this.tracklist = val;
-    });
+    }));
 
-    this.store.select(state => state.search).subscribe((val) => {
+    this.subscriptions.push(this.store.select(state => state.search).subscribe((val) => {
       this.search(val);
+    }));
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(subscribe => {
+      subscribe.unsubscribe();
     });
   }
 

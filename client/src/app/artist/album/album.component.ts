@@ -1,29 +1,31 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+
 import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import { MatDialog } from '@angular/material';
 
-import { Song, IAppState } from '../app-state';
+import { Song, IAppState } from '../../app-state';
 import {
   AppendPlaylist
-} from '../player/state';
+} from '../../player/state';
 
 import { Store, Action, select } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs/Rx';
 
-import { PlayerActions } from '../player/player-actions';
-import { MetadatasComponent } from '../metadatas/metadatas.component';
+import { PlayerActions } from '../../player/player-actions';
+import { MetadatasComponent } from '../../metadatas/metadatas.component';
 
-import { ArtistService } from './artist.service';
+import { AlbumService } from './album.service';
+
 
 @Component({
-  selector: 'app-artist',
-  templateUrl: './artist.component.html',
-  styleUrls: ['./artist.component.scss']
+  selector: 'app-album',
+  templateUrl: './album.component.html',
+  styleUrls: ['./album.component.scss']
 })
-export class ArtistComponent implements OnInit {
+export class AlbumComponent implements OnInit {
 
-  private artist: string;
+  private album: string; 
   private details: Object;
   private image;
 
@@ -35,32 +37,31 @@ export class ArtistComponent implements OnInit {
   private _albumsIdCounter: number = 0;
   
   public subscriptions = new Array<Subscription>();
-  
+
   constructor(
     private activatedRoute: ActivatedRoute,
-    private service: ArtistService,
+    private service: AlbumService,
     private _sanitizer: DomSanitizer,
     private store: Store<IAppState>,
     public dialog: MatDialog,
     private actions: PlayerActions) { }
 
   ngOnInit() {
-    // subscribe to router event
-    this.activatedRoute.params.subscribe((params: Params) => {
-      this.artist = params['artist'];
 
-      this.subscriptions.push(this.service.get(this.artist).subscribe((details) => {
-        details.artist_info = details.info;
+    this.activatedRoute.params.subscribe((params: Params) => {
+      this.album = params['album'];
+
+      this.subscriptions.push(this.service.get(this.album).subscribe((details) => {
+        details.artist_info = {
+          bio: ""
+        };
         this.details = details;
-        if (details) {
-          this.image = this.getImageSrc(details.info);
-          details.albums.forEach(album => {
-            this.covers[album.album_info.title] = this.getImageSrc(album.album_info);
-          });
-        }
+        this.image = this.getImageSrc();
       }));
     });
+
   }
+
 
   ngOnDestroy() {
     this.subscriptions.forEach(subscribe => {
@@ -68,13 +69,18 @@ export class ArtistComponent implements OnInit {
     });
   }
 
-  getArtistBackground(src) {
+  getAlbumBackground() {
+    const src = this.details[0].albums[0].album_info;
+
     const image = src.image ? src.image[3]['#text'] : '';
+    console.log(image);
 
     return this._sanitizer.bypassSecurityTrustStyle(`linear-gradient(rgba(29, 29, 29, 0), rgba(16, 16, 23, 0.5)), url(${image})`);
   }
 
-  getImageSrc(src) {
+  getImageSrc() {
+
+    const src = this.details[0].albums[0].album_info;
     const image = src.image ? src.image[3]['#text'] : '';
 
     return this._sanitizer.bypassSecurityTrustUrl(`${image}`);
@@ -127,7 +133,7 @@ export class ArtistComponent implements OnInit {
   metadata(track: Song, artist, event: Event) {
     event.preventDefault();
     event.stopPropagation();
-    track.artistDetails = this.details;
+    track.artistDetails = this.details[0];
     this.dialog.open(MetadatasComponent, {
       width: '80%',
       hasBackdrop: true,
@@ -136,12 +142,4 @@ export class ArtistComponent implements OnInit {
     });
   }
 
-  scrollLink(target) {
-    if (target) {
-      return target.replace(new RegExp(' ', 'g'), '_');
-    }
-
-    this._albumsIdCounter += 1;
-    return this._albumsIdCounter.toString();
-  }
 }

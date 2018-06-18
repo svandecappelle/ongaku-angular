@@ -41,7 +41,7 @@
     <span *ngIf="!albums || albums.length === 0">No results</span>
     <mat-grid-list cols="5" *ngIf="albums && albums.length > 0">
       <mat-grid-tile *ngFor="let album of albums">
-        <mat-card class="album">
+        <mat-card class="album" (click)="openAlbumDetail(album)">
           <mat-card-header>
             <mat-card-title>{{album.name}}</mat-card-title>
           </mat-card-header>
@@ -70,7 +70,5 @@
       </button>
     </div>
   </div>
-
-  <h1 class="mat-h1">Library</h1>
-  <app-search></app-search>
+  <div style="margin-top: 1em"></div>
 </div>

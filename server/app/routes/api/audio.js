@@ -356,6 +356,13 @@ router.get('/artists/filter/:search/:page', (req, res) => {
     middleware.json(req, res, libraryDatas);
 });
 
+router.get('/album/:name', (req, res) => {
+    
+    logger.debug("Get detail page of artist ".concat(req.params.name));
+    var datas = libraryDatas = library.getAlbum('all', req.params.name);
+    middleware.json(req, res, datas);
+});
+
 router.get('/albums/filter/:search/:page', (req, res) => {
     // load by page of 3 artists.
    
