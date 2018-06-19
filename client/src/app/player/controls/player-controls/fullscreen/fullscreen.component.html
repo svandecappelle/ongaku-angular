@@ -57,7 +57,7 @@
       </mat-table>
   </div>
 
-  <div class="track-details">
+  <div class="track-details" *ngIf="current.artistDetails && current.artistDetails.artist_info">
       <p [innerHTML]="current.artistDetails.artist_info.bio.content"></p>
   </div>
 </div>

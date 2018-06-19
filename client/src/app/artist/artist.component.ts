@@ -45,6 +45,14 @@ export class ArtistComponent implements OnInit {
     private actions: PlayerActions) { }
 
   ngOnInit() {
+    this.subscriptions.push(this.store.select(state => state.trackList).subscribe((val) => {
+      this.tracklist = val;
+    }));
+
+    this.subscriptions.push(this.store.select(state => state.search).subscribe((val) => {
+      this.search(val);
+    }));
+
     // subscribe to router event
     this.activatedRoute.params.subscribe((params: Params) => {
       this.artist = params['artist'];
@@ -143,5 +151,9 @@ export class ArtistComponent implements OnInit {
 
     this._albumsIdCounter += 1;
     return this._albumsIdCounter.toString();
+  }
+
+  search(request) {
+    
   }
 }

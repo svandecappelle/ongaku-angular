@@ -154,6 +154,10 @@ export class PlayerControlsComponent implements OnInit {
         this.fullscreener.setCurrent(this.current);
       }
       this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
+    } else {
+      this.currentTime = 0;
+      this.player.nativeElement.currentTime = this.currentTime;
+      this.state = 'paused';
     }
   }
 
@@ -175,7 +179,7 @@ export class PlayerControlsComponent implements OnInit {
   }
 
   onStepperClick($event) {
-    this.currentTime = this.duration * ($event.clientX - 72) / $event.target.offsetWidth;
+    this.currentTime = this.duration * $event.clientX / $event.target.offsetWidth;
     this.player.nativeElement.currentTime = this.currentTime;
   }
 

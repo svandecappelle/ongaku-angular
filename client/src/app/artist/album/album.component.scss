@@ -6,6 +6,13 @@ img.album {
     display: inline-block;
 }
 
+.title {
+    vertical-align: top;
+    display: inline-block;
+    line-height: 2em;
+    padding: 1rem;
+}
+
 .content {
     padding: 1em;
     background-color: rgba(0, 0, 0, 0.55);

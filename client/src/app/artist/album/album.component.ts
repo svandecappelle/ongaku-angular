@@ -47,6 +47,13 @@ export class AlbumComponent implements OnInit {
     private actions: PlayerActions) { }
 
   ngOnInit() {
+    this.subscriptions.push(this.store.select(state => state.trackList).subscribe((val) => {
+      this.tracklist = val;
+    }));
+
+    this.subscriptions.push(this.store.select(state => state.search).subscribe((val) => {
+      this.search(val);
+    }));
 
     this.activatedRoute.params.subscribe((params: Params) => {
       this.album = params['album'];
@@ -71,10 +78,7 @@ export class AlbumComponent implements OnInit {
 
   getAlbumBackground() {
     const src = this.details[0].albums[0].album_info;
-
     const image = src.image ? src.image[3]['#text'] : '';
-    console.log(image);
-
     return this._sanitizer.bypassSecurityTrustStyle(`linear-gradient(rgba(29, 29, 29, 0), rgba(16, 16, 23, 0.5)), url(${image})`);
   }
 
@@ -142,4 +146,7 @@ export class AlbumComponent implements OnInit {
     });
   }
 
+  search(request) {
+    console.log("search " + requestAnimationFrame);
+  }
 }
