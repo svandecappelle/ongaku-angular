@@ -5,6 +5,8 @@ const nconf = require("nconf");
 const path = require("path");
 const fs = require("fs");
 const async = require("async");
+var rp = require('request-promise');
+
 var library;
 try {
   library = require("../model/library");
@@ -274,8 +276,26 @@ class Library {
         } else if (art.image) {
           artist.image = parseLastFm(art.image);
           artist = _.extend(artist, art);
+
           this.loadingCoverArtists[artist.artist] = artist;
           logger.debug("image artist '" + artist.artist + "': " + artist.image);
+
+          // wikipedia
+          rp.get('https://fr.wikipedia.org/w/api.php', {
+            qs: {
+              action: "query",
+              titles: artist.artist,
+              prop: "revisions",
+              rvprop: "content",
+              format: "json",
+              formatversion: 2
+            },
+            json: true
+          }).then(response => {
+            // console.log(response.query.pages[0].revisions[0].content);
+            artist.wikipedia = response.query.pages[0].revisions[0].content;
+          }).catch(error => console.error(error));
+          // https://en.wikipedia.org/w/api.php?action=query&titles=The%20Beatles&prop=revisions&rvprop=content&format=json&formatversion=2
         }
       });
     }
