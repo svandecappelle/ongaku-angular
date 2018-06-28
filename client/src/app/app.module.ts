@@ -34,7 +34,7 @@ import { LoginComponent } from './login/login.component';
 import { AlertService, AuthenticationService, UserService } from './services/index';
 import { AuthGuard } from './guards/index';
 import { MetadatasComponent } from './metadatas/metadatas.component';
-import { AdminComponent } from './admin/admin.component';
+import { AdminComponent, StatisticsService } from './admin/';
 import { SearchComponent } from './search/search.component';
 import { ArtistComponent, ArtistService } from './artist';
 import { AlbumComponent, AlbumService } from './artist/album/';
@@ -80,7 +80,8 @@ import { AlbumComponent, AlbumService } from './artist/album/';
     UserService,
     AudioService,
     ArtistService,
-    AlbumService
+    AlbumService,
+    StatisticsService
   ],
   bootstrap: [AppComponent]
 })

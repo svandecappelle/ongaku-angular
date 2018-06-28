@@ -1,4 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { StatisticsService } from './statistics.service';
+
+import * as moment from 'moment';
+import { Chart } from 'chart.js';
 
 @Component({
   selector: 'app-admin',
@@ -10,34 +14,23 @@ export class AdminComponent implements OnInit {
   // lineChart
   public lineChartData: Array<any> = [
     {
-      data: [
-      { t: new Date('2018-06-07'), y: 25 },
-      { t: new Date('2018-06-08'), y: 15 },
-      { t: new Date('2018-06-09'), y: 15 },
-      { t: new Date('2018-06-10'), y: 16 },
-      { t: new Date('2018-06-11'), y: 18 },
-      { t: new Date('2018-06-12'), y: 20 },
-      { t: new Date('2018-06-13'), y: 23 }], label: 'Connection'
+      data: [{
+        t: moment().startOf('day').subtract(1, 'days'),
+        y: 10,
+      },
+      {
+        t: moment().startOf('day').subtract(0, 'days'),
+        y: 0,
+      }],
+      label: 'Connection'
     },
     {
-      data: [
-      { t: new Date('2018-06-07'), y: 17 },
-      { t: new Date('2018-06-08'), y: 25 },
-      { t: new Date('2018-06-09'), y: 10 },
-      { t: new Date('2018-06-10'), y: 8 },
-      { t: new Date('2018-06-11'), y: 12 },
-      { t: new Date('2018-06-12'), y: 45 },
-      { t: new Date('2018-06-13'), y: 19 }], label: 'Plays'
+      data: [],
+      label: 'Plays'
     },
     {
-      data: [
-      { t: new Date('2018-06-07'), y: 35 },
-      { t: new Date('2018-06-08'), y: 25 },
-      { t: new Date('2018-06-09'), y: 15 },
-      { t: new Date('2018-06-10'), y: 17 },
-      { t: new Date('2018-06-11'), y: 19 },
-      { t: new Date('2018-06-12'), y: 26 },
-      { t: new Date('2018-06-13'), y: 24 }], label: 'Page access'
+      data: [],
+      label: 'Page access'
     }
   ];
   public lineChartOptions: any = {
@@ -79,22 +72,54 @@ export class AdminComponent implements OnInit {
   ];
   public lineChartLegend: boolean = true;
   public lineChartType: string = 'line';
+  @ViewChild('canvas', { read: ElementRef }) canvas: ElementRef;
+  private chart;
 
-  constructor() { }
+  constructor (private service: StatisticsService) { }
 
   ngOnInit() {
-  }
+    this.service.getUsersAccess().subscribe(datas => {
+      this.lineChartData[0].data = [];
+      const allDates = [];
+      const connections = [];
+      datas.forEach(day => {
+        allDates.push(moment(day.date).format('LLL'));
+        connections.push(parseInt(day.value.toString(), 10));
+      });
 
-  public randomize(): void {
-    let _lineChartData: Array<any> = new Array(this.lineChartData.length);
-    for (let i = 0; i < this.lineChartData.length; i++) {
-      _lineChartData[i] = { data: new Array(this.lineChartData[i].data.length), label: this.lineChartData[i].label };
-      for (let j = 0; j < this.lineChartData[i].data.length; j++) {
-        _lineChartData[i].data[j] = Math.floor((Math.random() * 100) + 1);
-      }
-    }
-    this.lineChartData = _lineChartData;
+      this.chart = new Chart(this.canvas.nativeElement, {
+        type: 'line',
+        data: {
+          labels: allDates,
+          datasets: [
+            {
+              data: connections,
+              borderColor: '#3cba9f',
+              fill: false,
+              label: 'Connections'
+            },
+            {
+              data: connections,
+              borderColor: '#ffcc00',
+              fill: false
+            },
+          ]
+        },
+        options: {
+          legend: {
+            display: true
+          },
+          scales: {
+            xAxes: [{
+              display: true
+            }],
+            yAxes: [{
+              display: true
+            }],
+          }
+        }
+      });
+    });
   }
-
 
 }
