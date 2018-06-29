@@ -97,6 +97,10 @@ export class PlayerControlsComponent implements OnInit {
     }
   }
 
+  isPlaying () { 
+    return !this.player.nativeElement.paused; 
+  }
+
   play() {
     if (this.state !== 'playing') {
       if (this.tracks[this.play_index] === 'stopped') {
@@ -109,10 +113,14 @@ export class PlayerControlsComponent implements OnInit {
         }
         this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
 
-        this.player.nativeElement.play();
+        if (!this.isPlaying()) {
+          this.player.nativeElement.play();
+        }
       } else {
         this.state = 'playing';
-        this.player.nativeElement.play();
+        if (!this.isPlaying()) {
+          this.player.nativeElement.play();
+        }
       }
     } else {
       this.state = 'paused';
