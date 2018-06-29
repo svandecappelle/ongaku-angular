@@ -25,16 +25,30 @@ var lfm = new LastfmAPI({
   'secret': '7ccaec2093e33cded282ec7bc81c6fca'
 });
 
-function parseLastFm(imageList) {
+function parseLastFm(object) {
+  
+  var imageList;
   var imageSource;
   var sizes = ['small', 'medium', 'large', 'extralarge', 'mega'];
   var images = null;
+
+  if (object && object.image) {
+    imageList = object.image;
+    if (!object.image[0]['#text']){
+      object.image = _.map(sizes, (size) => {
+        return {
+          '#text': '/static/img/album.png',
+          size: size
+        };
+      });
+    }
+  }
 
   if (imageList) {
     images = _.map(_.sortBy(imageList, (image) => {
       return sizes.indexOf(image.size);
     }), (image) => {
-      return image['#text'] ? image['#text'] : null;
+      return image['#text'] ? image['#text'] : '/static/img/album.png';
     });
   }
   images = _.compact(images);
@@ -71,7 +85,7 @@ class Library {
     this.loadingCoversAlbumsFlatten = [];
 
     scan.on('decoded', (song, type) => {
-      logger.debug("decoded", song, type);
+      console.debug("decoded", song, type);
       // this.flatten.push(song);
       try {
         var libraryElement = _.extend(song, {
@@ -85,7 +99,7 @@ class Library {
           libraryElement.metadatas = {};
         }
 
-        // logger.info("elem", libraryElement);
+        // console.info("elem", libraryElement);
         libraryElement;
 
         var tracks = [libraryElement];
@@ -104,11 +118,11 @@ class Library {
             artist: song.artist
           }, album);
         } else {
-          logger.debug("already scanned album '" + album.title + "': " + this.loadingCoverAlbums[song.artist][album.title]);
+          console.debug("already scanned album '" + album.title + "': " + this.loadingCoverAlbums[song.artist][album.title]);
         }
 
       } catch (err) {
-        logger.error(err)
+        console.error('Error on decoding tracks: ', err)
       }
     });
   }
@@ -139,7 +153,7 @@ class Library {
         }
         resolve(lib);
       }, (error) => {
-        logger.error(`Error scanning library: `, error);
+        console.error(`Error scanning library: `, error);
         reject(error);
       });
     });
@@ -264,39 +278,95 @@ class Library {
   getArtistCover(artist) {
     var alreadyScanned = this.loadingCoverArtists[artist.artist] !== undefined;
 
-    // logger.info(artist);
+    // console.info(artist);
     if (!alreadyScanned) {
-      this.loadingCoverArtists[artist.artist] = "/img/artist.jpg";
+      this.loadingCoverArtists[artist.artist] = "/static/img/artist.jpg";
 
       lfm.artist.getInfo({
         'artist': artist.artist.trim(),
       }, (err, art) => {
         if (err) {
-          logger.warn("artist '" + artist.artist + "' not found");
-        } else if (art.image) {
-          artist.image = parseLastFm(art.image);
-          artist = _.extend(artist, art);
-
-          this.loadingCoverArtists[artist.artist] = artist;
-          logger.debug("image artist '" + artist.artist + "': " + artist.image);
-
-          // wikipedia
-          rp.get('https://fr.wikipedia.org/w/api.php', {
-            qs: {
-              action: "query",
-              titles: artist.artist,
-              prop: "revisions",
-              rvprop: "content",
-              format: "json",
-              formatversion: 2
-            },
-            json: true
-          }).then(response => {
-            // console.log(response.query.pages[0].revisions[0].content);
-            artist.wikipedia = response.query.pages[0].revisions[0].content;
-          }).catch(error => console.error(error));
-          // https://en.wikipedia.org/w/api.php?action=query&titles=The%20Beatles&prop=revisions&rvprop=content&format=json&formatversion=2
+          console.warn("artist '" + artist.artist + "' not found");
         }
+        artist.image = parseLastFm(art);
+        artist = _.extend(artist, art);
+
+        this.loadingCoverArtists[artist.artist] = artist;
+        console.debug("image artist '" + artist.artist + "': " + artist.image);
+
+        // wikipedia
+        let searchTerm = `${artist.artist}`.toLowerCase();
+        rp.get('https://fr.wikipedia.org/w/api.php', {
+          qs: {
+            action: "query",
+            list: 'search',
+            srsearch: searchTerm,
+            srwhat: 'text',
+            srprop: 'titlesnippet|snippet|hasrelated',
+            format: "json",
+            formatversion: 2
+          },
+          json: true
+        }).then(pages => {
+
+          var count = 0;
+          async.doWhilst((next) => {
+            let page = pages.query.search[count];
+            count +=1;
+
+            rp.get('https://fr.wikipedia.org/w/api.php', {
+              qs: {
+                action: "query",
+                prop: 'categories|extracts',
+                titles: page.title,
+                format: "json",
+                pslimit: 100,
+                formatversion: 2
+              },
+              json: true
+            }).then((detailPage) => {
+              try {
+                let musicCategory = _.filter(detailPage.query.pages[0].categories, (category) => {
+                  let categoryTitle = category.title.toLowerCase();
+                  let isMusic = false;
+
+                  let musicTerms = require('./music_terms.json');
+                  for (let index = 0; index < musicTerms.length; index++) {
+                    const element = musicTerms[index];
+                    if (categoryTitle.indexOf(element) !== -1) {
+                      console.debug("found with: " + element + " matched with: " + categoryTitle);
+                      return true;
+                    }
+                  }
+                  return false;
+                });
+                if (musicCategory && musicCategory.length > 0) {
+                  artist.wikipedia = detailPage.query.pages[0].extract;
+                  console.debug(artist.name + " found in wiki page: " + page.title);
+                  return next(null, true);
+                } else {
+                  console.debug(artist.name + " not found in wiki");
+                }
+                return next(null, false);
+              } catch ( error ) {
+                console.error(" - " + error, error);
+              }
+            }).catch(error => {
+              console.error(error);
+            });
+          }, (found, err) => {
+            // console.log(count, pages.query.search.length -1 , pages.query.search[count], found);
+
+            // console.log(count < pages.query.search.length -1, !found);
+
+            return count < pages.query.search.length -1 && !found;
+          }, () => {
+            // console.log("finished");
+          });
+
+        }).catch((error) => {
+          console.error("wikipedia error", error);
+        });
       });
     }
   };
@@ -315,22 +385,23 @@ class Library {
     var alreadyScanned = this.loadingCoverAlbums[artist.artist][album.title] !== undefined;
 
     if (!alreadyScanned) {
-      this.loadingCoverAlbums[artist.artist][album.title] = "/img/album.jpg";
-      this.loadingCoversAlbumsFlatten[album.title] = "/img/album.jpg";
-      
+      this.loadingCoverAlbums[artist.artist][album.title] = "/static/img/album.png";
+      this.loadingCoversAlbumsFlatten[album.title] = "/static/img/album.png";
+
 
       lfm.album.getInfo({
         'artist': artist.artist.trim(),
         'album': album.album_origin ? album.album_origin.trim() : album.title.trim()
       }, (err, alb) => {
         if (err) {
-          logger.warn("[" + artist.artist + "] -> album:: '" + album.title + "' not found");
-        } else if (alb.image) {
-          album.cover = parseLastFm(alb.image);
-          album = _.extend(album, alb);
-          this.loadingCoverAlbums[artist.artist][album.title] = album;
-          this.loadingCoversAlbumsFlatten[album.title] = album;
+          console.warn("[" + artist.artist + "] -> album:: '" + album.title + "' not found");
         }
+
+        // parse function allow not defined images
+        album.cover = parseLastFm(alb);
+        album = _.extend(album, alb);
+        this.loadingCoverAlbums[artist.artist][album.title] = album;
+        this.loadingCoversAlbumsFlatten[album.title] = album;
       });
     }
   };
@@ -373,7 +444,7 @@ class Library {
                 path: path.join(__dirname, `../../../public/user/${username}/imported/${folder.replace(username + "[", "").slice(0, -1)}`),
                 username: folder.split("[")[0]
               };
-              logger.info(`adding user shared folder: ${folderObject.path} ---> ${folderObject.username}`);
+              console.info(`adding user shared folder: ${folderObject.path} ---> ${folderObject.username}`);
               this.addFolder(folderObject, (scanResults) => {
                 var scannedFolder = _.where(foldersScanning, {
                   path: folder
@@ -422,16 +493,16 @@ class Library {
       try {
         // Check if ffmetadata is best than mm
         ffmetadata.read(filePath, (err, metadataFFMPEG) => {
-          logger.debug(`libelement: ${filePath}`, err, metadataFFMPEG)
+          console.debug(`libelement: ${filePath}`, err, metadataFFMPEG)
           if (err) {
-            logger.error(`libelement: ${filePath}`, err);
+            console.error(`libelement: ${filePath}`, err);
             return reject(err);
           }
 
           var parser = mm(fs.createReadStream(filePath), { duration: true }, (err, metadata) => {
-            logger.debug(`libelement: ${filePath}`, err, metadataFFMPEG)
+            console.debug(`libelement: ${filePath}`, err, metadataFFMPEG)
             if (err) {
-              logger.error(`libelement: ${filePath}`, err);
+              console.error(`libelement: ${filePath}`, err);
               return reject(err);
             }
 
@@ -510,15 +581,15 @@ class Library {
   getArtists(page, lenght, search, sort) {
     var artists;
     artists = _.sortBy(_.uniq(_.map(this.flatten, (track) => {
-        return track.artist;
-      })), (name) => {
+      return track.artist;
+    })), (name) => {
       return name;
     });
 
     if (search) {
       artists = _.filter(artists, (name) => {
-        if (name){
-          return name.trim().toLowerCase().match(`.*${search.toLowerCase()}.*`);          
+        if (name) {
+          return name.trim().toLowerCase().match(`.*${search.toLowerCase()}.*`);
         }
         return false;
       });
@@ -541,15 +612,15 @@ class Library {
   getLibAlbums(page, lenght, search, asc) {
     var albums;
     albums = _.sortBy(_.uniq(_.map(this.flatten, (track) => {
-        return track.album;
-      })), (name) => {
+      return track.album;
+    })), (name) => {
       return name;
     });
 
     if (search) {
       albums = _.filter(albums, (name) => {
         if (name) {
-          return name.trim().toLowerCase().match(`.*${search.toLowerCase()}.*`);          
+          return name.trim().toLowerCase().match(`.*${search.toLowerCase()}.*`);
         }
         return false;
       });
@@ -605,7 +676,7 @@ class Library {
     uuid = uuid.replace(".mp3", "");
     uuid = uuid.replace(".ogg", "");
     uuid = uuid.replace(".wav", "");
-    logger.info("Update: ", _.findIndex(this.flatten, { uid: uuid }));
+    console.info("Update: ", _.findIndex(this.flatten, { uid: uuid }));
     return this.flatten[_.findIndex(this.flatten, { uid: uuid })] = libElement;
   };
 
@@ -637,7 +708,7 @@ class Library {
 
     if (filter.indexOf("~") === 0) {
       var filters = filter.substring(1, filter.length).split(" ");
-      logger.debug("Search into any of these values: ", filters);
+      console.debug("Search into any of these values: ", filters);
       _.each(filters, (subFilter) => {
         if (searchResultList) {
           searchResultList = this.search({
@@ -674,7 +745,7 @@ class Library {
           found = obj.name.toLowerCase().match(filterClause);
         } else if (type === "audio" && obj.type === type) {
           if (!obj.title) {
-            logger.error("error checking object: ", obj);
+            console.error("error checking object: ", obj);
           }
           found = obj.title.toString().latinize().toLowerCase().match(filterClause);
           found = found ? found : obj.album.toString().latinize().toLowerCase().match(filterClause);
@@ -756,7 +827,7 @@ class Library {
           if (groupbyClause[1] === "album" && this.loadingCoverAlbums[groupObject]) {
             albumObject.album_info = this.loadingCoverAlbums[groupObject][albumObject.title];
             if (!albumObject.album_info) {
-              albumObject.album_info = {cover: '/img/album.jpg'};
+              albumObject.album_info = { cover: '/static/img/album.png' };
             }
           } else if (groupbyClause[1] === "artist") {
             albumObject.album_info = this.loadingCoverArtists[albumObject.title];
@@ -767,7 +838,7 @@ class Library {
               if (element.metadatas.track.no) {
                 return parseInt(element.metadatas.track.no);
               } else {
-                if (element.metadatas.track.indexOf('/')){
+                if (element.metadatas.track.indexOf('/')) {
                   return parseInt(element.metadatas.track.split('/')[0]);
                 }
                 return parseInt(element.metadatas.track);
@@ -851,7 +922,7 @@ class Library {
         albums: _.map(val, (album, title) => {
           var albumObject = {
             title: title,
-            cover: artist && title && this.loadingCoverAlbums[artist] && this.loadingCoverAlbums[artist][title] ? this.loadingCoverAlbums[artist][title] : "/img/album.jpg",
+            cover: artist && title && this.loadingCoverAlbums[artist] && this.loadingCoverAlbums[artist][title] ? this.loadingCoverAlbums[artist][title] : "/static/img/album.png",
             tracks: _.map(album, (tracks, index) => {
               return tracks;
             })
@@ -892,7 +963,7 @@ class Library {
         albums: _.map(val, (album, title) => {
           var albumObject = {
             title: title,
-            cover: this.loadingCoverAlbums[artist][title] ? this.loadingCoverAlbums[artist][title] : "/img/album.jpg",
+            cover: this.loadingCoverAlbums[artist][title] ? this.loadingCoverAlbums[artist][title] : "/static/img/album.png",
             tracks: _.map(album, (tracks, index) => {
               return tracks;
             })
