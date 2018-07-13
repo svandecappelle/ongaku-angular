@@ -3,10 +3,7 @@ import {
   OnInit,
   Inject,
   OnDestroy,
-  Renderer2,
-  ChangeDetectorRef,
-  ViewChild,
-  ElementRef
+  Renderer2
 } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { Observable } from 'rxjs/Observable';

@@ -12,10 +12,18 @@ import { AdminComponent } from './admin/admin.component';
 
 import { ArtistComponent } from './artist/artist.component';
 import { AlbumComponent } from './artist/album/album.component';
+import { UsersComponent } from './users/users.component';
+import { RadiosComponent } from './radios/radios.component';
+import { LibraryComponent } from './library/library.component';
+import { UploadComponent } from './upload/upload.component';
 
 const routes: Routes = [
   { path: 'artist/:artist', component: ArtistComponent, canActivate: [AuthGuard]},
   { path: 'album/:album', component: AlbumComponent, canActivate: [AuthGuard]},
+  { path: 'users', component: UsersComponent, canActivate: [AuthGuard]},
+  { path: 'radios', component: RadiosComponent, canActivate: [AuthGuard]},
+  { path: 'my-library', component: LibraryComponent, canActivate: [AuthGuard]},
+  { path: 'upload', component: UploadComponent, canActivate: [AuthGuard]},
   { path: '', component: HomeComponent, canActivate: [AuthGuard] },
 
   { path: 'install', component: InstallComponent },

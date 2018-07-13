@@ -36,15 +36,13 @@ export class PlayerControlsComponent implements OnInit {
 
   @ViewChild('fullscreener', { read: FullscreenComponent }) fullscreener: FullscreenComponent;
 
-  constructor(private ref: ChangeDetectorRef, public renderer: Renderer, private store: Store<IAppState>, private actions: PlayerActions) {
+  constructor(public renderer: Renderer, private store: Store<IAppState>, private actions: PlayerActions) {
     this.isInit = false;
   }
 
   ngOnInit() {
     this.player.nativeElement.addEventListener('loadedmetadata', (el) => {
       this.metadataLoaded = true;
-      this.ref.markForCheck();
-      this.ref.detectChanges();
       this.duration = el.target.duration;
       this.value = 0;
       if (this.state !== 'playing') {
@@ -171,8 +169,6 @@ export class PlayerControlsComponent implements OnInit {
 
   change(uid) {
     this.metadataLoaded = false;
-    this.ref.markForCheck();
-    this.ref.detectChanges();
     this.switching();
     this.src = this.link(uid);
   }

@@ -1,12 +1,7 @@
 const express = require('express');
 const logger = require('log4js').getLogger("UsersRoutes");
-const nconf = require("nconf");
-const passport = require("passport");
-const path = require("path");
 const library = require("./../../middleware/library");
 const middleware = require("./../../middleware/middleware");
-const meta = require("./../../meta");
-const communication = require("./../../communication");
 
 const userlib = require("./../../model/library");
 

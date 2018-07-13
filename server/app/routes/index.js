@@ -36,11 +36,13 @@ class Routes {
       console.log('Error on checking installation', err);
     });
 
-    app.use('/api/install', install);
-    app.use('/api/upgrade', upgrade);
+    // DESACTIVATED DUE TO Postgresql is not yet fonctionnal
+    // app.use('/api/install', install);
+    // app.use('/api/upgrade', upgrade);
 
-    app.use('/api/users', users);
-    app.use('/api/groups', groups);
+
+    // app.use('/api/users', users);
+    // app.use('/api/groups', groups);
 
     try {
       app.use('/api', api);

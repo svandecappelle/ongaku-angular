@@ -4,6 +4,8 @@ const nconf = require('nconf');
 const fs = require('fs');
 const _ = require("underscore");
 const path = require("path");
+const moment = require("moment");
+
 const logger = require('log4js').getLogger("Middleware");
 const scanner = require("./scanner");
 const library = require("./library");
@@ -11,7 +13,7 @@ const transcoder = require("./transcoder");
 const meta = require("./../meta");
 const translator = require("./translator");
 const streamer = require("./streamer");
-
+const statistics = require('./../model/statistics');
 
 const gravatar = require("gravatar");
 var identicon;
@@ -124,6 +126,11 @@ class Middleware {
       res.json({ error: 'Need privileges' });
       res.end();
     } else {
+
+      statistics.set('plays', moment().startOf('day').format('x'), 'increment', () => {
+        console.debug("Stats saved");
+      });
+
       logger.info("Stream " + type);
       var fs = require("fs"),
         src = library.getRelativePath(path.basename(uuid)),

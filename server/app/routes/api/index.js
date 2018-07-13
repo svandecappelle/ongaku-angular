@@ -1,6 +1,7 @@
 var express = require('express');
 const audio = require('./audio');
 const user = require('./user');
+const users = require('./users');
 const admin = require('./admin');
 const downloader = require('./downloader');
 const uploader = require('./uploader');
@@ -16,6 +17,7 @@ router.use('/uploader', uploader);
 router.use('/statistics', statistics);
 
 router.use('/user', user);
+router.use('/users', users);
 router.use('/admin', admin);
 
 router.post("/api/files/set-properties/imported/:filename(*)", (req, res) => {

@@ -38,6 +38,14 @@ import { AdminComponent, StatisticsService } from './admin/';
 import { SearchComponent } from './search/search.component';
 import { ArtistComponent, ArtistService } from './artist';
 import { AlbumComponent, AlbumService } from './artist/album/';
+import { UsersComponent } from './users/users.component';
+import { LibraryComponent } from './library/library.component';
+import { RadiosComponent } from './radios/radios.component';
+import { UploadComponent } from './upload/upload.component';
+
+import { UsersService } from './users';
+import { UploadService } from './upload';
+
 
 @NgModule({
   declarations: [
@@ -53,7 +61,11 @@ import { AlbumComponent, AlbumService } from './artist/album/';
     AdminComponent,
     SearchComponent,
     ArtistComponent,
-    AlbumComponent
+    AlbumComponent,
+    UsersComponent,
+    LibraryComponent,
+    RadiosComponent,
+    UploadComponent
   ],
   imports: [
     BrowserModule,
@@ -81,7 +93,9 @@ import { AlbumComponent, AlbumService } from './artist/album/';
     AudioService,
     ArtistService,
     AlbumService,
-    StatisticsService
+    StatisticsService,
+    UsersService,
+    UploadService
   ],
   bootstrap: [AppComponent]
 })

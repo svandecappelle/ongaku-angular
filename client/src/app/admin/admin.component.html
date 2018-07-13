@@ -73,7 +73,7 @@
         </mat-card-title>
         <mat-card-content>
           <span>Graph of user activity</span>
-          <canvas #canvas>{{ chart }}</canvas>
+          <canvas #access>{{ chart }}</canvas>
         </mat-card-content>
       </mat-card>
     </mat-grid-tile>
@@ -85,17 +85,12 @@
         </mat-card-title>
         <mat-card-content>
           <span>Graph of plays activity</span>
-          <canvas baseChart width="100%" height="50"
-                [datasets]="lineChartData"
-                [options]="lineChartOptions"
-                [colors]="lineChartColors"
-                [legend]="lineChartLegend"
-                [chartType]="lineChartType"></canvas>
+          <canvas #activity>{{ chart }}</canvas>
         </mat-card-content>
       </mat-card>
     </mat-grid-tile>
 
-    <mat-grid-tile [colspan]=2 [rowspan]=2>
+    <!--<mat-grid-tile [colspan]=2 [rowspan]=2>
       <mat-card>
         <mat-card-title>
           <h2 class="example-h2">Other statistics</h2>
@@ -103,14 +98,9 @@
         <mat-card-content>
           <span>Graph of other</span>
     
-          <canvas baseChart width="100%" height="50"
-              [datasets]="lineChartData"
-              [options]="lineChartOptions"
-              [colors]="lineChartColors"
-              [legend]="lineChartLegend"
-              [chartType]="lineChartType"></canvas>
+          <canvas #others>{{ chart }}</canvas>
         </mat-card-content>
       </mat-card>
-    </mat-grid-tile>
+    </mat-grid-tile>-->
   </mat-grid-list>
 </div>

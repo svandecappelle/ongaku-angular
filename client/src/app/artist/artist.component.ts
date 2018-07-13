@@ -88,7 +88,6 @@ export class ArtistComponent implements OnInit {
     return this._sanitizer.bypassSecurityTrustUrl(`${image}`);
   }
 
-
   actionFrom (action, artist) {
     switch (action) {
       case 'play':

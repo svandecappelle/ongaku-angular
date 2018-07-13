@@ -72,34 +72,44 @@ export class AdminComponent implements OnInit {
   ];
   public lineChartLegend: boolean = true;
   public lineChartType: string = 'line';
-  @ViewChild('canvas', { read: ElementRef }) canvas: ElementRef;
-  private chart;
+  
+  @ViewChild('access', { read: ElementRef }) canvasUserAccess: ElementRef;
 
+  @ViewChild('activity', { read: ElementRef }) canvasActivity: ElementRef;
+
+  // @ViewChild('other', { read: ElementRef }) canvasOther: ElementRef;
+
+  
   constructor (private service: StatisticsService) { }
 
   ngOnInit() {
-    this.service.getUsersAccess().subscribe(datas => {
+    this.userAccess();
+    this.userActivity();
+  }
+
+  userActivity() {
+    this.service.getUsersActivity().subscribe(datas => {
       this.lineChartData[0].data = [];
       const allDates = [];
-      const connections = [];
+      const plays = [];
       datas.forEach(day => {
-        allDates.push(moment(day.date).format('LLL'));
-        connections.push(parseInt(day.value.toString(), 10));
+        allDates.push(moment(day.date).format('l'));
+        plays.push(parseInt(day.value.toString(), 10));
       });
 
-      this.chart = new Chart(this.canvas.nativeElement, {
+      new Chart(this.canvasActivity.nativeElement, {
         type: 'line',
         data: {
           labels: allDates,
           datasets: [
             {
-              data: connections,
+              data: plays,
               borderColor: '#3cba9f',
               fill: false,
-              label: 'Connections'
+              label: 'Plays count'
             },
             {
-              data: connections,
+              data: plays,
               borderColor: '#ffcc00',
               fill: false
             },
@@ -122,4 +132,54 @@ export class AdminComponent implements OnInit {
     });
   }
 
+  userAccess() {
+    this.service.getUsersAccess().subscribe(datas => {
+      this.lineChartData[0].data = [];
+      const allDates = [];
+      const connections = [];
+      datas.succeed.forEach(day => {
+        allDates.push(moment(day.date).format('l'));
+        connections.push(parseInt(day.value.toString(), 10));
+      });
+
+      const failedConnection = [];
+      datas.failed.forEach(day => {
+        failedConnection.push(parseInt(day.value.toString(), 10));
+      });
+
+      new Chart(this.canvasUserAccess.nativeElement, {
+        type: 'line',
+        data: {
+          labels: allDates,
+          datasets: [
+            {
+              data: connections,
+              borderColor: '#3cba9f',
+              fill: false,
+              label: 'Connections'
+            },
+            {
+              data: failedConnection,
+              borderColor: '#ffcc00',
+              fill: false,
+              label: 'Failed connection'
+            },
+          ]
+        },
+        options: {
+          legend: {
+            display: true
+          },
+          scales: {
+            xAxes: [{
+              display: true
+            }],
+            yAxes: [{
+              display: true
+            }],
+          }
+        }
+      });
+    });
+  }
 }

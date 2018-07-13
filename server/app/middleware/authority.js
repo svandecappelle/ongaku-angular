@@ -170,6 +170,10 @@ class Authority {
 
   login (username, password, done) {
     if (!username || !password) {
+
+      statistics.set('failed-logins', moment().startOf('day').format('x'), 'increment', () => {
+        console.debug("Stats saved");
+      });
       return done(new Error('[[error:invalid-user-data]]'));
     }
 
@@ -180,6 +184,10 @@ class Authority {
         return done(err);
       }
       if (!uid) {
+
+        statistics.set('failed-logins', moment().startOf('day').format('x'), 'increment', () => {
+          console.debug("Stats saved");
+        });
         // To-do: Even if a user doesn't exist, compare passwords anyway, so we don't immediately return
         return done(null, false, '[[error:no-user]]');
       }
@@ -202,6 +210,9 @@ class Authority {
           }
 
           if (!userData || !userData.password) {
+            statistics.set('failed-logins', moment().startOf('day').format('x'), 'increment', () => {
+              console.debug("Stats saved");
+            });
             return done(new Error('[[error:invalid-user-data]]'));
           }
 
@@ -217,6 +228,9 @@ class Authority {
               return done(new Error('bcrypt compare error'));
             }
             if (!res) {
+              statistics.set('failed-logins', moment().startOf('day').format('x'), 'increment', () => {
+                console.debug("Stats saved");
+              });
               return done(null, false, {
                 code: 401,
                 message: '[[error:invalid-password]]'});

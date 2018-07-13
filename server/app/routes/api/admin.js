@@ -63,7 +63,18 @@ router.get('/statistics/users/access', (req, res) => {
 });
 
 router.get('/statistics/users/login', (req, res) => {
-    getDayStatistics(7, 'logins').then((data) => {
+    getDayStatistics(25, 'logins').then((logins) => {
+        getDayStatistics(25, 'failed-logins').then((failedLogins) => {
+            res.json({
+                succeed: logins,
+                failed: failedLogins
+            })
+        });
+    });
+});
+
+router.get('/statistics/users/activity', (req, res) => {
+    getDayStatistics(25, 'plays').then((data) => {
         res.json(data);
     });
 });
