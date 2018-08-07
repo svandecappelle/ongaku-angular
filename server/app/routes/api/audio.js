@@ -26,6 +26,9 @@ const tinycolor = require("tinycolor2");
 // const translator = require("./../../middleware/translator");
 const async = require("async");
 
+const crypto = require('crypto');
+const algorithm = 'aes-256-ctr';
+const password = nconf.get('secret');
 var router = express.Router();
 
 try {
@@ -34,7 +37,7 @@ try {
     logger.warn('Application cannot be used using desktop player.');
 }
 
-const DEFAULT_USERS__DIRECTORY = path.join(__dirname, "/../../../../public/user/");
+const DEFAULT_USERS__DIRECTORY = path.resolve(__dirname, "../../../../public/user/");
 const DEFAULT_GROUP_BY = ['artist', 'album'];
 const DEFAULT_SORT_BY = 'artist';
 const userFilesOpts = {
@@ -151,6 +154,21 @@ class SuccessCall {
 
 };
 class Helpers {
+
+
+    encrypt(text) {
+        var cipher = crypto.createCipher(algorithm, password)
+        var crypted = cipher.update(text, 'utf8', 'hex')
+        crypted += cipher.final('hex');
+        return crypted;
+    }
+
+    decrypt(text) {
+        var decipher = crypto.createDecipher(algorithm, password)
+        var dec = decipher.update(text, 'hex', 'utf8')
+        dec += decipher.final('utf8');
+        return dec;
+    }
 
     incrementPlays(mediauid, userSession) {
         if (mediauid) {
@@ -309,7 +327,7 @@ router.get('/library/:page', (req, res) => {
 
 router.get('/artists/:page', (req, res) => {
     // load by page of 3 artists.
-   
+
     logger.debug("Get all one page of artists ".concat(req.params.page));
     var libraryDatas = null;
 
@@ -323,7 +341,7 @@ router.get('/artists/:page', (req, res) => {
 
 router.get('/albums/:page', (req, res) => {
     // load by page of 3 artists.
-   
+
     logger.debug("Get all one page of artists ".concat(req.params.page));
     var libraryDatas = null;
 
@@ -336,7 +354,7 @@ router.get('/albums/:page', (req, res) => {
 });
 
 router.get('/artist/:name', (req, res) => {
-    
+
     logger.debug("Get detail page of artist ".concat(req.params.name));
     var datas = library.getArtistDetails(req.params.name);
     middleware.json(req, res, datas);
@@ -344,7 +362,7 @@ router.get('/artist/:name', (req, res) => {
 
 router.get('/artists/filter/:search/:page', (req, res) => {
     // load by page of 3 artists.
-   
+
     logger.debug("Get all one page of artists ".concat(req.params.page));
     var libraryDatas = null;
 
@@ -357,7 +375,7 @@ router.get('/artists/filter/:search/:page', (req, res) => {
 });
 
 router.get('/album/:name', (req, res) => {
-    
+
     logger.debug("Get detail page of artist ".concat(req.params.name));
     var datas = libraryDatas = library.getAlbum('all', req.params.name);
     middleware.json(req, res, datas);
@@ -365,7 +383,7 @@ router.get('/album/:name', (req, res) => {
 
 router.get('/albums/filter/:search/:page', (req, res) => {
     // load by page of 3 artists.
-   
+
     logger.debug("Get all one page of albums ".concat(req.params.page));
     var libraryDatas = null;
 
@@ -457,30 +475,75 @@ router.get("/api/users", (req, res) => {
     res.json();
 });
 
+router.get('/my-library/:folder(*)', (req, res) => {
+    //if (nconf.get("allowUpload") === 'true') {
+    if (req.session.passport && req.session.passport.user) {
+        var username = req.session.passport.user.username;
+        var folder = req.params.folder;
+        var folderReading = path.join(DEFAULT_USERS__DIRECTORY, username, "imported");
 
-var onUploadView = (req, res) => {
-    if (nconf.get("allowUpload") === 'true') {
-        helpers.redirectIfNotAuthenticated(req, res, () => {
-            var username = req.session.passport.user.username;
-            var folder = req.params.folder;
+        if (!fs.existsSync(folderReading)) {
+            return res.status(500).json({
+                message: 'Destination file doesn\'t exists contact your administrator'
+            });
+        }
+        if (folder) {
+            folderReading += pah.join(folderReading, folder);
+        }
 
-            if (fs.existsSync(DEFAULT_USERS__DIRECTORY + username + "/imported")) {
-                var folderReading = DEFAULT_USERS__DIRECTORY + username + "/imported/";
-                if (folder) {
-                    folderReading += folder + "/";
-                }
-
-                middleware.render('user/upload', req, res, {
-                    files: fs.readdirSync(folderReading)
-                });
-            } else {
-                middleware.render('user/upload', req, res);
-            }
+        var files = fs.readdirSync(folderReading);
+        files = _.map(files, (file) => {
+            const stat = fs.statSync(path.resolve(folderReading, file));
+            let location = path.join(folderReading, file);
+            return {
+                name: file,
+                type: stat.isDirectory(path.resolve(folderReading, file)) ? 'directory' : 'file',
+                stat: stat,
+                location: helpers.encrypt(location).substring(0, 32)
+            };
         });
-    } else {
-        middleware.redirect('403', res);
+        res.json({
+            files: files
+        });
     }
-};
+    /*} else {
+        res.status(403).json({ message: 'Not allowed.' });
+    }*/
+});
+
+router.post('/upload/:folder(*)', (req, res) => {
+    //if (nconf.get("allowUpload") === 'true') {
+    if (req.session.passport && req.session.passport.user) {
+        var username = req.session.passport.user.username;
+        var folder = req.params.folder;
+        var folderReading = path.join(DEFAULT_USERS__DIRECTORY, username, "imported");
+
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        if (!fs.existsSync(path.join(DEFAULT_USERS__DIRECTORY, username))) {
+            fs.mkdirSync(path.join(DEFAULT_USERS__DIRECTORY, username));
+        }
+
+        if (!fs.existsSync(folderReading)) {
+            fs.mkdirSync(folderReading);
+        }
+
+        var busboy = new Busboy({ headers: req.headers });
+        busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+            var saveTo = path.join(folderReading, filename);
+            file.pipe(fs.createWriteStream(saveTo));
+        });
+        busboy.on('finish', () => {
+            res.json({
+                message: 'ok'
+            });
+        });
+
+        req.pipe(busboy);
+    }
+    /*} else {
+        res.status(403).json({ message: 'Not allowed.' });
+    }*/
+});
 
 
 

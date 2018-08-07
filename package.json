@@ -23,6 +23,7 @@
     "connect-redis": "^3.3.3",
     "cookie-parser": "^1.4.3",
     "core-js": "^2.5.0",
+    "crypto": "^1.0.1",
     "csurf": "^1.9.0",
     "dateformat": "^2.0.0",
     "errorhandler": "^1.5.0",

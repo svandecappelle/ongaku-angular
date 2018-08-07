@@ -1,3 +1,26 @@
-<p>
-  upload works!
-</p>
+<h3>
+  Folder: {{folder}}
+</h3>
+
+<div>
+  <h4>Files in this folder</h4>
+  <mat-list #tracks>
+    <mat-list-item *ngFor="let file of directories(files)">
+      <span class="file-name" *ngIf="file.type === 'directory'"><a routerLink="/upload">{{file.name}}</a></span>
+    </mat-list-item>
+  </mat-list>
+  
+  <mat-selection-list #tracks>
+    <mat-list-option *ngFor="let file of regularFiles(files)" [value]="file">
+      <div class="track">
+        <span>
+          <button mat-icon-button (click)="appendToPlaylist(track, artist, $event)">
+            <mat-icon aria-label="File type">{{getFileIcon(file)}}</mat-icon>
+          </button>
+        </span>
+        <span class="file-name" *ngIf="file.type === 'file'">{{file.name}}</span>
+      </div>
+    </mat-list-option>
+  </mat-selection-list>
+</div>
+<button mat-raised-button (click)="openUploadDialog()">Upload</button>

@@ -22,6 +22,7 @@ const routes: Routes = [
   { path: 'album/:album', component: AlbumComponent, canActivate: [AuthGuard]},
   { path: 'users', component: UsersComponent, canActivate: [AuthGuard]},
   { path: 'radios', component: RadiosComponent, canActivate: [AuthGuard]},
+  { path: 'my-library/:folder', component: LibraryComponent, canActivate: [AuthGuard]},
   { path: 'my-library', component: LibraryComponent, canActivate: [AuthGuard]},
   { path: 'upload', component: UploadComponent, canActivate: [AuthGuard]},
   { path: '', component: HomeComponent, canActivate: [AuthGuard] },

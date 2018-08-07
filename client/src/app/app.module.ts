@@ -28,7 +28,6 @@ import { AudioService } from './audio.service';
 import { PlayerModule } from './player/player.module';   // our custom service, see below
 
 import { AppStateModule } from './app-state';
-import { PlayerControlsComponent } from './player/controls/player-controls/player-controls.component';
 import { LoginComponent } from './login/login.component';
 
 import { AlertService, AuthenticationService, UserService } from './services/index';
@@ -41,10 +40,10 @@ import { AlbumComponent, AlbumService } from './artist/album/';
 import { UsersComponent } from './users/users.component';
 import { LibraryComponent } from './library/library.component';
 import { RadiosComponent } from './radios/radios.component';
-import { UploadComponent } from './upload/upload.component';
 
 import { UsersService } from './users';
 import { UploadService } from './upload';
+import { UploadModule } from './upload/upload.module';
 
 
 @NgModule({
@@ -64,8 +63,7 @@ import { UploadService } from './upload';
     AlbumComponent,
     UsersComponent,
     LibraryComponent,
-    RadiosComponent,
-    UploadComponent
+    RadiosComponent
   ],
   imports: [
     BrowserModule,
@@ -81,6 +79,7 @@ import { UploadService } from './upload';
     HttpClientModule,
     AppStateModule,
     PlayerModule,
+    UploadModule,
   ],
   entryComponents: [
     MetadatasComponent
