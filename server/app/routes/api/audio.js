@@ -483,6 +483,7 @@ router.get('/my-library/:folder(*)', (req, res) => {
         var folderReading = path.join(DEFAULT_USERS__DIRECTORY, username, "imported");
         if (!fs.existsSync(path.join(DEFAULT_USERS__DIRECTORY, username))) {
             fs.mkdirSync(path.join(DEFAULT_USERS__DIRECTORY, username));
+            fs.mkdirSync(path.join(DEFAULT_USERS__DIRECTORY, username, "imported"));
         }
         if (!fs.existsSync(folderReading)) {
             return res.status(500).json({
