@@ -481,7 +481,9 @@ router.get('/my-library/:folder(*)', (req, res) => {
         var username = req.session.passport.user.username;
         var folder = req.params.folder;
         var folderReading = path.join(DEFAULT_USERS__DIRECTORY, username, "imported");
-
+        if (!fs.existsSync(path.join(DEFAULT_USERS__DIRECTORY, username))) {
+            fs.mkdirSync(path.join(DEFAULT_USERS__DIRECTORY, username));
+        }
         if (!fs.existsSync(folderReading)) {
             return res.status(500).json({
                 message: 'Destination file doesn\'t exists contact your administrator'
