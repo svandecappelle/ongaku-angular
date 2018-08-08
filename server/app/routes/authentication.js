@@ -49,7 +49,7 @@ class Authenticator {
   load () {
     this.app.get('/api/auth/', (req, res) => {
       res.send({
-        connected: req.isAuthenticated()
+        connected: middleware.isAuthenticated(req)
       });
     });
     this.app.get('/api/auth/logout', authority.logout);

@@ -25,7 +25,7 @@ const USERS_IMAGE_DIRECTORY = path.join(__dirname, "/../../../public/user/");
 class Authority {
 
     logout (req, res) {
-      if (req.isAuthenticated()) {
+      if (middleware.isAuthenticated(req)) {
         logger.info('[Auth] Session ' + req.sessionID + ' logout (uid: ' + req.session.passport.user + ')');
         req.session.locale = nconf.get("defaultLocale");
 

@@ -56,7 +56,7 @@ class Middleware {
       call = async.compose((middlewareObject, next) => {
         middlewareObject.objs.theme = nconf.get("theme");
 
-        if (middlewareObject.req.isAuthenticated()) {
+        if (this.isAuthenticated(middlewareObject.req)) {
           middlewareObject.objs.session.user.avatar = this.getAvatar(middlewareObject.req.user.username);
           middlewareObject.objs.session.user.cover = this.getCover(middlewareObject.req.user.username);
           if (fs.existsSync(USERS_IMAGE_DIRECTORY.concat(middlewareObject.req.user.username + "/imported/theme.css"))) {
@@ -244,7 +244,7 @@ class Middleware {
           middlewareObject.objs.meta.requireAuthentication = true;
         }
 
-        if (middlewareObject.req.isAuthenticated()) {
+        if (this.isAuthenticated(middlewareObject.req)) {
           middlewareObject.objs.session.user = middlewareObject.req.user;
 
           middlewareObject.objs.session.user.isAnonymous = false;
@@ -388,7 +388,7 @@ class Middleware {
    * Post a method (test if user is authenticated)
    */
   post(req, res, callback) {
-    if (!req.isAuthenticated()) {
+    if (!this.isAuthenticated(req)) {
       res.send('403', 'You need to be logged');
     } else {
       callback();
@@ -401,7 +401,7 @@ class Middleware {
   };
 
   isAuthenticated(req) {
-    return req.isAuthenticated();
+    return req.session.passport && req.session.passport.user !== undefined;
   };
 
   /*
