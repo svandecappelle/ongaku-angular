@@ -514,7 +514,7 @@ router.get('/my-library/:folder(*)', (req, res) => {
     }*/
 });
 
-router.post('/upload/:folder(*)', (req, res) => {
+router.post('/upload', (req, res) => {
     //if (nconf.get("allowUpload") === 'true') {
     if (req.session.passport && req.session.passport.user) {
         var username = req.session.passport.user.username;
