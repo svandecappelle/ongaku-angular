@@ -12,22 +12,11 @@ defaultLanguage: fr
 database: redis
 type: browser
 playingtype: streaming
-postgres:
-    host: localhost
-    database: ongaku
-    username: svandecappelle
-    password:
-    type: postgresql
-    logging: false
-    #schema: svandecappelle
-    dialect: postgres
-    dialectOptions:
-      multipleStatements: true
 redis:
     host: 127.0.0.1
     port: 6379
     password:
-    database: 2
+    database: 0
 secret: eba16c61-18db-471a-9406-6371d7e42f63
 bcrypt_rounds: 12
 gravatar: true

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { InstallService } from './install.service';
 
 @Component({
   selector: 'app-install',
@@ -7,9 +8,15 @@ import { Component, OnInit } from '@angular/core';
 })
 export class InstallComponent implements OnInit {
 
-  constructor() { }
+  constructor(private installService: InstallService) { }
 
   ngOnInit() {
   }
 
+  install() {
+    console.log("Install in progress");
+    this.installService.install().subscribe(() => {
+      console.log("installed");
+    });
+  }
 }

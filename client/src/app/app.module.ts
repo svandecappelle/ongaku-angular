@@ -22,6 +22,8 @@ import { AppRoutingModule } from './app-routing.module';
 import { HomeComponent } from './home/home.component';
 import { InstallComponent } from './install/install.component';
 import { UpgradeComponent } from './upgrade/upgrade.component';
+
+import { InstallService } from './install/install.service';
 import { MenuComponent } from './menu/menu.component';
 
 import { AudioService } from './audio.service';
@@ -94,7 +96,8 @@ import { UploadModule } from './upload/upload.module';
     AlbumService,
     StatisticsService,
     UsersService,
-    UploadService
+    UploadService,
+    InstallService
   ],
   bootstrap: [AppComponent]
 })

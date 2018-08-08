@@ -11,17 +11,24 @@ class Version {
 
   installed() {
     return new Promise((resolve, reject) => {
-      models[nconf.get('product-name')].findAll().then(properties => {
-        var application = {};
-        for (var variable of properties) {
-          application[variable.get('property')] = variable.get('value');
-        }
-        resolve(application.version);
-      }).catch((error) => {
-        // console.error(error);
-        console.log('not installed application');
-        resolve(null);
-      });
+      if (nconf.get('database') === 'redis'){
+        const groups = require('../model/groups');
+        groups.getAllGroups((err, groups) => {
+          resolve(!err && groups.length > 0 ? this.current(): null);
+        });
+      } else {
+        models[nconf.get('product-name')].findAll().then(properties => {
+          var application = {};
+          for (var variable of properties) {
+            application[variable.get('property')] = variable.get('value');
+          }
+          resolve(application.version);
+        }).catch((error) => {
+          // console.error(error);
+          console.log('not installed application');
+          resolve(null);
+        });
+      }
     });
   }
 

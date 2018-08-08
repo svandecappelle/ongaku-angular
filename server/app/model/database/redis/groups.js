@@ -27,7 +27,7 @@ class GroupsRedisModel {
         db.getSetMembers('groups', (err, groupNames) => {
             if (groupNames.length > 0) {
                 async.map(groupNames, (groupName, next) => {
-                    Groups.get(groupName, options, next);
+                    this.get(groupName, options, next);
                 }, (err, groups) => {
                     callback(err, filterGroups(groups, options));
                 });
@@ -131,7 +131,7 @@ class GroupsRedisModel {
                 });
 
                 async.map(groups, (groupName, next) => {
-                    Groups.get(groupName, options, next);
+                    this.get(groupName, options, next);
                 }, (err, groups) => {
                     callback(err, filterGroups(groups, options));
                 });
