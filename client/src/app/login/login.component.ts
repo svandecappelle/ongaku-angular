@@ -3,6 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { AlertService, AuthenticationService } from '../services/index';
+import { InstallService } from '../install/install.service';
 
 @Component({
   selector: 'app-login',
@@ -10,24 +11,32 @@ import { AlertService, AuthenticationService } from '../services/index';
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit {
-    form: FormGroup;                    // {1}
-    private formSubmitAttempt: boolean; // {2}
+    form: FormGroup;
+    private formSubmitAttempt: boolean;
     private loginInProgress: boolean;
 
     constructor(
       private ref: ChangeDetectorRef,
-      private fb: FormBuilder,         // {3}
-      private authService: AuthenticationService // {4}
+      private fb: FormBuilder,
+      private authService: AuthenticationService,
+      private installService: InstallService,
+      private router: Router
     ) {}
 
     ngOnInit() {
-      this.form = this.fb.group({     // {5}
+      this.installService.check().subscribe((result) => {
+        console.log(result);
+        if (!result.version) {
+          this.router.navigate(['/install']);
+        }
+      });
+      this.form = this.fb.group({
         userName: ['', Validators.required],
         password: ['', Validators.required]
       });
     }
 
-    isFieldInvalid(field: string) { // {6}
+    isFieldInvalid(field: string) {
       this.loginInProgress = false;
       return (
         (!this.form.get(field).valid && this.form.get(field).touched) ||
@@ -39,10 +48,10 @@ export class LoginComponent implements OnInit {
       this.loginInProgress = true;
       this.ref.markForCheck();
       if (this.form.valid) {
-        this.authService.login(this.form.value.userName, this.form.value.password); // {7}
+        this.authService.login(this.form.value.userName, this.form.value.password);
         this.loginInProgress = false;
       }
-      this.formSubmitAttempt = true;             // {8}
+      this.formSubmitAttempt = true;
     }
   }
 
