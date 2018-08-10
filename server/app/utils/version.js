@@ -13,14 +13,6 @@ class Version {
     return new Promise((resolve, reject) => {
       if (nconf.get('database') === 'redis'){
         const groups = require('../model/groups');
-        const user = require('../model/user');
-        // TODO correction on redis stack getObjectFields
-
-        user.getUsers(['me@mizore.fr'], function (err, data) {
-          // console.log('user', data);
-        });
-        
-
         groups.getAllGroups((err, groups) => {
           resolve(!err && groups.length > 0 ? this.current(): null);
         });
