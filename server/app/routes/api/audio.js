@@ -505,8 +505,17 @@ router.get('/my-library/:folder(*)', (req, res) => {
                 location: helpers.encrypt(location).substring(0, 32)
             };
         });
-        res.json({
-            files: files
+        console.log("Folder " + folder + " scanning");
+        var type = ['audio', 'video'];
+
+        library.addFolder({
+            path: path.join(DEFAULT_USERS__DIRECTORY, username, "imported"),
+            username: username
+        }, (scanResult) => {
+            console.log("Folder added");
+            res.json({
+                files: files
+            });
         });
     }
     /*} else {
