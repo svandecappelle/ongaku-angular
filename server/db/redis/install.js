@@ -14,25 +14,20 @@ class Installer {
         console.info("Standard global settings initialised");
       });
 
-
-      user.create({ email: "admin@domain.fr", username: "admin", password: "admin" }, function (err, uuid) {
+      user.create({ email: opts.email, username: opts.username, password: opts.password }, function (err, uuid) {
         if (err) {
           console.error("Error while create user: " + err);
           reject(err);
         } else {
           console.info("Success create user: " + uuid);
         }
-        user.getUsers(["admin@domain.fr"], function (err, data) {
-          console.info("Installed");
-          resolve();
-        });
-
-        groups.join("administrators", "admin@domain.fr", function (err) {
+        groups.join("administrators", opts.email, function (err) {
           if (err) {
             console.error(err);
             reject(err);
           }
-          console.info("User admin configured as administrator");
+          console.info("Installed");
+          resolve();
         });
       });
     });

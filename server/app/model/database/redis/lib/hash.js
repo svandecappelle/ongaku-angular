@@ -43,7 +43,7 @@ module.exports = function(redisClient, module) {
 	};
 
 	module.getObjectFields = function(key, fields, callback) {
-		module.getObjectsFields([key], fields, function(err, results) {
+		module.getObjectsFields(key, fields, function(err, results) {
 			callback(err, results ? results[0]: null);
 		});
 	};

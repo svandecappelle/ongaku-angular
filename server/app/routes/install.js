@@ -25,7 +25,7 @@ router.get('/', function (req, res, next) {
 });
 
 router.post('/', (req, res) => {
-  installer.install().then((installed, errors) => {
+  installer.install(req.body).then((installed, errors) => {
     res.json({ install: 'ok' });
   }).catch((error) => {
     res.status(500).json(error);

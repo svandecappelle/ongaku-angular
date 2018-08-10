@@ -14,8 +14,8 @@ export class InstallService {
     .catch((error: any) => Observable.throw(error || 'Server error'));
   }
 
-  install (): Observable<any> {
-    return this.http.post(`/api/install`, {}, {}).map((object) => object)
+  install (opts): Observable<any> {
+    return this.http.post(`/api/install`, opts).map((object) => object)
       .catch((error: any) => Observable.throw(error || 'Server error'));
   }
 }
