@@ -505,18 +505,6 @@ router.get('/my-library/:folder(*)', (req, res) => {
                 location: helpers.encrypt(location).substring(0, 32)
             };
         });
-        console.log("Folder " + folder + " scanning");
-        var type = ['audio', 'video'];
-
-        library.addFolder({
-            path: path.join(DEFAULT_USERS__DIRECTORY, username, "imported"),
-            username: username
-        }, (scanResult) => {
-            console.log("Folder added");
-            res.json({
-                files: files
-            });
-        });
     }
     /*} else {
         res.status(403).json({ message: 'Not allowed.' });
@@ -545,9 +533,19 @@ router.post('/upload', (req, res) => {
             file.pipe(fs.createWriteStream(saveTo));
         });
         busboy.on('finish', () => {
-            res.json({
-                message: 'ok'
+            console.log("Folder " + folder + " scanning");
+            var type = ['audio', 'video'];
+
+            library.addFolder({
+                path: path.join(DEFAULT_USERS__DIRECTORY, username, "imported"),
+                username: username
+            }, (scanResult) => {
+                console.log("Folder added");
+                res.json({
+                    message: 'ok'
+                });
             });
+            
         });
 
         req.pipe(busboy);
