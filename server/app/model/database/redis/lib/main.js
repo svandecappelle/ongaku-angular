@@ -1,107 +1,96 @@
-"use strict";
+'use strict';
 
-module.exports = function(redisClient, module) {
-	module.searchIndex = function(key, content, id) {
-		if (key === 'post') {
-				module.postSearch.index(content, id);
-		} else if(key === 'topic') {
-				module.topicSearch.index(content, id);
-		}
-	};
-
-	module.search = function(key, term, limit, callback) {
-		function search(searchObj, callback) {
-			searchObj.query(term).between(0, limit - 1).type('or').end(callback);
-		}
-
-		if(key === 'post') {
-			search(module.postSearch, callback);
-		} else if(key === 'topic') {
-			search(module.topicSearch, callback);
-		}
-	};
-
-	module.searchRemove = function(key, id, callback) {
-		if(key === 'post') {
-			module.postSearch.remove(id);
-		} else if(key === 'topic') {
-			module.topicSearch.remove(id);
-		}
-
-		if (typeof callback === 'function') {
-			callback();
-		}
-	};
-
-	module.flushdb = function(callback) {
-		redisClient.send_command('flushdb', [], function(err) {
+module.exports = function (redisClient, module) {
+	module.flushdb = function (callback) {
+		redisClient.send_command('flushdb', [], function (err) {
 			if (typeof callback === 'function') {
 				callback(err);
 			}
 		});
 	};
 
-	module.info = function(callback) {
-		redisClient.info(function (err, data) {
-			if(err) {
-				return callback(err);
-			}
-
-			var lines = data.toString().split("\r\n").sort();
-			var redisData = {};
-			lines.forEach(function (line) {
-				var parts = line.split(':');
-				if (parts[1]) {
-					redisData[parts[0]] = parts[1];
-				}
-			});
-
-			redisData.raw = JSON.stringify(redisData, null, 4);
-			redisData.redis = true;
-
-			callback(null, redisData);
-		});
+	module.emptydb = function (callback) {
+		module.flushdb(callback);
 	};
 
-	module.exists = function(key, callback) {
-		redisClient.exists(key, function(err, exists) {
+	module.exists = function (key, callback) {
+		redisClient.exists(key, function (err, exists) {
 			callback(err, exists === 1);
 		});
 	};
 
-	module.delete = function(key, callback) {
-		redisClient.del(key, callback);
+	module.delete = function (key, callback) {
+		callback = callback || function () {};
+		redisClient.del(key, function (err) {
+			callback(err);
+		});
 	};
 
-	module.get = function(key, callback) {
+	module.deleteAll = function (keys, callback) {
+		callback = callback || function () {};
+		var multi = redisClient.multi();
+		for (var i = 0; i < keys.length; i += 1) {
+			multi.del(keys[i]);
+		}
+		multi.exec(function (err) {
+			callback(err);
+		});
+	};
+
+	module.get = function (key, callback) {
 		redisClient.get(key, callback);
 	};
 
-	module.set = function(key, value, callback) {
-		redisClient.set(key, value, callback);
+	module.set = function (key, value, callback) {
+		callback = callback || function () {};
+		redisClient.set(key, value, function (err) {
+			callback(err);
+		});
 	};
 
-	module.increment = function(key, callback) {
+	module.increment = function (key, callback) {
+		callback = callback || function () {};
 		redisClient.incr(key, callback);
 	};
 
-	module.rename = function(oldKey, newKey, callback) {
-		redisClient.rename(oldKey, newKey, callback);
+	module.rename = function (oldKey, newKey, callback) {
+		callback = callback || function () {};
+		redisClient.rename(oldKey, newKey, function (err) {
+			callback(err && err.message !== 'ERR no such key' ? err : null);
+		});
 	};
 
-	module.expire = function(key, seconds, callback) {
-		redisClient.expire(key, seconds, callback);
+	module.type = function (key, callback) {
+		redisClient.type(key, function (err, type) {
+			callback(err, type !== 'none' ? type : null);
+		});
 	};
 
-	module.expireAt = function(key, timestamp, callback) {
-		redisClient.expireat(key, timestamp, callback);
+	module.expire = function (key, seconds, callback) {
+		callback = callback || function () {};
+		redisClient.expire(key, seconds, function (err) {
+			callback(err);
+		});
 	};
 
-	module.pexpire = function(key, ms, callback) {
-		redisClient.pexpire(key, ms, callback);
+	module.expireAt = function (key, timestamp, callback) {
+		callback = callback || function () {};
+		redisClient.expireat(key, timestamp, function (err) {
+			callback(err);
+		});
 	};
 
-	module.pexpireAt = function(key, timestamp, callback) {
-		redisClient.pexpireat(key, timestamp, callback);
+	module.pexpire = function (key, ms, callback) {
+		callback = callback || function () {};
+		redisClient.pexpire(key, ms, function (err) {
+			callback(err);
+		});
+	};
+
+	module.pexpireAt = function (key, timestamp, callback) {
+		callback = callback || function () {};
+		redisClient.pexpireat(key, timestamp, function (err) {
+			callback(err);
+		});
 	};
 };

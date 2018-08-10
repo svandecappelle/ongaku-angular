@@ -3,15 +3,10 @@
 (function (module) {
 
     var nconf = require('nconf'),
-        path = require('path'),
-        express = require('express'),
-        utils = require('./../../../../utils'),
         redis,
         ConnectRedis,
         reds,
-        redisClient,
-        postSearch,
-        topicSearch;
+        redisClient;
 
     module.questions = [{
         name: 'redis:host',

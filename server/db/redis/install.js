@@ -14,20 +14,23 @@ class Installer {
         console.info("Standard global settings initialised");
       });
 
-      user.create({ email: opts.email, username: opts.username, password: opts.password }, function (err, uuid) {
-        if (err) {
-          console.error("Error while create user: " + err);
-          reject(err);
-        } else {
-          console.info("Success create user: " + uuid);
-        }
-        groups.join("administrators", opts.email, function (err) {
+      user.getUsers([opts.email], function (err, data) {
+        console.info("Installed", data);
+        user.create({ email: opts.email, username: opts.username, password: opts.password }, function (err, uuid) {
           if (err) {
-            console.error(err);
+            console.error("Error while create user: " + err);
             reject(err);
+          } else {
+            console.info("Success create user: " + uuid);
           }
-          console.info("Installed");
-          resolve();
+          groups.join("administrators", opts.email, function (err) {
+            if (err) {
+              console.error(err);
+              reject(err);
+            }
+            console.info("Installed");
+            resolve();
+          });
         });
       });
     });

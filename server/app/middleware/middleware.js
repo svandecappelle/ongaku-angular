@@ -389,7 +389,9 @@ class Middleware {
    */
   post(req, res, callback) {
     if (!this.isAuthenticated(req)) {
-      res.send('403', 'You need to be logged');
+      res.status(403).json({
+        message: 'You need to be logged'
+      });
     } else {
       callback();
     }

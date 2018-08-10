@@ -177,9 +177,7 @@ class Authority {
       return done(new Error('[[error:invalid-user-data]]'));
     }
 
-    var userslug = username;
-
-    user.getUidByUsername(userslug, (err, uid) => {
+    user.getUidByUsername(username.trim(), (err, uid) => {
       if (err) {
         return done(err);
       }

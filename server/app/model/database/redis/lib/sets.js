@@ -1,61 +1,94 @@
-"use strict";
+'use strict';
 
-module.exports = function(redisClient, module) {
-	module.setAdd = function(key, value, callback) {
-		redisClient.sadd(key, value, callback);
-	};
+module.exports = function (redisClient, module) {
+	var helpers = module.helpers.redis;
 
-	module.setRemove = function(key, value, callback) {
-		redisClient.srem(key, value, callback);
-	};
-
-	module.isSetMember = function(key, value, callback) {
-		redisClient.sismember(key, value, function(err, result) {
-			if(err) {
-				return callback(err);
-			}
-
-			callback(null, result === 1);
+	module.setAdd = function (key, value, callback) {
+		callback = callback || function () {};
+		if (!Array.isArray(value)) {
+			value = [value];
+		}
+		if (!value.length) {
+			return callback();
+		}
+		redisClient.sadd(key, value, function (err) {
+			callback(err);
 		});
 	};
 
-	module.isSetMembers = function(key, values, callback) {
-		var multi = redisClient.multi();
-		for (var i=0; i<values.length; ++i) {
-			multi.sismember(key, values[i]);
-		}
-
-		multi.exec(function(err, results) {
-			if (err) {
-				return callback(err);
-			}
-
-			for (var i=0; i<results.length; ++i) {
-				results[i] = results[i] === 1;
-			}
-			callback(null, results);
+	module.setsAdd = function (keys, value, callback) {
+		callback = callback || function () {};
+		helpers.multiKeysValue(redisClient, 'sadd', keys, value, function (err) {
+			callback(err);
 		});
 	};
 
-	module.isMemberOfSets = function(sets, value, callback) {
-		var multi = redisClient.multi();
-
-		for (var i = 0, ii = sets.length; i < ii; i++) {
-			multi.sismember(sets[i], value);
+	module.setRemove = function (key, value, callback) {
+		callback = callback || function () {};
+		if (!Array.isArray(value)) {
+			value = [value];
 		}
-
-		multi.exec(callback);
+		if (!Array.isArray(key)) {
+			key = [key];
+		}
+		var multi = redisClient.multi();
+		key.forEach(function (key) {
+			multi.srem(key, value);
+		});
+		multi.exec(function (err) {
+			callback(err);
+		});
 	};
 
-	module.getSetMembers = function(key, callback) {
+	module.setsRemove = function (keys, value, callback) {
+		callback = callback || function () {};
+		helpers.multiKeysValue(redisClient, 'srem', keys, value, function (err) {
+			callback(err);
+		});
+	};
+
+	module.isSetMember = function (key, value, callback) {
+		if (!key || !value){
+			return callback(null, null);
+		}
+		redisClient.sismember(key, value, function (err, result) {
+			callback(err, result === 1);
+		});
+	};
+
+	module.isSetMembers = function (key, values, callback) {
+		if (!key || !values){
+			return callback(null, null);
+		}
+		helpers.multiKeyValues(redisClient, 'sismember', key, values, function (err, results) {
+			callback(err, results ? helpers.resultsToBool(results) : null);
+		});
+	};
+
+	module.isMemberOfSets = function (sets, value, callback) {
+		helpers.multiKeysValue(redisClient, 'sismember', sets, value, function (err, results) {
+			callback(err, results ? helpers.resultsToBool(results) : null);
+		});
+	};
+
+	module.getSetMembers = function (key, callback) {
 		redisClient.smembers(key, callback);
 	};
 
-	module.setCount = function(key, callback) {
+	module.getSetsMembers = function (keys, callback) {
+		helpers.multiKeys(redisClient, 'smembers', keys, callback);
+	};
+
+	module.setCount = function (key, callback) {
 		redisClient.scard(key, callback);
 	};
 
-	module.setRemoveRandom = function(key, callback) {
+	module.setsCount = function (keys, callback) {
+		helpers.multiKeys(redisClient, 'scard', keys, callback);
+	};
+
+	module.setRemoveRandom = function (key, callback) {
+		callback = callback || function () {};
 		redisClient.spop(key, callback);
 	};
 
