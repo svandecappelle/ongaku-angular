@@ -14,7 +14,10 @@ export class UploadComponent implements OnInit {
   private files: string[];
   private folder: string;
 
-  constructor(public dialog: MatDialog, public uploadService: UploadService, public route: ActivatedRoute, public router: Router) {
+  constructor(public dialog: MatDialog, 
+    public uploadService: UploadService,
+    public route: ActivatedRoute,
+    public router: Router) {
   }
 
   ngOnInit() {
@@ -29,7 +32,12 @@ export class UploadComponent implements OnInit {
   }
 
   public openUploadDialog() {
-    let dialogRef = this.dialog.open(DialogComponent, { width: '50%', height: '50%' });
+    let dialogRef = this.dialog.open(DialogComponent, { width: '50%', height: '50%', data: { folder: this.folder } });
+    dialogRef.afterClosed().subscribe(() => {
+      this.uploadService.list(this.folder ? this.folder : '').subscribe(files => {
+        this.files = files;
+      });
+    })
   }
 
   directories(files) {

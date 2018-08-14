@@ -171,7 +171,7 @@ class Library {
     scan.addToScan(folder.path);
     this.removeFolder(folder);
     scan.scanFolder(folder.path).then((folderContent) => {
-      folderContent.private = folder.isPrivate
+      folderContent.private = folder.private;
 
       if (folderContent.audio) {
         that.populate("audio", {

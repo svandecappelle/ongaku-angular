@@ -4,14 +4,9 @@
 
 <div>
   <h4>Files in this folder</h4>
-  <mat-list #tracks *ngIf="files">
-    <mat-list-item *ngFor="let file of directories(files)">
-      <span class="file-name" *ngIf="file.type === 'directory'"><a routerLink="/upload">{{file.name}}</a></span>
-    </mat-list-item>
-  </mat-list>
-  
+
   <mat-selection-list #tracks *ngIf="files">
-    <mat-list-option *ngFor="let file of regularFiles(files)" [value]="file">
+    <mat-list-option *ngFor="let file of files" [value]="file">
       <div class="track">
         <span>
           <button mat-icon-button (click)="appendToPlaylist(track, artist, $event)">
@@ -19,6 +14,7 @@
           </button>
         </span>
         <span class="file-name" *ngIf="file.type === 'file'">{{file.name}}</span>
+        <a *ngIf="file.type === 'directory'" routerLink="/my-library/{{file.name}}">{{file.name}}</a>
       </div>
     </mat-list-option>
   </mat-selection-list>

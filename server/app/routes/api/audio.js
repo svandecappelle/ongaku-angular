@@ -491,7 +491,7 @@ router.get('/my-library/:folder(*)', (req, res) => {
             });
         }
         if (folder) {
-            folderReading += pah.join(folderReading, folder);
+            folderReading = path.join(folderReading, folder);
         }
 
         var files = fs.readdirSync(folderReading);
@@ -505,13 +505,16 @@ router.get('/my-library/:folder(*)', (req, res) => {
                 location: helpers.encrypt(location).substring(0, 32)
             };
         });
+        res.send({
+            files: files
+        });
     }
     /*} else {
         res.status(403).json({ message: 'Not allowed.' });
     }*/
 });
 
-router.post('/upload', (req, res) => {
+router.post('/upload/:folder(*)', (req, res) => {
     //if (nconf.get("allowUpload") === 'true') {
     if (req.session.passport && req.session.passport.user) {
         var username = req.session.passport.user.username;
@@ -525,6 +528,10 @@ router.post('/upload', (req, res) => {
 
         if (!fs.existsSync(folderReading)) {
             fs.mkdirSync(folderReading);
+        } 
+        
+        if (folder) {
+            folderReading = path.join(folderReading, folder);
         }
 
         var busboy = new Busboy({ headers: req.headers });
@@ -533,12 +540,12 @@ router.post('/upload', (req, res) => {
             file.pipe(fs.createWriteStream(saveTo));
         });
         busboy.on('finish', () => {
-            console.log("Folder " + folder + " scanning");
             var type = ['audio', 'video'];
 
             library.addFolder({
-                path: path.join(DEFAULT_USERS__DIRECTORY, username, "imported"),
-                username: username
+                path: path.join(DEFAULT_USERS__DIRECTORY, username),
+                username: username,
+                private: true
             }, (scanResult) => {
                 console.log("Folder added");
                 res.json({

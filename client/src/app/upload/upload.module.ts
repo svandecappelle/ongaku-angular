@@ -9,7 +9,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 
 @NgModule({
-  imports: [CommonModule, MatButtonModule, MatDialogModule, MatListModule, MatIconModule, HttpClientModule, BrowserAnimationsModule, MatProgressBarModule],
+  imports: [CommonModule, MatButtonModule, MatDialogModule, MatListModule, MatIconModule, HttpClientModule, BrowserAnimationsModule, MatProgressBarModule, RouterModule],
   declarations: [UploadComponent, DialogComponent],
   exports: [UploadComponent, RouterModule],
   entryComponents: [DialogComponent], // Add the DialogComponent as entry component

@@ -14,7 +14,7 @@ export class UploadService {
       .catch((error: any) => Observable.throw(error || 'Server error'));
   }
 
-  public upload(files: Set<File>): { [key: string]: Observable<number> } {
+  public upload(folder: string, files: Set<File>): { [key: string]: Observable<number> } {
 
     // this will be the our resulting map
     const status = {};
@@ -26,7 +26,7 @@ export class UploadService {
 
       // create a http-post request and pass the form
       // tell it to report the upload progress
-      const req = new HttpRequest('POST', url, formData, {
+      const req = new HttpRequest('POST', folder ? url.concat(`/${folder}`): url, formData, {
         reportProgress: true
       });
 
