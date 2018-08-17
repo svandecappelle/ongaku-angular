@@ -616,8 +616,10 @@ class Library {
         title: track.album,
         artist: track.artist
       };
-    })), (name) => {
-      return name;
+    }), false, (element) => {
+      return element.title;
+    }), (element) => {
+      return element.title;
     });
 
     if (search) {
