@@ -612,24 +612,29 @@ class Library {
   getLibAlbums(page, lenght, search, asc) {
     var albums;
     albums = _.sortBy(_.uniq(_.map(this.flatten, (track) => {
-      return track.album;
+      return {
+        title: track.album,
+        artist: track.artist
+      };
     })), (name) => {
       return name;
     });
 
     if (search) {
-      albums = _.filter(albums, (name) => {
-        if (name) {
-          return name.trim().toLowerCase().match(`.*${search.toLowerCase()}.*`);
+      albums = _.filter(albums, (album) => {
+        if (album && album.title) {
+          let albumNameMatches = album.title.trim().toLowerCase().match(`.*${search.toLowerCase()}.*`);
+          let artistNameMatches = album.artist.trim().toLowerCase().match(`.*${search.toLowerCase()}.*`);
+          return albumNameMatches || artistNameMatches;
         }
         return false;
       });
     }
 
-    albums = _.map(albums, (name) => {
+    albums = _.map(albums, (album) => {
       return {
-        name: name,
-        info: this.loadingCoversAlbumsFlatten[name]
+        name: album.title,
+        info: this.loadingCoversAlbumsFlatten[album.title]
       };
     });
 
