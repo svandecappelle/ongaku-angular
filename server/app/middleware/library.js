@@ -26,7 +26,7 @@ var lfm = new LastfmAPI({
 });
 
 function parseLastFm(object) {
-  
+
   var imageList;
   var imageSource;
   var sizes = ['small', 'medium', 'large', 'extralarge', 'mega'];
@@ -34,7 +34,7 @@ function parseLastFm(object) {
 
   if (object && object.image) {
     imageList = object.image;
-    if (!object.image[0]['#text']){
+    if (!object.image[0]['#text']) {
       object.image = _.map(sizes, (size) => {
         return {
           '#text': '/static/img/album.png',
@@ -312,7 +312,7 @@ class Library {
           var count = 0;
           async.doWhilst((next) => {
             let page = pages.query.search[count];
-            count +=1;
+            count += 1;
 
             rp.get('https://fr.wikipedia.org/w/api.php', {
               qs: {
@@ -348,7 +348,7 @@ class Library {
                   console.debug(artist.name + " not found in wiki");
                 }
                 return next(null, false);
-              } catch ( error ) {
+              } catch (error) {
                 console.error(" - " + error, error);
               }
             }).catch(error => {
@@ -359,7 +359,7 @@ class Library {
 
             // console.log(count < pages.query.search.length -1, !found);
 
-            return count < pages.query.search.length -1 && !found;
+            return count < pages.query.search.length - 1 && !found;
           }, () => {
             // console.log("finished");
           });
@@ -430,9 +430,8 @@ class Library {
 
     // Rescan full library.
     this.flatten = null;
-    this.beginScan().then(() => {
-      if (this.videoScanned && this.audioScanned) {
-
+    return new Promise((resolve) => {
+      this.beginScan().then(() => {
         library.getSharedFolders((err, folders) => {
           if (folders) {
             var foldersScanning = _.map(folders, (folder) => {
@@ -458,14 +457,14 @@ class Library {
               });
             }, () => {
               this.scanProgress = false;
-              callback();
+              resolve();
             });
           } else {
             that.scanProgress = false;
-            callback();
+            resolve();
           }
         });
-      }
+      });
     });
   };
 

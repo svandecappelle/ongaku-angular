@@ -1,25 +1,36 @@
 const express = require('express');
 const _ = require("underscore");
-const nconf = require("nconf");
-const passport = require("passport");
-const unzip = require("node-unzip-2");
-const path = require("path");
-const Busboy = require('busboy');
-const ffmetadata = require("ffmetadata");
 const async = require("async");
 const moment = require('moment');
+const nconf = require('nconf');
 
 const library = require("./../../middleware/library");
 const middleware = require("./../../middleware/middleware");
-const exporter = require("./../../middleware/exporter");
-const meta = require("./../../meta");
-const communication = require("./../../communication");
-const user = require("./../../model/user");
-const userlib = require("./../../model/library");
 const statistics = require("./../../model/statistics");
-
+const application = require("./../../index");
+const user = require("./../../model/user");
 
 var router = express.Router();
+
+function redirectIfNotAdministrator (req, res, callback) {
+    if (middleware.isAuthenticated(req)) {
+        user.isAdministrator(req.session.passport.user.uid, (err, administrator) => {
+            if (administrator){
+                callback();
+            } else {
+                middleware.render("api/middleware/403", req, res);
+            }
+        });
+    } else {
+        if (nconf.get('type') === "desktop") {
+            console.info("Desktop mode all access is granted.");
+            callback();
+        } else {
+            console.warn("Anonymous access forbidden: authentication required.");
+            middleware.redirect('/login', res);
+        }
+    }
+};
 
 getDayStatistics = (nbDays, statname) => {
     moment().startOf('day');
@@ -79,4 +90,21 @@ router.get('/statistics/users/activity', (req, res) => {
     });
 });
 
+router.post('/library/reload', (req, res) => {
+    redirectIfNotAdministrator(req, res, () => {
+        application.reload().then(() => {
+            var libraryDatas = library.getAudio();
+            res.json(libraryDatas);
+        });
+    });
+});
+
+router.get('/library/reload', (req, res) => {
+    redirectIfNotAdministrator(req, res, () => {
+        application.reload().then(() => {
+            var libraryDatas = library.getAudio();
+            res.json(libraryDatas);
+        });
+    });
+});
 module.exports = router;

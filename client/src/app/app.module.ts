@@ -46,6 +46,9 @@ import { RadiosComponent } from './radios/radios.component';
 import { UsersService } from './users';
 import { UploadService } from './upload';
 import { UploadModule } from './upload/upload.module';
+import { ReloadComponent } from './library/reload/reload.component';
+import { ReloadService } from './library/reload.service';
+
 
 
 @NgModule({
@@ -65,7 +68,8 @@ import { UploadModule } from './upload/upload.module';
     AlbumComponent,
     UsersComponent,
     LibraryComponent,
-    RadiosComponent
+    RadiosComponent,
+    ReloadComponent
   ],
   imports: [
     BrowserModule,
@@ -97,7 +101,8 @@ import { UploadModule } from './upload/upload.module';
     StatisticsService,
     UsersService,
     UploadService,
-    InstallService
+    InstallService,
+    ReloadService
   ],
   bootstrap: [AppComponent]
 })

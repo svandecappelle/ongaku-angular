@@ -124,3 +124,7 @@ ul {
         line-height: 1.5em;    
     }
 }
+
+.mat-tab-label.mat-tab-label-active {
+    background-color: rgba(0,150,136,.3);
+}
