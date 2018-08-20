@@ -24,13 +24,10 @@ function userStorages() {
                 return path.resolve(__dirname, `../../../../public/user/${userBean.username}/imported`);
             });
             folders = _.filter(folders, (folder) => {
-                console.log(fs.existsSync(folder));
                 return fs.existsSync(folder);
             });
-            console.log(folders);
             if (folders.length > 0) {
                 async.reduce(folders, 0, (currentSize, folder, next) => {
-                    //next(null, currentSize + 10000000);
                     getSize(folder, (err, size) => {
                         if (err) { throw err; }
                         next(null, currentSize + size);
@@ -99,9 +96,7 @@ getDayStatistics = (nbDays, statname) => {
 
 router.get('/statistics', (req, res) => {
     library.usage().then(size => {
-        console.log("Common storage: " + size);
         userStorages().then(sizeUsers => {
-            console.log("User storage: " + sizeUsers);
             let totalSpaceUsed = ((size + sizeUsers) / 1024 / 1024).toFixed(2);
             let commonSpaceUsed =  (size / 1024 / 1024).toFixed(2)
             let usersSpaceUsed = ((sizeUsers) / 1024 / 1024).toFixed(2);
