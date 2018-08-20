@@ -416,12 +416,12 @@ class Library {
   /**
    * Scan the library.
    * 
-   * @param {function} callback callback function called when scan is finished 
+   * @returns a promise
    */
-  scan(callback) {
+  scan() {
     var that = this;
     this.scanProgress = true;
-    this.videoScanned = false;
+    this.videoScanned = true;
     this.audioScanned = false;
     // Clear all datas.
     this.data = { audio: [], video: [] };
@@ -432,38 +432,40 @@ class Library {
     this.flatten = null;
     return new Promise((resolve) => {
       this.beginScan().then(() => {
-        library.getSharedFolders((err, folders) => {
-          if (folders) {
-            var foldersScanning = _.map(folders, (folder) => {
-              return { path: folder, scanned: 0 };
-            });
-            async.each(folders, (folder, next) => {
-              var username = folder.split("[")[0];
-              var folderObject = {
-                path: path.join(__dirname, `../../../public/user/${username}/imported/${folder.replace(username + "[", "").slice(0, -1)}`),
-                username: folder.split("[")[0]
-              };
-              console.info(`adding user shared folder: ${folderObject.path} ---> ${folderObject.username}`);
-              this.addFolder(folderObject, (scanResults) => {
-                var scannedFolder = _.where(foldersScanning, {
-                  path: folder
-                });
-                scannedFolder.scanned += 1;
-
-                if (scannedFolder.scanned === 2) {
-                  // Audio and video are scanned.
-                  next();
-                }
+        if (this.videoScanned && this.audioScanned) {
+          library.getSharedFolders((err, folders) => {
+            if (folders) {
+              var foldersScanning = _.map(folders, (folder) => {
+                return { path: folder, scanned: 0 };
               });
-            }, () => {
-              this.scanProgress = false;
+              async.each(folders, (folder, next) => {
+                var username = folder.split("[")[0];
+                var folderObject = {
+                  path: path.join(__dirname, `../../../public/user/${username}/imported/${folder.replace(username + "[", "").slice(0, -1)}`),
+                  username: folder.split("[")[0]
+                };
+                console.info(`adding user shared folder: ${folderObject.path} ---> ${folderObject.username}`);
+                this.addFolder(folderObject, (scanResults) => {
+                  var scannedFolder = _.where(foldersScanning, {
+                    path: folder
+                  });
+                  scannedFolder.scanned += 1;
+
+                  if (scannedFolder.scanned === 2) {
+                    // Audio and video are scanned.
+                    next();
+                  }
+                });
+              }, () => {
+                this.scanProgress = false;
+                resolve();
+              });
+            } else {
+              that.scanProgress = false;
               resolve();
-            });
-          } else {
-            that.scanProgress = false;
-            resolve();
-          }
-        });
+            }
+          });
+        }
       });
     });
   };

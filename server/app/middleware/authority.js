@@ -28,12 +28,11 @@ class Authority {
       if (middleware.isAuthenticated(req)) {
         logger.info('[Auth] Session ' + req.sessionID + ' logout (uid: ' + req.session.passport.user + ')');
         req.session.locale = nconf.get("defaultLocale");
+        let username = req.session.passport.username;
+        setTimeout(() => {
+          communication.emit(username, "notification", { message: 'disconnected from application' });
+        }, 1500);
 
-        // TODO reactivate
-        //setTimeout(() => {
-        //  communication.emit(req.session.sessionID, "notification", { message: 'disconnected from application' });
-        //}, 1500);
-        //
         req.logout();
       }
 
@@ -93,11 +92,10 @@ class Authority {
             if (userData.uid) {
               //user.logIP(userData.uid, req.ip);
               logger.info("user '" + userData.uid + "' connected on: " + req.ip);
-              // TODO reactive this
-              // communication.setStatus(userBean.username, 'online');
-              //setTimeout(function(){
-              //  communication.emit(req.session.sessionID, 'application:connected', req.sessionID);
-              //}, 1500);
+              communication.setStatus(userBean.username, 'online');
+              setTimeout(function(){
+                communication.emit(userBean.username, 'application:connected', req.sessionID);
+              }, 1500);
               
               statistics.set('logins', moment().startOf('day').format('x'), 'increment', () => {
                 console.debug("Stats saved");

@@ -48,7 +48,7 @@ import { UploadService } from './upload';
 import { UploadModule } from './upload/upload.module';
 import { ReloadComponent } from './library/reload/reload.component';
 import { ReloadService } from './library/reload.service';
-
+import { CommunicationModule } from './communication/communication.module';
 
 
 @NgModule({
@@ -86,6 +86,7 @@ import { ReloadService } from './library/reload.service';
     AppStateModule,
     PlayerModule,
     UploadModule,
+    CommunicationModule
   ],
   entryComponents: [
     MetadatasComponent

@@ -2,7 +2,6 @@ const async = require("async");
 
 const library = require("./middleware/library");
 
-//const communication = require('./communication');
 //const meta = require('./meta');
 
 

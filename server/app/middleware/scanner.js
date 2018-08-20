@@ -139,6 +139,7 @@ class Scanner extends events.EventEmitter {
           }
         }, function(err, scanned){
           logger.info(`Adding ${scanned.audio.length} audio files and ${scanned.video.length} video files to library.`);
+          scanned.isFinishedAll = true;
           resolve(scanned);
         });
       } else{
@@ -181,12 +182,10 @@ class Scanner extends events.EventEmitter {
         logger.debug(`${this.status()} elapsed on ${apath}`);
 
         setTimeout( () => {
-          var message = `<div class="progress" style="min-width: 300px; height: 10px;"><div class="progress-bar progress-bar-info progress-bar-striped active" style="width:${this.status()}%"></div></div>`;
-
           communication.broadcast("library:scanner:progress", {
-            close: false,
-            message: message,
-            value: this.status()
+            content: 'A reload is in progress on library datas', 
+            value: this.status(),
+            from: 'System'
           });
         }, 250);
 

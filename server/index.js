@@ -49,19 +49,19 @@ const session = require('express-session');
 const yaml_config = require('node-yaml-config');
 const dateFormat = require('dateformat');
 const colors = require('colors');
+const http = require('http');
 
-  config    = yaml_config.load(path.resolve(__dirname, './config/config.yml')),
-  app = express();
+config    = yaml_config.load(path.resolve(__dirname, './config/config.yml')),
+app = express();
 var environment = process.env.NODE_ENV || 'development';
 
 var application = require('./app/index');
+const communication = require('./app/communication');
 
 class Server {
 
   constructor () {
     this.running = false;
-    // application is full angular now
-    // this.initViewEngine();
     this.initExpressMiddleWare();
     this.initRoutes();
     this.start();
@@ -72,15 +72,11 @@ class Server {
   }
 
   start () {
-    app.listen(config.port, (err) => {
-
-      this.running = !err;
-      if (err) {
-        console.error('Error loading server: ', err);
-      } else {
-        console.log('Listening on http://localhost:%d', config.port);
-      }
+    var service = http.Server(app);
+    service.listen(config.port, () => {
+      console.log('Listening on http://localhost:%d', config.port);
     });
+    communication.start(service)
   }
 
   initViewEngine () {
@@ -137,9 +133,7 @@ class Server {
     var routes = require('./app/routes');
     // redirect all others to the index (HTML5 history)
     routes.serve(app);
-    
     application.start();
-    
     
   }
 

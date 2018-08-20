@@ -1,33 +1,28 @@
 const socketio = require('socket.io');
-const logger = require('log4js').getLogger('Communication');
 
 let instance = null;
 
 class Communication {
 
-	constructor () {
-		if( !instance ) {
+	constructor() {
+		if (!instance) {
 			instance = this;
 		}
 		return instance;
 	}
 
-	listen (server) {
+	start(service) {
 		this.statuses = {};
-		this.io = require('socket.io')(server);
-		this.open();
-	}
-
-	open () {
+		this.io = require('socket.io')(service);
 		this.io.on('connection', (socket) => {
-		  var address = socket.handshake.address;
-		  var userAgent = socket.client.request.headers['user-agent'];
-		  logger.info(`User ${address} connected to communication system`);
+			var address = socket.handshake.address;
+			var userAgent = socket.client.request.headers['user-agent'];
+			console.info(`User ${address} connected to communication system`);
 
-		  	socket.emit('connected');
+			socket.emit('connected');
 
 			socket.on('room:join', (data) => {
-				logger.info(`joining room: ${data}`);
+				console.info(`joining room: ${data}`);
 				socket.join(data);
 			});
 
@@ -42,22 +37,22 @@ class Communication {
 		});
 	}
 
-	broadcast (event, data) {
-		if (this.io){
+	broadcast(event, data) {
+		if (this.io) {
 			this.io.sockets.emit(event, data);
 		}
 	}
 
-	emit (room, event, data) {
-		logger.info(`emit to room: ${room}`, event, data ? data.message : undefined);
-		// this.io.to(room).emit(event, data);
+	emit(room, event, data) {
+		console.info(`emit to room: ${room}`, event, data ? data.message : undefined);
+		this.io.to(room).emit(event, data);
 	}
 
-	status (username) {
+	status(username) {
 		return this.statuses[username] ? this.statuses[username] : 'offline';
 	}
 
-	setStatus (username, status){
+	setStatus(username, status) {
 		this.statuses[username] = status;
 	}
 }
