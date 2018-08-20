@@ -5,7 +5,8 @@ const nconf = require("nconf");
 const path = require("path");
 const fs = require("fs");
 const async = require("async");
-var rp = require('request-promise');
+const rp = require('request-promise');
+const getSize = require('get-folder-size');
 
 var library;
 try {
@@ -1054,6 +1055,44 @@ class Library {
     });
     return searchResultList;
   };
+
+  count(criterion) {
+    if (!criterion || criterion === 'tracks') {
+      return this.flatten.length;
+    } else {
+      return _.keys(this.groupby(this.flatten, [criterion])).length;
+    }
+  }
+
+  usage() {
+    return new Promise((resolve, reject) => {
+      if (Array.isArray(nconf.get("library"))) {
+        var folders = nconf.get("library");
+        return new Promise((resolve, reject) => {
+          async.reduce(folders, 0, (currentSize, folder, next) => {
+            getSize(folder, (err, size) => {
+              if (err) { throw err; }
+              next(null, currentSize + size);
+            });
+          }, function (error, ret) {
+            if (error) {
+              return reject(error);
+            }
+            resolve(ret);
+          });
+        });
+      } else {
+        var folder = nconf.get("library");
+        getSize(folder, (err, size) => {
+          if (err) { throw err; }
+
+          console.log(size + ' bytes');
+          console.log((size / 1024 / 1024).toFixed(2) + ' MB');
+          resolve(size);
+        });
+      }
+    });
+  }
 }
 
 module.exports = new Library();

@@ -21,6 +21,7 @@ var logger = new Winston.Logger({
   ]
 });
 
+console.clean = console.log;
 console.error = logger.error;
 console.warn = logger.warn;
 console.log = logger.info;

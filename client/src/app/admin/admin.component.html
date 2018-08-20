@@ -47,21 +47,27 @@
           <h2 class="example-h2">Statistics</h2>
         </mat-card-title>
         <mat-card-content>
-          <ul>
-            <li>
-                Users count: 0
-            </li>
-            <li>
-                Library album count: 0
-            </li>
-            <li>
-                Library tracks count: 0
-            </li>
-            <li>
-                Library storage space: 0
-            </li>
-          </ul>
-          
+          <div class="counters">
+            <h4>Counters</h4>
+            <mat-list>
+              <mat-list-item>
+                Users count: {{ statistics.usersCount }}
+              </mat-list-item>
+              <mat-list-item>
+                Library album count: {{ statistics.albumsCount }}
+              </mat-list-item>
+              <mat-list-item>
+                Library tracks count: {{ statistics.tracksCount }}
+              </mat-list-item>
+              <mat-list-item>
+                Users count: {{ statistics.usersCount }}
+              </mat-list-item>
+            </mat-list>
+          </div>
+          <div class="storage-graph">
+            <h4>Storage</h4>
+            <canvas #storage width="50px">{{ chartStorage }}</canvas>
+          </div>
         </mat-card-content>
       </mat-card>
     </mat-grid-tile>

@@ -16,4 +16,9 @@ export class StatisticsService {
     return this.http.get(`/api/admin/statistics/users/activity`).map((data) => data)
       .catch((error: any) => Observable.throw(error || 'Server error'));
   }
+
+  getStatistics (): Observable<any> {
+    return this.http.get(`/api/admin/statistics`).map((data) => data)
+      .catch((error: any) => Observable.throw(error || 'Server error'));
+  }
 }

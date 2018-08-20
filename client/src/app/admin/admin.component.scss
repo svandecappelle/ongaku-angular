@@ -20,3 +20,15 @@
         }
     }
 }
+
+.storage-graph, .counters {
+    position: absolute;
+    top: 3em;
+    width: 40%;
+}
+.storage-graph {
+    right: 0;
+}
+.counters {
+    left: 0;
+}

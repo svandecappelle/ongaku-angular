@@ -11,6 +11,17 @@ import { Chart } from 'chart.js';
 })
 export class AdminComponent implements OnInit {
 
+  private statistics = {
+    userCount: 0,
+    albumsCount: 0,
+    tracksCount: 0,
+    storage: {
+      common: 0,
+      users: 0,
+      total: 0
+    }    
+  };
+
   // lineChart
   public lineChartData: Array<any> = [
     {
@@ -77,42 +88,68 @@ export class AdminComponent implements OnInit {
 
   @ViewChild('activity', { read: ElementRef }) canvasActivity: ElementRef;
 
-  // @ViewChild('other', { read: ElementRef }) canvasOther: ElementRef;
+  @ViewChild('storage', { read: ElementRef }) canvasStorage: ElementRef;
 
-  
   constructor (private service: StatisticsService) { }
 
   ngOnInit() {
     this.userAccess();
     this.userActivity();
+    this.getStatistics();
+  }
+
+  getStatistics() {
+    this.service.getStatistics().subscribe(datas => {
+      this.statistics = datas;
+      new Chart(this.canvasStorage.nativeElement, {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [datas.storage.users.value, datas.storage.common.value],
+            backgroundColor: [
+              "#3cba9f",
+              "#A9A9A9"
+            ],
+            borderColor: [
+                "#3cffff",
+                "#989898"
+            ],
+          }],
+          labels: [
+            'User storages',
+            'Common library'
+          ]
+        }
+      });
+    });
   }
 
   userActivity() {
     this.service.getUsersActivity().subscribe(datas => {
+      let maxYValue = Number.MIN_VALUE;
       this.lineChartData[0].data = [];
       const allDates = [];
       const plays = [];
       datas.forEach(day => {
+        if (maxYValue < day.value) {
+          maxYValue = day.value;
+        }
         allDates.push(moment(day.date).format('l'));
         plays.push(parseInt(day.value.toString(), 10));
       });
 
+      maxYValue = parseFloat(maxYValue.toString()) + (parseFloat(maxYValue.toString()) / 10);
+
       new Chart(this.canvasActivity.nativeElement, {
-        type: 'line',
+        type: 'bar',
         data: {
           labels: allDates,
           datasets: [
             {
               data: plays,
-              borderColor: '#3cba9f',
-              fill: false,
+              backgroundColor: '#3cba9f',
               label: 'Plays count'
-            },
-            {
-              data: plays,
-              borderColor: '#ffcc00',
-              fill: false
-            },
+            }
           ]
         },
         options: {
@@ -120,12 +157,11 @@ export class AdminComponent implements OnInit {
             display: true
           },
           scales: {
-            xAxes: [{
-              display: true
-            }],
             yAxes: [{
-              display: true
-            }],
+              ticks: {
+                suggestedMax: maxYValue
+              }
+            }]
           }
         }
       });
@@ -134,34 +170,40 @@ export class AdminComponent implements OnInit {
 
   userAccess() {
     this.service.getUsersAccess().subscribe(datas => {
+      let maxYValue = Number.MIN_VALUE;
       this.lineChartData[0].data = [];
       const allDates = [];
       const connections = [];
       datas.succeed.forEach(day => {
         allDates.push(moment(day.date).format('l'));
+        if (maxYValue < day.value) {
+          maxYValue = day.value;
+        }
         connections.push(parseInt(day.value.toString(), 10));
       });
 
       const failedConnection = [];
       datas.failed.forEach(day => {
+        if (maxYValue < day.value) {
+          maxYValue = day.value;
+        }
         failedConnection.push(parseInt(day.value.toString(), 10));
       });
 
+      maxYValue = parseFloat(maxYValue.toString()) + (parseFloat(maxYValue.toString()) / 10);
       new Chart(this.canvasUserAccess.nativeElement, {
-        type: 'line',
+        type: 'bar',
         data: {
           labels: allDates,
           datasets: [
             {
               data: connections,
-              borderColor: '#3cba9f',
-              fill: false,
+              backgroundColor: '#3cba9f',
               label: 'Connections'
             },
             {
               data: failedConnection,
-              borderColor: '#ffcc00',
-              fill: false,
+              backgroundColor: '#ffcc00',
               label: 'Failed connection'
             },
           ]
@@ -171,12 +213,11 @@ export class AdminComponent implements OnInit {
             display: true
           },
           scales: {
-            xAxes: [{
-              display: true
-            }],
             yAxes: [{
-              display: true
-            }],
+              ticks: {
+                suggestedMax: maxYValue
+              }
+            }]
           }
         }
       });
