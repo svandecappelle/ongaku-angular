@@ -2,13 +2,15 @@ const express = require('express');
 const Busboy = require('busboy');
 const fs = require('fs');
 const path = require('path');
+const async = require("async");
+const _ = require("underscore");
+
 const library = require("./../../middleware/library");
 const middleware = require("./../../middleware/middleware");
+const scanner = require("./../../middleware/scanner");
 
 const userlib = require("./../../model/library");
 const user = require("./../../model/user");
-
-const async = require("async");
 
 var router = express.Router();
 
@@ -33,15 +35,71 @@ var helpers = new Helpers();
 
 
 router.get('/me', (req, res) => {
+    if (!req.session.passport || !req.session.passport.user){
+        return res.status(403).json({
+            message: 'You need to be logged'
+        });
+    }
     var uid = req.session.passport.user.uid;
-    user.getUsers([uid], (error, data) => {
-        if (error) {
+    var username = req.session.passport.user.username;
+    var userdir = path.resolve(__dirname, `../../../../public/user/${username}`);
+    var output = {};
+    scanner.files(userdir).then((files) => {
+        output.files = {
+            count: files.length
+        };
+        user.getUsers([uid], (error, data) => {
+            output = _.extend(output, data[0]);
+
+            if (error) {
+                console.error(error);
+                return res.status(500).json({ message: "Internal server error" });
+            }
+            user.getGroups(uid, (groups) => {
+                output.groups = groups;
+                res.json(output);
+            });
+        });
+    }).catch(error => {
+        console.error(error);
+        res.status(500).json({
+            message: 'Internal server error'
+        });
+    });
+});
+
+router.get('/:username', (req, res) => {
+    if (!req.session.passport || !req.session.passport.user){
+        return res.status(403).json({
+            message: 'You need to be logged'
+        });
+    }
+    var uid = req.session.passport.user.uid;
+    var username = req.params.username;
+    var userdir = path.resolve(__dirname, `../../../../public/user/${username}`);
+    var output = {};
+    user.getUidByUsername(username, (error, uid) => {
+        scanner.files(userdir).then((files) => {
+            output.files = {
+                count: files.length
+            };
+            user.getUsers([uid], (error, data) => {
+                output = _.extend(output, data[0]);
+
+                if (error) {
+                    console.error(error);
+                    return res.status(500).json({ message: "Internal server error" });
+                }
+                user.getGroups(uid, (groups) => {
+                    output.groups = groups;
+                    res.json(output);
+                });
+            });
+        }).catch(error => {
             console.error(error);
-            return res.status(500).json({ message: "Internal server error" });
-        }
-        user.getGroups(uid, (groups) => {
-            data[0].groups = groups;
-            res.json(data[0]);
+            res.status(500).json({
+                message: 'Internal server error'
+            });
         });
     });
 });

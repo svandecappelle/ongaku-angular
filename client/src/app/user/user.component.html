@@ -1,6 +1,16 @@
 <div class="content" *ngIf="infos">
   <div class="account">
     <div class="cover initialised" component="account/cover" [style]="coverBackground">
+      <mat-list class="files-updates">
+        <mat-list-item>
+          <input #avatarFiler type="file" name="avatar" (change)="onSelectFile('avatar', $event)" placeholder="Upload file" accept=".jpg,.gif,.jpeg" style="display: none">
+          <button mat-button mat-raised-button color="primary" (click)="selectFile('avatar')">Change avatar</button>
+        </mat-list-item>
+        <mat-list-item>
+          <input #coverFiler type="file" name="avatar" (change)="onSelectFile('cover', $event)" placeholder="Upload file" accept=".jpg,.gif,.jpeg" style="display: none">
+          <button mat-button mat-raised-button color="primary" (click)="selectFile('cover')">Change cover</button>
+        </mat-list-item>
+      </mat-list>
       <div class="avatar-wrapper" data-uid="819">
         <img #avatar src="{{avatarSrc}}" class="avatar avatar-xl avatar-rounded" data-original-title="" title="">
         <i component="user/status" class="fa fa-circle status online" title="En ligne"></i>
@@ -36,7 +46,7 @@
       <br>
       <div class="account-stats">
         <div class="stat">
-          <div class="human-readable-number" title="12">12</div>
+          <div class="human-readable-number" title="{{infos.files.count}}">{{infos.files.count}}</div>
           <span class="stat-label">Number of files</span>
         </div>
         <div class="stat">
@@ -48,17 +58,6 @@
           <span class="stat-label">Likes</span>
         </div>
       </div>
-
-      <mat-list class="files-updates">
-        <mat-list-item>
-          <input #avatarFiler type="file" name="avatar" (change)="onSelectFile('avatar', $event)" placeholder="Upload file" accept=".jpg,.gif,.jpeg" style="display: none">
-          <button mat-button (click)="selectFile('avatar')">Change avatar</button>
-        </mat-list-item>
-        <mat-list-item>
-          <input #coverFiler type="file" name="avatar" (change)="onSelectFile('cover', $event)" placeholder="Upload file" accept=".jpg,.gif,.jpeg" style="display: none">
-          <button mat-button (click)="selectFile('cover')">Change cover</button>
-        </mat-list-item>
-      </mat-list>
 
       <!--
       <div class="text-center profile-meta">

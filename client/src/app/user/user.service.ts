@@ -13,6 +13,11 @@ export class UserService {
       .catch((error: any) => Observable.throw(error || 'Server error'));
   }
 
+  getUserInfos (username): Observable<any> {
+    return this.http.get(`/api/user/${username}`).map((data) => data)
+      .catch((error: any) => Observable.throw(error || 'Server error'));
+  }
+
   // file from event.target.files[0]
   uploadFile(url: string, file: File): Observable<HttpEvent<any>> {
 

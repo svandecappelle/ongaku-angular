@@ -44,6 +44,12 @@
             left: auto;
             right: 0;
 
+            .files-updates {
+                position: absolute;
+                top: 0;
+                left: 3em;
+            }
+            
             .avatar-wrapper {
                 position: absolute;
                 left: 50%;
@@ -109,11 +115,5 @@
                 color: #777;
             }
         }
-    }
-
-    .files-updates {
-        position: absolute;
-        top: 0;
-        left: 3em;
     }
 }

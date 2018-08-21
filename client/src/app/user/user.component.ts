@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 
+import { ActivatedRoute, Params } from '@angular/router';
 import { HttpEventType, HttpResponse } from '@angular/common/http';
 
 import { DomSanitizer } from '@angular/platform-browser';
@@ -13,6 +14,7 @@ import { UserService } from './user.service';
 export class UserComponent implements OnInit {
 
   private infos: any;
+  private user: string;
 
   private avatarSrc: string;
   private coverBackground: any;
@@ -21,13 +23,25 @@ export class UserComponent implements OnInit {
 
 
   constructor(private service: UserService,
-    private _sanitizer: DomSanitizer) { }
+    private _sanitizer: DomSanitizer,
+    private activatedRoute: ActivatedRoute) { }
 
   ngOnInit() {
-    this.service.getMyInfos().subscribe((data) => {
-      this.infos = data;
-      this.avatarSrc = `/static/user/${this.infos.username}/avatar?${new Date().getTime()}`;
-      this.coverBackground = this.getImage('cover');
+    this.activatedRoute.params.subscribe((params: Params) => {
+      this.user = params['user'];
+      if (this.user) {
+        this.service.getUserInfos(this.user).subscribe((data) => {
+          this.infos = data;
+          this.avatarSrc = `/static/user/${this.infos.username}/avatar?${new Date().getTime()}`;
+          this.coverBackground = this.getImage('cover');
+        });
+      } else {
+        this.service.getMyInfos().subscribe((data) => {
+          this.infos = data;
+          this.avatarSrc = `/static/user/${this.infos.username}/avatar?${new Date().getTime()}`;
+          this.coverBackground = this.getImage('cover');
+        });
+      }
     });
   }
 
@@ -37,7 +51,7 @@ export class UserComponent implements OnInit {
   }
 
   onSelectFile(type, event) {
-    if(event.target.files && event.target.files.length > 0) {
+    if (event.target.files && event.target.files.length > 0) {
       this.uploadFile(type, event.target.files);
     }
   }

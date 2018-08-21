@@ -120,7 +120,6 @@ class Scanner extends events.EventEmitter {
   };
 
   scanFolder (folder) {
-
     return new Promise((resolve, reject) => {
       logger.debug(`scanFolder: ${folder}`);
       if (fs.existsSync(folder)) {
@@ -206,6 +205,16 @@ class Scanner extends events.EventEmitter {
       });
     });
   };
+
+  files(directory) {
+    return new Promise((resolve, reject) => {
+      var files = walkSync(directory);
+      files = _.filter(files, (file) => {
+        return !fs.statSync(file).isDirectory();
+      });
+      resolve(files);
+    });
+  }
 }
 
 module.exports = new Scanner();

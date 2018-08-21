@@ -29,6 +29,7 @@ const routes: Routes = [
   { path: 'upload', component: UploadComponent, canActivate: [AuthGuard]},
   { path: 'reload', component: ReloadComponent, canActivate: [AuthGuard] },
   { path: 'profile', component: UserComponent, canActivate: [AuthGuard] },
+  { path: 'profile/:user', component: UserComponent, canActivate: [AuthGuard] },
   { path: '', component: HomeComponent, canActivate: [AuthGuard] },
 
   { path: 'install', component: InstallComponent },
