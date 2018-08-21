@@ -65,8 +65,7 @@
     "tinycolor2": "^1.4.1",
     "underscore": "^1.8.3",
     "uuid": "^3.2.1",
-    "winston": "^2.3.1",
-    "winston-color": "^1.0.0",
+    "winston": "^3.0.0",
     "xregexp": "^4.1.1"
   },
   "devDependencies": {

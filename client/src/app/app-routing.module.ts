@@ -17,6 +17,7 @@ import { RadiosComponent } from './radios/radios.component';
 import { LibraryComponent } from './library/library.component';
 import { UploadComponent } from './upload/upload.component';
 import { ReloadComponent } from './library/reload/reload.component';
+import { UserComponent } from './user/user.component';
 
 const routes: Routes = [
   { path: 'artist/:artist', component: ArtistComponent, canActivate: [AuthGuard]},
@@ -27,6 +28,7 @@ const routes: Routes = [
   { path: 'my-library', component: LibraryComponent, canActivate: [AuthGuard]},
   { path: 'upload', component: UploadComponent, canActivate: [AuthGuard]},
   { path: 'reload', component: ReloadComponent, canActivate: [AuthGuard] },
+  { path: 'profile', component: UserComponent, canActivate: [AuthGuard] },
   { path: '', component: HomeComponent, canActivate: [AuthGuard] },
 
   { path: 'install', component: InstallComponent },

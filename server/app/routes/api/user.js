@@ -1,9 +1,12 @@
 const express = require('express');
-const logger = require('log4js').getLogger("UsersRoutes");
+const Busboy = require('busboy');
+const fs = require('fs');
+const path = require('path');
 const library = require("./../../middleware/library");
 const middleware = require("./../../middleware/middleware");
 
 const userlib = require("./../../model/library");
+const user = require("./../../model/user");
 
 const async = require("async");
 
@@ -29,18 +32,61 @@ class Helpers {
 var helpers = new Helpers();
 
 
+router.get('/me', (req, res) => {
+    var uid = req.session.passport.user.uid;
+    user.getUsers([uid], (error, data) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).json({ message: "Internal server error" });
+        }
+        user.getGroups(uid, (groups) => {
+            data[0].groups = groups;
+            res.json(data[0]);
+        });
+    });
+});
+
+router.post(['/image/:type' ], (req, res) => {
+    var username = req.session.passport.user.username;
+    var type = req.params.type;
+    if (type !== 'avatar' && type !== 'cover'){
+        return res.status(403).json({
+            message: 'Forbidden'
+        });
+    }
+
+    var busboy = new Busboy({ headers: req.headers });
+    req.session.save(function () {
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
+            var userdir = path.resolve(__dirname, `../../../../public/user/${username}`);
+
+            if (!fs.existsSync(userdir)) {
+                fs.mkdirSync(userdir);
+            }
+            var saveTo = path.resolve(userdir, `${type}`);
+            file.pipe(fs.createWriteStream(saveTo));
+        });
+        busboy.on('finish', function () {
+            res.json("ok upload");
+        });
+
+        req.pipe(busboy);
+    });
+});
+
 router.post('/library/add', (req, res) => {
     var username = req.session.passport.user.username,
         uids = req.body.elements;
-    logger.debug("append to user lib: ".concat(username).concat(" -> ").concat(uids));
+    console.debug("append to user lib: ".concat(username).concat(" -> ").concat(uids));
 
     async.each(uids, (uid, next) => {
         userlib.append(username, uid, () => {
-            logger.debug("Appended to list: " + uid);
+            console.debug("Appended to list: " + uid);
             next();
         });
     }, () => {
-        logger.debug("All elements added");
+        console.debug("All elements added");
     });
     res.send({ message: "ok" });
 });
@@ -48,15 +94,15 @@ router.post('/library/add', (req, res) => {
 router.post('/library/remove', (req, res) => {
     var username = req.session.passport.user.username,
         uids = req.body.elements;
-    logger.debug("remove to user lib: ".concat(username).concat(" -> ").concat(uids));
+    console.debug("remove to user lib: ".concat(username).concat(" -> ").concat(uids));
 
     async.each(uids, (uid, next) => {
         userlib.remove(username, uid, () => {
-            logger.debug("Remove from list: " + uid);
+            console.debug("Remove from list: " + uid);
             next();
         });
     }, () => {
-        logger.debug("All elements removed");
+        console.debug("All elements removed");
     });
     res.send({ message: "ok" });
 });
@@ -68,7 +114,7 @@ router.get('/:username/library/:page', (req, res) => {
 });
 
 router.get('/:username/library/filter/:search/:page', (req, res) => {
-    logger.debug("Search filtering audio library");
+    console.debug("Search filtering audio library");
     var username = req.params.username;
     helpers.renderLibraryPage(username, req, res);
 });

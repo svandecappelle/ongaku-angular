@@ -2,33 +2,17 @@ const express = require('express');
 const path = require('path');
 const nconf = require('nconf');
 const nconfYaml = require('nconf-yaml');
-const winston = require('winston-color');
+const winston = require('winston');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const errorhandler = require('errorhandler');
+const csrf = require('csurf');
+const favicon = require('serve-favicon');
+const session = require('express-session');
+const yaml_config = require('node-yaml-config');
+const http = require('http');
 
-var logger = new Winston.Logger({
-  transports: [
-      new Winston.transports.Console({
-          level: nconf.get('log-level'),
-          handleExceptions: true,
-          json: false,
-          timestamp: function() {
-            return dateFormat();
-          },
-          formatter: function(options) {
-            // Return string will be passed to logger.
-            return `${options.timestamp().green} [${options.level.toUpperCase().yellow}][${environment.red}] - ${(options.message ? options.message : '')} ${(options.meta && Object.keys(options.meta).length ? '\n'+ JSON.stringify(options.meta, null, ' ') : '' )}`;
-          }
-      })
-  ]
-});
-
-console.clean = console.log;
-console.error = logger.error;
-console.warn = logger.warn;
-console.log = logger.info;
-console.info = logger.info;
-console.trace = logger.verbose;
-console.debug = logger.debug;
-console.silly = logger.silly;
+require('colors');
 
 nconf.file({
   file: path.resolve(__dirname, './config/application.yml'),
@@ -40,21 +24,10 @@ String.prototype.latinise=function(){return this.replace(/[^A-Za-z0-9\[\] ]/g,fu
 String.prototype.latinize=String.prototype.latinise;
 String.prototype.isLatin=function(){return this==this.latinise()}
 
-const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
-const errorhandler = require('errorhandler');
-const csrf = require('csurf');
-  // morgan = require('morgan'),
-const favicon = require('serve-favicon');
-const session = require('express-session');
-const yaml_config = require('node-yaml-config');
-const dateFormat = require('dateformat');
-const colors = require('colors');
-const http = require('http');
 
 config    = yaml_config.load(path.resolve(__dirname, './config/config.yml')),
 app = express();
-var environment = process.env.NODE_ENV || 'development';
+require('./logger.js');
 
 var application = require('./app/index');
 const communication = require('./app/communication');
@@ -87,7 +60,6 @@ class Server {
 
   initExpressMiddleWare () {
     // app.use(morgan('dev'));
-    winston.level = nconf.get('log-level');
     app.use((req, res, next) => {
       console.trace(`${req.method} -> ${req.url}`);
       next();

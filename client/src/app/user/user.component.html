@@ -1,0 +1,81 @@
+<div class="content" *ngIf="infos">
+  <div class="account">
+    <div class="cover initialised" component="account/cover" [style]="coverBackground">
+      <div class="avatar-wrapper" data-uid="819">
+        <img #avatar src="{{avatarSrc}}" class="avatar avatar-xl avatar-rounded" data-original-title="" title="">
+        <i component="user/status" class="fa fa-circle status online" title="En ligne"></i>
+      </div>
+      <div class="container">
+        <button class="menu" mat-fab [matMenuTriggerFor]="menu">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item>
+            <mat-icon>account_circle</mat-icon>
+            <span>Profile</span>
+          </button>
+          <button mat-menu-item>
+            <mat-icon>edit</mat-icon>
+            <span>Edit</span>
+          </button>
+          <button mat-menu-item>
+            <mat-icon>settings</mat-icon>
+            <span>Parameters</span>
+          </button>
+        </mat-menu>
+      </div>
+    </div>
+    <div class="profile text-center">
+      <h1 class="fullname">{{infos.username}}</h1>
+      <h2 class="username">@{{infos.username}}</h2>
+      <div class="text-center">
+        <mat-chip-list>
+          <mat-chip *ngFor="let group of infos.groups">{{group}}</mat-chip>
+        </mat-chip-list>
+      </div>
+      <br>
+      <div class="account-stats">
+        <div class="stat">
+          <div class="human-readable-number" title="12">12</div>
+          <span class="stat-label">Number of files</span>
+        </div>
+        <div class="stat">
+          <div class="human-readable-number" title="20">20</div>
+          <span class="stat-label">Plays count this months</span>
+        </div>
+        <div class="stat">
+          <div class="human-readable-number" title="564">564</div>
+          <span class="stat-label">Likes</span>
+        </div>
+      </div>
+
+      <mat-list class="files-updates">
+        <mat-list-item>
+          <input #avatarFiler type="file" name="avatar" (change)="onSelectFile('avatar', $event)" placeholder="Upload file" accept=".jpg,.gif,.jpeg" style="display: none">
+          <button mat-button (click)="selectFile('avatar')">Change avatar</button>
+        </mat-list-item>
+        <mat-list-item>
+          <input #coverFiler type="file" name="avatar" (change)="onSelectFile('cover', $event)" placeholder="Upload file" accept=".jpg,.gif,.jpeg" style="display: none">
+          <button mat-button (click)="selectFile('cover')">Change cover</button>
+        </mat-list-item>
+      </mat-list>
+
+      <!--
+      <div class="text-center profile-meta">
+        <span>Inscrit</span>
+        <strong class="timeago" title="19 févr. 2014 à 12:01" datetime="2014-02-19T11:01:53.080Z">19 févr. 2014 à 12:01</strong>
+        <span>Dernière connexion</span>
+        <strong class="timeago" title="21 août 2018 à 10:43" datetime="2018-08-21T08:43:39.821Z">il y a environ 4 minutes</strong>
+        <br>
+        <span>Email</span>
+        <strong>
+          <i class="fa fa-eye-slash " title="Email masqué"></i> me@mizore.fr</strong>
+        <span>Situation géographique</span>
+        <strong>France (Nord)</strong>
+        <span>Âge</span>
+        <strong>30</strong>
+      </div>
+      -->
+    </div>
+  </div>
+</div>
