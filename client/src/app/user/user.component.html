@@ -1,7 +1,7 @@
 <div class="content" *ngIf="infos">
   <div class="account">
     <div class="cover initialised" component="account/cover" [style]="coverBackground">
-      <mat-list class="files-updates">
+      <mat-list class="files-updates" *ngIf="user === undefined">
         <mat-list-item>
           <input #avatarFiler type="file" name="avatar" (change)="onSelectFile('avatar', $event)" placeholder="Upload file" accept=".jpg,.gif,.jpeg" style="display: none">
           <button mat-button mat-raised-button color="primary" (click)="selectFile('avatar')">Change avatar</button>
@@ -58,7 +58,12 @@
           <span class="stat-label">Likes</span>
         </div>
       </div>
-
+      
+      <div class="storage-graph">
+        <h4>Quotas:</h4>
+        <canvas #storage width="100px"></canvas>
+      </div>
+      
       <!--
       <div class="text-center profile-meta">
         <span>Inscrit</span>

@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const async = require("async");
 const _ = require("underscore");
+const getSize = require('get-folder-size');
 
 const library = require("./../../middleware/library");
 const middleware = require("./../../middleware/middleware");
@@ -34,8 +35,22 @@ class Helpers {
 var helpers = new Helpers();
 
 
+function userStorage(username) {
+    return new Promise((resolve, reject) => {
+        let folder = path.resolve(__dirname, `../../../../public/user/${username}/imported`);
+        if (!fs.existsSync(folder)) {
+            resolve(0);
+        } else {
+            getSize(folder, (err, size) => {
+                if (err) { throw err; }
+                resolve(size);
+            });
+        }
+    });
+}
+
 router.get('/me', (req, res) => {
-    if (!req.session.passport || !req.session.passport.user){
+    if (!req.session.passport || !req.session.passport.user) {
         return res.status(403).json({
             message: 'You need to be logged'
         });
@@ -44,24 +59,33 @@ router.get('/me', (req, res) => {
     var username = req.session.passport.user.username;
     var userdir = path.resolve(__dirname, `../../../../public/user/${username}`);
     var output = {};
-    scanner.files(userdir).then((files) => {
-        output.files = {
-            count: files.length
-        };
-        user.getUsers([uid], (error, data) => {
-            output = _.extend(output, data[0]);
+    userStorage(username).then((usage) => {
+        output.usage = usage;
 
-            if (error) {
-                console.error(error);
-                return res.status(500).json({ message: "Internal server error" });
-            }
-            user.getGroups(uid, (groups) => {
-                output.groups = groups;
-                res.json(output);
+        scanner.files(userdir).then((files) => {
+            output.files = {
+                count: files.length
+            };
+            user.getUsers([uid], (error, data) => {
+                output = _.extend(output, data[0]);
+
+                if (error) {
+                    console.error(error);
+                    return res.status(500).json({ message: "Internal server error" });
+                }
+                user.getGroups(uid, (groups) => {
+                    output.groups = groups;
+                    res.json(output);
+                });
+            });
+        }).catch(error => {
+            console.error(error);
+            res.status(500).json({
+                message: 'Internal server error'
             });
         });
-    }).catch(error => {
-        console.error(error);
+    }).catch(err => {
+        console.error(err);
         res.status(500).json({
             message: 'Internal server error'
         });
@@ -69,7 +93,7 @@ router.get('/me', (req, res) => {
 });
 
 router.get('/:username', (req, res) => {
-    if (!req.session.passport || !req.session.passport.user){
+    if (!req.session.passport || !req.session.passport.user) {
         return res.status(403).json({
             message: 'You need to be logged'
         });
@@ -104,10 +128,10 @@ router.get('/:username', (req, res) => {
     });
 });
 
-router.post(['/image/:type' ], (req, res) => {
+router.post(['/image/:type'], (req, res) => {
     var username = req.session.passport.user.username;
     var type = req.params.type;
-    if (type !== 'avatar' && type !== 'cover'){
+    if (type !== 'avatar' && type !== 'cover') {
         return res.status(403).json({
             message: 'Forbidden'
         });

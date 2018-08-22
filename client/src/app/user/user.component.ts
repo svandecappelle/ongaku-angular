@@ -6,6 +6,8 @@ import { HttpEventType, HttpResponse } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
 import { UserService } from './user.service';
 
+import { Chart } from 'chart.js';
+
 @Component({
   selector: 'app-user',
   templateUrl: './user.component.html',
@@ -18,13 +20,26 @@ export class UserComponent implements OnInit {
 
   private avatarSrc: string;
   private coverBackground: any;
-  @ViewChild('avatarFiler', { read: ElementRef }) avatarFiler: ElementRef;
-  @ViewChild('coverFiler', { read: ElementRef }) coverFiler: ElementRef;
 
+  private avatarFiler: ElementRef;
+  private coverFiler: ElementRef;
+  private canvasStorage: ElementRef;
 
   constructor(private service: UserService,
     private _sanitizer: DomSanitizer,
     private activatedRoute: ActivatedRoute) { }
+
+  @ViewChild('storage') set contentStorage(elRef: ElementRef) {
+    this.canvasStorage = elRef;
+  }
+
+  @ViewChild('avatarFiler') set contentAvatar(elRef: ElementRef) {
+    this.avatarFiler = elRef;
+  }
+
+  @ViewChild('coverFiler') set contentCover(elRef: ElementRef) {
+    this.coverFiler = elRef;
+  }
 
   ngOnInit() {
     this.activatedRoute.params.subscribe((params: Params) => {
@@ -40,6 +55,28 @@ export class UserComponent implements OnInit {
           this.infos = data;
           this.avatarSrc = `/static/user/${this.infos.username}/avatar?${new Date().getTime()}`;
           this.coverBackground = this.getImage('cover');
+          setTimeout(() => {
+            new Chart(this.canvasStorage.nativeElement, {
+              type: 'doughnut',
+              data: {
+                datasets: [{
+                  data: [Math.round(data.usage / 1024 / 1024), 1000],
+                  backgroundColor: [
+                    "#3cba9f",
+                    "#A9A9A9"
+                  ],
+                  borderColor: [
+                    "#3cffff",
+                    "#989898"
+                  ],
+                }],
+                labels: [
+                  'User storage',
+                  'Max Quota'
+                ]
+              }
+            });
+          });
         });
       }
     });
@@ -62,7 +99,7 @@ export class UserComponent implements OnInit {
     } else if (type === 'cover') {
       this.coverFiler.nativeElement.click();
     }
-    
+
   }
 
   uploadFile(type: String, files: FileList) {
