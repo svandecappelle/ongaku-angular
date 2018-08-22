@@ -18,6 +18,7 @@ import { LibraryComponent } from './library/library.component';
 import { UploadComponent } from './upload/upload.component';
 import { ReloadComponent } from './library/reload/reload.component';
 import { UserComponent } from './user/user.component';
+import { RegisterComponent } from './user/register/register.component';
 
 const routes: Routes = [
   { path: 'artist/:artist', component: ArtistComponent, canActivate: [AuthGuard]},
@@ -38,6 +39,7 @@ const routes: Routes = [
   { path: 'admin', component: AdminComponent, canActivate: [AuthGuard] },
 
   { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
 ];
 
 @NgModule({

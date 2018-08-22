@@ -1,7 +1,6 @@
 product-name: application
 # possible levels:  error, warn, info, verbose, debug, silly
 log-level: info
-
 port: 4000
 hostname: localhost
 uploader: false
@@ -23,6 +22,6 @@ gravatar: true
 local: false
 requireLogin: false
 allowUpload: true
-allowRegisteration: 0
+allowRegisteration: 3
 theme:
   base-color: rgb(230, 217, 45)

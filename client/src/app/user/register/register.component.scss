@@ -1,0 +1,16 @@
+.register-content {
+    width: 75%;
+    margin: auto;
+
+    .full-width-input {
+        display: block;
+    }
+
+
+    .register-in-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+}

@@ -1,5 +1,8 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { StatisticsService } from './statistics.service';
+import { AdminService } from './admin.service';
+
+import { FormGroup, FormBuilder, Validators, ValidatorFn, AbstractControl, FormControl } from '@angular/forms';
 
 import * as moment from 'moment';
 import { Chart } from 'chart.js';
@@ -10,6 +13,9 @@ import { Chart } from 'chart.js';
   styleUrls: ['./admin.component.scss']
 })
 export class AdminComponent implements OnInit {
+  private form: FormGroup;
+  private formSubmitAttempt: boolean;
+  private properties: any;
 
   private statistics = {
     userCount: 0,
@@ -90,12 +96,23 @@ export class AdminComponent implements OnInit {
 
   @ViewChild('storage', { read: ElementRef }) canvasStorage: ElementRef;
 
-  constructor (private service: StatisticsService) { }
+  constructor (private service: StatisticsService, private fb: FormBuilder, private configureService: AdminService) { }
 
   ngOnInit() {
     this.userAccess();
     this.userActivity();
     this.getStatistics();
+
+    this.form = this.fb.group({
+      allowRegisteration: [''],
+      requireLogin: [''],
+      allowUpload: [''],
+      allowDownload: ['']
+    });
+
+    this.configureService.getProperties().subscribe(data => {
+      this.properties = data;
+    });
   }
 
   getStatistics() {
@@ -221,6 +238,14 @@ export class AdminComponent implements OnInit {
           }
         }
       });
+    });
+  }
+
+  onConfigurationSubmit() {
+    console.log(this.form.value);
+    console.log(this.form.value.allowRegisteration);
+    this.configureService.configure(this.form.value).subscribe((success) => {
+
     });
   }
 }

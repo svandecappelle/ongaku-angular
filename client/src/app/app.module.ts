@@ -7,7 +7,7 @@ import 'moment-duration-format';
 
 import { MaterialModule } from './modules/material.module';
 
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';  // replaces previous Http service
 
 import { DragulaModule } from 'ng2-dragula';
@@ -35,7 +35,7 @@ import { LoginComponent } from './login/login.component';
 import { AlertService, AuthenticationService, UserService } from './services/index';
 import { AuthGuard } from './guards/index';
 import { MetadatasComponent } from './metadatas/metadatas.component';
-import { AdminComponent, StatisticsService } from './admin/';
+import { AdminComponent, StatisticsService, AdminService } from './admin/';
 import { SearchComponent } from './search/search.component';
 import { ArtistComponent, ArtistService } from './artist';
 import { AlbumComponent, AlbumService } from './artist/album/';
@@ -50,7 +50,6 @@ import { ReloadComponent } from './library/reload/reload.component';
 import { ReloadService } from './library/reload.service';
 import { CommunicationModule } from './communication/communication.module';
 import { UserModule } from './user/user.module';
-
 
 @NgModule({
   declarations: [
@@ -102,6 +101,7 @@ import { UserModule } from './user/user.module';
     ArtistService,
     AlbumService,
     StatisticsService,
+    AdminService,
     UsersService,
     UploadService,
     InstallService,

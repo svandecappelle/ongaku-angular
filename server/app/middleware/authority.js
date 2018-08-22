@@ -130,7 +130,12 @@ class Authority {
    register (req, res) {
     user.count((err, usercount) => {
       meta.settings.getOne("global", "allowRegisteration", (err, val) => {
-        if (usercount < parseInt(val)){
+        if (usercount < parseInt(val)) {
+          if (req.body.password !== req.body.confirmPassword) {
+            return res.status(400).json({
+              message: 'Password and confirmation password mismatch'
+            });
+          }
           var userData = {
               username: req.body.username,
               password: req.body.password,
@@ -140,7 +145,10 @@ class Authority {
 
           user.create(userData, (err, uid) => {
             if (err || !uid) {
-              return res.redirect('/register');
+              console.error(err);
+              return res.status(500).json({
+                message: 'Internal server error'
+              });
             }
 
             req.login({
@@ -151,16 +159,16 @@ class Authority {
               // for the connected users count
               //require('../socket.io').emitUserCount();
               req.user.username = userData.username;
-              if (req.body.referrer) {
-                res.redirect(req.body.referrer);
-              } else {
-                res.redirect('/');
-              }
+              res.json({
+                message: 'OK'
+              });
             });
           });
         } else {
           req.session.error = "Maximum user registered";
-          res.redirect("/500");
+          return res.status(403).json({
+            message: 'Forbidden: Maximum user registered'
+          });
         }
       });
     });

@@ -12,6 +12,7 @@ const middleware = require("./../../middleware/middleware");
 const statistics = require("./../../model/statistics");
 const application = require("./../../index");
 const user = require("./../../model/user");
+const meta = require("./../../meta");
 
 const MONTHS = 30;
 const WEEKS = 7;
@@ -98,9 +99,9 @@ router.get('/statistics', (req, res) => {
     library.usage().then(size => {
         userStorages().then(sizeUsers => {
             let totalSpaceUsed = ((size + sizeUsers) / 1024 / 1024).toFixed(2);
-            let commonSpaceUsed =  (size / 1024 / 1024).toFixed(2)
+            let commonSpaceUsed = (size / 1024 / 1024).toFixed(2)
             let usersSpaceUsed = ((sizeUsers) / 1024 / 1024).toFixed(2);
-            
+
             user.count((err, usersCount) => {
                 res.send({
                     usersCount: usersCount,
@@ -111,7 +112,7 @@ router.get('/statistics', (req, res) => {
                             value: totalSpaceUsed,
                             label: totalSpaceUsed + 'Mb'
                         },
-                        common:{
+                        common: {
                             value: commonSpaceUsed,
                             label: commonSpaceUsed + 'Mb'
                         },
@@ -168,6 +169,36 @@ router.get('/library/reload', (req, res) => {
         application.reload().then(() => {
             var libraryDatas = library.getAudio();
             res.json(libraryDatas);
+        });
+    });
+});
+
+router.get('/configure', (req, res) => {
+    redirectIfNotAdministrator(req, res, () => {
+        var properties = ["global"];
+        console.info("Client access to admin index [" + req.ip + "]");
+        meta.settings.get(properties, (err, settings) => {
+            res.json(settings);
+        });
+    });
+});
+
+router.post('/configure', (req, res) => {
+    redirectIfNotAdministrator(req, res, () => {
+        var preferences = req.body;
+        async.forEachOf(preferences, (value, key, callback) => {
+            meta.settings.setOne("global", key, value, (err) => {
+                if (err) {
+                    callback(err);
+                }
+
+                console.info("Global parameter saved: ", key, value);
+                callback();
+            });
+        }, () => {
+            res.json({
+                message: 'done'
+            });
         });
     });
 });

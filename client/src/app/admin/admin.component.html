@@ -1,5 +1,4 @@
-<div class="content">
-
+<div class="content" *ngIf="properties">
   <mat-grid-list cols="2" rowHeight="3:1">
     <mat-grid-tile>
       <mat-card>
@@ -7,37 +6,34 @@
           <h2 class="example-h2">Administration configuration</h2>
         </mat-card-title>
         <mat-card-content>
-          <section class="example-section">
-            <label class="example-margin">Allow user register</label>
-            <mat-input-container>
-              <input matInput placeholder="User count" type="number" />
-            </mat-input-container>
-          </section>
+          <form [formGroup]="form" (ngSubmit)="onConfigurationSubmit()">
+            <section class="example-section">
+              <label class="example-margin">Allow user register</label>
+              <mat-input-container>
+                <input matInput formControlName="allowRegisteration" placeholder="User count" type="number" value="{{properties.allowRegisteration}}" required/>
+              </mat-input-container>
+            </section>
 
-          <section class="example-section">
-            <mat-slide-toggle class="example-margin" [color]="warn" [checked]="checked">
-              Allow register
-            </mat-slide-toggle>
-          </section>
+            <section class="example-section">
+              <mat-slide-toggle formControlName="requireLogin" class="example-margin" [color]="warn" [checked]="properties.requireLogin">
+                Require authentication to stream
+              </mat-slide-toggle>
+            </section>
 
-          <section class="example-section">
-            <mat-slide-toggle class="example-margin" [color]="warn" [checked]="checked">
-              Require authentication to stream
-            </mat-slide-toggle>
-          </section>
+            <section class="example-section">
+              <mat-slide-toggle formControlName="allowUpload"  class="example-margin" [color]="warn" [checked]="properties.allowUpload">
+                Allow user upload
+              </mat-slide-toggle>
+            </section>
 
-          <section class="example-section">
-            <mat-slide-toggle class="example-margin" [color]="warn" [checked]="checked">
-              Allow user upload
-            </mat-slide-toggle>
-          </section>
+            <section class="example-section">
+              <mat-slide-toggle formControlName="allowDownload"  class="example-margin" [color]="warn" [checked]="properties.allowDownload">
+                Allow user download
+              </mat-slide-toggle>
+            </section>
 
-          <section class="example-section">
-            <mat-slide-toggle class="example-margin" [color]="warn" [checked]="checked">
-              Allow user download
-            </mat-slide-toggle>
-          </section>
-
+            <button mat-raised-button color="primary" type="submit">Save</button>
+          </form>
         </mat-card-content>
       </mat-card>
     </mat-grid-tile>
