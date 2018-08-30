@@ -13,7 +13,7 @@ export class NotificationsService {
   constructor() { }
 
   public initSocket(): void {
-    this.socket = socketIo("http://localhost:4000");
+    this.socket = socketIo();
   }
 
   public send(message: Message): void {
