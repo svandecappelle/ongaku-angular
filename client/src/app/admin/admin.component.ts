@@ -27,6 +27,7 @@ export class AdminComponent implements OnInit {
       total: 0
     }    
   };
+  private details;
 
   // lineChart
   public lineChartData: Array<any> = [
@@ -99,10 +100,13 @@ export class AdminComponent implements OnInit {
   constructor (private service: StatisticsService, private fb: FormBuilder, private configureService: AdminService) { }
 
   ngOnInit() {
-    this.userAccess();
-    this.userActivity();
-    this.getStatistics();
-
+    setTimeout(() => {
+      this.userAccess();
+      this.userActivity();
+      this.getStatistics();
+      this.getDetails();
+    }, 500);
+    
     this.form = this.fb.group({
       allowRegisteration: [''],
       requireLogin: [''],
@@ -112,6 +116,12 @@ export class AdminComponent implements OnInit {
 
     this.configureService.getProperties().subscribe(data => {
       this.properties = data;
+    });
+  }
+
+  getDetails() {
+    this.service.getDetails().subscribe(datas => {
+      this.details = datas;
     });
   }
 
@@ -136,6 +146,9 @@ export class AdminComponent implements OnInit {
             'User storages',
             'Common library'
           ]
+        },
+        options: {
+          maintainAspectRatio: false
         }
       });
     });
@@ -170,6 +183,7 @@ export class AdminComponent implements OnInit {
           ]
         },
         options: {
+          maintainAspectRatio: false,
           legend: {
             display: true
           },
@@ -226,6 +240,7 @@ export class AdminComponent implements OnInit {
           ]
         },
         options: {
+          maintainAspectRatio: false,
           legend: {
             display: true
           },
@@ -242,8 +257,6 @@ export class AdminComponent implements OnInit {
   }
 
   onConfigurationSubmit() {
-    console.log(this.form.value);
-    console.log(this.form.value.allowRegisteration);
     this.configureService.configure(this.form.value).subscribe((success) => {
 
     });

@@ -1,49 +1,64 @@
-<div class="content" *ngIf="properties">
-  <mat-grid-list cols="2" rowHeight="3:1">
-    <mat-grid-tile>
+<div class="content">
+  <mat-grid-list cols="2" rowHeight="4:1">
+    <mat-grid-tile rowspan="1">
       <mat-card>
         <mat-card-title>
-          <h2 class="example-h2">Administration configuration</h2>
+          <h2 class="example-h2">Summary</h2>
         </mat-card-title>
         <mat-card-content>
-          <form [formGroup]="form" (ngSubmit)="onConfigurationSubmit()">
-            <section class="example-section">
-              <label class="example-margin">Allow user register</label>
-              <mat-input-container>
-                <input matInput formControlName="allowRegisteration" placeholder="User count" type="number" value="{{properties.allowRegisteration}}" required/>
-              </mat-input-container>
-            </section>
-
-            <section class="example-section">
-              <mat-slide-toggle formControlName="requireLogin" class="example-margin" [color]="warn" [checked]="properties.requireLogin">
-                Require authentication to stream
-              </mat-slide-toggle>
-            </section>
-
-            <section class="example-section">
-              <mat-slide-toggle formControlName="allowUpload"  class="example-margin" [color]="warn" [checked]="properties.allowUpload">
-                Allow user upload
-              </mat-slide-toggle>
-            </section>
-
-            <section class="example-section">
-              <mat-slide-toggle formControlName="allowDownload"  class="example-margin" [color]="warn" [checked]="properties.allowDownload">
-                Allow user download
-              </mat-slide-toggle>
-            </section>
-
-            <button mat-raised-button color="primary" type="submit">Save</button>
-          </form>
+          <div *ngIf="details">Version: {{details.version}}</div>
+          <mat-spinner *ngIf="details === undefined"></mat-spinner>
         </mat-card-content>
       </mat-card>
     </mat-grid-tile>
-    <mat-grid-tile>
+
+    <mat-grid-tile rowspan="1">
+
+      <mat-card>
+        <form [formGroup]="form" (ngSubmit)="onConfigurationSubmit()">
+          <mat-card-title>
+            <h2 class="example-h2">Configuration</h2>
+          </mat-card-title>
+          <mat-card-content>
+            <mat-spinner *ngIf="properties === undefined"></mat-spinner>
+            <div *ngIf="properties">
+              <section class="inline-section">
+                <label class="example-margin">Allow user register</label>
+                <mat-input-container>
+                  <input matInput formControlName="allowRegisteration" placeholder="User count" type="number" value="{{properties.allowRegisteration}}"
+                    required/>
+                </mat-input-container>
+              </section>
+              <section class="inline-section">
+                <mat-slide-toggle formControlName="requireLogin" class="example-margin" [color]="warn" [checked]="properties.requireLogin">
+                  Require authentication to stream
+                </mat-slide-toggle>
+              </section>
+              <section class="inline-section">
+                <mat-slide-toggle formControlName="allowUpload" class="example-margin" [color]="warn" [checked]="properties.allowUpload">
+                  Allow user upload
+                </mat-slide-toggle>
+              </section>
+              <section class="inline-section">
+                <mat-slide-toggle formControlName="allowDownload" class="example-margin" [color]="warn" [checked]="properties.allowDownload">
+                  Allow user download
+                </mat-slide-toggle>
+              </section>
+              <div class="actions">
+                <button mat-raised-button color="primary" type="submit">Save</button>
+              </div>
+            </div>
+          </mat-card-content>
+        </form>
+      </mat-card>
+    </mat-grid-tile>
+    <mat-grid-tile class="statistics" rowspan="2">
       <mat-card>
         <mat-card-title>
           <h2 class="example-h2">Statistics</h2>
         </mat-card-title>
         <mat-card-content>
-          <div class="counters">
+          <div class="counters" *ngIf="statistics">
             <h4>Counters</h4>
             <mat-list dense>
               <mat-list-item>
@@ -60,19 +75,17 @@
               </mat-list-item>
             </mat-list>
           </div>
+          <mat-spinner *ngIf="statistics === undefined"></mat-spinner>
           <div class="storage-graph">
             <h4>Storage</h4>
-            <canvas #storage width="50px"></canvas>
+            <canvas #storage></canvas>
           </div>
         </mat-card-content>
       </mat-card>
     </mat-grid-tile>
 
-    <mat-grid-tile [rowspan]=2>
+    <mat-grid-tile class="plays" rowspan="2">
       <mat-card>
-        <mat-card-title>
-          <h2 class="example-h2">Users access</h2>
-        </mat-card-title>
         <mat-card-content>
           <span>Graph of user activity</span>
           <canvas #access>{{ chart }}</canvas>
@@ -80,11 +93,8 @@
       </mat-card>
     </mat-grid-tile>
 
-    <mat-grid-tile [rowspan]=2>
+    <mat-grid-tile rowspan="2" colspan="2">
       <mat-card>
-        <mat-card-title>
-          <h2 class="example-h2">Plays statistics</h2>
-        </mat-card-title>
         <mat-card-content>
           <span>Graph of plays activity</span>
           <canvas #activity>{{ chart }}</canvas>

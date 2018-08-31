@@ -1,30 +1,53 @@
 .content {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    margin: 1px;
+    padding-bottom: 3em;
     mat-card {
-        width: 100%;
-        height: 100%;
-        padding: 1em;
+        width: calc(100% - 3em);
+        height: calc(100% - 3em);
+        mat-card-content {
+            height: 100%;           
+        }
+
+        mat-card-title {
+            button {
+                display: inline;
+                padding-left: 1em;
+            }
+        }
     }
+
+    section.inline-section{
+        display: inline-block;
+        width: calc(50% - 1em);
+    }
+
     .actions {
-        margin-top: 5em;
         text-align: right;
     }
 
-    .mat-card-title {
-        h2 {
-            margin-top: 5px;
-        }
+    .plays {
+        margin-bottom: 65px;
+    }
+
+    canvas {
+        margin: 0.5em;
+    }
+
+    h2 {
+        margin-top: 0px;
+        margin-bottom: 0.25em;
+    }
+
+    mat-spinner {
+        margin: auto;
     }
 }
 
 .storage-graph, .counters {
-    position: absolute;
-    top: 3em;
-    width: 40%;
+    display: inline-block;
+    float: left;
+    padding: 0.5em;
+    width: calc(50% - 1em);
 }
 .storage-graph {
     right: 0;

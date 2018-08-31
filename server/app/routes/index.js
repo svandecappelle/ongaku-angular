@@ -38,7 +38,7 @@ class Routes {
 
     // DESACTIVATED DUE TO Postgresql is not yet fonctionnal
     app.use('/api/install', install);
-    // app.use('/api/upgrade', upgrade);
+    app.use('/api/upgrade', upgrade);
 
 
     // app.use('/api/users', users);
