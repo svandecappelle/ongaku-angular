@@ -3,15 +3,31 @@ const path = require('path');
 const semver = require('semver');
 const models = require('../models');
 
+const git = require('nodegit');
+
 class Version {
 
   current() {
     return require(path.resolve(__dirname, '../../../package')).version;
   }
 
+  async sha() {
+    try {
+      return await git.Repository.open(path.resolve(__dirname, '../../../')).then((repo) => {
+        return repo.getHeadCommit();
+      }).then(commit => {
+        return commit.sha();
+      });
+    } catch (error) {
+      // not a git repo.
+      console.error(error);
+      return null;
+    }
+  }
+
   installed() {
     return new Promise((resolve, reject) => {
-      if (nconf.get('database') === 'redis'){
+      if (nconf.get('database') === 'redis') {
         const groups = require('../model/groups');
         groups.getAllGroups((err, groups) => {
           resolve(!err && groups.length > 0 ? this.current(): null);

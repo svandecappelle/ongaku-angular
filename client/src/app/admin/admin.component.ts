@@ -25,7 +25,7 @@ export class AdminComponent implements OnInit {
       common: 0,
       users: 0,
       total: 0
-    }    
+    }
   };
   private details;
 
@@ -90,7 +90,7 @@ export class AdminComponent implements OnInit {
   ];
   public lineChartLegend: boolean = true;
   public lineChartType: string = 'line';
-  
+
   @ViewChild('access', { read: ElementRef }) canvasUserAccess: ElementRef;
 
   @ViewChild('activity', { read: ElementRef }) canvasActivity: ElementRef;
@@ -106,7 +106,7 @@ export class AdminComponent implements OnInit {
       this.getStatistics();
       this.getDetails();
     }, 500);
-    
+
     this.form = this.fb.group({
       allowRegisteration: [''],
       requireLogin: [''],
@@ -259,6 +259,13 @@ export class AdminComponent implements OnInit {
   onConfigurationSubmit() {
     this.configureService.configure(this.form.value).subscribe((success) => {
 
+    });
+  }
+
+  update() {
+    this.details = undefined;
+    this.configureService.update().subscribe(success => {
+      this.getDetails();
     });
   }
 }

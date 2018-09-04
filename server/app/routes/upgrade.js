@@ -8,7 +8,9 @@ const yaml_config = require('node-yaml-config');
 
 const upgrader = require(path.resolve(__dirname, '../../db/postgres/upgrade'));
 
-var router = express.Router();
+const router = express.Router();
+
+const git = require('nodegit');
 
 router.get('/', function (req, res, next) {
   version.check().then(version => {
@@ -21,10 +23,39 @@ router.get('/', function (req, res, next) {
   });
 });
 
+router.post('/git/check', function (req, res, next) {
+  var repository;
+  console.log(path.resolve(__dirname, '../../../'));
+  git.Repository.open(path.resolve(__dirname, '../../../')).then((repo) => {
+    repository = repo;
+    console.log('Fetching repository');
+    return repo.fetchAll({
+      credentials: function(url, userName) {
+        return NodeGit.Cred.sshKeyFromAgent(userName);
+      }
+    })
+  }).then(remote => {
+    console.log("Merging code");
+    return repository.mergeBranches("master", "origin/master");
+  }).done(function() {
+    let sha = repository.getBranchCommit().then(commit => {
+      res.json({
+        message: `Application updated to origin/master ${commit.sha()}`
+      })
+    });
+    
+  })
+});
+
+
+router.post('/git/check', function (req, res, next) {
+  version.check().then(version => {
+  });
+});
 
 router.post('/', (req, res) => {
   version.check().then(version => {
-    upgrader.upgrade( { from: version.installed, to: version.launched } ).then((status) => {
+    upgrader.upgrade({ from: version.installed, to: version.launched }).then((status) => {
       console.log("upgraded");
       res.json({
         message: 'Application upgraded to 1.0.1'

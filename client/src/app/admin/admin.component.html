@@ -7,6 +7,9 @@
         </mat-card-title>
         <mat-card-content>
           <div *ngIf="details">Version: {{details.version}}</div>
+          <div class="actions">
+            <button mat-raised-button color="primary" type="button" (click)="update()">Update application</button>
+          </div>
           <mat-spinner *ngIf="details === undefined"></mat-spinner>
         </mat-card-content>
       </mat-card>

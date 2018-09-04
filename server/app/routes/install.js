@@ -15,11 +15,14 @@ if (nconf.get('database') === 'redis') {
 }
 
 router.get('/', function (req, res, next) {
-  version.installed().then(versionNumber => {
-    res.json({
-      title: 'Installer',
-      version: versionNumber,
-      database: nconf.get('database') === 'postgresql' ? yaml_config.load(path.resolve(__dirname, '../../config/config.yml')).database : ''
+  version.sha().then(sha => {
+    version.installed().then(versionNumber => {
+      res.json({
+        title: 'Installer',
+        sha: sha,
+        version: versionNumber,
+        database: nconf.get('database') === 'postgresql' ? yaml_config.load(path.resolve(__dirname, '../../config/config.yml')).database : ''
+      });
     });
   });
 });
