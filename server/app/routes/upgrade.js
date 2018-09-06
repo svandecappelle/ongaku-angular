@@ -25,26 +25,32 @@ router.get('/', function (req, res, next) {
 
 router.post('/git/check', function (req, res, next) {
   var repository;
+  var commit;
   console.log(path.resolve(__dirname, '../../../'));
   git.Repository.open(path.resolve(__dirname, '../../../')).then((repo) => {
     repository = repo;
     console.log('Fetching repository');
     return repo.fetchAll({
-      credentials: function(url, userName) {
-        return NodeGit.Cred.sshKeyFromAgent(userName);
+      callbacks: {
+        credentials: function(url, userName) {
+          return git.Cred.sshKeyFromAgent(userName);
+        }
       }
     })
   }).then(remote => {
     console.log("Merging code");
     return repository.mergeBranches("master", "origin/master");
-  }).done(function() {
-    let sha = repository.getBranchCommit().then(commit => {
-      res.json({
-        message: `Application updated to origin/master ${commit.sha()}`
-      })
+  }).then(() => {
+    return commit = repository.getHeadCommit();
+  }).then((headCommit) => {
+    commit = headCommit;
+  }).done(() => {
+    var message = `Application updated to origin/master ${commit.sha()}`;
+    console.log(message);
+    res.json({
+      message: message
     });
-    
-  })
+  });
 });
 
 
