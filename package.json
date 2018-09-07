@@ -45,7 +45,6 @@
     "node-unzip-2": "^0.2.7",
     "node-wave": "0.0.4",
     "node-yaml-config": "0.0.4",
-    "nodegit": "^0.22.2",
     "ora": "^2.0.0",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
@@ -68,6 +67,9 @@
     "uuid": "^3.2.1",
     "winston": "^3.0.0",
     "xregexp": "^4.1.1"
+  },
+  "optionalDependencies": {
+    "nodegit": "^0.22.2"
   },
   "devDependencies": {
     "concurrently": "3.5.0",

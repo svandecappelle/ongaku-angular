@@ -3,7 +3,14 @@ const path = require('path');
 const semver = require('semver');
 const models = require('../models');
 
-const git = require('nodegit');
+
+var git;
+try {
+  git = require('nodegit');
+} catch (error) {
+  git = require('./../middleware/git');
+  console.warn('Git plugin not installed.');
+}
 
 class Version {
 
@@ -12,16 +19,14 @@ class Version {
   }
 
   async sha() {
-    try {
+    if (git.Repository) {
       return await git.Repository.open(path.resolve(__dirname, '../../../')).then((repo) => {
         return repo.getHeadCommit();
       }).then(commit => {
         return commit.sha();
       });
-    } catch (error) {
-      // not a git repo.
-      console.error(error);
-      return null;
+    } else {
+      return git.version();
     }
   }
 
