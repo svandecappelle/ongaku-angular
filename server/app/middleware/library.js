@@ -85,6 +85,8 @@ class Library {
     this.loadingCoverArtists = [];
     this.loadingCoversAlbumsFlatten = [];
 
+    this.coversLocation = [];
+
     scan.on('decoded', (song, type) => {
       console.debug("decoded", song, type);
       // this.flatten.push(song);
@@ -104,6 +106,7 @@ class Library {
         libraryElement;
 
         var tracks = [libraryElement];
+        let location = path.dirname(song.file);
         this.flatten = _.union(this.flatten, tracks);
 
         this.getArtistCover({
@@ -117,7 +120,7 @@ class Library {
         if (album !== "Unknown album") {
           this.getAlbumCover({
             artist: song.artist
-          }, album);
+          }, album, location);
         } else {
           console.debug("already scanned album '" + album.title + "': " + this.loadingCoverAlbums[song.artist][album.title]);
         }
@@ -378,7 +381,7 @@ class Library {
    * @param {String} artist artist name 
    * @param {String} album album title
    */
-  getAlbumCover(artist, album) {
+  getAlbumCover(artist, album, location) {
     if (this.loadingCoverAlbums[artist.artist] === undefined) {
       this.loadingCoverAlbums[artist.artist] = {};
     }
@@ -388,24 +391,48 @@ class Library {
     if (!alreadyScanned) {
       this.loadingCoverAlbums[artist.artist][album.title] = "/static/img/album.png";
       this.loadingCoversAlbumsFlatten[album.title] = "/static/img/album.png";
+      album.cover = ['/static/img/album.png'];
+        album.image = [
+          {
+            '#text': ['/static/img/album.png']
+          }
+        ];
 
-
-      lfm.album.getInfo({
-        'artist': artist.artist.trim(),
-        'album': album.album_origin ? album.album_origin.trim() : album.title.trim()
-      }, (err, alb) => {
-        if (err) {
-          console.warn("[" + artist.artist + "] -> album:: '" + album.title + "' not found");
-        }
-
-        // parse function allow not defined images
-        album.cover = parseLastFm(alb);
-        album = _.extend(album, alb);
+      if (fs.existsSync(path.resolve(location, 'cover.jpg'))) {
+        album.cover = [`/api/audio/static/covers/${artist.artist}/${album.title}/cover.jpg`];
+        album.image = [
+          {
+            '#text': [`/api/audio/static/covers/${artist.artist}/${album.title}/cover.jpg`]
+          }
+        ];
         this.loadingCoverAlbums[artist.artist][album.title] = album;
         this.loadingCoversAlbumsFlatten[album.title] = album;
-      });
+        if (!this.coversLocation[artist.artist]) {
+          this.coversLocation[artist.artist] = {};
+        }
+        this.coversLocation[artist.artist][album.title] = path.resolve(location, 'cover.jpg');
+      } else {
+        lfm.album.getInfo({
+          'artist': artist.artist.trim(),
+          'album': album.album_origin ? album.album_origin.trim() : album.title.trim()
+        }, (err, alb) => {
+          if (err) {
+            console.warn("[" + artist.artist + "] -> album:: '" + album.title + "' not found");
+          }
+
+          // parse function allow not defined images
+          album.cover = parseLastFm(alb);
+          album = _.extend(album, alb);
+          this.loadingCoverAlbums[artist.artist][album.title] = album;
+          this.loadingCoversAlbumsFlatten[album.title] = album;
+        });
+      }
     }
   };
+
+  getAlbumCoverByName(artist, album) {
+    return this.coversLocation[artist] && this.coversLocation[artist][album] ? this.coversLocation[artist][album] : undefined;
+  }
 
   /**
    * Check if library is scanning a folder.

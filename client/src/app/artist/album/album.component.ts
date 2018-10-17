@@ -78,15 +78,24 @@ export class AlbumComponent implements OnInit {
 
   getAlbumBackground() {
     const src = this.details[0].albums[0].album_info;
-    const image = src.image ? src.image[3]['#text'] : '';
+    let image;
+    if (src.image && src.image.length > 1) {
+      image = src.image ? src.image[3]['#text'] : '';
+    } else if (src.image) {
+      image = src.image ? src.image[0]['#text'] : '';
+    }
+    
     return this._sanitizer.bypassSecurityTrustStyle(`linear-gradient(rgba(29, 29, 29, 0), rgba(16, 16, 23, 0.5)), url(${image})`);
   }
 
   getImageSrc() {
-
     const src = this.details[0].albums[0].album_info;
-    const image = src.image ? src.image[3]['#text'] : '';
-
+    let image;
+    if (src.image && src.image.length > 1) {
+      image = src.image ? src.image[3]['#text'] : '';
+    } else if (src.image) {
+      image = src.image ? src.image[0]['#text'] : '';
+    }
     return this._sanitizer.bypassSecurityTrustUrl(`${image}`);
   }
 

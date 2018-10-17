@@ -427,7 +427,12 @@ router.get("/song-image/:songid", (req, res) => {
     }
 });
 
-
+router.get("/static/covers/:artist/:album/cover.jpg", (req, res) => {
+    var albumart = library.getAlbumCoverByName(req.params.artist, req.params.album);
+    console.log(req.params.artist, req.params.album);
+    console.log(albumart);
+    res.sendFile(albumart);
+});
 
 router.post('/metadata/set/:id', (req, res) => {
     var id = req.params.id;

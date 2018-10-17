@@ -101,7 +101,12 @@ export class HomeComponent implements OnInit {
   }
 
   getImageSrc(src) {
-    const image = src.image ? src.image[3]['#text'] : '';
+    let image;
+    if (src.image && src.image.length > 1) {
+      image = src.image ? src.image[3]['#text'] : '';
+    } else if (src.image) {
+      image = src.image ? src.image[0]['#text'] : '';
+    }
 
     return this._sanitizer.bypassSecurityTrustUrl(`${image}`);
   }
