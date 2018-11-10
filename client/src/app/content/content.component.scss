@@ -5,3 +5,15 @@
   right: 0;
   top: 64px;
 }
+
+.background {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  background-position: 0px 0px;
+  background-attachment: fixed;
+  background-size: cover;
+  z-index: -1;
+}

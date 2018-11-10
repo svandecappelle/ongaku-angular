@@ -1,4 +1,5 @@
-<div class="background" *ngIf="details" [style.backgroundImage]="getArtistBackground(details.info)"></div>
+<div class="background" *ngIf="details && toggleBackground" [style.backgroundImage]="getArtistBackground(details.info)"></div>
+<mat-slide-toggle class="toggle-background" [checked]="toggleBackground" [(ngModel)]="toggleBackground" (ngModelChange)="onToggleChange($event)" >Show artist as background</mat-slide-toggle>
 
 <div class="content">
   <h1 class="mat-h1" >
@@ -14,16 +15,15 @@
 
           <hr/>
           <h3>Albums</h3>
-          <mat-grid-list cols="5" >
+          <mat-grid-list cols="10" >
             <mat-grid-tile *ngFor="let album of details.albums">
-              <mat-card class="album" *ngIf="album">
+              <mat-card class="album" *ngIf="album" [style.background-image]="getArtistBackground(album.album_info)">
                 <a pageScroll href="#{{scrollLink(album.album)}}">
                   <mat-card-header>
                     <mat-card-title>{{album.album}}</mat-card-title>
                   </mat-card-header>
                 </a>
                 <mat-card-content>
-                  <img [src]="covers[album.album]" />
                 </mat-card-content>
               </mat-card>
             </mat-grid-tile>
@@ -35,8 +35,8 @@
             <li *ngFor="let album of details.albums">
               <div>
                 <div>
-                  <mat-icon mat-list-icon class="cover-icon" *ngIf="album.album_info.cover === '/img/album.jpg'">album</mat-icon>
-                  <div mat-card-avatar class="cover-image" *ngIf="album.album_info.cover !== '/img/album.jpg'" [style.background-image]="getArtistBackground(album.album_info)"></div>
+                  <mat-icon mat-list-icon class="cover-icon" *ngIf="album.album_info.image === '/img/album.jpg'">album</mat-icon>
+                  <div mat-card-avatar class="cover-image" *ngIf="album.album_info.image !== '/img/album.jpg'" [style.background-image]="getArtistBackground(album.album_info)"></div>
                   <h4 id="{{scrollLink(album.album_info.title)}}">{{album.album_info.title}}</h4>
                 </div>
                 <mat-divider mat-line></mat-divider>

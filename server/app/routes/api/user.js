@@ -131,7 +131,7 @@ router.get('/:username', (req, res) => {
 router.post(['/image/:type'], (req, res) => {
     var username = req.session.passport.user.username;
     var type = req.params.type;
-    if (type !== 'avatar' && type !== 'cover') {
+    if (type !== 'avatar' && type !== 'cover' && type !== 'background') {
         return res.status(403).json({
             message: 'Forbidden'
         });
@@ -155,6 +155,19 @@ router.post(['/image/:type'], (req, res) => {
 
         req.pipe(busboy);
     });
+});
+
+
+router.get('/image/:type', (req, res) => {
+    var username = req.session.passport.user.username;
+    var type = req.params.type;
+    if (type !== 'avatar' && type !== 'cover' && type !== 'background') {
+        return res.status(403).json({
+            message: 'Forbidden'
+        });
+    }
+    var userFile = path.resolve(__dirname, `../../../../public${middleware.getImageFile(username, type)}`);
+    res.sendFile(userFile);
 });
 
 router.post('/library/add', (req, res) => {

@@ -16,10 +16,19 @@ import {
 } from './player/controls/playlist/playlist-state';
 
 
+export function backgroundOnViewsReducer(state: Boolean): Boolean {
+
+  if (state === undefined) {
+    state = false;
+  }
+  return state;
+}
+
 export interface IAppState {
   readonly search: String;
   readonly player: IPlayerState;
   readonly trackList: Song[];
+  readonly showBackgroundOnViews: Boolean;
 }
 
 export interface Song {
@@ -39,5 +48,6 @@ export interface Song {
 export const AppStateModule: ModuleWithProviders = StoreModule.forRoot({
   search: searchReducer,
   player: playerReducer,
-  trackList: PlaylistReducer
+  trackList: PlaylistReducer,
+  showBackgroundOnViews: backgroundOnViewsReducer
 });

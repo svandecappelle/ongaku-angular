@@ -35,6 +35,12 @@ img.artist {
     width: 100%;
 }
 
+.toggle-background {
+    position: absolute;
+    top: 1em;
+    right: 1em;
+}
+
 mat-tab-body.mat-tab-body-active {
     z-index: 0;
 }
@@ -86,6 +92,11 @@ ul {
             }
         }
     }
+}
+
+.album {
+    background-position: center;
+    background-size: cover;
 }
 
 .album-actions {

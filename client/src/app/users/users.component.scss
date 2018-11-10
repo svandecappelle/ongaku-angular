@@ -14,6 +14,9 @@ img.user-avatar {
         width: 100%;
         height: 100%;
 
+        background-size: cover;
+        background-position: center;
+
         .mat-card-header {
             position: relative;
         }

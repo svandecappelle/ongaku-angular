@@ -23,6 +23,7 @@ export class UserComponent implements OnInit {
 
   private avatarFiler: ElementRef;
   private coverFiler: ElementRef;
+  private backgroundFiler: ElementRef;
   private canvasStorage: ElementRef;
 
   constructor(private service: UserService,
@@ -41,6 +42,10 @@ export class UserComponent implements OnInit {
     this.coverFiler = elRef;
   }
 
+  @ViewChild('backgroundFiler') set contentBackground(elRef: ElementRef) {
+    this.backgroundFiler = elRef;
+  }
+
   ngOnInit() {
     this.activatedRoute.params.subscribe((params: Params) => {
       this.user = params['user'];
@@ -56,18 +61,18 @@ export class UserComponent implements OnInit {
           this.avatarSrc = `/static/user/${this.infos.username}/avatar?${new Date().getTime()}`;
           this.coverBackground = this.getImage('cover');
           setTimeout(() => {
-            new Chart(this.canvasStorage.nativeElement, {
+            const chart = new Chart(this.canvasStorage.nativeElement, {
               type: 'doughnut',
               data: {
                 datasets: [{
                   data: [Math.round(data.usage / 1024 / 1024), 1000],
                   backgroundColor: [
-                    "#3cba9f",
-                    "#A9A9A9"
+                    '#3cba9f',
+                    '#A9A9A9'
                   ],
                   borderColor: [
-                    "#3cffff",
-                    "#989898"
+                    '#3cffff',
+                    '#989898'
                   ],
                 }],
                 labels: [
@@ -98,22 +103,24 @@ export class UserComponent implements OnInit {
       this.avatarFiler.nativeElement.click();
     } else if (type === 'cover') {
       this.coverFiler.nativeElement.click();
+    } else if (type === 'background') {
+      this.backgroundFiler.nativeElement.click();
     }
 
   }
 
   uploadFile(type: String, files: FileList) {
-    if (files.length == 0) {
-      console.log("No file selected!");
-      return
+    if (files.length === 0) {
+      console.log('No file selected!');
+      return;
 
     }
-    let file: File = files[0];
+    const file: File = files[0];
 
     this.service.uploadFile(`/api/user/image/${type}`, file)
       .subscribe(
         event => {
-          if (event.type == HttpEventType.UploadProgress) {
+          if (event.type === HttpEventType.UploadProgress) {
             const percentDone = Math.round(100 * event.loaded / event.total);
             console.log(`File is ${percentDone}% loaded.`);
           } else if (event instanceof HttpResponse) {
@@ -121,12 +128,12 @@ export class UserComponent implements OnInit {
           }
         },
         (err) => {
-          console.log("Upload Error:", err);
+          console.log('Upload Error:', err);
         }, () => {
-          console.log("Upload done");
+          console.log('Upload done');
           this.avatarSrc = `/static/user/${this.infos.username}/avatar?${new Date().getTime()}`;
           this.coverBackground = this.getImage('cover');
         }
-      )
+      );
   }
 }

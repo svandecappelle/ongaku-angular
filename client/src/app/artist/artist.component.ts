@@ -23,6 +23,7 @@ import { ArtistService } from './artist.service';
 })
 export class ArtistComponent implements OnInit {
 
+  private toggleBackground = true;
   private artist: string;
   private details: Object;
   private image;
@@ -32,10 +33,10 @@ export class ArtistComponent implements OnInit {
   private selectedOptions = [];
   private covers: Object = {};
 
-  private _albumsIdCounter: number = 0;
-  
+  private _albumsIdCounter = 0;
+
   public subscriptions = new Array<Subscription>();
-  
+
   constructor(
     private activatedRoute: ActivatedRoute,
     private service: ArtistService,
@@ -51,6 +52,10 @@ export class ArtistComponent implements OnInit {
 
     this.subscriptions.push(this.store.select(state => state.search).subscribe((val) => {
       this.search(val);
+    }));
+
+    this.subscriptions.push(this.store.select(state => state.showBackgroundOnViews).subscribe((val) => {
+      this.toggleBackground = !val;
     }));
 
     // subscribe to router event
@@ -70,21 +75,38 @@ export class ArtistComponent implements OnInit {
     });
   }
 
-  ngOnDestroy() {
+  OnDestroy() {
     this.subscriptions.forEach(subscribe => {
       subscribe.unsubscribe();
     });
   }
 
-  getArtistBackground(src) {
-    const image = src.image ? src.image[3]['#text'] : '';
+  onToggleChange(event) {
+    this.store.select(state => state.showBackgroundOnViews).dispatch(event.value);
+  }
 
+  getArtistBackground(src) {
+    let image;
+
+    let i = 0;
+    src.image.forEach(element => {
+      if (i < 4) {
+        image = element ? element['#text'] : '';
+      }
+      i += 1;
+    });
     return this._sanitizer.bypassSecurityTrustStyle(`linear-gradient(rgba(29, 29, 29, 0), rgba(16, 16, 23, 0.5)), url(${image})`);
   }
 
   getImageSrc(src) {
-    const image = src.image ? src.image[3]['#text'] : '';
-
+    let image;
+    let i = 0;
+    src.image.forEach(element => {
+      if (i < 4) {
+        image = element ? element['#text'] : '';
+      }
+      i += 1;
+    });
     return this._sanitizer.bypassSecurityTrustUrl(`${image}`);
   }
 
