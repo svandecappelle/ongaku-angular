@@ -1,16 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 
-import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
-import { Router, ActivatedRoute, Params } from '@angular/router';
+import { DomSanitizer } from '@angular/platform-browser';
+import { ActivatedRoute, Params } from '@angular/router';
 import { MatDialog } from '@angular/material';
 
 import { Song, IAppState } from '../../app-state';
-import {
-  AppendPlaylist
-} from '../../player/state';
+import { AppendPlaylist } from '../../player/state';
+import { ToggleBackgroundTypeAction, ToggleBackgroundType } from '../../content/content-state';
 
-import { Store, Action, select } from '@ngrx/store';
-import { Observable, Subscription } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { Subscription } from 'rxjs';
 
 import { PlayerActions } from '../../player/player-actions';
 import { MetadatasComponent } from '../../metadatas/metadatas.component';
@@ -28,6 +27,7 @@ export class AlbumComponent implements OnInit {
   private album: string; 
   private details: Object;
   private image;
+  private toggleBackground = true;
 
   public tracklist = [];
 
@@ -36,7 +36,7 @@ export class AlbumComponent implements OnInit {
 
   private _albumsIdCounter: number = 0;
   
-  public subscriptions = new Array<Subscription>();
+  public subscriptions = new Subscription();
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -47,18 +47,22 @@ export class AlbumComponent implements OnInit {
     private actions: PlayerActions) { }
 
   ngOnInit() {
-    this.subscriptions.push(this.store.select(state => state.trackList).subscribe((val) => {
+    this.subscriptions.add(this.store.select(state => state.trackList).subscribe((val) => {
       this.tracklist = val;
     }));
 
-    this.subscriptions.push(this.store.select(state => state.search).subscribe((val) => {
+    this.subscriptions.add(this.store.select(state => state.search).subscribe((val) => {
       this.search(val);
+    }));
+
+    this.subscriptions.add(this.store.select(state => state.showBackgroundOnViews).subscribe((val) => {
+      this.toggleBackground = !val;
     }));
 
     this.activatedRoute.params.subscribe((params: Params) => {
       this.album = params['album'];
 
-      this.subscriptions.push(this.service.get(this.album).subscribe((details) => {
+      this.subscriptions.add(this.service.get(this.album).subscribe((details) => {
         details.artist_info = {
           bio: ""
         };
@@ -71,9 +75,7 @@ export class AlbumComponent implements OnInit {
 
 
   ngOnDestroy() {
-    this.subscriptions.forEach(subscribe => {
-      subscribe.unsubscribe();
-    });
+    this.subscriptions.unsubscribe();
   }
 
   getAlbumBackground() {
@@ -153,6 +155,14 @@ export class AlbumComponent implements OnInit {
       panelClass: 'custom-overlay-pane-class',
       data: track
     });
+  }
+  
+  onToggleChange(event) {
+    if (!this.toggleBackground) {
+      this.store.dispatch(new ToggleBackgroundTypeAction(ToggleBackgroundType.USER_VIEWS));
+    } else {
+      this.store.dispatch(new ToggleBackgroundTypeAction(ToggleBackgroundType.DYNAMIC));
+    }
   }
 
   search(request) {

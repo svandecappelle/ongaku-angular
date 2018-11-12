@@ -5,6 +5,20 @@ img.album {
     display: inline-block;
 }
 
+.album-header {
+    z-index: 9;
+    position: sticky;
+    top: 4em;
+    padding-top: 0.3em;
+    background-color: rgba(0, 0, 0, 0.85)
+}
+
+.toggle-background {
+    position: absolute;
+    top: 1em;
+    right: 1em;
+}
+
 .title {
     vertical-align: top;
     display: inline-block;

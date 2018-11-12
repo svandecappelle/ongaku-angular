@@ -1,10 +1,13 @@
-<div class="background" *ngIf="details" [style.backgroundImage]="getAlbumBackground()"></div>
+<div class="background" *ngIf="details && toggleBackground" [style.backgroundImage]="getAlbumBackground()"></div>
 
 <div class="content">
-  <h1 class="mat-h1" >
-      <img class="album" [src]="image" />
-      <div class="title">{{album}}</div>
-  </h1>
+  <div class="album-header">
+    <h1 class="mat-h1" >
+        <img class="album" [src]="image" />
+        <div class="title">{{album}}</div>
+    </h1>
+    <mat-slide-toggle class="toggle-background" [checked]="toggleBackground" [(ngModel)]="toggleBackground" (ngModelChange)="onToggleChange($event)" >Show artist as background</mat-slide-toggle>
+  </div>
 
   <div *ngIf="details">
     <mat-tab-group color="accent">

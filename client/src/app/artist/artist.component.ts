@@ -4,9 +4,8 @@ import { Router, ActivatedRoute, Params } from '@angular/router';
 import { MatDialog } from '@angular/material';
 
 import { Song, IAppState } from '../app-state';
-import {
-  AppendPlaylist
-} from '../player/state';
+import { AppendPlaylist } from '../player/state';
+import { ToggleBackgroundTypeAction, ToggleBackgroundType } from '../content/content-state';
 
 import { Store, Action, select } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
@@ -82,7 +81,11 @@ export class ArtistComponent implements OnInit {
   }
 
   onToggleChange(event) {
-    this.store.dispatch(event.value);
+    if (!this.toggleBackground) {
+      this.store.dispatch(new ToggleBackgroundTypeAction(ToggleBackgroundType.USER_VIEWS));
+    } else {
+      this.store.dispatch(new ToggleBackgroundTypeAction(ToggleBackgroundType.DYNAMIC));
+    }
   }
 
   getArtistBackground(src) {
