@@ -14,24 +14,24 @@
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <p>Enter admin credentials</p>
-      <mat-input-container class="full-width-input">
+      <mat-form-field class="full-width-input">
         <input matInput placeholder="User" formControlName="userName" required>
         <mat-error *ngIf="isFieldInvalid('userName')">
           Please inform your user name
         </mat-error>
-      </mat-input-container>
-      <mat-input-container class="full-width-input">
+      </mat-form-field>
+      <mat-form-field class="full-width-input">
         <input matInput type="email" placeholder="Email" formControlName="email" required>
         <mat-error *ngIf="isFieldInvalid('email')">
           Please inform your email
         </mat-error>
-      </mat-input-container>
-      <mat-input-container class="full-width-input">
+      </mat-form-field>
+      <mat-form-field class="full-width-input">
         <input matInput type="password" placeholder="Password" formControlName="password" required>
         <mat-error *ngIf="isFieldInvalid('userName')">
           Please inform your password
         </mat-error>
-      </mat-input-container>
+      </mat-form-field>
     </form>
     <mat-progress-bar class="login-in-progress" [mode]="'indeterminate'" *ngIf="loginInProgress"></mat-progress-bar>
   </mat-card-content>

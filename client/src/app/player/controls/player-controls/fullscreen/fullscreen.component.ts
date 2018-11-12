@@ -9,10 +9,9 @@ import {
 } from '@angular/core';
 
 import { DOCUMENT } from '@angular/common';
-import { Observable } from 'rxjs/Observable';
+import { Observable ,  BehaviorSubject } from 'rxjs';
 import { MatDialog, MAT_DIALOG_DATA, MatTableDataSource } from '@angular/material';
 import { DataSource } from '@angular/cdk/collections';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Store, select } from '@ngrx/store';
 
 import { PlayerActions } from '../../../player-actions';
@@ -192,10 +191,7 @@ export class FullscreenComponent implements OnInit {
   }
 
   onStepperClick($event) {
-    console.log($event);
     const time = this.duration * $event.layerX / $event.target.offsetWidth;
-
-    console.log(time);
     this.player.goTo(time);
   }
 }

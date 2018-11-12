@@ -1,12 +1,10 @@
-import 'rxjs/add/observable/fromEvent';
-import 'rxjs/add/observable/merge';
-import 'rxjs/add/operator/map';
+
+
+
 
 import { Action } from '@ngrx/store';
-import { Observable } from 'rxjs/Observable';
+import { Observable ,  Subject } from 'rxjs';
 import { AudioSource } from './audio-source';
-
-import { Subject } from 'rxjs/Subject';
 import { Song } from '../app-state';
 
 class UtilityService {

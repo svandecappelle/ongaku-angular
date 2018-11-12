@@ -49,7 +49,6 @@ export class RegisterComponent implements OnInit {
 
   onSubmit() {
     this.inProgress = true;
-    console.log(this.form.valid);
     if (this.form.valid) {
       this.service.register(
         this.form.value.email,

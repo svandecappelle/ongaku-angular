@@ -1,6 +1,6 @@
-import { Component, OnInit, ViewChild, ElementRef, Renderer, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, Renderer, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { Store, select } from '@ngrx/store';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { BehaviorSubject, Subscription } from 'rxjs';
 
 import { PlayerStateRecord, IPlayerState } from '../../index';
 
@@ -14,8 +14,9 @@ import { FullscreenComponent } from './fullscreen/fullscreen.component';
   templateUrl: './player-controls.component.html',
   styleUrls: ['./player-controls.component.scss']
 })
-export class PlayerControlsComponent implements OnInit {
+export class PlayerControlsComponent implements OnInit, OnDestroy {
 
+  private subscriptions: Subscription = new Subscription();
   private color = 'accent';
 
   private duration;
@@ -61,22 +62,20 @@ export class PlayerControlsComponent implements OnInit {
       this.next();
     });
 
-    this.store.select(state => state.player).subscribe((val) => {
-
-      if (val.track) {
-
-        this.play_index = val.track.index;
-
-        this.current = val.track;
+    this.subscriptions.add(this.store.select(state => state.player).subscribe((playerState) => {
+      let track = playerState.track;
+      if (track) {
+        this.play_index = track.index;
+        this.current = track;
         if (this.fullscreener) {
           this.fullscreener.setCurrent(this.current);
         }
         this.stop();
         this.change(this.current.uid);
       }
-    });
+    }));
 
-    this.store.select(state => state.trackList).subscribe((val) => {
+    this.subscriptions.add(this.store.select(state => state.trackList).subscribe((val) => {
       this.tracks = val;
       if (this.play_index === 0) {
         this.current = val[0];
@@ -86,7 +85,11 @@ export class PlayerControlsComponent implements OnInit {
         }
         this.ensurePlay();
       }
-    });
+    }));
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
   }
 
   ensurePlay() {
@@ -95,8 +98,8 @@ export class PlayerControlsComponent implements OnInit {
     }
   }
 
-  isPlaying () { 
-    return !this.player.nativeElement.paused; 
+  isPlaying() {
+    return !this.player.nativeElement.paused;
   }
 
   play() {
@@ -109,7 +112,7 @@ export class PlayerControlsComponent implements OnInit {
         if (this.fullscreener) {
           this.fullscreener.setCurrent(this.current);
         }
-        this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
+        this.store.dispatch(this.actions.playSelectedTrack(this.current));
 
         if (!this.isPlaying()) {
           this.player.nativeElement.play();
@@ -146,20 +149,20 @@ export class PlayerControlsComponent implements OnInit {
       if (this.fullscreener) {
         this.fullscreener.setCurrent(this.current);
       }
-      this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
+      this.store.dispatch(this.actions.playSelectedTrack(this.current));
     }
   }
 
   next() {
     this.switching();
-    const newIndex =  this.current ? this.current.index + 1 : this.play_index + 1;
+    const newIndex = this.current ? this.current.index + 1 : this.play_index + 1;
     if (this.tracks.length > newIndex) {
       this.play_index = newIndex;
       this.current = this.tracks[newIndex];
       if (this.fullscreener) {
         this.fullscreener.setCurrent(this.current);
       }
-      this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
+      this.store.dispatch(this.actions.playSelectedTrack(this.current));
     } else {
       this.currentTime = 0;
       this.player.nativeElement.currentTime = this.currentTime;

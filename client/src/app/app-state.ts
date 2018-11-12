@@ -1,8 +1,7 @@
 import { ModuleWithProviders } from '@angular/core';
-import { StoreModule, Action } from '@ngrx/store';
+import { StoreModule } from '@ngrx/store';
 
 import {
-  PlayerStateRecord,
   IPlayerState,
   playerReducer
 } from './player/';

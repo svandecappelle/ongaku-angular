@@ -1,7 +1,8 @@
+
+import { Subject, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpRequest, HttpEventType, HttpResponse } from '@angular/common/http';
-import { Subject } from 'rxjs/Subject';
-import { Observable } from 'rxjs/Observable';
 
 const url = '/api/audio/upload';
 
@@ -10,8 +11,7 @@ export class UploadService {
   constructor(private http: HttpClient) { }
 
   public list(folder: string): Observable<any[]> {
-    return this.http.get(`/api/audio/my-library/${folder}`).map((page) => page['files'])
-      .catch((error: any) => Observable.throw(error || 'Server error'));
+    return this.http.get(`/api/audio/my-library/${folder}`).pipe(map((page) => page['files']));
   }
 
   public upload(folder: string, files: Set<File>): { [key: string]: Observable<number> } {

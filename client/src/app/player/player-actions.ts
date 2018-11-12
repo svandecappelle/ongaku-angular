@@ -52,7 +52,7 @@ export class PlayerActions {
     };
   }
 
-  playSelectedTrack(track: Object): PlayerAction {
+  playSelectedTrack(track: any): PlayerAction {
     return {
       type: PlayerActions.PLAY_SELECTED_TRACK,
       payload: {

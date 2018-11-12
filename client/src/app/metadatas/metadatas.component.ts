@@ -8,10 +8,9 @@ import {
 } from '@angular/core';
 
 import { DOCUMENT } from '@angular/common';
-import { Observable } from 'rxjs/Observable';
+import { Observable ,  BehaviorSubject } from 'rxjs';
 import { MatDialog, MAT_DIALOG_DATA, MatTableDataSource } from '@angular/material';
 import { DataSource } from "@angular/cdk/collections";
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 @Component({
   selector: 'app-metadatas',

@@ -39,7 +39,7 @@
 
 /** Evergreen browsers require these. **/
 import 'core-js/es6/reflect';
-import 'core-js/es7/reflect';
+
 
 
 /**
@@ -70,3 +70,5 @@ import 'zone.js/dist/zone';  // Included with Angular CLI.
  * Need to import at least one locale-data with intl.
  */
 // import 'intl/locale-data/jsonp/en';
+
+(window as any).global = window;

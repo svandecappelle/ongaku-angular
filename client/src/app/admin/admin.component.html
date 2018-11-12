@@ -27,10 +27,10 @@
             <div *ngIf="properties">
               <section class="inline-section">
                 <label class="example-margin">Allow user register</label>
-                <mat-input-container>
+                <mat-form-field>
                   <input matInput formControlName="allowRegisteration" placeholder="User count" type="number" value="{{properties.allowRegisteration}}"
                     required/>
-                </mat-input-container>
+                </mat-form-field>
               </section>
               <section class="inline-section">
                 <mat-slide-toggle formControlName="requireLogin" class="example-margin" [color]="warn" [checked]="properties.requireLogin">

@@ -27,7 +27,6 @@ export type TrackActionsUnion =
 
 
 export function PlaylistReducer(state: Song[], action: SongAction) {
-
     if (!state) {
         state = [];
     }

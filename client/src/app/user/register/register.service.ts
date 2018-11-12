@@ -1,7 +1,8 @@
+
+import {throwError as observableThrowError,  Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
 
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs/Observable';
 
 @Injectable()
 export class RegisterService {
@@ -9,8 +10,7 @@ export class RegisterService {
   constructor(private http: HttpClient) { }
 
   fetchRegisterParameters(): Observable<any> {
-    return this.http.get(`/api/auth/register`).map((data) => data)
-      .catch((error: any) => Observable.throw(error || 'Server error'));
+    return this.http.get(`/api/auth/register`);
   }
 
   register(email, username, password, confirmPassword) : Observable<any> {
@@ -19,7 +19,6 @@ export class RegisterService {
       username: username,
       password: password,
       confirmPassword: confirmPassword
-    }).map((data) => data)
-      .catch((error: any) => Observable.throw(error || 'Server error'));
+    });
   }
 }

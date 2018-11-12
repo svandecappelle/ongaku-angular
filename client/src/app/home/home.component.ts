@@ -13,7 +13,7 @@ import {
 import { Store, Action, select } from '@ngrx/store';
 
 import { AudioService } from '../audio.service';
-import { Observable, Subscription } from 'rxjs/Rx';
+import { Observable, Subscription } from 'rxjs';
 
 import { PlayerActions } from '../player/player-actions';
 import { MetadatasComponent } from '../metadatas/metadatas.component';

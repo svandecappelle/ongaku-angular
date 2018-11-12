@@ -3,9 +3,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 
 
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/operator/map';
+import { BehaviorSubject ,  Observable } from 'rxjs';
+
 
 import {
     User
@@ -42,7 +41,6 @@ export class AuthenticationService {
     logout() {
         // remove user from local storage to log user out
         this.http.post('/api/auth/logout', {}).subscribe((disconnected) => {
-            console.log(disconnected);
             localStorage.removeItem('currentUser');
             this.loggedIn.next(false);
             this.router.navigate(['/login']);

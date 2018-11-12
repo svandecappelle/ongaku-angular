@@ -10,7 +10,7 @@ import {
 import { Store, Action, select } from '@ngrx/store';
 
 import { AudioService } from '../audio.service';
-import { Observable, Subscription } from 'rxjs/Rx';
+import { Observable, Subscription } from 'rxjs';
 
 import { PlayerActions } from '../player/player-actions';
 import { MetadatasComponent } from '../metadatas/metadatas.component';
@@ -129,7 +129,7 @@ export class SearchComponent implements OnInit, OnDestroy {
     track.index = this.tracklist.length;
     track.artistDetails = artist;
     this.store.dispatch(new AppendPlaylist(track));
-    this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(track));
+    this.store.dispatch(this.actions.playSelectedTrack(track));
   }
 
   selectAll(artist, album) {

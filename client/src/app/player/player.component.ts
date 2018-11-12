@@ -4,8 +4,7 @@ import { Song, IAppState } from '../app-state';
 
 import { Store, select } from '@ngrx/store';
 
-import { Subject } from 'rxjs/Subject';
-import { Observable } from 'rxjs';
+import { Subject ,  Observable } from 'rxjs';
 
 @Component({
   selector: 'app-player',

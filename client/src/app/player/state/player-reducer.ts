@@ -6,22 +6,30 @@ import { IPlayerState, PlayerStateRecord } from './player-state';
 export const initialState: IPlayerState = new PlayerStateRecord() as IPlayerState;
 
 
-export function playerReducer(state: IPlayerState = initialState, {payload, type}: PlayerAction): IPlayerState {
+export function playerReducer(state: IPlayerState, { payload, type }: PlayerAction): IPlayerState {
+  if (!state) {
+    state = initialState;
+  }
   switch (type) {
     case PlayerActions.AUDIO_ENDED:
     case PlayerActions.AUDIO_PAUSED:
-      return state.set('isPlaying', false) as IPlayerState;
-
+      state.isPlaying = false;
+      break;
     case PlayerActions.AUDIO_PLAYING:
-      return state.set('isPlaying', true) as IPlayerState;
-
+      state.isPlaying = true;
+      break;
     case PlayerActions.AUDIO_VOLUME_CHANGED:
-      return state.set('volume', payload.volume) as IPlayerState;
-
+      state.volume = payload.volume;
+      break;
     case PlayerActions.PLAY_SELECTED_TRACK:
-      return state.set('track', payload.track) as IPlayerState;
-
+      state.track = payload.track;
+      break;
     default:
       return state;
   }
+  return {
+    isPlaying: state.isPlaying,
+    track: state.track,
+    volume: state.volume
+  };
 }

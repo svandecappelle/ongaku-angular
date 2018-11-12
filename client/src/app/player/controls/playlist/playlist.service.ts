@@ -3,8 +3,8 @@ import { Injectable } from '@angular/core';
 import { CollectionViewer, DataSource } from '@angular/cdk/collections';
 
 import { Song, IAppState } from '../../../app-state';
-import { Observable } from 'rxjs/Observable';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Observable ,  BehaviorSubject } from 'rxjs';
+import { merge, map } from 'rxjs/operators';
 import { forEach } from '@angular/router/src/utils/collection';
 
 import { Store, select } from '@ngrx/store';
@@ -61,8 +61,6 @@ export class PlaylistService extends DataSource<Song> {
             toPosition = 0;
         }
 
-        // console.log("moved index: " + fromPosition + " to " + toPosition);
-
         const from = this.tracks[fromPosition];
         const to = this.tracks[toPosition];
 
@@ -70,8 +68,6 @@ export class PlaylistService extends DataSource<Song> {
             oldIndex: fromPosition,
             newIndex: toPosition
         }, this.tracks);
-
-        // console.log(this.tracks);
 
         let index = 0;
         this.tracks.forEach((track) => {
@@ -90,13 +86,12 @@ export class PlaylistService extends DataSource<Song> {
     }
 
     connect(collectionViewer: CollectionViewer): Observable<Song[]> {
-        // return this.tracksSubject.asObservable();
         const displayDataChanges = [
             this.tracks,
             this._filterChange
         ];
 
-        return Observable.merge(...displayDataChanges).map(() => {
+        return new Observable().pipe(merge(...displayDataChanges)).pipe(map(() => {
             // Filter data
             this.filteredData = this.tracks.slice().filter((item: Song) => {
                 const simplifiedSong: Song = {
@@ -121,7 +116,7 @@ export class PlaylistService extends DataSource<Song> {
             // Grab the page's slice of the filtered sorted data.
             this.renderedData = this.filteredData;
             return this.renderedData;
-        });
+        }));
     }
 
     disconnect(collectionViewer: CollectionViewer): void {

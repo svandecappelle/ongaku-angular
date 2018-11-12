@@ -9,7 +9,7 @@ import {
 } from '../player/state';
 
 import { Store, Action, select } from '@ngrx/store';
-import { Observable, Subscription } from 'rxjs/Rx';
+import { Observable, Subscription } from 'rxjs';
 
 import { PlayerActions } from '../player/player-actions';
 import { MetadatasComponent } from '../metadatas/metadatas.component';
@@ -82,7 +82,7 @@ export class ArtistComponent implements OnInit {
   }
 
   onToggleChange(event) {
-    this.store.select(state => state.showBackgroundOnViews).dispatch(event.value);
+    this.store.dispatch(event.value);
   }
 
   getArtistBackground(src) {
@@ -142,7 +142,7 @@ export class ArtistComponent implements OnInit {
     track.index = this.tracklist.length;
     track.artistDetails = this.details;
     this.store.dispatch(new AppendPlaylist(track));
-    this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(track));
+    this.store.dispatch(this.actions.playSelectedTrack(track));
   }
 
   selectAll(artist, album) {

@@ -14,7 +14,7 @@ import { DragulaService } from 'ng2-dragula';
 import { Song, IAppState } from '../../../app-state';
 import { PlayerActions } from '../../player-actions';
 import { PlaylistService } from './playlist.service';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'playlist-dialog',
@@ -25,10 +25,8 @@ export class PlaylistDialogComponent implements OnDestroy {
 
     public current: Song;
     private store: Store<IAppState>;
-    private subscription;
+    private subscriptions;
     private dataSource: PlaylistService;
-
-    private _storeSubscription: Subscription;
 
     @ViewChild('filter') filter: ElementRef;
 
@@ -36,26 +34,27 @@ export class PlaylistDialogComponent implements OnDestroy {
 
     constructor(@Inject(MAT_DIALOG_DATA) public data: any, private actions: PlayerActions, private dragulaService: DragulaService) {
         this.store = this.data.store;
+        this.subscriptions = new Subscription();
 
         this.dataSource = new PlaylistService(this.store);
         this.dataSource.init(this.data.tracklist, this.data.current);
 
-        this._storeSubscription = this.store.select(state => state.player).subscribe((val) => {
+        this.subscriptions.add(this.store.select(state => state.player).subscribe((val) => {
             this.current = val.track;
             this.dataSource.playing(this.current);
-        });
+        }));
 
         const bag: any = this.dragulaService.find('playlist-bag'); if (bag !== undefined) { this.dragulaService.destroy('playlist-bag'); };
 
-        dragulaService.setOptions('playlist-bag', {
-            moves: function (el, container, handle) {
-                return handle.className.match('.*handle.*');
+        dragulaService.createGroup('playlist-bag', {
+            moves: (el, container, handle) => {
+                return handle.className.match('.*handle.*') !== null;
             }
         });
 
-        dragulaService.drop.subscribe((value: any) => {
-            this.onDrop(value.slice(1));
-        });
+        this.subscriptions.add(dragulaService.drop('playlist-bag').subscribe((value: any) => {
+            this.onDrop(value);
+        }));
     }
 
     private hasClass(el: any, name: string): any {
@@ -80,11 +79,9 @@ export class PlaylistDialogComponent implements OnDestroy {
     }
 
     private onDrop(args: any): void {
-        let [e] = args;
-        // console.log("moved index: " + args[0].id + " to " + (args[3] ? args[3].id.toString() : 'last'));
-        this.dataSource.switch(parseInt(args[0].id), (args[3] ? parseInt(args[3].id) - 1 : null));
+        this.dataSource.switch(parseInt(args.el.id), (args.sibling ? parseInt(args.sibling.id) - 1 : null));
         // TODO fire change event on tracklist to set tracklist in appstate
-        this.addClass(e, 'ex-moved');
+        this.addClass(args.el, 'ex-moved');
     }
 
     applyFilter(filterValue: string) {
@@ -95,16 +92,16 @@ export class PlaylistDialogComponent implements OnDestroy {
 
     play(track) {
         this.current = track;
-        this.store.select(state => state.player).dispatch(this.actions.playSelectedTrack(this.current));
+        this.store.dispatch(this.actions.playSelectedTrack(this.current));
     }
 
     pause(track) {
         this.current = track;
-        this.store.select(state => state.player).dispatch(this.actions.audioPaused());
+        this.store.dispatch(this.actions.audioPaused());
     }
 
     ngOnDestroy() {
         this.dragulaService.destroy("playlist-bag");
-        this._storeSubscription.unsubscribe();
+        this.subscriptions.unsubscribe();
     }
 }

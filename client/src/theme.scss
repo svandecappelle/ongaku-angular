@@ -19,7 +19,7 @@ $my-app-theme: mat-dark-theme($my-app-primary, $my-app-accent, $my-app-warn);
 }
 
 .mat-focused {
-  .mat-input-placeholder {
+  .mat-form-field-label {
     color: mat-color($my-app-accent) !important;
   }
 }

@@ -2,14 +2,14 @@ import { Map, Record } from 'immutable';
 
 import { Song } from '../../app-state';
 
-export interface IPlayerState extends Map<string,any> {
+export interface IPlayerState {
   isPlaying: boolean;
   track: Song;
   volume: number;
 }
 
-export const PlayerStateRecord = Record({
-  isPlaying: false,
-  track: null,
-  volume: null
-});
+export class PlayerStateRecord implements IPlayerState {
+  isPlaying = false;
+  track = null;
+  volume = null;
+};

@@ -1,7 +1,8 @@
+
+import {throwError as observableThrowError,  Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
 
 import { HttpClient, HttpParams, HttpRequest, HttpEvent } from '@angular/common/http';
-import { Observable } from 'rxjs/Observable';
 
 @Injectable()
 export class UserService {
@@ -9,13 +10,11 @@ export class UserService {
   constructor(private http: HttpClient) { }
 
   getMyInfos (): Observable<any> {
-    return this.http.get(`/api/user/me`).map((data) => data)
-      .catch((error: any) => Observable.throw(error || 'Server error'));
+    return this.http.get(`/api/user/me`);
   }
 
   getUserInfos (username): Observable<any> {
-    return this.http.get(`/api/user/${username}`).map((data) => data)
-      .catch((error: any) => Observable.throw(error || 'Server error'));
+    return this.http.get(`/api/user/${username}`);
   }
 
   // file from event.target.files[0]

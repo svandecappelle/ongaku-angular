@@ -25,7 +25,6 @@ export class LoginComponent implements OnInit {
 
     ngOnInit() {
       this.installService.check().subscribe((result) => {
-        console.log(result);
         if (!result.version) {
           this.router.navigate(['/install']);
         }

@@ -23,7 +23,6 @@ export class UploadComponent implements OnInit {
   ngOnInit() {
     this.route.params.subscribe((params: Params) => {
       this.folder = params['folder'];
-      console.log(this.folder);
 
       this.uploadService.list(this.folder ? this.folder : '').subscribe(files => {
         this.files = files;

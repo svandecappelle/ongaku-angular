@@ -74,7 +74,7 @@ import { UserModule } from './user/user.module';
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    DragulaModule,
+    DragulaModule.forRoot(),
     MomentModule,
     Ng2PageScrollModule,
     ChartsModule,

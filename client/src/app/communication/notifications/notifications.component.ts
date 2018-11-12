@@ -31,14 +31,10 @@ export class NotificationsComponent implements OnInit {
       });
 
     this.service.onEvent(Event.CONNECT)
-      .subscribe(() => {
-        console.log('connected');
-      });
+      .subscribe(() => {});
 
     this.service.onEvent(Event.DISCONNECT)
-      .subscribe(() => {
-        console.log('disconnected');
-      });
+      .subscribe(() => {});
 
     this.service.onEvent(Event.LIBRARY_SCAN).subscribe((data) => {
       this.scanProgressValue = data.value;
