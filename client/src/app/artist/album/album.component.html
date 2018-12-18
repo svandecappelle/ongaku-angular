@@ -9,7 +9,7 @@
     <mat-slide-toggle class="toggle-background" [checked]="toggleBackground" [(ngModel)]="toggleBackground" (ngModelChange)="onToggleChange($event)" >Show artist as background</mat-slide-toggle>
   </div>
 
-  <div *ngIf="details">
+  <div class="albums" *ngIf="details">
     <mat-tab-group color="accent">
       <mat-tab label="Album tracks">
         <div class="tab-content">
