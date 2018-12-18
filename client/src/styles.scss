@@ -153,3 +153,21 @@ mat-card.album, mat-card.artist {
   95%  { transform: rotate(-315deg); }
   100% { transform: rotate(-405deg); }
 }
+
+.fixed-tab-header {
+  .mat-tab-header {
+    position: absolute;
+    left: 0;
+    right: 0;
+  }
+
+  .mat-tab-body-wrapper {
+    margin-top: 3em;
+    overflow: auto;
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+}

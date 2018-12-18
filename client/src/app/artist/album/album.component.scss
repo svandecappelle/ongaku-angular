@@ -21,7 +21,6 @@ img.album {
     right: 0;
     bottom: 0;
     top: 0;
-    overflow: auto;
     margin-bottom: 1.5em;
 }
 
@@ -42,7 +41,6 @@ img.album {
 .content {
     padding: 1em;
     padding-bottom: 4em;
-    background-color: rgba(0, 0, 0, 0.55);
 }
 
 .tab-content{
@@ -52,7 +50,7 @@ img.album {
 .background {
     position: fixed;
     background-size: cover;
-    left: 0;
+    left: 6px;
     right: 0;
     top: 0;
     bottom: 0;
