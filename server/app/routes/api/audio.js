@@ -3,30 +3,22 @@
 const express = require('express');
 const logger = require('log4js').getLogger("UsersRoutes");
 const nconf = require("nconf");
-const passport = require("passport");
 const _ = require("underscore");
-const unzip = require("node-unzip-2");
 const path = require("path");
 const Busboy = require('busboy');
 const ffmetadata = require("ffmetadata");
+const https = require('https');
+const fs = require('fs');
+const async = require("async");
+const crypto = require('crypto');
+
 const library = require("./../../middleware/library");
 const middleware = require("./../../middleware/middleware");
-const exporter = require("./../../middleware/exporter");
 const meta = require("./../../meta");
 const communication = require("./../../communication");
-const user = require("./../../model/user");
-const userlib = require("./../../model/library");
-const playlist = require("./../../model/playlist");
 const statistics = require("./../../model/statistics");
 const security = require("./../../model/security");
-const mime = require("mime");
-const fs = require("fs");
-const he = require('he');
-const tinycolor = require("tinycolor2");
 // const translator = require("./../../middleware/translator");
-const async = require("async");
-
-const crypto = require('crypto');
 const algorithm = 'aes-256-ctr';
 const password = nconf.get('secret');
 var router = express.Router();
@@ -360,6 +352,24 @@ router.get('/artist/:name', (req, res) => {
     middleware.json(req, res, datas);
 });
 
+router.post('/artist-properties/:name', (req, res) => {
+    console.log('Save artist image: ', library.getArtistImage(req.params.name));
+    if (!fs.existsSync(path.resolve(__dirname, '../../../../public/artists-covers'))) {
+        fs.mkdirSync(path.resolve(__dirname, '../../../../public/artists-covers'));
+    }
+    var file = fs.createWriteStream(path.resolve(__dirname, `../../../../public/artists-covers/${req.params.name}`));
+
+    https.get(library.getArtistImage(req.params.name), (response) => {
+        response.pipe(file);
+
+        response.on('end', () => {
+            res.json({
+                message: "ok"
+            });
+        });
+    });
+});
+
 router.get('/artists/filter/:search/:page', (req, res) => {
     // load by page of 3 artists.
 
@@ -429,9 +439,15 @@ router.get("/song-image/:songid", (req, res) => {
 
 router.get("/static/covers/:artist/:album/cover.jpg", (req, res) => {
     var albumart = library.getAlbumCoverByName(req.params.artist, req.params.album);
-    console.log(req.params.artist, req.params.album);
-    console.log(albumart);
     res.sendFile(albumart);
+});
+
+router.get("/static/covers/:artist/cover.jpg", (req, res) => {
+    if (fs.existsSync(path.resolve(__dirname, `../../../../public/artists-covers/${req.params.artist}`))) {
+        res.sendFile(path.resolve(__dirname, `../../../../public/artists-covers/${req.params.artist}`));
+    } else {
+        res.redirect(library.getArtistImage(req.params.artist));
+    }
 });
 
 router.post('/metadata/set/:id', (req, res) => {

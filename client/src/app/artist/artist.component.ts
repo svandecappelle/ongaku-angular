@@ -65,7 +65,7 @@ export class ArtistComponent implements OnInit {
         details.artist_info = details.info;
         this.details = details;
         if (details) {
-          this.image = this.getImageSrc(details.info);
+          this.image = `/api/audio/static/covers/${this.artist}/cover.jpg`;
           details.albums.forEach(album => {
             this.covers[album.album_info.title] = this.getImageSrc(album.album_info);
           });
@@ -86,6 +86,10 @@ export class ArtistComponent implements OnInit {
     } else {
       this.store.dispatch(new ToggleBackgroundTypeAction(ToggleBackgroundType.DYNAMIC));
     }
+  }
+
+  saveImageServerSide() {
+    this.service.saveImage(this.artist).subscribe(() => {});
   }
 
   getArtistBackground(src) {

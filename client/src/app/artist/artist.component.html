@@ -4,6 +4,7 @@
   <div class="artist-header">
     <h1 class="mat-h1 ">
         <img class="artist" [src]="image" />
+        <i class="material-icons clickable" title="Save on server side" (click)="saveImageServerSide()">play_for_work</i>
         <div class="name">{{artist}}</div>
     </h1>
     <mat-slide-toggle class="toggle-background" [checked]="toggleBackground" [(ngModel)]="toggleBackground" (ngModelChange)="onToggleChange($event)" >Show artist as background</mat-slide-toggle>

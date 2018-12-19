@@ -430,6 +430,19 @@ class Library {
     }
   };
 
+  getArtistImage(artist) {
+    let image;
+    let i = 0;
+    this.loadingCoverArtists[artist].image.forEach(element => {
+      if (i < 4) {
+        image = element ? element['#text'] : '';
+      }
+      i += 1;
+    });
+
+    return image;
+  }
+
   getAlbumCoverByName(artist, album) {
     return this.coversLocation[artist] && this.coversLocation[artist][album] ? this.coversLocation[artist][album] : undefined;
   }
