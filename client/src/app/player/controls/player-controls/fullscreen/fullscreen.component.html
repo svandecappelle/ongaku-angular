@@ -58,6 +58,7 @@
   </div>
 
   <div class="track-details" *ngIf="current.artistDetails && current.artistDetails.artist_info">
-      <p [innerHTML]="current.artistDetails.artist_info.bio.content"></p>
+      <p [innerHTML]="current.artistDetails.artist_info.bio.content" *ngIf="!current.artistDetails.artist_info.wikipedia"></p>
+      <p [innerHTML]="current.artistDetails.artist_info.wikipedia" *ngIf="current.artistDetails.artist_info.wikipedia"></p>
   </div>
 </div>

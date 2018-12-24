@@ -18,6 +18,7 @@ import { PlaylistService } from './controls/playlist/playlist.service';
 
 import { PlaylistComponent, PlaylistDialogComponent } from './controls/playlist/';
 import { FullscreenComponent } from './controls/player-controls/fullscreen/fullscreen.component';
+import { LevelMeterComponent } from './level-meter/level-meter.component';
 
 @Pipe({
   name: 'duration'
@@ -37,7 +38,8 @@ class DurationPipe implements PipeTransform {
       PlaylistComponent,
       PlaylistDialogComponent,
       DurationPipe,
-      FullscreenComponent
+      FullscreenComponent,
+      LevelMeterComponent
     ],
     entryComponents: [
       PlaylistDialogComponent

@@ -431,9 +431,13 @@ router.get("/song-image/:songid", (req, res) => {
         if (req.query.quality === 'best') {
             albumart = _.last(albumart);
         }
-        res.redirect(albumart.cover[0]);
+        if (albumart.cover[0]) {
+            res.redirect(albumart.cover[0]);
+        } else {
+            res.redirect("/static/img/album.png");
+        }
     } else {
-        res.redirect("/img/album.jpg");
+        res.redirect("/static/img/album.png");
     }
 });
 

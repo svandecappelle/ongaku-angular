@@ -32,6 +32,10 @@ export class PlayerControlsComponent implements OnInit, OnDestroy {
   private play_index = 0;
   private tracks: Object[] = [];
 
+  private context: AudioContext = new AudioContext();
+  private sound;
+  // private gainNode;
+
   @ViewChild('audio', { read: ElementRef }) player: ElementRef;
   @ViewChild('progress', { read: ElementRef }) progressBar: ElementRef;
 
@@ -46,9 +50,6 @@ export class PlayerControlsComponent implements OnInit, OnDestroy {
       this.metadataLoaded = true;
       this.duration = el.target.duration;
       this.value = 0;
-      if (this.state !== 'playing') {
-        this.play();
-      }
     });
 
     this.player.nativeElement.addEventListener('timeupdate', (el) => {
@@ -60,6 +61,22 @@ export class PlayerControlsComponent implements OnInit, OnDestroy {
 
     this.player.nativeElement.addEventListener('ended', (el) => {
       this.next();
+    });
+    
+    this.context = new AudioContext();
+    //
+    // control gain / volume
+    // this.gainNode = this.context.createGain();
+    // this.gainNode.gain.value = 0.75; // 0.75% volume to ensure not gain
+    // this.gainNode.connect(this.context.destination);*/
+    this.sound = this.context.createMediaElementSource(this.player.nativeElement);
+    this.sound.connect(this.context.destination);
+
+    this.player.nativeElement.addEventListener('canplay', (el) => {
+      // connect the gain node to an output destination  
+      if (this.state !== 'playing') {
+        this.play();
+      }
     });
 
     this.subscriptions.add(this.store.select(state => state.player).subscribe((playerState) => {

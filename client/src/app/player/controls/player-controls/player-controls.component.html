@@ -60,6 +60,7 @@
       <small>{{ duration | duration }}</small>
     </li>
   </ul>
+  <app-level-meter [audio]="sound" [audioContext]="context" *ngIf="sound"></app-level-meter>
 
   <app-fullscreen #fullscreener></app-fullscreen>
 </div>
