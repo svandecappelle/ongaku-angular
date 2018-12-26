@@ -22,6 +22,7 @@ export class PlayerControlsComponent implements OnInit, OnDestroy {
   private duration;
   private currentTime;
   private value;
+  private gain = 0.75;
 
   private state = 'stopped';
   private current;
@@ -34,10 +35,11 @@ export class PlayerControlsComponent implements OnInit, OnDestroy {
 
   private context: AudioContext = new AudioContext();
   private sound;
-  // private gainNode;
+  private gainNode;
 
   @ViewChild('audio', { read: ElementRef }) player: ElementRef;
   @ViewChild('progress', { read: ElementRef }) progressBar: ElementRef;
+  @ViewChild('volume', { read: ElementRef }) volumeSlider: ElementRef;
 
   @ViewChild('fullscreener', { read: FullscreenComponent }) fullscreener: FullscreenComponent;
 
@@ -66,11 +68,11 @@ export class PlayerControlsComponent implements OnInit, OnDestroy {
     this.context = new AudioContext();
     //
     // control gain / volume
-    // this.gainNode = this.context.createGain();
-    // this.gainNode.gain.value = 0.75; // 0.75% volume to ensure not gain
-    // this.gainNode.connect(this.context.destination);*/
+    this.gainNode = this.context.createGain();
+    this.gainNode.gain.value = this.gain;
     this.sound = this.context.createMediaElementSource(this.player.nativeElement);
-    this.sound.connect(this.context.destination);
+    this.gainNode.connect(this.context.destination);
+    this.sound.connect(this.gainNode);
 
     this.player.nativeElement.addEventListener('canplay', (el) => {
       // connect the gain node to an output destination  
@@ -103,6 +105,11 @@ export class PlayerControlsComponent implements OnInit, OnDestroy {
         this.ensurePlay();
       }
     }));
+  }
+
+  volumeChanged(event) {
+    this.gain = event.value;
+    this.gainNode.gain.value = this.gain;
   }
 
   ngOnDestroy() {

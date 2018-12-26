@@ -4,7 +4,7 @@
 }
 
 .content {
-    margin-top: 5px;
+    margin-top: 1px;
 }
 
 ul {
@@ -41,16 +41,22 @@ small {
     font-size: 0.5em;
 }
 
+.volume {
+    position: absolute;
+    right: 0px;
+    top: 11px;
+}
+
 .audio-stepper {
     cursor: pointer;
     position: absolute;
-    top: 0;
+    top: -4px;
 
     transition: linear all 100ms;
     box-shadow: 0px 0px 1px #FFF;
 
     &:hover{
         height: 10px;
-        top: -5px;
+        top: -10px;
     }
 }

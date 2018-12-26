@@ -11,6 +11,7 @@
 </mat-progress-bar>
 
 <audio #audio [src]='src'></audio>
+<mat-slider #volume min="0" max="3" step="0.1" [value]="gain" class="volume" (change)="volumeChanged($event)"></mat-slider>
 <div class="content" *ngIf="isInit">
   <ul>
 
@@ -60,7 +61,7 @@
       <small>{{ duration | duration }}</small>
     </li>
   </ul>
-  <app-level-meter [audio]="sound" [audioContext]="context" *ngIf="sound"></app-level-meter>
+  <app-level-meter [audio]="sound" [audioContext]="context" [gain]="gain" *ngIf="sound"></app-level-meter>
 
   <app-fullscreen #fullscreener></app-fullscreen>
 </div>

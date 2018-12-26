@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, ViewChild, ElementRef } from '@angular/core';
 import { forEach } from '@angular/router/src/utils/collection';
-import { VuMetter } from './vumeter';
+import { VuMetterFactory, VuMetter } from './level-vumetter';
 
 @Component({
   selector: 'app-level-meter',
@@ -29,14 +29,19 @@ export class LevelMeterComponent implements OnInit {
   private audio;
 
   @Input()
+  private gain;
+
+  @Input()
   private audioContext;
 
-  private vue = [];
+  private vue: Array<VuMetter> = [];
 
   constructor() { }
 
-  volumeAudioProcess(event) {
+  private temp = 0;
 
+  volumeAudioProcess(event) {
+    this.temp +=1;
     for (let channel = 0; channel < 2; channel++) {
       var buf = event.inputBuffer.getChannelData(channel);
       var bufLength = buf.length;
@@ -65,8 +70,8 @@ export class LevelMeterComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.vue.push(new VuMetter(this.meterLeft.nativeElement.getContext('2d')));
-    this.vue.push(new VuMetter(this.meterRight.nativeElement.getContext('2d')));
+    this.vue.push(VuMetterFactory.get(this.meterLeft.nativeElement.getContext('2d'), 'LEFT'));
+    this.vue.push(VuMetterFactory.get(this.meterRight.nativeElement.getContext('2d'), 'RIGHT'));
 
     if (this.audio) {
       //this.mediaStreamSource = this.audioContext.createMediaElementSource(this.audio.nativeElement);
@@ -102,7 +107,8 @@ export class LevelMeterComponent implements OnInit {
 
   drawLoop(channel) {
     this.canvasContext = this.getMetter(channel);
-    this.canvasContext.setValue(this.volume[channel] * 100);
+    //console.log(this.volume[channel] * 100);
+    this.canvasContext.setValue(this.volume[channel] * 100 * this.gain);
     window.requestAnimationFrame(() => {
       this.drawLoop(channel);
     });

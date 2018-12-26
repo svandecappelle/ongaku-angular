@@ -1,5 +1,6 @@
+import { VuMetter } from './level-vumetter';
 
-export class VuMetter {
+export class VuMetterClassical implements VuMetter{
 
     private context;
     private value = 0;

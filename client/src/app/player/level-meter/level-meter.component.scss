@@ -2,19 +2,10 @@
     display: inline-block;
     position: absolute;
     vertical-align: top;
-    margin-left: 1.5em;
-    height: 59px;
-    width: 50px;
-    right: 0px;
-}
-
-canvas {
-    position: absolute;
-    padding: 0em;
-    margin: 0em;
-    overflow: hidden;
-
-    &.right {
-        left: 26px;
-    }
+    height: 60px;
+    width: 50%;
+    text-align: center;
+    margin: auto;
+    left: 25%;
+    top: 1px;
 }

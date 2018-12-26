@@ -1,4 +1,6 @@
 .content {
+    background-color: rgba($color: #000000, $alpha: 0.5);
+    padding-bottom: 3rem;
     .account {
         @media (min-width:1200px) {
             .container {
@@ -103,6 +105,8 @@
                 display: inline-block;
                 min-width: 100px;
                 margin-bottom: 20px;
+                margin-right: 1rem;
+                margin-left: 1rem;
             }
             .stats {   
                 display: inline-block;

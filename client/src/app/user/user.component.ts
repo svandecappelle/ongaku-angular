@@ -51,39 +51,42 @@ export class UserComponent implements OnInit {
       this.user = params['user'];
       if (this.user) {
         this.service.getUserInfos(this.user).subscribe((data) => {
-          this.infos = data;
-          this.avatarSrc = `/static/user/${this.infos.username}/avatar?${new Date().getTime()}`;
-          this.coverBackground = this.getImage('cover');
+          this.build(data);
         });
       } else {
         this.service.getMyInfos().subscribe((data) => {
-          this.infos = data;
-          this.avatarSrc = `/static/user/${this.infos.username}/avatar?${new Date().getTime()}`;
-          this.coverBackground = this.getImage('cover');
-          setTimeout(() => {
-            const chart = new Chart(this.canvasStorage.nativeElement, {
-              type: 'doughnut',
-              data: {
-                datasets: [{
-                  data: [Math.round(data.usage / 1024 / 1024), 1000],
-                  backgroundColor: [
-                    '#3cba9f',
-                    '#A9A9A9'
-                  ],
-                  borderColor: [
-                    '#3cffff',
-                    '#989898'
-                  ],
-                }],
-                labels: [
-                  'User storage',
-                  'Max Quota'
-                ]
-              }
-            });
-          });
+          this.build(data);
         });
       }
+    });
+  }
+
+  build(data) {
+    this.infos = data;
+    this.avatarSrc = `/static/user/${this.infos.username}/avatar?${new Date().getTime()}`;
+    this.coverBackground = this.getImage('cover');
+
+    setTimeout(() => {
+      const chart = new Chart(this.canvasStorage.nativeElement, {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [Math.round(data.usage / 1024 / 1024), 1000],
+            backgroundColor: [
+              '#3cba9f',
+              '#A9A9A9'
+            ],
+            borderColor: [
+              '#3cffff',
+              '#989898'
+            ],
+          }],
+          labels: [
+            'User storage',
+            'Max Quota'
+          ]
+        }
+      });
     });
   }
 

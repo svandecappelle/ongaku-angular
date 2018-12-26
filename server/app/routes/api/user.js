@@ -103,26 +103,29 @@ router.get('/:username', (req, res) => {
     var userdir = path.resolve(__dirname, `../../../../public/user/${username}`);
     var output = {};
     user.getUidByUsername(username, (error, uid) => {
-        scanner.files(userdir).then((files) => {
-            output.files = {
-                count: files.length
-            };
-            user.getUsers([uid], (error, data) => {
-                output = _.extend(output, data[0]);
+        userStorage(username).then((usage) => {
+            output.usage = usage;
+            scanner.files(userdir).then((files) => {
+                output.files = {
+                    count: files.length
+                };
+                user.getUsers([uid], (error, data) => {
+                    output = _.extend(output, data[0]);
 
-                if (error) {
-                    console.error(error);
-                    return res.status(500).json({ message: "Internal server error" });
-                }
-                user.getGroups(uid, (groups) => {
-                    output.groups = groups;
-                    res.json(output);
+                    if (error) {
+                        console.error(error);
+                        return res.status(500).json({ message: "Internal server error" });
+                    }
+                    user.getGroups(uid, (groups) => {
+                        output.groups = groups;
+                        res.json(output);
+                    });
                 });
-            });
-        }).catch(error => {
-            console.error(error);
-            res.status(500).json({
-                message: 'Internal server error'
+            }).catch(error => {
+                console.error(error);
+                res.status(500).json({
+                    message: 'Internal server error'
+                });
             });
         });
     });

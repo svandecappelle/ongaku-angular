@@ -1,6 +1,7 @@
 import { NgModule, Pipe, PipeTransform } from '@angular/core';
 
 import { BrowserModule } from '@angular/platform-browser';
+import { FormsModule } from '@angular/forms';
 import { DragulaModule } from 'ng2-dragula';
 import { MomentModule } from 'ngx-moment';
 
@@ -47,6 +48,7 @@ class DurationPipe implements PipeTransform {
     imports: [
       MaterialModule,
       BrowserModule,
+      FormsModule,
       DragulaModule,
       MomentModule
     ],
