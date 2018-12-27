@@ -20,6 +20,7 @@ CERTIFICATE_CRT_FILE=server/certificate/server.crt
 #### FOLDERS ####
 NODE_DIR=node_modules
 DIST_DIR=client/dist
+CLIENT_DIR=client
 
 #### FILES ####
 DIST_TAR=dist.tar.gz
@@ -40,6 +41,7 @@ help:
 
 clean:
 	$(DEL) $(NODE_DIR)
+	$(DEL) $(CLIENT_DIR)/$(NODE_DIR)
 	$(DEL) $(DIST_DIR)
 	$(DEL) $(DIST_TAR)
 

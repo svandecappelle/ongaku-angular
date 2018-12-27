@@ -511,7 +511,7 @@ router.get(['/my-library', '/my-library/:folder'], (req, res) => {
     //if (nconf.get("allowUpload") === 'true') {
     if (req.session.passport && req.session.passport.user) {
         const username = req.session.passport.user.username;
-        const folder = req.params.folder ? helpers.decrypt(filesMap[req.params.folder.substring(0, 32)]).trim() : req.params.folder;
+        const folder = req.params.folder ? helpers.decrypt(filesMap[req.params.folder]).trim() : req.params.folder;
         let folderReading = path.join(DEFAULT_USERS__DIRECTORY, username, "imported");
         let canonicalFolderName = '';
         if (!fs.existsSync(path.join(DEFAULT_USERS__DIRECTORY, username))) {
@@ -528,11 +528,10 @@ router.get(['/my-library', '/my-library/:folder'], (req, res) => {
             canonicalFolderName = path.join(canonicalFolderName, folder);
         }
 
-        if (fs.existsSync(folderReading)) {
-            console.log(folderReading);
-            console.log(fs.statSync(folderReading).isFile());
-            if (fs.statSync(folderReading).isFile()) {
-                var rstream = fs.createReadStream(folderReading);
+        try {
+            const fileToTest = folderReading.replace(/[^\x20-\x7E]+/g, '').trim();
+            if (fs.statSync(fileToTest).isFile()) {
+                var rstream = fs.createReadStream(fileToTest);
                 return rstream.pipe(res);
             }
             var files = fs.readdirSync(folderReading);
@@ -541,12 +540,12 @@ router.get(['/my-library', '/my-library/:folder'], (req, res) => {
                 const stat = fs.statSync(canonicalName);
                 const location = path.join(canonicalFolderName, file);
                 const encrypted = helpers.encrypt(location);
-                filesMap[encrypted.substring(0, 32)] = encrypted;
+                filesMap[encrypted.substring(0, 32).trim()] = encrypted;
                 return {
                     name: file,
                     type: stat.isDirectory(path.resolve(folderReading, file)) ? 'directory' : 'file',
                     stat: stat,
-                    location: encrypted.substring(0, 32),
+                    location: encrypted.substring(0, 32).trim(),
                     locationFolder: canonicalName
                 };
             });
@@ -554,6 +553,8 @@ router.get(['/my-library', '/my-library/:folder'], (req, res) => {
                 files: files,
                 location: `/${folder ? folder : ''}`
             });
+        } catch (err) {
+            res.status(500).send(err);
         }
     }
     /*} else {
