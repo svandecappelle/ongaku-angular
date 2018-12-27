@@ -162,8 +162,13 @@ router.post(['/image/:type'], (req, res) => {
 
 
 router.get('/image/:type', (req, res) => {
-    var username = req.session.passport.user.username;
-    var type = req.params.type;
+    if (!req.session.passport || !req.session.passport.user) {
+        return res.status(403).json({
+            message: 'You need to be logged'
+        });
+    }
+    let username = req.session.passport.user.username;
+    let type = req.params.type;
     if (type !== 'avatar' && type !== 'cover' && type !== 'background') {
         return res.status(403).json({
             message: 'Forbidden'
