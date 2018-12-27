@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import { MatDialog } from '@angular/material';
 import { DialogComponent } from './dialog/dialog.component';
+import { DetailsComponent } from './details/details.component';
 import { UploadService } from './upload.service';
 
 @Component({
@@ -13,6 +14,7 @@ export class UploadComponent implements OnInit {
 
   private files: string[];
   private folder: string;
+  private folderName: string;
 
   constructor(public dialog: MatDialog, 
     public uploadService: UploadService,
@@ -24,19 +26,31 @@ export class UploadComponent implements OnInit {
     this.route.params.subscribe((params: Params) => {
       this.folder = params['folder'];
 
-      this.uploadService.list(this.folder ? this.folder : '').subscribe(files => {
-        this.files = files;
+      this.uploadService.list(this.folder ? this.folder : '').subscribe(content => {
+        this.files = content.files;
+        this.folderName = content.location;
       });
+    });
+  }
+
+  details(file, event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    let dialogRef = this.dialog.open(DetailsComponent, { width: '50%', height: '50%', data: { file: file } });
+    dialogRef.afterClosed().subscribe(() => {
+      // nothing to do
     });
   }
 
   public openUploadDialog() {
     let dialogRef = this.dialog.open(DialogComponent, { width: '50%', height: '50%', data: { folder: this.folder } });
     dialogRef.afterClosed().subscribe(() => {
-      this.uploadService.list(this.folder ? this.folder : '').subscribe(files => {
-        this.files = files;
+      this.uploadService.list(this.folder ? this.folder : '').subscribe(content => {
+        this.files = content.files;
+        this.folder = 'content.location';
       });
-    })
+    });
   }
 
   directories(files) {

@@ -19,7 +19,7 @@ const communication = require("./../../communication");
 const statistics = require("./../../model/statistics");
 const security = require("./../../model/security");
 // const translator = require("./../../middleware/translator");
-const algorithm = 'aes-256-ctr';
+const algorithm = 'aes-192-cbc';
 const password = nconf.get('secret');
 var router = express.Router();
 
@@ -42,6 +42,9 @@ const userFilesOpts = {
 };
 
 const lights_themes = ["light"];
+const key = crypto.scryptSync(password, 'salt', 24);
+const iv = Buffer.alloc(16, 0);
+const filesMap = {};
 
 var rmdirAsync = function (path, callback) {
 
@@ -149,14 +152,17 @@ class Helpers {
 
 
     encrypt(text) {
-        var cipher = crypto.createCipher(algorithm, password)
+        const cipher = crypto.createCipheriv(algorithm, key, iv);
+        cipher.setAutoPadding(true);
         var crypted = cipher.update(text, 'utf8', 'hex')
         crypted += cipher.final('hex');
+        this.decrypt(crypted);
         return crypted;
     }
 
     decrypt(text) {
-        var decipher = crypto.createDecipher(algorithm, password)
+        const decipher = crypto.createDecipheriv(algorithm, key, iv);
+        decipher.setAutoPadding(false);
         var dec = decipher.update(text, 'hex', 'utf8')
         dec += decipher.final('utf8');
         return dec;
@@ -500,12 +506,14 @@ router.get("/api/users", (req, res) => {
     res.json();
 });
 
-router.get(['/my-library', '/my-library/:folder(*)'], (req, res) => {
+router.get(['/my-library', '/my-library/:folder'], (req, res) => {
+    console.log(req.params);
     //if (nconf.get("allowUpload") === 'true') {
     if (req.session.passport && req.session.passport.user) {
-        var username = req.session.passport.user.username;
-        var folder = req.params.folder;
-        var folderReading = path.join(DEFAULT_USERS__DIRECTORY, username, "imported");
+        const username = req.session.passport.user.username;
+        const folder = req.params.folder ? helpers.decrypt(filesMap[req.params.folder.substring(0, 32)]).trim() : req.params.folder;
+        let folderReading = path.join(DEFAULT_USERS__DIRECTORY, username, "imported");
+        let canonicalFolderName = '';
         if (!fs.existsSync(path.join(DEFAULT_USERS__DIRECTORY, username))) {
             fs.mkdirSync(path.join(DEFAULT_USERS__DIRECTORY, username));
             fs.mkdirSync(path.join(DEFAULT_USERS__DIRECTORY, username, "imported"));
@@ -517,22 +525,36 @@ router.get(['/my-library', '/my-library/:folder(*)'], (req, res) => {
         }
         if (folder) {
             folderReading = path.join(folderReading, folder);
+            canonicalFolderName = path.join(canonicalFolderName, folder);
         }
 
-        var files = fs.readdirSync(folderReading);
-        files = _.map(files, (file) => {
-            const stat = fs.statSync(path.resolve(folderReading, file));
-            let location = path.join(folderReading, file);
-            return {
-                name: file,
-                type: stat.isDirectory(path.resolve(folderReading, file)) ? 'directory' : 'file',
-                stat: stat,
-                location: helpers.encrypt(location).substring(0, 32)
-            };
-        });
-        res.send({
-            files: files
-        });
+        if (fs.existsSync(folderReading)) {
+            console.log(folderReading);
+            console.log(fs.statSync(folderReading).isFile());
+            if (fs.statSync(folderReading).isFile()) {
+                var rstream = fs.createReadStream(folderReading);
+                return rstream.pipe(res);
+            }
+            var files = fs.readdirSync(folderReading);
+            files = _.map(files, (file) => {
+                const canonicalName = path.resolve(folderReading, file);
+                const stat = fs.statSync(canonicalName);
+                const location = path.join(canonicalFolderName, file);
+                const encrypted = helpers.encrypt(location);
+                filesMap[encrypted.substring(0, 32)] = encrypted;
+                return {
+                    name: file,
+                    type: stat.isDirectory(path.resolve(folderReading, file)) ? 'directory' : 'file',
+                    stat: stat,
+                    location: encrypted.substring(0, 32),
+                    locationFolder: canonicalName
+                };
+            });
+            res.send({
+                files: files,
+                location: `/${folder ? folder : ''}`
+            });
+        }
     }
     /*} else {
         res.status(403).json({ message: 'Not allowed.' });
@@ -553,8 +575,8 @@ router.post(['/upload', '/upload/:folder(*)'], (req, res) => {
 
         if (!fs.existsSync(folderReading)) {
             fs.mkdirSync(folderReading);
-        } 
-        
+        }
+
         if (folder) {
             folderReading = path.join(folderReading, folder);
         }
@@ -577,7 +599,7 @@ router.post(['/upload', '/upload/:folder(*)'], (req, res) => {
                     message: 'ok'
                 });
             });
-            
+
         });
 
         req.pipe(busboy);

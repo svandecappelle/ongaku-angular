@@ -1,0 +1,30 @@
+<div class="container" fxLayout="column" fxLayoutAlign="space-evenly stretch">
+  <h1 mat-dialog-title>{{file.name}}</h1>
+  <div>
+
+    <!-- This is the content of the dialog, containing a list of the files to upload -->
+    <mat-dialog-content fxFlex>
+
+      <mat-grid-list cols="2" rowHeight="300px">
+        <mat-grid-tile>
+          <mat-list>
+            <mat-list-item *ngFor="let property of getProperties(file.stat)">
+              <span>{{property}}:</span>
+              <span>{{file.stat[property]}}</span>
+            </mat-list-item>
+          </mat-list>
+        </mat-grid-tile>
+
+        <mat-grid-tile>
+          <div *ngIf="canPreview(file)">
+            <img src="/api/audio/my-library/{{file.location}}" width="100%"/>
+          </div>
+        </mat-grid-tile>
+      </mat-grid-list>
+    </mat-dialog-content>
+    <!-- This are the actions of the dialog, containing the primary and the cancel button-->
+    <mat-dialog-actions class="actions">
+      <button mat-button mat-dialog-close>Close</button>
+    </mat-dialog-actions>
+  </div>
+</div>

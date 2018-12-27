@@ -10,8 +10,8 @@ const url = '/api/audio/upload';
 export class UploadService {
   constructor(private http: HttpClient) { }
 
-  public list(folder: string): Observable<any[]> {
-    return this.http.get(`/api/audio/my-library/${folder}`).pipe(map((page) => page['files']));
+  public list(folder: string): Observable<any> {
+    return this.http.get(`/api/audio/my-library/${folder}`);
   }
 
   public upload(folder: string, files: Set<File>): { [key: string]: Observable<number> } {
