@@ -507,7 +507,6 @@ router.get("/api/users", (req, res) => {
 });
 
 router.get(['/my-library', '/my-library/:folder'], (req, res) => {
-    console.log(req.params);
     //if (nconf.get("allowUpload") === 'true') {
     if (req.session.passport && req.session.passport.user) {
         const username = req.session.passport.user.username;
@@ -562,11 +561,11 @@ router.get(['/my-library', '/my-library/:folder'], (req, res) => {
     }*/
 });
 
-router.post(['/upload', '/upload/:folder(*)'], (req, res) => {
+router.post(['/upload', '/upload/:folder'], (req, res) => {
     //if (nconf.get("allowUpload") === 'true') {
     if (req.session.passport && req.session.passport.user) {
+        const folder = req.params.folder ? helpers.decrypt(filesMap[req.params.folder]).trim() : req.params.folder;
         var username = req.session.passport.user.username;
-        var folder = req.params.folder;
         var folderReading = path.join(DEFAULT_USERS__DIRECTORY, username, "imported");
 
         res.setHeader('Access-Control-Allow-Credentials', 'true');

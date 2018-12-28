@@ -48,7 +48,6 @@ export class UploadComponent implements OnInit {
     dialogRef.afterClosed().subscribe(() => {
       this.uploadService.list(this.folder ? this.folder : '').subscribe(content => {
         this.files = content.files;
-        this.folder = 'content.location';
       });
     });
   }
