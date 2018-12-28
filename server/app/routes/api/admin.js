@@ -6,6 +6,7 @@ const async = require("async");
 const moment = require('moment');
 const nconf = require('nconf');
 const getSize = require('get-folder-size');
+const forever = require('forever');
 
 const library = require("./../../middleware/library");
 const middleware = require("./../../middleware/middleware");
@@ -16,6 +17,7 @@ const meta = require("./../../meta");
 
 const MONTHS = 30;
 const WEEKS = 7;
+const APPLICATION_ID = "ongaku";
 var router = express.Router();
 
 function userStorages() {
@@ -200,6 +202,26 @@ router.post('/configure', (req, res) => {
                 message: 'done'
             });
         });
+    });
+});
+
+router.post('/restart', (req, res) => {
+    redirectIfNotAdministrator(req, res, () => {
+        // TODO check if this can be optimized using forever scripts
+        process.exit();
+        /*forever.list(false, (err, processes) => {
+            if (err) {
+                console.error(err);
+                res.status(500).send(err);
+            } else if (processes) {
+                console.log(processes);
+                const ongaku = _.findWhere(processes, { uid: APPLICATION_ID });
+                ongaku.index = _.indexOf(processes, ongaku);
+                const pid = ongaku.pid;
+                forever.restart(ongaku.index);
+                res.send({ message: 'ok' });
+            }
+        });*/
     });
 });
 module.exports = router;

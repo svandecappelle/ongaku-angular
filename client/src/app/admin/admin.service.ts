@@ -25,4 +25,9 @@ export class AdminService {
     return this.http.post('/api/upgrade/git/check', {}).pipe(map((data) => data))
       .pipe(catchError((error: any) => observableThrowError(error || 'Server error')));
   }
+  
+  restart(): Observable<any> {
+    return this.http.post('/api/admin/restart', {}).pipe(map((data) => data))
+      .pipe(catchError((error: any) => observableThrowError(error || 'Server error')));
+  }
 }

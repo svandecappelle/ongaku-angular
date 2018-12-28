@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --watch server server/index.js",
+    "start-dev": "nodemon --watch server server/index.js",
+    "start": "node server/ongaku.js start",
     "watch": "concurrently --raw \"cd client && npm run watch\" \"npm start\" "
   },
   "author": "Steeve Vandecappelle",
@@ -30,6 +31,7 @@
     "express": "^4.16.4",
     "express-session": "^1.15.6",
     "ffmetadata": "^1.5.0",
+    "forever": "^0.15.3",
     "get-folder-size": "^2.0.0",
     "gravatar": "^1.8.0",
     "he": "^1.2.0",

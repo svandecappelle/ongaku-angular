@@ -268,4 +268,11 @@ export class AdminComponent implements OnInit {
       this.getDetails();
     });
   }
+
+  restart() {
+    this.details = undefined;
+    this.configureService.restart().subscribe(success => {
+      this.getDetails();
+    });
+  }
 }

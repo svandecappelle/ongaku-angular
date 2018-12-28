@@ -329,32 +329,29 @@ class Library {
               },
               json: true
             }).then((detailPage) => {
-              try {
-                let musicCategory = _.filter(detailPage.query.pages[0].categories, (category) => {
-                  let categoryTitle = category.title.toLowerCase();
-                  let isMusic = false;
+              let musicCategory = _.filter(detailPage.query.pages[0].categories, (category) => {
+                let categoryTitle = category.title.toLowerCase();
+                let isMusic = false;
 
-                  let musicTerms = require('./music_terms.json');
-                  for (let index = 0; index < musicTerms.length; index++) {
-                    const element = musicTerms[index];
-                    if (categoryTitle.indexOf(element) !== -1) {
-                      console.debug("found with: " + element + " matched with: " + categoryTitle);
-                      return true;
-                    }
+                let musicTerms = require('./music_terms.json');
+                for (let index = 0; index < musicTerms.length; index++) {
+                  const element = musicTerms[index];
+                  if (categoryTitle.indexOf(element) !== -1) {
+                    console.debug("found with: " + element + " matched with: " + categoryTitle);
+                    return true;
                   }
-                  return false;
-                });
-                if (musicCategory && musicCategory.length > 0) {
-                  artist.wikipedia = detailPage.query.pages[0].extract;
-                  console.debug(artist.name + " found in wiki page: " + page.title);
-                  return next(null, true);
-                } else {
-                  console.debug(artist.name + " not found in wiki");
                 }
-                return next(null, false);
-              } catch (error) {
-                console.error(" - " + error, error);
+                return false;
+              });
+              if (musicCategory && musicCategory.length > 0) {
+                artist.wikipedia = detailPage.query.pages[0].extract;
+                console.debug(artist.name + " found in wiki page: " + page.title);
+              } else {
+                console.debug(artist.name + " not found in wiki");
               }
+
+              next(null, musicCategory && musicCategory.length > 0);
+              return 0;
             }).catch(error => {
               console.error(error);
             });
@@ -368,6 +365,7 @@ class Library {
             // console.log("finished");
           });
 
+          return 0;
         }).catch((error) => {
           console.error("wikipedia error", error);
         });
