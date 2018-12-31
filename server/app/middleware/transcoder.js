@@ -88,7 +88,7 @@ class Transcoder {
         streamStarted = false;
         
         if (!fs.existsSync("/tmp/ongaku/")){
-            fs.mkdir("/tmp/ongaku/");
+            fs.mkdirSync("/tmp/ongaku/");
         }
 
         /*if (fs.existsSync(outputFile)){

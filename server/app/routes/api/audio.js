@@ -418,6 +418,7 @@ router.get('/stream/:media', (req, res) => {
             middleware.stream(req, res, req.params.media, "audio");
             resolve(req.params.media);
         }).catch((error) => {
+            console.error(error);
             res.status(404).json({ "error": "media not found" });
         });
     };
