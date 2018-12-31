@@ -5,32 +5,50 @@ img.user-avatar {
     right: 0;
     text-align: center;
 }
+
 .content {
     padding: 1em;
     padding-bottom: 1em;
     padding-bottom: 4em;
 
-    mat-card {
-        width: 100%;
-        height: 100%;
+    a.user {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin: 0.5em;
 
-        background-size: cover;
-        background-position: center;
-
-        .mat-card-header {
-            position: relative;
+        &:hover {
+            mat-card {
+                transition: all linear 150ms;
+                margin-top: -0.5em;
+            }
         }
 
-        .mat-card-title {
-            position: absolute;
-            z-index: 1;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 0.5em;
-            background-color: rgba(0, 0, 0, 0.5);
-            font-size: 1.5em;
-            text-align: center;
+        mat-card {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            background-size: cover;
+            background-position: center;
+            transition: all linear 150ms;
+
+            .mat-card-header {
+                position: relative;
+            }
+
+            .mat-card-title {
+                position: absolute;
+                z-index: 1;
+                top: 0;
+                left: 0;
+                right: 0;
+                padding: 0.5em;
+                background-color: rgba(0, 0, 0, 0.5);
+                font-size: 1.5em;
+                text-align: center;
+            }
         }
     }
 }
