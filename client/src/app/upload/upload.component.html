@@ -1,6 +1,7 @@
 <div class="content">
   <h3>
-    Folder: {{folderName}}
+    Folder: {{location.name}}
+    <a routerLink="/my-library/{{location.parent}}" *ngIf="location">Parent</a>
   </h3>
 
   <h4>Files in this folder</h4>

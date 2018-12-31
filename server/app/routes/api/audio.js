@@ -154,18 +154,18 @@ class Helpers {
     encrypt(text) {
         const cipher = crypto.createCipheriv(algorithm, key, iv);
         cipher.setAutoPadding(true);
-        var crypted = cipher.update(text, 'utf8', 'hex')
+        var crypted = cipher.update(text.trim(), 'utf8', 'hex')
         crypted += cipher.final('hex');
         this.decrypt(crypted);
-        return crypted;
+        return crypted.trim();
     }
 
     decrypt(text) {
         const decipher = crypto.createDecipheriv(algorithm, key, iv);
         decipher.setAutoPadding(false);
-        var dec = decipher.update(text, 'hex', 'utf8')
+        var dec = decipher.update(text.trim(), 'hex', 'utf8')
         dec += decipher.final('utf8');
-        return dec;
+        return dec.trim();
     }
 
     incrementPlays(mediauid, userSession) {
@@ -526,8 +526,13 @@ router.get(['/my-library', '/my-library/:folder'], (req, res) => {
         if (folder) {
             folderReading = path.join(folderReading, folder);
             canonicalFolderName = path.join(canonicalFolderName, folder);
-        }
 
+            const fileAskLocation = path.join(DEFAULT_USERS__DIRECTORY, username, canonicalFolderName, '..');
+            const fileAskLocationEncrypt = helpers.encrypt(fileAskLocation).substring(0, 32);
+            console.info(fileAskLocation, fileAskLocationEncrypt);
+            filesMap[fileAskLocationEncrypt.substring(0, 32)] = fileAskLocationEncrypt;
+        }
+        
         try {
             const fileToTest = folderReading.replace(/[^\x20-\x7E]+/g, '').trim();
             if (fs.statSync(fileToTest).isFile()) {
@@ -549,12 +554,23 @@ router.get(['/my-library', '/my-library/:folder'], (req, res) => {
                     locationFolder: canonicalName
                 };
             });
+            let locationFolder = req.params.folder ? folderReading: '';
+            const locationFolderParent = path.resolve(folderReading, '..');
+            const encryptedFolderParent = locationFolder !== '' ? helpers.encrypt(locationFolderParent).substring(0, 32): '';
+            console.info(locationFolderParent);
+            console.info(encryptedFolderParent);
+            console.info('------');
             res.send({
                 files: files,
-                location: `/${folder ? folder : ''}`
+                location: {
+                    name: `/${folder ? folder : ''}`,
+                    id: folder,
+                    parent: encryptedFolderParent
+                }
             });
         } catch (err) {
-            res.status(500).send(err);
+            console.error(err);
+            res.status(500).json(err);
         }
     }
     /*} else {

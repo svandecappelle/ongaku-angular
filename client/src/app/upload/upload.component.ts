@@ -14,7 +14,10 @@ export class UploadComponent implements OnInit {
 
   private files: string[];
   private folder: string;
-  private folderName: string;
+  private location= {
+    name: '',
+    id: ''
+  };
 
   constructor(public dialog: MatDialog, 
     public uploadService: UploadService,
@@ -28,7 +31,7 @@ export class UploadComponent implements OnInit {
 
       this.uploadService.list(this.folder ? this.folder : '').subscribe(content => {
         this.files = content.files;
-        this.folderName = content.location;
+        this.location = content.location;
       });
     });
   }
