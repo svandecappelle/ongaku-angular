@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { StatisticsService } from './statistics.service';
 import { AdminService } from './admin.service';
+import { ReloadService } from '../library/reload.service';
 
 import { FormGroup, FormBuilder, Validators, ValidatorFn, AbstractControl, FormControl } from '@angular/forms';
 
@@ -16,6 +17,7 @@ export class AdminComponent implements OnInit {
   private form: FormGroup;
   private formSubmitAttempt: boolean;
   private properties: any;
+  private reloading: boolean = false;
 
   private statistics = {
     userCount: 0,
@@ -97,7 +99,7 @@ export class AdminComponent implements OnInit {
 
   @ViewChild('storage', { read: ElementRef }) canvasStorage: ElementRef;
 
-  constructor (private service: StatisticsService, private fb: FormBuilder, private configureService: AdminService) { }
+  constructor (private service: StatisticsService, private fb: FormBuilder, private configureService: AdminService, private reloadService: ReloadService) { }
 
   ngOnInit() {
     setTimeout(() => {
@@ -273,6 +275,13 @@ export class AdminComponent implements OnInit {
     this.details = undefined;
     this.configureService.restart().subscribe(success => {
       this.getDetails();
+    });
+  }
+
+  reload() {
+    this.reloading = true;
+    this.reloadService.reload().subscribe(() => {
+      this.reloading = false;
     });
   }
 }
