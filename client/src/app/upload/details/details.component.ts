@@ -1,8 +1,8 @@
-import { Component, OnInit, ViewChild, Inject } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { MatDialogRef } from '@angular/material';
 import { UploadService } from '../upload.service';
-import { forkJoin } from 'rxjs';
 import { MAT_DIALOG_DATA } from '@angular/material';
+import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-details',
@@ -13,16 +13,22 @@ export class DetailsComponent {
 
   private file;
 
-  progress;
-  canBeClosed = true;
-  primaryButtonText = 'Upload';
-  showCancelButton = true;
-  uploading = false;
-  uploadSuccessful = false;
+  private sanitazedLocation;
+  private progress;
+  private canBeClosed = true;
+  private primaryButtonText = 'Upload';
+  private showCancelButton = true;
+  private uploading = false;
+  private uploadSuccessful = false;
 
-  constructor(public dialogRef: MatDialogRef<DetailsComponent>, public uploadService: UploadService,
-    @Inject(MAT_DIALOG_DATA) public data: any) {
+  constructor(
+    public dialogRef: MatDialogRef<DetailsComponent>,
+    public uploadService: UploadService,
+    private sanitizer: DomSanitizer,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ) {
     this.file = data.file;
+    this.sanitazedLocation = sanitizer.bypassSecurityTrustResourceUrl(`/api/audio/my-library/${this.file.location}`);
   }
 
   addFiles() {
@@ -34,9 +40,13 @@ export class DetailsComponent {
   }
 
   canPreview(file) {
-    return file.name.toLowerCase().indexOf('.png')
-      || file.name.toLowerCase().indexOf('.jpg')
-      || file.name.toLowerCase().indexOf('.gif')
-      || file.name.toLowerCase().indexOf('.jpeg');
+    return file.name.toLowerCase().indexOf('.png') !== -1
+      || file.name.toLowerCase().indexOf('.jpg') !== -1
+      || file.name.toLowerCase().indexOf('.gif') !== -1
+      || file.name.toLowerCase().indexOf('.jpeg') !== -1;
+  }
+
+  isPdf(file) {
+    return file.name.toLowerCase().indexOf('.pdf') !== -1;
   }
 }

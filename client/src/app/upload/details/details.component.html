@@ -5,8 +5,8 @@
     <!-- This is the content of the dialog, containing a list of the files to upload -->
     <mat-dialog-content fxFlex>
 
-      <mat-grid-list cols="2" rowHeight="300px">
-        <mat-grid-tile>
+      <mat-grid-list cols="2" rowHeight="500px">
+        <mat-grid-tile class="properties">
           <mat-list>
             <mat-list-item *ngFor="let property of getProperties(file.stat)">
               <span>{{property}}:</span>
@@ -18,6 +18,9 @@
         <mat-grid-tile>
           <div *ngIf="canPreview(file)">
             <img src="/api/audio/my-library/{{file.location}}" width="100%"/>
+          </div>
+          <div *ngIf="isPdf(file)" class="pdf">
+            <embed [src]="sanitazedLocation" type="application/pdf" width="100%" height="100%"/>
           </div>
         </mat-grid-tile>
       </mat-grid-list>

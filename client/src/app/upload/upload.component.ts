@@ -40,7 +40,7 @@ export class UploadComponent implements OnInit {
     event.preventDefault();
     event.stopPropagation();
 
-    let dialogRef = this.dialog.open(DetailsComponent, { width: '50%', height: '50%', data: { file: file } });
+    let dialogRef = this.dialog.open(DetailsComponent, { width: '70%', height: '70%', data: { file: file } });
     dialogRef.afterClosed().subscribe(() => {
       // nothing to do
     });
