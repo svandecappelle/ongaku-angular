@@ -171,3 +171,8 @@ mat-card.album, mat-card.artist {
     bottom: 0;
   }
 }
+
+hr {
+  border-top: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
