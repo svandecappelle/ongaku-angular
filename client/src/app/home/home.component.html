@@ -3,7 +3,7 @@
   <div class="discover-container">
 
     <span *ngIf="!artists || artists.length === 0">No results</span>
-    <mat-grid-list cols="5" *ngIf="artists && artists.length > 0">
+    <mat-grid-list [cols]="breakpoint" (window:resize)="onResize($event)" *ngIf="artists && artists.length > 0">
       <mat-grid-tile *ngFor="let artist of artists">
         <mat-card class="artist" (click)="openArtistDetail(artist.name)">
           <mat-card-header>
@@ -39,7 +39,7 @@
   <div class="discover-container">
 
     <span *ngIf="!albums || albums.length === 0">No results</span>
-    <mat-grid-list cols="5" *ngIf="albums && albums.length > 0">
+    <mat-grid-list [cols]="breakpoint" *ngIf="albums && albums.length > 0">
       <mat-grid-tile *ngFor="let album of albums">
         <mat-card class="album" (click)="openAlbumDetail(album)">
           <mat-card-header>

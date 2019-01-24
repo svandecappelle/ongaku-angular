@@ -29,6 +29,7 @@ export class HomeComponent implements OnInit {
 
   public artists = [];
   public albums = [];
+  public breakpoint: number = 5;
 
   public _page = {
     artist: 0,
@@ -58,9 +59,14 @@ export class HomeComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.breakpoint = (window.innerWidth <= 400) ? 1 : 5;
     this.subscriptions.push(this.store.select(state => state.search).subscribe((val) => {
       this.search(val);
     }));
+  }
+
+  onResize(event) {
+    this.breakpoint = (event.target.innerWidth <= 400) ? 1 : event.target.innerWidth / 250;
   }
 
   ngOnDestroy() {
