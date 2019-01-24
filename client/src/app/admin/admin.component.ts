@@ -14,12 +14,13 @@ import { Chart } from 'chart.js';
   styleUrls: ['./admin.component.scss']
 })
 export class AdminComponent implements OnInit {
-  private form: FormGroup;
   private formSubmitAttempt: boolean;
-  private properties: any;
-  private reloading: boolean = false;
 
-  private statistics = {
+  form: FormGroup;
+  properties: any;
+  reloading: boolean = false;
+
+  statistics = {
     userCount: 0,
     albumsCount: 0,
     tracksCount: 0,
@@ -29,7 +30,7 @@ export class AdminComponent implements OnInit {
       total: 0
     }
   };
-  private details;
+  details;
 
   // lineChart
   public lineChartData: Array<any> = [

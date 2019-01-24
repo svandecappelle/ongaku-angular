@@ -17,16 +17,15 @@ export class PlayerComponent implements OnInit, OnDestroy {
     private song: Song;
     private currentTime: string;
     private fullTime: string;
-    private isPlaying: boolean;
     // Subscription variables
     private songSubscription: any;
     private currentTimeSubscription: any;
     private fullTimeSubscription: any;
 
-    private color = "accent";
-
-    private tracklist = Observable;
-    private initialized: Boolean;
+    color = "accent";
+    isPlaying: boolean;
+    tracklist = Observable;
+    initialized: Boolean;
     
     constructor(private _playerService: AudioService, private store: Store<IAppState>) {
       this.store.select(state => state.trackList).subscribe((val) => {

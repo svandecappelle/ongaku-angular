@@ -21,9 +21,10 @@ export function equalityValidator(testing: String): ValidatorFn {
   styleUrls: ['./register.component.scss']
 })
 export class RegisterComponent implements OnInit {
-  form: FormGroup;
-  private inProgress: boolean = true;
   private formSubmitAttempt: boolean;
+
+  form: FormGroup;
+  inProgress: boolean = true;
 
   constructor(private fb: FormBuilder, private service: RegisterService,
     private router: Router) {

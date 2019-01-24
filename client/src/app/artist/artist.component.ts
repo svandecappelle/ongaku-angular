@@ -22,11 +22,6 @@ import { ArtistService } from './artist.service';
 })
 export class ArtistComponent implements OnInit {
 
-  private toggleBackground = true;
-  private artist: string;
-  private details: Object;
-  private image;
-
   public tracklist = [];
 
   private selectedOptions = [];
@@ -35,6 +30,11 @@ export class ArtistComponent implements OnInit {
   private _albumsIdCounter = 0;
 
   public subscriptions = new Array<Subscription>();
+
+  details: Object;
+  toggleBackground = true;
+  artist: string;
+  image;
 
   constructor(
     private activatedRoute: ActivatedRoute,

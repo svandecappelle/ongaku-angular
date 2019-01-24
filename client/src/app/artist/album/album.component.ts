@@ -24,19 +24,18 @@ import { AlbumService } from './album.service';
 })
 export class AlbumComponent implements OnInit {
 
-  private album: string; 
-  private details: Object;
-  private image;
-  private toggleBackground = true;
-
   public tracklist = [];
+  public subscriptions = new Subscription();
 
   private selectedOptions = [];
   private covers: Object = {};
 
-  private _albumsIdCounter: number = 0;
-  
-  public subscriptions = new Subscription();
+  private _albumsIdCounter: number = 0;  
+
+  album: string; 
+  details: Object;
+  image;
+  toggleBackground = true;
 
   constructor(
     private activatedRoute: ActivatedRoute,

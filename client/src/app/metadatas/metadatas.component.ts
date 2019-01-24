@@ -23,12 +23,12 @@ export class MetadatasComponent implements OnInit, OnDestroy {
   dataSource: MetadatasDataSource | null;
   metadatasDatabase:MetadatasDatabase;
 
-  private columns = [
+  columns = [
     { columnDef: 'key', header: 'Key', cell: (row:Metadata) => `${row.key}`},
     { columnDef: 'value', header: 'Value', cell: (row:Metadata) => `${row.value}`},
     
   ];
-  private displayedColumns:String[] = [];
+  displayedColumns:String[] = [];
 
   constructor( @Inject(MAT_DIALOG_DATA) public data: any) {
     let metadatas = [];

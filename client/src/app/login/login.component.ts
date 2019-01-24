@@ -11,9 +11,10 @@ import { InstallService } from '../install/install.service';
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit {
-    form: FormGroup;
     private formSubmitAttempt: boolean;
-    private loginInProgress: boolean;
+
+    form: FormGroup;
+    loginInProgress: boolean;
 
     constructor(
       private ref: ChangeDetectorRef,

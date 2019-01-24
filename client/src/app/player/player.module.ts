@@ -24,7 +24,7 @@ import { LevelMeterComponent } from './level-meter/level-meter.component';
 @Pipe({
   name: 'duration'
 })
-class DurationPipe implements PipeTransform {
+export class DurationPipe implements PipeTransform {
   transform(value: string, fallback: string): string {
     const result: string = moment.duration(value, 'seconds').format('mm:ss');
     return result;

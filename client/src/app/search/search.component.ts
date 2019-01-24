@@ -25,8 +25,10 @@ export class SearchComponent implements OnInit, OnDestroy {
 
   public artists = [];
   public _page;
+
   private selectedOptions = [];
-  private loading: Boolean = true;
+
+  loading: Boolean = true;
 
   private images = {
     artists: Object,

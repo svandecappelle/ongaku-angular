@@ -17,25 +17,26 @@ import { FullscreenComponent } from './fullscreen/fullscreen.component';
 export class PlayerControlsComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription = new Subscription();
-  private color = 'accent';
 
   private duration;
   private currentTime;
   private value;
-  private gain = 0.75;
 
   private state = 'stopped';
   private current;
-  private metadataLoaded: Boolean = true;
 
-  private isInit: Boolean;
-  private src;
   private play_index = 0;
   private tracks: Object[] = [];
 
   private context: AudioContext = new AudioContext();
   private sound;
   private gainNode;
+
+  isInit: Boolean;
+  gain = 0.75;
+  src;
+  color = 'accent';
+  metadataLoaded: Boolean = true;
 
   @ViewChild('audio', { read: ElementRef }) player: ElementRef;
   @ViewChild('progress', { read: ElementRef }) progressBar: ElementRef;

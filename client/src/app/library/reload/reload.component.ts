@@ -9,7 +9,7 @@ import { ReloadService } from '../reload.service';
 })
 export class ReloadComponent implements OnInit {
 
-  private reloading: boolean = false;
+  reloading: boolean = false;
 
   constructor(private service: ReloadService) { }
 

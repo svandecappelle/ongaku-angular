@@ -10,7 +10,7 @@ import { User } from './index';
 })
 export class UsersComponent implements OnInit {
 
-  private users: User[];
+  users: User[];
 
   constructor(private service: UsersService) { }
 

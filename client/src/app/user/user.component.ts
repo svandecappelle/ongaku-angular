@@ -15,16 +15,15 @@ import { Chart } from 'chart.js';
 })
 export class UserComponent implements OnInit {
 
-  private infos: any;
   private user: string;
-
   private avatarSrc: string;
   private coverBackground: any;
-
   private avatarFiler: ElementRef;
   private coverFiler: ElementRef;
   private backgroundFiler: ElementRef;
   private canvasStorage: ElementRef;
+
+  infos: any;
 
   constructor(private service: UserService,
     private _sanitizer: DomSanitizer,

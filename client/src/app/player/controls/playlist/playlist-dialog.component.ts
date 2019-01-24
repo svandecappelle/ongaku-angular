@@ -23,14 +23,13 @@ import { Subscription } from 'rxjs';
 })
 export class PlaylistDialogComponent implements OnDestroy {
 
-    public current: Song;
     private store: Store<IAppState>;
     private subscriptions;
-    private dataSource: PlaylistService;
+    dataSource: PlaylistService;
+    current: Song;
+    displayedColumns = ['action', 'index', 'title', 'artist', 'album', 'duration'];
 
     @ViewChild('filter') filter: ElementRef;
-
-    private displayedColumns = ['action', 'index', 'title', 'artist', 'album', 'duration'];
 
     constructor(@Inject(MAT_DIALOG_DATA) public data: any, private actions: PlayerActions, private dragulaService: DragulaService) {
         this.store = this.data.store;

@@ -12,9 +12,10 @@ import { UploadService } from './upload.service';
 })
 export class UploadComponent implements OnInit {
 
-  private files: string[];
   private folder: string;
-  private location= {
+
+  files: string[];
+  location= {
     name: '',
     id: ''
   };

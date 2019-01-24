@@ -11,8 +11,6 @@ import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browse
 })
 export class DetailsComponent {
 
-  private file;
-
   private sanitazedLocation;
   private progress;
   private canBeClosed = true;
@@ -20,6 +18,8 @@ export class DetailsComponent {
   private showCancelButton = true;
   private uploading = false;
   private uploadSuccessful = false;
+
+  file;
 
   constructor(
     public dialogRef: MatDialogRef<DetailsComponent>,

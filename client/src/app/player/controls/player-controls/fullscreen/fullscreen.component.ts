@@ -2,7 +2,6 @@ import {
   Component,
   OnInit,
   Inject,
-  OnDestroy,
   Renderer2,
   ViewChild,
   ElementRef
@@ -10,9 +9,8 @@ import {
 
 import { DOCUMENT } from '@angular/common';
 import { Observable ,  BehaviorSubject } from 'rxjs';
-import { MatDialog, MAT_DIALOG_DATA, MatTableDataSource } from '@angular/material';
 import { DataSource } from '@angular/cdk/collections';
-import { Store, select } from '@ngrx/store';
+import { Store } from '@ngrx/store';
 
 import { PlayerActions } from '../../../player-actions';
 import { Song, IAppState } from '../../../../app-state';
@@ -78,17 +76,18 @@ export class FullscreenComponent implements OnInit {
 
   private player: PlayerControlsComponent;
 
-  private current: Song;
   private visible: Boolean = false;
 
-  private dataSource: MetadatasDataSource | null;
   private metadatasDatabase: MetadatasDatabase;
   private columns = [
     { columnDef: 'key', header: 'Key', cell: (row: Metadata) => `${row.key}`},
     { columnDef: 'value', header: 'Value', cell: (row: Metadata) => `${row.value}`},
   ];
-  private displayedColumns: String[] = [];
 
+  dataSource: MetadatasDataSource | null;
+  displayedColumns: String[] = [];
+  current: Song;
+  
   @ViewChild('animatedArt', { read: ElementRef }) animationElement: ElementRef;
   @ViewChild('fullscreener', { read: ElementRef }) fullscreener: ElementRef;
   @ViewChild('fullscreenerBackground', { read: ElementRef }) background: ElementRef;
