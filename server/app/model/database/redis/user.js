@@ -4,12 +4,9 @@ var bcrypt = require('bcryptjs'),
     async = require('async'),
     nconf = require('nconf'),
     logger = require('log4js').getLogger('User'),
-    gravatar = require('gravatar'),
-    S = require('string'),
     utils = require('./../../../utils'),
     db = require('../index'),
     groups = require('../../groups'),
-    notifications,
     plugins;
 
 var security = require('./user/security');
