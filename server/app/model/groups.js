@@ -1,6 +1,6 @@
 const nconf = require("nconf");
-const primaryDBName = nconf.get('database');
-const model = require(`./database/redis/groups`);
+const dbtype = nconf.get('database');
+const model = require(`./database/${dbtype}/groups`);
 
 class GroupsModel extends model {
 

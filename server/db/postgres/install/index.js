@@ -16,12 +16,11 @@ class Installer {
       })
   }
 
-  install(){
+  install() {
     return new Promise((resolve, reject) => {
       var sqlFiles = this.getFiles();
       async.eachSeries(sqlFiles, (file, next) => {
         var sqlFileContent = fs.readFileSync(path.resolve(__dirname, file), 'utf8');
-        // console.log("Executing: ", sqlFileContent);
         models.sequelize.query(sqlFileContent,
           {
             raw: true

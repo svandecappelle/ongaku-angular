@@ -1,10 +1,6 @@
-/*jslint node: true */
-'use strict';
-
 const nconf = require("nconf");
-const primaryDBName = nconf.get('database');
-
-const model = require(`./database/redis/playlist`);
+const dbtype = nconf.get('database');
+const model = require(`./database/${dbtype}/playlist`);
 class PlaylistModel extends model{
     
     constructor () {

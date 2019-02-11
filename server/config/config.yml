@@ -4,7 +4,6 @@ default:
     database: angular-init
     username: svandecappelle
     password:
-    type: postgresql
     logging: false
     schema: svandecappelle
     dialect: postgres
@@ -17,9 +16,18 @@ development:
     database: angular-init
     username: svandecappelle
     password:
-    type: postgresql
     logging: false
     dialect: postgres
     dialectOptions:
       multipleStatements: true
   port: 4000
+testing:
+  database:
+    database: angular
+    username: svandecappelle
+    password: null
+    logging: false
+    dialect: sqlite
+    storage: test.db
+    dialectOptions:
+      multipleStatements: true

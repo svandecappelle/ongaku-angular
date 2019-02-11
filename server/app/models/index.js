@@ -5,7 +5,7 @@ var path      = require("path");
 var Sequelize = require("sequelize");
 var env       = process.env.NODE_ENV || "development";
 var yaml_config = require('node-yaml-config');
-var config    = yaml_config.load(path.resolve(__dirname, '../../config/config.yml')).database;
+var config    = yaml_config.load(path.resolve(__dirname, '../../config/config.yml'), env).database;
 var sequelize = new Sequelize(config.database, config.username, config.password, config);
 var db        = {};
 

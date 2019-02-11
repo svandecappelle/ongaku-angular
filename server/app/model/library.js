@@ -1,6 +1,6 @@
 const nconf = require("nconf");
-const primaryDBName = nconf.get('database');
-const model = require(`./database/redis/library`);
+const dbtype = nconf.get('database');
+const model = require(`./database/${dbtype}/library`);
 
 class LibraryModel {
 
