@@ -14,8 +14,10 @@ export class UploadComponent implements OnInit {
 
   private folder: string;
 
+  showCreateFolderInput = false;
+  folderNameToCreate: string;
   files: string[];
-  location= {
+  location = {
     name: '',
     id: ''
   };
@@ -33,7 +35,29 @@ export class UploadComponent implements OnInit {
       this.uploadService.list(this.folder ? this.folder : '').subscribe(content => {
         this.files = content.files;
         this.location = content.location;
+        console.log(this.location);
       });
+    });
+  }
+
+  setNewFolderName(folder: string) {
+    this.folderNameToCreate = folder;
+  }
+  
+  createFolder(event, submit) {
+    this.showCreateFolderInput = true;
+    if (submit) {
+      console.log(this.folderNameToCreate, this.location);
+      this.uploadService.createFolder(this.folderNameToCreate, this.location).subscribe(data => {
+        this.refresh();
+      });
+    }
+  }
+
+  refresh() {
+    this.uploadService.list(this.folder ? this.folder : '').subscribe(content => {
+      this.files = content.files;
+      this.location = content.location;
     });
   }
 
@@ -50,9 +74,7 @@ export class UploadComponent implements OnInit {
   public openUploadDialog() {
     let dialogRef = this.dialog.open(DialogComponent, { width: '50%', height: '50%', data: { folder: this.folder } });
     dialogRef.afterClosed().subscribe(() => {
-      this.uploadService.list(this.folder ? this.folder : '').subscribe(content => {
-        this.files = content.files;
-      });
+      this.refresh();
     });
   }
 

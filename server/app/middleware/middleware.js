@@ -160,7 +160,7 @@ class Middleware {
         //if (nconf.get("ostype") == 'windows'){
         //  logger.info('os is windows');
         // Windows doesn't have save same rootPatht definitions that unix / linux
-        if (process.platform.indexOf('win') !== -1) {
+        if (process.platform.indexOf('win') !== -1 && process.platform.indexOf('darwin') === -1) {
           src = src.replace("C:\\", "");
           settings.rootFolder = "C:\\";
         }
