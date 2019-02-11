@@ -1,6 +1,15 @@
 <div class="content">
   <h3>
     Folder: {{location.name}}
+    <mat-form-field class="search" *ngIf="showCreateFolderInput">
+        <input matInput  (change)="setNewFolderName($event.target.value)">
+    </mat-form-field>
+    <button mat-icon-button (click)="createFolder($event, false)" *ngIf="!showCreateFolderInput">
+      <mat-icon arial-label="New folder" matSuffix>add_circle_outline</mat-icon>
+    </button>
+    <button mat-icon-button (click)="createFolder($event, true)" *ngIf="showCreateFolderInput">
+      <mat-icon arial-label="Create" matSuffix>done</mat-icon>
+    </button>
     <a routerLink="/my-library/{{location.parent}}" *ngIf="location">Parent</a>
   </h3>
 

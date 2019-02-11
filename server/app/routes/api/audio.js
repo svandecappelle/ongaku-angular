@@ -157,7 +157,7 @@ class Helpers {
         var crypted = cipher.update(text.trim(), 'utf8', 'hex')
         crypted += cipher.final('hex');
         this.decrypt(crypted);
-        return crypted.trim();
+        return crypted.trim().replace(/[^\x20-\x7E]+/g, '');
     }
 
     decrypt(text) {
@@ -165,7 +165,7 @@ class Helpers {
         decipher.setAutoPadding(false);
         var dec = decipher.update(text.trim(), 'hex', 'utf8')
         dec += decipher.final('utf8');
-        return dec.trim();
+        return dec.trim().replace(/[^\x20-\x7E]+/g, '');
     }
 
     incrementPlays(mediauid, userSession) {
@@ -523,13 +523,13 @@ router.get(['/my-library', '/my-library/:folder'], (req, res) => {
                 message: 'Destination file doesn\'t exists contact your administrator'
             });
         }
+        let fileAskLocationEncrypt = '';
         if (folder) {
             folderReading = path.join(folderReading, folder);
             canonicalFolderName = path.join(canonicalFolderName, folder);
 
             const fileAskLocation = path.join(DEFAULT_USERS__DIRECTORY, username, canonicalFolderName, '..');
-            const fileAskLocationEncrypt = helpers.encrypt(fileAskLocation).substring(0, 32);
-            console.info(fileAskLocation, fileAskLocationEncrypt);
+            fileAskLocationEncrypt = helpers.encrypt(fileAskLocation);
             filesMap[fileAskLocationEncrypt.substring(0, 32)] = fileAskLocationEncrypt;
         }
         
@@ -557,14 +557,13 @@ router.get(['/my-library', '/my-library/:folder'], (req, res) => {
             let locationFolder = req.params.folder ? folderReading: '';
             const locationFolderParent = path.resolve(folderReading, '..');
             const encryptedFolderParent = locationFolder !== '' ? helpers.encrypt(locationFolderParent).substring(0, 32): '';
-            console.info(locationFolderParent);
-            console.info(encryptedFolderParent);
-            console.info('------');
+            const folderId = helpers.encrypt(folderReading);
+            filesMap[folderId.substring(0, 32)] = folderId;
             res.send({
                 files: files,
                 location: {
                     name: `/${folder ? folder : ''}`,
-                    id: folder,
+                    id: folderId.substring(0, 32),
                     parent: encryptedFolderParent
                 }
             });
@@ -576,6 +575,41 @@ router.get(['/my-library', '/my-library/:folder'], (req, res) => {
     /*} else {
         res.status(403).json({ message: 'Not allowed.' });
     }*/
+});
+
+router.post('/my-library/create-folder', (req, res) => {
+    if (req.session.passport && req.session.passport.user) {
+        const username = req.session.passport.user.username;
+        const folder = req.body.location && req.body.location.id ? helpers.decrypt(filesMap[req.body.location.id]).trim() : '';
+        
+        let userFolder = path.join(DEFAULT_USERS__DIRECTORY, username, "imported");
+        if (!fs.existsSync(path.join(DEFAULT_USERS__DIRECTORY, username))) {
+            fs.mkdirSync(path.join(DEFAULT_USERS__DIRECTORY, username));
+            fs.mkdirSync(path.join(DEFAULT_USERS__DIRECTORY, username, "imported"));
+        }
+        if (!fs.existsSync(userFolder)) {
+            fs.mkdirSync(userFolder);
+        }
+        if (req.body.folder.indexOf('..') !== -1){
+            return res.status(500).json({
+                msg: 'Cannot create relative dir'
+            });
+        }
+        const targetFolder = path.resolve(folder, req.body.folder);
+        fs.mkdirSync(targetFolder);
+        const encrypted = helpers.encrypt(targetFolder);
+        filesMap[encrypted.substring(0, 32).trim()] = encrypted;
+        res.send({
+            files: [],
+            location: {
+                name: `/${targetFolder.replace(userFolder, '')}`,
+                id: encrypted.substring(0, 32).trim(),
+                location: targetFolder
+            }
+        })
+    } else {
+        req.status(403).send()
+    }
 });
 
 router.post(['/upload', '/upload/:folder'], (req, res) => {

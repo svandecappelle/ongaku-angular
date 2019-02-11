@@ -1,8 +1,8 @@
 
-import { Subject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Subject, Observable, throwError as observableThrowError, } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpRequest, HttpEventType, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpRequest, HttpEventType, HttpResponse, HttpHeaders } from '@angular/common/http';
 
 const url = '/api/audio/upload';
 
@@ -58,5 +58,12 @@ export class UploadService {
 
     // return the map of progress.observables
     return status;
+  }
+
+  createFolder(folderName: string, location: any): Observable<any>  {
+    return this.http.post<any>('/api/audio/my-library/create-folder', {
+      'folder': folderName,
+      'location': location
+    });
   }
 }
