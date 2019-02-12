@@ -26,7 +26,7 @@ class Installer {
             raw: true
           }
         ).then( () => {
-          console.log("** query success ** ");
+          console.log(`${file} installed`);
           next();
         }).catch ( (error) => {
           // TODO check on error to retry errors and have an incremental install

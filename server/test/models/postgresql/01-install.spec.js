@@ -10,8 +10,6 @@ const uninstall = () => {
         sequelize.query(sqlFileContent, {
             raw: true
         }).then(() => {
-            console.log("** query success ** ");
-            console.log(`schema successfully uninstalled`);
             resolve();
         }).catch ((error) => {
             // TODO check on error to retry errors and have an incremental install
@@ -27,7 +25,6 @@ before((done) => {
     sequelize.query("select * from installations", {
         raw: true
     }).then(() => {
-        console.log("** query success ** ");
         uninstall().then(() => {
             done();
         });
@@ -43,8 +40,8 @@ after((done) => {
     });
 });
 
-describe('Can install', () => {
-    it('installation sql scripts should works', (done) => {
+describe('Installation', () => {
+    it('sql scripts should works', (done) => {
         installation.install().then((success) => {
             console.log("Installed");
             expect(success).to.be.true;
