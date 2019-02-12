@@ -2,23 +2,12 @@ const nconf = require("nconf");
 const dbtype = nconf.get('database');
 const model = require(`./database/${dbtype}/library`);
 
-class LibraryModel {
+class LibraryModel extends model {
 
-  get (username, callback) {
-    model.get(username, callback);
-  };
 
-  append (username, uid, callback) {
-    model.append(username, uid, callback);
-  };
-
-  remove (username, uid, callback) {
-    model.remove(username, uid, callback);
-  };
-
-  getSharedFolders (callback) {
-    model.getSharedFolders(callback);
-  };
+  constructor() {
+    super()
+  }
 
 }
 

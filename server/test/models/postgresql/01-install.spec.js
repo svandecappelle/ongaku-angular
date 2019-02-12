@@ -1,7 +1,8 @@
 const expect = require('chai').expect;
 const fs = require('fs');
 const path = require('path');
-const { User, sequelize } = require('../../../app/models');
+const moment = require('moment');
+const { User, Config, sequelize } = require('../../../app/sql-models');
 const installation = require('../../../db/postgres/install');
 
 const uninstall = () => {
@@ -40,11 +41,28 @@ after((done) => {
     });
 });
 
+let installationDate;
+
 describe('Installation', () => {
     it('sql scripts should works', (done) => {
+        installationDate = moment();
         installation.install().then((success) => {
-            console.log("Installed");
             expect(success).to.be.true;
         }).then(() => done(), done);
     }).timeout(120 * 1000);
+
+    it('check initialized', (done) => {
+        Config.findOne({where: {'property': 'installed_at'}, raw: true}).then((conf) => {
+            expect(conf.property).to.equal('installed_at');
+            expect(moment(conf.value).startOf('minute').format()).to.equal(installationDate.startOf('minute').format());
+            done();
+        })
+    });
+
+    it('admin should be created', (done) => {
+        User.findAll().then((users) => {
+            expect(users).to.be.an('array').that.is.not.empty;
+            done();
+        });
+    })
 });

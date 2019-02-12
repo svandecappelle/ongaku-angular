@@ -1,7 +1,5 @@
-const models = require('../models');
 const express = require('express');
 const path = require('path');
-const async = require('async');
 const yaml_config = require('node-yaml-config');
 const version = require(path.resolve(__dirname, '../utils/version'));
 const nconf = require('nconf');

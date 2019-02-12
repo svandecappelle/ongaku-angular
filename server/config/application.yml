@@ -8,7 +8,7 @@ library: /Users/svandeca/Music
 audio: [mp3,  wav, wma, ogg, flac]
 video: [mp4, webm, flv, ogv, mpg]
 defaultLanguage: fr
-database: redis
+database: postgresql
 type: browser
 playingtype: streaming
 redis:

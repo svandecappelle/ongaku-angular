@@ -1,19 +1,19 @@
 default:
   database:
     host: localhost
-    database: angular-init
-    username: svandecappelle
+    database: test-ongaku
+    username: test-ongaku
     password:
     logging: false
     dialect: postgres
     dialectOptions:
       multipleStatements: true
-  port: 3000
+  port: 4000
 development:
   database:
     host: localhost
-    database: angular-init
-    username: svandecappelle
+    database: test-ongaku
+    username: test-ongaku
     password:
     logging: false
     dialect: postgres
@@ -30,6 +30,7 @@ unit-testing:
     storage: test.db
     dialectOptions:
       multipleStatements: true
+  port: 4000
 testing:
   database:
     host: localhost
@@ -40,4 +41,4 @@ testing:
     dialect: postgres
     dialectOptions:
       multipleStatements: true
-  port: 5432
+  port: 4000

@@ -1,5 +1,5 @@
 const expect = require('chai').expect;
-const { User, sequelize } = require('../../../app/models');
+const { User, sequelize } = require('../../../app/sql-models');
 
 describe('User', () => {
     it('creation', (done) => {
@@ -8,6 +8,8 @@ describe('User', () => {
             password: 'strong'
         }).then(() => {
             done();
+        }).catch(err => {
+            console.error(err);
         });
     });
 

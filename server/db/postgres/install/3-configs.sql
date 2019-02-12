@@ -1,4 +1,4 @@
-CREATE TABLE ongaku (
+CREATE TABLE config (
   property varchar not null,
   value text not null,
   created_at timestamp,

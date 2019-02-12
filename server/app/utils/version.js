@@ -1,7 +1,7 @@
 const nconf = require('nconf');
 const path = require('path');
 const semver = require('semver');
-const models = require('../models');
+const { Config } = require('../sql-models');
 
 
 var git;
@@ -38,7 +38,7 @@ class Version {
           resolve(!err && groups.length > 0 ? this.current(): null);
         });
       } else {
-        models[nconf.get('product-name')].findAll().then(properties => {
+        Config.findAll().then(properties => {
           var application = {};
           for (var variable of properties) {
             application[variable.get('property')] = variable.get('value');

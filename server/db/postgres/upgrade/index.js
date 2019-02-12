@@ -5,7 +5,7 @@ const async = require('async');
 const semver = require('semver');
 const semverSort = require('semver-sort');
 
-const models = require(path.resolve(__dirname, '../../../app/models'));
+const models = require(path.resolve(__dirname, '../../../app/sql-models'));
 const version = require(path.resolve(__dirname, '../../../app/utils/version'));
 
 class Upgrader {
