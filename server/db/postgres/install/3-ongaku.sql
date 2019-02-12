@@ -1,4 +1,4 @@
-CREATE TABLE pricing (
+CREATE TABLE ongaku (
   property varchar not null,
   value text not null,
   created_at timestamp,

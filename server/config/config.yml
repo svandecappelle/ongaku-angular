@@ -5,7 +5,6 @@ default:
     username: svandecappelle
     password:
     logging: false
-    schema: svandecappelle
     dialect: postgres
     dialectOptions:
       multipleStatements: true
@@ -21,7 +20,7 @@ development:
     dialectOptions:
       multipleStatements: true
   port: 4000
-testing:
+unit-testing:
   database:
     database: angular
     username: svandecappelle
@@ -31,3 +30,14 @@ testing:
     storage: test.db
     dialectOptions:
       multipleStatements: true
+testing:
+  database:
+    host: localhost
+    database: test-ongaku
+    username: test-ongaku
+    password:
+    logging: false
+    dialect: postgres
+    dialectOptions:
+      multipleStatements: true
+  port: 5432

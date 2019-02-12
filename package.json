@@ -4,7 +4,8 @@
   "description": "Angular generic project with database connectors",
   "main": "index.js",
   "scripts": {
-    "test": "rm -f test.db && NODE_ENV=testing mocha server/test/**/*.spec.js",
+    "test": "rm -f test.db && NODE_ENV=unit-testing mocha server/test/**/*.spec.js",
+    "test-postgres": "NODE_ENV=testing mocha server/test/**/*.spec.js",
     "start-dev": "nodemon --watch server server/index.js",
     "start": "node server/ongaku.js start",
     "watch": "concurrently --raw \"cd client && npm run watch\" \"npm start\" "
