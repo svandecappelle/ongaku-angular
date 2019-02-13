@@ -7,7 +7,7 @@ class StatisticsModel {
     }
 
     set(name, id, value, callback) {
-        Statistics.findOrCreate({
+        return Statistics.findOrCreate({
             where: {
                 concern: id,
                 name: name
@@ -38,25 +38,16 @@ class StatisticsModel {
                     }
                 });
             }
-        }).then(callback)
-        .catch((error) => {
-            console.error(error);
-            callback(error);
         });
     }
 
     get(name, id, callback) {
-        Statistics.findOne({
+        return Statistics.findOne({
             where: {
                 'name': name,
                 'concern': id
             },
             raw: true
-        }).then((stats) => {
-            callback(stats);
-        }).catch((error) => {
-            console.error(error);
-            callback(error);
         });
     }
 }

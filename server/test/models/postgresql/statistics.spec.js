@@ -3,8 +3,8 @@ const StatisticsModel = require('../../../app/model/statistics');
 
 describe('Statistics', () => {
     it('create stat', (done) => {
-        StatisticsModel.set('plays', 'id-song', 'something', () => {
-            StatisticsModel.get('plays', 'id-song', (stat) => {
+        StatisticsModel.set('plays', 'id-song', 'something').then( () => {
+            StatisticsModel.get('plays', 'id-song').then( (stat) => {
                 expect(stat.value).to.be.equal('something');
                 done();
             });
@@ -12,8 +12,8 @@ describe('Statistics', () => {
     });
 
     it('init using increment stat', (done) => {
-        StatisticsModel.set('plays', 'id-song-increment-init', 'increment', () => {
-            StatisticsModel.get('plays', 'id-song-increment-init', (stat) => {
+        StatisticsModel.set('plays', 'id-song-increment-init', 'increment').then( () => {
+            StatisticsModel.get('plays', 'id-song-increment-init').then( (stat) => {
                 expect(stat.value).to.be.equal('1');
                 done();
             });
@@ -21,9 +21,9 @@ describe('Statistics', () => {
     });
 
     it('increment stat', (done) => {
-        StatisticsModel.set('plays', 'id-song-increment', 'increment', () => {
-            StatisticsModel.set('plays', 'id-song-increment', 'increment', () => {
-                StatisticsModel.get('plays', 'id-song-increment', (stat) => {
+        StatisticsModel.set('plays', 'id-song-increment', 'increment').then( () => {
+            StatisticsModel.set('plays', 'id-song-increment', 'increment').then(() => {
+                StatisticsModel.get('plays', 'id-song-increment').then((stat) => {
                     expect(stat.value).to.be.equal('2');
                     done();
                 });
@@ -32,8 +32,8 @@ describe('Statistics', () => {
     });
 
     it('decrement stat', (done) => {
-        StatisticsModel.set('plays', 'id-song-decrement', 'decrement', () => {
-            StatisticsModel.get('plays', 'id-song-decrement', (stat) => {
+        StatisticsModel.set('plays', 'id-song-decrement', 'decrement').then( () => {
+            StatisticsModel.get('plays', 'id-song-decrement').then( (stat) => {
                 expect(stat.value).to.be.equal('-1');
                 done();
             });
@@ -41,7 +41,7 @@ describe('Statistics', () => {
     });
 
     it('re-check stat', (done) => {
-        StatisticsModel.get('plays', 'id-song', (stat) => {
+        StatisticsModel.get('plays', 'id-song').then( (stat) => {
             expect(stat.value).to.be.equal('something');
             done();
         });

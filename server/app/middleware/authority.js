@@ -207,14 +207,9 @@ class Authority {
             return done(null, false, err.message);
           }
         }
-
-        db.getObjectFields('user:' + uid, ['password', 'banned'], (err, userData) => {
-          if (err) {
-            return done(err);
-          }
-
+        user.get(uid, ['password', 'banned']).then(userData => {
           if (!userData || !userData.password) {
-            statistics.set('failed-logins', moment().startOf('day').format('x'), 'increment', () => {
+            statistics.set('failed-logins', moment().startOf('day').format('x'), 'increment').then(() => {
               console.debug("Stats saved");
             });
             return done(new Error('[[error:invalid-user-data]]'));
@@ -232,7 +227,7 @@ class Authority {
               return done(new Error('bcrypt compare error'));
             }
             if (!res) {
-              statistics.set('failed-logins', moment().startOf('day').format('x'), 'increment', () => {
+              statistics.set('failed-logins', moment().startOf('day').format('x'), 'increment').then(() => {
                 console.debug("Stats saved");
               });
               return done(null, false, {
@@ -244,10 +239,12 @@ class Authority {
 
             async.auto({
               settings: (next) => {
-                user.getSettings(uid, next);
+                user.getSettings(uid).then((res) => next(null, res));
               },
               security: (next) => {
-                security.getAccessId(uid, next);
+                next('a');
+                // TODO reactive that
+                // security.getAccessId(uid).then((res) => next(null, res));
               }
             }, (err, results) => {
               done(null, {
@@ -258,6 +255,8 @@ class Authority {
             });
 
           });
+        }).catch(err => {
+          done(err);
         });
       });
     });
