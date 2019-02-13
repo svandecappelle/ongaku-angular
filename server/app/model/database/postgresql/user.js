@@ -1,5 +1,5 @@
 const nconf = require("nconf");
-const { User } = require("./models")
+const { User } = require("./models");
 
 class UserAuth {
     logAttempt(uid, callback) {

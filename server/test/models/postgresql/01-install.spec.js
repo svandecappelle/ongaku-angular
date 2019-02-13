@@ -1,7 +1,14 @@
 const expect = require('chai').expect;
 const fs = require('fs');
+const nconf = require('nconf');
 const path = require('path');
 const moment = require('moment');
+const nconfYaml = require('nconf-yaml');
+nconf.file({
+    file: path.resolve(__dirname, '../../../config/application.yml'),
+    format: nconfYaml
+});
+
 const { User, Config, sequelize } = require('../../../app/sql-models');
 const installation = require('../../../db/postgres/install');
 
@@ -14,6 +21,7 @@ const uninstall = () => {
             resolve();
         }).catch ((error) => {
             // TODO check on error to retry errors and have an incremental install
+            console.error(error);
             reject({
                 msg: 'Error uninstalling application',
                 details: error
