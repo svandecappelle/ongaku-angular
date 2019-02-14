@@ -3,8 +3,11 @@ const _ = require('underscore');
 const { User, UserSettings } = require("./models");
 
 class UserAuth {
-    logAttempt(uid, callback) {
-        callback();
+    logAttempt(uid) {
+        return new Promise(resolve => {
+            // "[[error:account-locked]]" for locked
+            resolve();
+        });
     }
 
     clearLoginAttempts(uid) {
@@ -18,16 +21,9 @@ class UserModel {
         this.auth = new UserAuth();
     }
 
-    getUidByUsername(username, callback) {
-        User.findOne({where: {'username': username}, raw: true}).then((user) => {
-            if (user) {
-                callback(null, user.id);
-            } else {
-                callback({'msg': 'user not exists'}, null)
-            }
-        }).catch((error) => {
-            callback(error, null);
-        });
+    getUidByUsername(username) {
+        return User.findOne({where: {'username': username}, raw: true})
+            .then(user => user ? user.id: null);
     }
 
     get(uid, datas) {
@@ -36,9 +32,11 @@ class UserModel {
         });
     }
 
-    isAdministrator(uid, callback) {
+    isAdministrator(uid) {
         // TODO reactive that
-        callback(null, true);
+        return new Promise((resolve, reject) => {
+            resolve(true)
+        });
     }
 
     getSettings(uid) {

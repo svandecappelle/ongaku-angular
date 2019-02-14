@@ -23,5 +23,5 @@ CREATE TABLE user_settings (
   updated_at timestamp,
   deleted_at timestamp,
 
-  PRIMARY KEY (property, owner)
+  PRIMARY KEY(property, owner)
 );

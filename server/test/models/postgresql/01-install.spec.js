@@ -51,7 +51,10 @@ describe('Installation', () => {
         installationDate = moment();
         installation.install().then((success) => {
             expect(success).to.be.true;
-        }).then(() => done(), done);
+        }).then(() => done(), done)
+        .catch((err) => {
+            done(err)
+        });
     }).timeout(120 * 1000);
 
     it('check initialized', (done) => {

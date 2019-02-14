@@ -12,7 +12,6 @@ try {
   git = require('nodegit');
 } catch (error) {
   git = require('./../middleware/git');
-  console.warn('Git plugin not installed.');
 }
 
 router.get('/', function (req, res, next) {

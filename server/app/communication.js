@@ -17,7 +17,7 @@ class Communication {
 		this.io.on('connection', (socket) => {
 			var address = socket.handshake.address;
 			var userAgent = socket.client.request.headers['user-agent'];
-			console.info(`User ${address} connected to communication system`);
+			console.info(`User ${address} connected to communication system on ${userAgent}`);
 
 			socket.emit('connected');
 
@@ -44,7 +44,9 @@ class Communication {
 	}
 
 	emit(room, event, data) {
-		console.info(`emit to room: ${room}`, event, data ? data.message : undefined);
+		if (data && data.message) {
+			console.info(`emit to room: ${room}`, event, data.message);
+		}
 		this.io.to(room).emit(event, data);
 	}
 

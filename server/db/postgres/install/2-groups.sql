@@ -1,16 +1,15 @@
 CREATE TABLE groups (
-  id serial NOT NULL,
+  id serial PRIMARY KEY,
   name varchar NOT NULL,
 	created_at timestamp,
 	updated_at timestamp,
-	deleted_at timestamp,
-  CONSTRAINT groups_pk PRIMARY KEY (id)
+	deleted_at timestamp
 );
 CREATE TABLE user_groups (
-  group_id int not null REFERENCES groups(id),
-  user_id int not null REFERENCES users(id),
+  group_id int REFERENCES groups(id),
+  user_id int REFERENCES users(id),
   created_at timestamp,
   updated_at timestamp,
   deleted_at timestamp,
-  PRIMARY KEY(group_id , user_id)
+  CONSTRAINT user_groups_pkey PRIMARY KEY (group_id , user_id) 
 );

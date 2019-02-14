@@ -27,6 +27,12 @@
     }];
 
     module.init = function (callback) {
+        if (nconf.get('database') !== "redis") {
+            if (typeof callback === 'function') {
+                callback();
+            }
+            return;
+        }
         try {
             var session = require('express-session')
             redis = require('redis');

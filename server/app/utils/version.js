@@ -9,7 +9,7 @@ try {
   git = require('nodegit');
 } catch (error) {
   git = require('./../middleware/git');
-  console.warn('Git plugin not installed.');
+  console.warn('Git plugin not installed. This will use a fallback git command liner. Make sure git is installed to get updates.');
 }
 
 class Version {

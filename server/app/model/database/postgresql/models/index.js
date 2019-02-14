@@ -8,6 +8,7 @@ var yaml_config = require('node-yaml-config');
 var config    = yaml_config.load(path.resolve(__dirname, '../../../../../config/config.yml'), env).database;
 // To debug sequelize queries
 // config.logging = console.log;
+config.operatorsAliases= Sequelize.Op;
 var sequelize = new Sequelize(config.database, config.username, config.password, config);
 var db        = {};
 

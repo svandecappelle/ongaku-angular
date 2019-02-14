@@ -213,11 +213,8 @@ class Helpers {
             logger.info("desktop mode all access granted");
             callback();
         } else {
-            meta.settings.getOne("global", "requireLogin", (err, curValue) => {
-                if (err) {
-                    logger.debug("userauth error checking");
-                    middleware.redirect('/login', res);
-                } else if (curValue === "true") {
+            meta.settings.getOne("global", "requireLogin").then(curValue => {
+                if (curValue === "true") {
                     logger.debug("userauth is required to listen");
                     if (middleware.isAuthenticated(req)) {
                         callback();
@@ -241,6 +238,9 @@ class Helpers {
                     logger.debug("userauth is not required to listen");
                     callback();
                 }
+            }).catch(err => {
+                logger.debug("userauth error checking");
+                middleware.redirect('/login', res);
             });
         }
     };
