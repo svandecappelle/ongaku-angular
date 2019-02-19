@@ -6,10 +6,11 @@ class StatisticsModel {
     constructor () {
     }
 
-    set(name, id, value, callback) {
+    set(name, id, time, value) {
         return Statistics.findOrCreate({
             where: {
                 concern: id,
+                time: time,
                 name: name
             }, defaults: {
                 value: '0'
@@ -41,15 +42,27 @@ class StatisticsModel {
         });
     }
 
-    get(name, id, callback) {
-        return Statistics.findOne({
-            where: {
-                'name': name,
-                'concern': id
-            },
+    get(name, id, filters) {
+        const where = filters ? filters : {};
+        where.name = name;
+        if (id) {
+            where.concern = id
+        }
+        return Statistics.findAll({
+            where: where,
             raw: true
+        }).then(results => {
+            if (id && results.length == 1) {
+                return results[0];
+            }
+            return results;
         });
     }
+
+    getWithFilters(name, filters) {
+        return this.get(name, undefined, filters);
+    }
+
 }
 
 module.exports = StatisticsModel;

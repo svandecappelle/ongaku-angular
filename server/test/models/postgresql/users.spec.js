@@ -9,7 +9,7 @@ describe('User', () => {
             password: 'strong'
         }).then(() => {
             done();
-        })
+        });
     });
 
     it('fetch', (done) => {

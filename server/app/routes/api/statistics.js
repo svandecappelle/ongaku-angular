@@ -16,7 +16,7 @@ class Helpers {
             logger.debug(media);
             var genre = media.metadatas.genre ? media.metadatas.genre : media.metadatas.GENRE;
             if (genre) {
-                statistics.set('plays-genre', genre, 'increment', () => {
+                statistics.set('plays-genre', genre, moment().startOf('day').toDate(), 'increment').then(() => {
                     logger.debug("set statistics");
                 });
             }

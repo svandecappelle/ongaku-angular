@@ -127,7 +127,7 @@ class Middleware {
       res.end();
     } else {
 
-      statistics.set('plays', moment().startOf('day').format('x'), 'increment', () => {
+      statistics.set('plays', null, moment().startOf('day'), 'increment').then(() => {
         console.debug("Stats saved");
       });
 
@@ -295,7 +295,7 @@ class Middleware {
     var imageFile = "/user/" + username + "/" + type;
     urlUser = path.resolve(imageFile);
 
-    if (!this.hasImageFile(username, type)) {
+    if (!this.hasImageFile(username, type) && type !== "background") {
       if (identicon) {
         if (!fs.existsSync(USERS_IMAGE_DIRECTORY + username)) {
           fs.mkdirSync(USERS_IMAGE_DIRECTORY + username);

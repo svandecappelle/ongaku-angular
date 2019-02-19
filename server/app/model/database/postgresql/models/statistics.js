@@ -8,6 +8,7 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true
         },
         concern: DataTypes.STRING,
+        time: DataTypes.DATE,
         value: DataTypes.STRING,
         owner: {
             type: DataTypes.INTEGER,

@@ -32,7 +32,7 @@ class Authenticator {
           communication.emit(userBean.username, 'application:connected', req.sessionID);
         }, 1500);
 
-        statistics.set('logins', moment().startOf('day').format('x'), 'increment', () => {
+        statistics.set('logins', null, moment().startOf('day').toDate(), 'increment').then(() => {
           console.debug("Stats saved");
         });
       }
@@ -78,7 +78,7 @@ class Authenticator {
         
         user.get(uid, ['password', 'banned']).then(userData => {
           if (!userData || !userData.password) {
-            statistics.set('failed-logins', moment().startOf('day').format('x'), 'increment').then(() => {
+            statistics.set('failed-logins', null, moment().startOf('day').toDate(), 'increment').then(() => {
               console.debug("Stats saved");
             });
             return reject(new Error('[[error:invalid-user-data]]'));
@@ -96,7 +96,7 @@ class Authenticator {
               return done(new Error('bcrypt compare error'));
             }
             if (!res) {
-              statistics.set('failed-logins', moment().startOf('day').format('x'), 'increment').then(() => {
+              statistics.set('failed-logins', null, moment().startOf('day').toDate(), 'increment').then(() => {
                 console.debug("Stats saved");
               });
               return reject({
@@ -255,7 +255,7 @@ class Authority {
   login(username, password, done) {
     if (!username || !password) {
 
-      statistics.set('failed-logins', moment().startOf('day').format('x'), 'increment', () => {
+      statistics.set('failed-logins', null, moment().startOf('day').format('x'), 'increment').then(() => {
         console.debug("Stats saved");
       });
       return done(new Error('[[error:invalid-user-data]]'));
@@ -263,7 +263,7 @@ class Authority {
 
     user.getUidByUsername(username.trim()).then(uid => {
       if (!uid) {
-        statistics.set('failed-logins', moment().startOf('day').format('x'), 'increment', () => {
+        statistics.set('failed-logins', null, moment().startOf('day').toDate(), 'increment').then(() => {
           console.debug("Stats saved");
         });
         // To-do: Even if a user doesn't exist, compare passwords anyway, so we don't immediately return

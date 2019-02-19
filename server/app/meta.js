@@ -24,7 +24,6 @@ class Meta {
             allowLocalLogin: true
         };
         this.settings = config;
-        console.log(config);
     }
 }
 

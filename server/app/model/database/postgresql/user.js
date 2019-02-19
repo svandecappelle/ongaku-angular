@@ -1,6 +1,6 @@
 const nconf = require("nconf");
 const _ = require('underscore');
-const { User, UserSettings } = require("./models");
+const { User, Group, UserGroups, UserSettings } = require("./models");
 
 class UserAuth {
     logAttempt(uid) {
@@ -85,6 +85,38 @@ class UserModel {
             });
         });
         return Promise.all(rows);
+    }
+
+    getAllUsers() {
+        return this.getUsers().then(users => {
+            return {users: users};
+        });
+    }
+
+    getUsers(uids) {
+        const datasToKeep = ['username', 'email', 'groups'];
+        const find = {
+            include: [{
+                model: Group,
+                as: 'groups',
+                required: false,
+                attributes: ['id', 'name'],
+                through: { attributes: [] }
+            }]
+        };
+        if (uids) {
+            find.where = {
+                id: uids
+            }
+        }
+        return User.findAll(find).then(datas => {
+            const users = _.map(datas,  user => {
+                const jsonUser = _.pick(user, datasToKeep);
+                jsonUser.groups = _.map(user.groups, group => group.name);
+                return jsonUser;
+            });
+            return users;
+        });
     }
 }
 

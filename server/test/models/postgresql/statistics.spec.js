@@ -1,4 +1,7 @@
 const expect = require('chai').expect;
+const moment = require('moment');
+const { Sequelize } = require('../../../app/sql-models')
+const { Op } = Sequelize;
 const StatisticsModel = require('../../../app/model/statistics');
 
 describe('Statistics', () => {
@@ -46,4 +49,16 @@ describe('Statistics', () => {
             done();
         });
     });
+
+    it('get-stats-filtering-date', (done) => {
+        StatisticsModel.getWithFilters('plays', {
+            updated_at: {
+                [Op.gte]: moment().startOf('day').toDate()
+            }
+        }).then(results => {
+            expect(results).to.be.an('array');
+            expect(results.length).to.be.equal(4);
+            done();
+        });
+    })
 });

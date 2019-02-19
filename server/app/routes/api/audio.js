@@ -11,6 +11,7 @@ const https = require('https');
 const fs = require('fs');
 const async = require("async");
 const crypto = require('crypto');
+const moment = require('moment');
 
 const library = require("./../../middleware/library");
 const middleware = require("./../../middleware/middleware");
@@ -171,14 +172,14 @@ class Helpers {
     incrementPlays(mediauid, userSession) {
         if (mediauid) {
             mediauid = mediauid.replace(".mp3", '');
-            statistics.set('plays', mediauid, 'increment', () => {
+            statistics.set('plays', mediauid, moment().startOf('day').toDate(), 'increment').then(() => {
                 logger.info(`set statistics: ${mediauid}`);
             });
             var media = library.getByUid(mediauid);
             logger.debug(media);
             var genre = media.metadatas.genre ? media.metadatas.genre : media.metadatas.GENRE;
             if (genre) {
-                statistics.set('plays-genre', genre, 'increment', () => {
+                statistics.set('plays-genre', genre, moment().startOf('day').toDate(), 'increment').then(() => {
                     logger.debug("set statistics");
                 });
             }

@@ -5,6 +5,7 @@ const path = require('path');
 const async = require("async");
 const _ = require("underscore");
 const getSize = require('get-folder-size');
+const nconf = require('nconf');
 
 const library = require("./../../middleware/library");
 const middleware = require("./../../middleware/middleware");
@@ -15,6 +16,12 @@ const user = require("./../../model/user");
 
 var router = express.Router();
 
+const genericError = (error, res) => {
+    console.error(error);
+    res.status(500).json({
+        message: 'Internal server error'
+    });
+}
 
 class Helpers {
 
@@ -66,30 +73,13 @@ router.get('/me', (req, res) => {
             output.files = {
                 count: files.length
             };
-            user.getUsers([uid], (error, data) => {
+            user.getUsers([uid]).then(data => {
                 output = _.extend(output, data[0]);
-
-                if (error) {
-                    console.error(error);
-                    return res.status(500).json({ message: "Internal server error" });
-                }
-                user.getGroups(uid, (groups) => {
-                    output.groups = groups;
-                    res.json(output);
-                });
-            });
-        }).catch(error => {
-            console.error(error);
-            res.status(500).json({
-                message: 'Internal server error'
-            });
-        });
-    }).catch(err => {
-        console.error(err);
-        res.status(500).json({
-            message: 'Internal server error'
-        });
-    });
+                // TODO add groups into redis model when fetch user
+                res.json(output);
+            }).catch(err => genericError(err, res));
+        }).catch(err => genericError(err, res));
+    }).catch(err => genericError(err, res));
 });
 
 router.get('/:username', (req, res) => {
@@ -102,33 +92,27 @@ router.get('/:username', (req, res) => {
     var username = req.params.username;
     var userdir = path.resolve(__dirname, `../../../../public/user/${username}`);
     var output = {};
-    user.getUidByUsername(username, (error, uid) => {
+    user.getUidByUsername(username).then(uid => {
         userStorage(username).then((usage) => {
             output.usage = usage;
             scanner.files(userdir).then((files) => {
                 output.files = {
                     count: files.length
                 };
-                user.getUsers([uid], (error, data) => {
+                user.getUsers([uid]).then(data => {
                     output = _.extend(output, data[0]);
-
-                    if (error) {
-                        console.error(error);
-                        return res.status(500).json({ message: "Internal server error" });
-                    }
-                    user.getGroups(uid, (groups) => {
-                        output.groups = groups;
+                    if (nconf.get('database') === "redis") {   
+                        user.getGroups(uid, (groups) => {
+                            output.groups = groups;
+                            res.json(output);
+                        });
+                    } else {
                         res.json(output);
-                    });
-                });
-            }).catch(error => {
-                console.error(error);
-                res.status(500).json({
-                    message: 'Internal server error'
-                });
-            });
-        });
-    });
+                    }
+                }).catch(err => genericError(err, res));
+            }).catch(err => genericError(err, res));
+        }).catch(err => genericError(err, res));
+    }).catch(err => genericError(err, res));
 });
 
 router.post(['/image/:type'], (req, res) => {
@@ -175,7 +159,11 @@ router.get('/image/:type', (req, res) => {
         });
     }
     var userFile = path.resolve(__dirname, `../../../../public${middleware.getImageFile(username, type)}`);
-    res.sendFile(userFile);
+    if (fs.existsSync(userFile)) {
+        return res.sendFile(userFile);
+    }
+
+    return res.status(404).send('File not found');
 });
 
 router.post('/library/add', (req, res) => {

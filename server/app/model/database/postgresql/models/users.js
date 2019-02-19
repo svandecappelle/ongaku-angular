@@ -12,7 +12,11 @@ module.exports = function(sequelize, DataTypes) {
   });
 
   User.associate = function(models) {
-    User.belongsToMany(models.Group, { as: 'Group', through: models.UserGroups});
+    User.belongsToMany(models.Group, {
+      as: 'groups',
+      through: models.UserGroups,
+      foreignKey: 'user_id'
+    });
   };
 
   return User;

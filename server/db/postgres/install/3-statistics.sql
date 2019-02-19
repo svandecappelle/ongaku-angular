@@ -2,6 +2,7 @@ CREATE TABLE statistics (
     name varchar(255) not null,
     value varchar(255) NOT NULL,
     concern varchar(255),
+    time date NOT NULL,
     owner integer REFERENCES users(id),
 	created_at timestamp,
 	updated_at timestamp,

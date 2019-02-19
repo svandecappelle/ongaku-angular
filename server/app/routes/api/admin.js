@@ -80,21 +80,46 @@ getDayStatistics = (nbDays, statname) => {
         });
     }
 
-    return new Promise((resolve, reject) => {
-        async.eachLimit(days, 2 * WEEKS, (day, next) => {
-            statistics.getOne(statname, day.time, (err, value) => {
-                if (value) {
-                    day.value = value;
-                }
-                if (err) {
-                    console.error(err);
-                }
-                next();
+    if (nconf.get('database') === 'redis') {
+        return new Promise((resolve, reject) => {
+            async.eachLimit(days, 2 * WEEKS, (day, next) => {
+                statistics.getOne(statname, day.time).then(value => {
+                    console.log(statname, value);
+                    if (value) {
+                        day.value = value;
+                    }
+                    next();
+                }).catch(error => {
+                    console.error(error);
+                    next();
+                });
+            }, () => {
+                resolve(days);
             });
-        }, () => {
-            resolve(days);
         });
-    });
+    } else {
+        const { Sequelize } = require('../../sql-models');
+        const { gte } = Sequelize.Op;
+
+        return new Promise((resolve, reject) => {
+            statistics.getWithFilters(statname, {
+                updated_at: {
+                    [gte]: days[days.length - 1].date.toDate()
+                }
+            }).then(results => {
+                days.forEach(day => {
+                    const record = _.findWhere(results, {
+                        time: day.date.format('YYYY-MM-DD')
+                    });
+                    if (record) {
+                        day.value = parseInt(record.value);
+                    }
+                    return day;
+                })
+                resolve(days);
+            });
+        });
+    }
 }
 
 router.get('/statistics', (req, res) => {
