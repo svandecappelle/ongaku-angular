@@ -26,8 +26,6 @@ var lfm = new LastfmAPI({
   'secret': nconf.get('third-party:lastfm:secret')
 });
 
-var SpotifyWebApi = require('spotify-web-api-node');
-
 // credentials are optional
 var spotifyApi = new SpotifyWebApi({
   clientId: nconf.get('third-party:spotify:clientId'),
@@ -140,16 +138,18 @@ class Library {
 
   async connectSpotify(){
     return new Promise((resolve, reject) => {
-       spotifyApi.clientCredentialsGrant().then(
-         function(data) {
-           console.log('The access token is ' + data.body['access_token']);
-           spotifyApi.setAccessToken(data.body['access_token']);
-           resolve();
-         },
-         function(err) {
-           console.log('Something went wrong!', err);
-           reject(err);
-         });
+      if (nconf.get('third-party:spotify:clientId')) {
+        spotifyApi.clientCredentialsGrant().then((data) => {
+          console.log('The access token is ' + data.body['access_token']);
+          spotifyApi.setAccessToken(data.body['access_token']);
+          resolve();
+        }, (err) => {
+          console.log('Something went wrong!', err);
+          reject(err);
+        });
+      } else {
+        resolve();
+      }
     });
   }
   /**
@@ -306,25 +306,20 @@ class Library {
     // console.info(artist);
     if (!alreadyScanned) {
       this.loadingCoverArtists[artist.artist] = "/static/img/artist.jpg";
-
-      spotifyApi.searchArtists(artist.artist.trim()).
-        then((data) => {
-            console.log(data.body.artists.items[0].images);
-            artist.image = _.map(data.body.artists.items[0].images[0], (img) => {
-                return {
-                    '#text': img.url,
-                    size: img.width
-                };
-            });
+      if (nconf.get('third-party:spotify:clientId')) {
+        spotifyApi.searchArtists(artist.artist.trim()).then((data) => {
+          artist.image = _.pluck(data.body.artists.items[0].images, "url");
         });
+      } else {
+        artist.image = ['/static/img/album.png'];
+      }
       lfm.artist.getInfo({
         'artist': artist.artist.trim(),
       }, (err, art) => {
         if (err) {
           console.warn("artist '" + artist.artist + "' not found");
         }
-        // artist.image = parseLastFm(art);
-        artist = _.extend(artist, art);
+        artist = _.extend(artist, _.omit(art, 'image'));
 
         this.loadingCoverArtists[artist.artist] = artist;
         console.debug("image artist '" + artist.artist + "': " + artist.image);
@@ -421,19 +416,11 @@ class Library {
       this.loadingCoverAlbums[artist.artist][album.title] = "/static/img/album.png";
       this.loadingCoversAlbumsFlatten[album.title] = "/static/img/album.png";
       album.cover = ['/static/img/album.png'];
-        album.image = [
-          {
-            '#text': ['/static/img/album.png']
-          }
-        ];
+      album.image = ['/static/img/album.png'];
 
       if (fs.existsSync(path.resolve(location, 'cover.jpg'))) {
         album.cover = [`/api/audio/static/covers/${artist.artist}/${album.title}/cover.jpg`];
-        album.image = [
-          {
-            '#text': [`/api/audio/static/covers/${artist.artist}/${album.title}/cover.jpg`]
-          }
-        ];
+        album.image = [`/api/audio/static/covers/${artist.artist}/${album.title}/cover.jpg`];
         this.loadingCoverAlbums[artist.artist][album.title] = album;
         this.loadingCoversAlbumsFlatten[album.title] = album;
         if (!this.coversLocation[artist.artist]) {
@@ -451,7 +438,8 @@ class Library {
 
           // parse function allow not defined images
           album.cover = parseLastFm(alb);
-          album = _.extend(album, alb);
+          album.image = album.cover;
+          album = _.extend(album, _.omit(alb, 'image'));
           this.loadingCoverAlbums[artist.artist][album.title] = album;
           this.loadingCoversAlbumsFlatten[album.title] = album;
         });
@@ -460,16 +448,11 @@ class Library {
   };
 
   getArtistImage(artist) {
-    let image;
-    let i = 0;
-    this.loadingCoverArtists[artist].image.forEach(element => {
-      if (i < 4) {
-        image = element ? element['#text'] : '';
-      }
-      i += 1;
-    });
+    return this.loadingCoverArtists[artist].image[0];
+  }
 
-    return image;
+  getCoverImage(artist, album) {
+    return this.loadingCoverAlbums[artist][album].image[0];
   }
 
   getAlbumCoverByName(artist, album) {

@@ -3,7 +3,9 @@
 <div class="content fixed-tab-header">
   <div class="album-header">
     <h1 class="mat-h1" >
+      <div class="album-image">
         <img class="album" [src]="image" />
+      </div>
         <div class="title">{{album}}</div>
     </h1>
     <mat-slide-toggle class="toggle-background" [checked]="toggleBackground" [(ngModel)]="toggleBackground" (ngModelChange)="onToggleChange($event)" >Show artist as background</mat-slide-toggle>
@@ -17,8 +19,7 @@
             <li *ngFor="let album of details[0].albums">
               <div>
                 <div>
-                  <mat-icon mat-list-icon class="cover-icon" *ngIf="album.album_info.cover === '/img/album.jpg'">album</mat-icon>
-                  <div mat-card-avatar class="cover-image" *ngIf="album.album_info.cover !== '/img/album.jpg'" [style.background-image]="getAlbumBackground(album.album_info)"></div>
+                  <div mat-card-avatar class="cover-image" [style.background-image]="getAlbumBackground(album.album_info)"></div>
                 </div>
                 <mat-divider mat-line></mat-divider>
                 

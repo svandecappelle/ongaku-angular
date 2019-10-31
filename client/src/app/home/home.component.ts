@@ -90,6 +90,7 @@ export class HomeComponent implements OnInit {
             break;
           case 'album':
             data.forEach(album => {
+              console.log(album.info);
               this.images.albums[album.name] = this.getImageSrc(album.info);
             });
             this.albums = this.albums.concat(data);
@@ -107,19 +108,7 @@ export class HomeComponent implements OnInit {
   }
 
   getImageSrc(src) {
-    let image;
-    if (src.image && src.image.length > 1) {
-        console.log(src.image);
-      image = src.image ? src.image.sort((a, b) => {
-        const SIZES = ['mega', 'extralarge', 'large', 'medium', 'small']
-        const t1 = a.width ? a.width : SIZES.indexOf(a.size);
-        const t2 = b.width ? b.width : SIZES.indexOf(b.size);
-        return t1 - t2;
-      })['#text'] : '';
-    } else if (src.image) {
-      image = src.image ? src.image[0]['#text'] : '';
-    }
-
+    let image = src.image ? src.image[0] : '/static/img/album.jpg';
     return this._sanitizer.bypassSecurityTrustUrl(`${image}`);
   }
 

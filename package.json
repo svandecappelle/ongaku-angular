@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start-dev": "nodemon --watch server server/index.js",
     "start": "node server/ongaku.js start",
-    "watch": "concurrently --raw \"cd client && npm run watch\" \"npm start\" "
+    "watch": "concurrently --raw \"cd client && npm run watch\" \"npm run start-dev\" "
   },
   "author": "Steeve Vandecappelle",
   "license": "SEE LICENCE IN LICENCE",
