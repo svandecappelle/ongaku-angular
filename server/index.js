@@ -107,7 +107,7 @@ class Server {
     // redirect all others to the index (HTML5 history)
     routes.serve(app);
     application.start();
-    
+
   }
 
 }

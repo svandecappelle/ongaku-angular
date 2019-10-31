@@ -4,7 +4,7 @@ log-level: info
 port: 4000
 hostname: localhost
 uploader: false
-library: /home/svandeca/Musique
+library: [/home/svandeca/Musique, /home/svandeca/rtorrent/download]
 audio: [mp3,  wav, wma, ogg, flac]
 video: [mp4, webm, flv, ogv, mpg]
 defaultLanguage: fr
@@ -23,5 +23,12 @@ local: false
 requireLogin: false
 allowUpload: true
 allowRegisteration: 3
+third-party:
+    spotify:
+        clientId:
+        secret:
+    lastfm:
+        api-key:
+        secret:
 theme:
   base-color: rgb(230, 217, 45)

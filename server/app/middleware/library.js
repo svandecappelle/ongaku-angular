@@ -7,6 +7,7 @@ const fs = require("fs");
 const async = require("async");
 const rp = require('request-promise');
 const getSize = require('get-folder-size');
+const SpotifyWebApi = require('spotify-web-api-node');
 
 var library;
 try {
@@ -17,13 +18,20 @@ try {
 
 const ffmetadata = require("ffmetadata");
 const mm = require('musicmetadata');
-
 var Decoder = require('./decoder').class;
-
 var LastfmAPI = require('lastfmapi');
+
 var lfm = new LastfmAPI({
-  'api_key': 'f21088bf9097b49ad4e7f487abab981e',
-  'secret': '7ccaec2093e33cded282ec7bc81c6fca'
+  'api_key': nconf.get('third-party:lastfm:api-key'),
+  'secret': nconf.get('third-party:lastfm:secret')
+});
+
+var SpotifyWebApi = require('spotify-web-api-node');
+
+// credentials are optional
+var spotifyApi = new SpotifyWebApi({
+  clientId: nconf.get('third-party:spotify:clientId'),
+  clientSecret: nconf.get('third-party:spotify:secret'),
 });
 
 function parseLastFm(object) {
@@ -86,7 +94,6 @@ class Library {
     this.loadingCoversAlbumsFlatten = [];
 
     this.coversLocation = [];
-
     scan.on('decoded', (song, type) => {
       console.debug("decoded", song, type);
       // this.flatten.push(song);
@@ -131,9 +138,23 @@ class Library {
     });
   }
 
+  async connectSpotify(){
+    return new Promise((resolve, reject) => {
+       spotifyApi.clientCredentialsGrant().then(
+         function(data) {
+           console.log('The access token is ' + data.body['access_token']);
+           spotifyApi.setAccessToken(data.body['access_token']);
+           resolve();
+         },
+         function(err) {
+           console.log('Something went wrong!', err);
+           reject(err);
+         });
+    });
+  }
   /**
    * Scan the library
-   * 
+   *
    */
   beginScan() {
     return new Promise((resolve, reject) => {
@@ -165,9 +186,9 @@ class Library {
 
   /**
    * Add a folder to scan
-   * 
-   * @param {String} folder path 
-   * @param {function} callback 
+   *
+   * @param {String} folder path
+   * @param {function} callback
    */
   addFolder(folder, callback) {
     var that = this;
@@ -205,7 +226,7 @@ class Library {
 
   /**
    * Remove folder from scanned library folders
-   * 
+   *
    * @param {String} folder remove the folder from scanned library folders
    */
   removeFolder(folder) {
@@ -220,7 +241,7 @@ class Library {
 
   /**
    * Populate library with scanned elements.
-   * 
+   *
    * @param {String} type type of media: audio | video
    * @param {Object} folderScanResult object of all scanned results
    * @param {Object} folder folder path and state
@@ -276,7 +297,7 @@ class Library {
 
   /**
    * Retrieve and populate artist photo from lastfm
-   * 
+   *
    * @param {String} artist artist name
    */
   getArtistCover(artist) {
@@ -286,13 +307,23 @@ class Library {
     if (!alreadyScanned) {
       this.loadingCoverArtists[artist.artist] = "/static/img/artist.jpg";
 
+      spotifyApi.searchArtists(artist.artist.trim()).
+        then((data) => {
+            console.log(data.body.artists.items[0].images);
+            artist.image = _.map(data.body.artists.items[0].images[0], (img) => {
+                return {
+                    '#text': img.url,
+                    size: img.width
+                };
+            });
+        });
       lfm.artist.getInfo({
         'artist': artist.artist.trim(),
       }, (err, art) => {
         if (err) {
           console.warn("artist '" + artist.artist + "' not found");
         }
-        artist.image = parseLastFm(art);
+        // artist.image = parseLastFm(art);
         artist = _.extend(artist, art);
 
         this.loadingCoverArtists[artist.artist] = artist;
@@ -375,8 +406,8 @@ class Library {
 
   /**
    * Retrieve and populate album cover from lastfm
-   * 
-   * @param {String} artist artist name 
+   *
+   * @param {String} artist artist name
    * @param {String} album album title
    */
   getAlbumCover(artist, album, location) {
@@ -454,7 +485,7 @@ class Library {
 
   /**
    * Scan the library.
-   * 
+   *
    * @returns a promise
    */
   scan() {
@@ -511,7 +542,7 @@ class Library {
 
   /**
    * Get relative path of audio file.
-   * 
+   *
    * @param {String} uuid unique file identifier
    */
   getRelativePath(uuid) {
@@ -577,7 +608,7 @@ class Library {
 
   /**
    * Get audio contents using some filters and render properties
-   * 
+   *
    * @param {*} page page number (starts from 0)
    * @param {*} lenght number of records
    * @param {*} groupby group by criterion
@@ -693,7 +724,7 @@ class Library {
   */
   /**
    * Get video contents.
-   * 
+   *
    * @param {*} page page number (starts from 0)
    * @param {*} lenght number of records
    */
@@ -703,7 +734,7 @@ class Library {
 
   /**
    * Get audio file properties using unique identifier.
-   * 
+   *
    * @param {String} uuid unique file identifier
    */
   getByUid(uuid) {
@@ -716,7 +747,7 @@ class Library {
 
   /**
    * Set audio file properties using unique identifier.
-   * 
+   *
    * @param {String} uuid unique file identifier
    */
   set(uuid, libElement) {
@@ -729,7 +760,7 @@ class Library {
 
   /**
    * Get album cover of a track.
-   * 
+   *
    * @param {String} uuid unique file identifier
    */
   getAlbumArtImage(uuid) {
@@ -742,7 +773,7 @@ class Library {
 
   /**
    * Search through an array containing the library elements.
-   * 
+   *
    * @param {Object} opts search options
    * @param {Array} fromList list to filter (Optional)
    */
@@ -840,7 +871,7 @@ class Library {
 
   /**
    * Render library using a group by criterion.
-   * 
+   *
    * @param {Array} searchResultList library list elements.
    * @param {String | Array} groupbyClause group by criterion
    * @param {String} sortby sort by criterion
@@ -930,7 +961,7 @@ class Library {
 
   /**
    * Search through pages
-   * 
+   *
    * @param {Object} opts search options
    */
   searchPage(opts) {
@@ -940,12 +971,12 @@ class Library {
 
   /**
    * Get user personal library.
-   * 
-   * @param {Array} ids 
-   * @param {Number} page 
-   * @param {Number} length 
-   * @param {String} username 
-   * @param {Object} filter 
+   *
+   * @param {Array} ids
+   * @param {Number} page
+   * @param {Number} length
+   * @param {String} username
+   * @param {Object} filter
    */
   getUserLibrary(ids, page, length, username, filter) {
     var searchResultList = _.filter(this.flatten, (obj) => {
@@ -988,12 +1019,12 @@ class Library {
 
   /**
    * Get audio files properties using a list of unique file identifier.
-   * 
-   * @param {Array} ids 
-   * @param {Number} page 
-   * @param {Number} length 
-   * @param {String} username 
-   * @param {Object} filter 
+   *
+   * @param {Array} ids
+   * @param {Number} page
+   * @param {Number} length
+   * @param {String} username
+   * @param {Object} filter
    */
   getAudioById(ids, page, length, username, filter) {
     var searchResultList = _.filter(this.flatten, (obj) => {
@@ -1029,7 +1060,7 @@ class Library {
 
   /**
    * Get all albums of an artist
-   * 
+   *
    * @param {String} artist artist name
    */
   getAlbums(artist) {
@@ -1038,7 +1069,7 @@ class Library {
 
   /**
    * Get a specific album tracks.
-   * 
+   *
    * @param {String} artist artist name
    * @param {String} album album title
    */
@@ -1075,8 +1106,8 @@ class Library {
 
   /**
    * Get file path.
-   * 
-   * @param {String} uid unique file identifier 
+   *
+   * @param {String} uid unique file identifier
    */
   getFile(uid) {
     return this.getRelativePath(uid);
@@ -1084,7 +1115,7 @@ class Library {
 
   /**
    * Get audio files in flatten representation.
-   * 
+   *
    * @param {Array} ids unique file identifier
    */
   getAudioFlattenById(ids) {

@@ -109,7 +109,13 @@ export class HomeComponent implements OnInit {
   getImageSrc(src) {
     let image;
     if (src.image && src.image.length > 1) {
-      image = src.image ? src.image[3]['#text'] : '';
+        console.log(src.image);
+      image = src.image ? src.image.sort((a, b) => {
+        const SIZES = ['mega', 'extralarge', 'large', 'medium', 'small']
+        const t1 = a.width ? a.width : SIZES.indexOf(a.size);
+        const t2 = b.width ? b.width : SIZES.indexOf(b.size);
+        return t1 - t2;
+      })['#text'] : '';
     } else if (src.image) {
       image = src.image ? src.image[0]['#text'] : '';
     }
