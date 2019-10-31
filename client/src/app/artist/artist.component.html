@@ -3,7 +3,9 @@
 <div class="content fixed-tab-header">
   <div class="artist-header">
     <h1 class="mat-h1 ">
-        <img class="artist" [src]="image" />
+        <div class="artist-image">
+          <img class="artist" [src]="image" />
+        </div>
         <i class="material-icons clickable" title="Save on server side" (click)="saveImageServerSide()">play_for_work</i>
         <div class="name">{{artist}}</div>
     </h1>
@@ -20,7 +22,7 @@
           <h3>Albums</h3>
           <mat-grid-list cols="10" >
             <mat-grid-tile *ngFor="let album of details.albums">
-              <mat-card class="album" *ngIf="album" [style.background-image]="getArtistBackground(album.album_info)">
+              <mat-card class="album" *ngIf="album" [style.background-image]="getBackground(album.album_info)">
                 <a pageScroll href="#{{scrollLink(album.album)}}">
                   <mat-card-header>
                     <mat-card-title>{{album.album}}</mat-card-title>
@@ -38,8 +40,7 @@
             <li *ngFor="let album of details.albums">
               <div>
                 <div>
-                  <mat-icon mat-list-icon class="cover-icon" *ngIf="album.album_info.image === '/img/album.jpg'">album</mat-icon>
-                  <div mat-card-avatar class="cover-image" *ngIf="album.album_info.image !== '/img/album.jpg'" [style.background-image]="getArtistBackground(album.album_info)"></div>
+                  <div mat-card-avatar class="cover-image" [style.background-image]="getArtistBackground(album.album_info)"></div>
                   <h4 id="{{scrollLink(album.album_info.title)}}">{{album.album_info.title}}</h4>
                 </div>
                 <mat-divider mat-line></mat-divider>

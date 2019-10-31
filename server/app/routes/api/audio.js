@@ -450,7 +450,11 @@ router.get("/song-image/:songid", (req, res) => {
 
 router.get("/static/covers/:artist/:album/cover.jpg", (req, res) => {
     var albumart = library.getAlbumCoverByName(req.params.artist, req.params.album);
-    res.sendFile(albumart);
+    if (albumart) {
+        res.sendFile(albumart);
+    } else {
+        res.redirect(library.getCoverImage(req.params.artist, req.params.album));
+    }
 });
 
 router.get("/static/covers/:artist/cover.jpg", (req, res) => {

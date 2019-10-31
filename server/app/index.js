@@ -15,7 +15,8 @@ class Application {
 		return instance;
 	}
 
-	start () {
+	async start () {
+        await library.connectSpotify();
 		var q = async.queue((task, callback) => {
 			console.info("Launch task: ".concat(task.name));
 			callback();
@@ -29,7 +30,7 @@ class Application {
 			this.reload();
 		});
 	}
-	
+
 	reload () {
 		return new Promise( (resolve, reject) => {
 			library.scan().then(() => {

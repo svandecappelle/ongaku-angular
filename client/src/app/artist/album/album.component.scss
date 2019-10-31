@@ -1,8 +1,15 @@
-img.album {
+.album-image {
+    height: 120px;
     width: 120px;
+    overflow: hidden;
     border: 2px solid white;
     border-radius: 50%;
     display: inline-block;
+    margin-top: 0.3rem;
+
+    img.album {
+        width: 120px;
+    }   
 }
 
 .album-header {

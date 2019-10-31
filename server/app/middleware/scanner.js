@@ -1,6 +1,6 @@
 /*jslint node: true */
 const fs = require("fs");
-const logger = require("log4js").getLogger("Scanner");
+const logger = console;
 const async = require("async");
 const _  = require("underscore");
 const communication = require('../communication');

@@ -1,8 +1,14 @@
-img.artist {
+.artist-image {
+    height: 120px;
     width: 120px;
+    overflow: hidden;
     border: 2px solid white;
     border-radius: 50%;
     display: inline-block;
+    margin-top: 0.3rem;
+    img.artist {
+        width: 120px;
+    }   
 }
 
 .name {
@@ -22,7 +28,7 @@ img.artist {
 }
 
 .artist-header{
-    z-index: 9;
+    z-index: 0;
     position: absolute;
     top: 0;
     left: 0;
