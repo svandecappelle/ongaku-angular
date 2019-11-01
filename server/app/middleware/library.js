@@ -5,9 +5,8 @@ const nconf = require("nconf");
 const path = require("path");
 const fs = require("fs");
 const async = require("async");
-const rp = require('request-promise');
 const getSize = require('get-folder-size');
-const SpotifyWebApi = require('spotify-web-api-node');
+const connector = require("./connectors");
 
 var library;
 try {
@@ -19,48 +18,6 @@ try {
 const ffmetadata = require("ffmetadata");
 const mm = require('musicmetadata');
 var Decoder = require('./decoder').class;
-var LastfmAPI = require('lastfmapi');
-
-var lfm = new LastfmAPI({
-  'api_key': nconf.get('third-party:lastfm:api-key'),
-  'secret': nconf.get('third-party:lastfm:secret')
-});
-
-// credentials are optional
-var spotifyApi = new SpotifyWebApi({
-  clientId: nconf.get('third-party:spotify:clientId'),
-  clientSecret: nconf.get('third-party:spotify:secret'),
-});
-
-function parseLastFm(object) {
-
-  var imageList;
-  var imageSource;
-  var sizes = ['small', 'medium', 'large', 'extralarge', 'mega'];
-  var images = null;
-
-  if (object && object.image) {
-    imageList = object.image;
-    if (!object.image[0]['#text']) {
-      object.image = _.map(sizes, (size) => {
-        return {
-          '#text': '/static/img/album.png',
-          size: size
-        };
-      });
-    }
-  }
-
-  if (imageList) {
-    images = _.map(_.sortBy(imageList, (image) => {
-      return sizes.indexOf(image.size);
-    }), (image) => {
-      return image['#text'] ? image['#text'] : '/static/img/album.png';
-    });
-  }
-  images = _.compact(images);
-  return images;
-}
 
 _.mixin({
   groupByMulti: (obj, values, context) => {
@@ -80,7 +37,10 @@ _.mixin({
 class Library {
 
   constructor() {
-    this.data = { audio: [], video: [] };
+    this.data = {
+      audio: [],
+      video: []
+    };
     this.flatten = [];
 
     this.audioScanned = false;
@@ -127,7 +87,8 @@ class Library {
             artist: song.artist
           }, album, location);
         } else {
-          console.debug("already scanned album '" + album.title + "': " + this.loadingCoverAlbums[song.artist][album.title]);
+          console.debug("already scanned album '" + album.title + "': " +
+            this.loadingCoverAlbums[song.artist][album.title]);
         }
 
       } catch (err) {
@@ -136,22 +97,10 @@ class Library {
     });
   }
 
-  async connectSpotify(){
-    return new Promise((resolve, reject) => {
-      if (nconf.get('third-party:spotify:clientId')) {
-        spotifyApi.clientCredentialsGrant().then((data) => {
-          console.log('The access token is ' + data.body['access_token']);
-          spotifyApi.setAccessToken(data.body['access_token']);
-          resolve();
-        }, (err) => {
-          console.log('Something went wrong!', err);
-          reject(err);
-        });
-      } else {
-        resolve();
-      }
-    });
-  }
+  async setupConnectors() {
+    await connector.connect();
+  };
+
   /**
    * Scan the library
    *
@@ -232,7 +181,8 @@ class Library {
   removeFolder(folder) {
     scan.removeToScan(folder.path);
     this.flatten = _.filter(this.flatten, (track) => {
-      if (track.username && track.username === folder.username && folder.path === track.userfolder) {
+      if (track.username && track.username === folder.username && folder.path ===
+        track.userfolder) {
         return false;
       }
       return true;
@@ -261,7 +211,8 @@ class Library {
       lib = folderScanResult[type];
     }
 
-    this.flatten = _.union(this.flatten, _.map(_.groupBy(lib, 'uid'), (track, uuid) => {
+    this.flatten = _.union(this.flatten, _.map(_.groupBy(lib, 'uid'), (track,
+      uuid) => {
 
       var libraryElement = _.extend(track[0], {
         uuid: uuid,
@@ -276,7 +227,9 @@ class Library {
 
       if (folder && folder.username) {
         // library is a user private but shared folder.
-        _.extend(libraryElement, { username: folder.username });
+        _.extend(libraryElement, {
+          username: folder.username
+        });
         libraryElement.metadatas.sharedBy = folder.username;
         libraryElement.userfolder = folder.path;
       }
@@ -288,9 +241,11 @@ class Library {
       this.data[type] = _.union(this.data[type], lib);
     }
 
-    if (type === "audio" && (folderScanResult.isFinishedAll || (folderScanResult.content && folderScanResult.content.isFinishedAll))) {
+    if (type === "audio" && (folderScanResult.isFinishedAll || (
+        folderScanResult.content && folderScanResult.content.isFinishedAll))) {
       this.audioScanned = true;
-    } else if (folderScanResult.isFinishedAll || (folderScanResult.content && folderScanResult.content.isFinishedAll)) {
+    } else if (folderScanResult.isFinishedAll || (folderScanResult.content &&
+        folderScanResult.content.isFinishedAll)) {
       this.videoScanned = true;
     }
   };
@@ -301,100 +256,13 @@ class Library {
    * @param {String} artist artist name
    */
   getArtistCover(artist) {
-    var alreadyScanned = this.loadingCoverArtists[artist.artist] !== undefined;
+    var alreadyScanned = this.loadingCoverArtists[artist.artist] !==
+      undefined;
 
-    // console.info(artist);
     if (!alreadyScanned) {
       this.loadingCoverArtists[artist.artist] = "/static/img/artist.jpg";
-      if (nconf.get('third-party:spotify:clientId')) {
-        spotifyApi.searchArtists(artist.artist.trim()).then((data) => {
-          artist.image = _.pluck(data.body.artists.items[0].images, "url");
-        });
-      } else {
-        artist.image = ['/static/img/album.png'];
-      }
-      lfm.artist.getInfo({
-        'artist': artist.artist.trim(),
-      }, (err, art) => {
-        if (err) {
-          console.warn("artist '" + artist.artist + "' not found");
-        }
-        artist = _.extend(artist, _.omit(art, 'image'));
-
+      connector.getArtistInfo(artist).then(data => {
         this.loadingCoverArtists[artist.artist] = artist;
-        console.debug("image artist '" + artist.artist + "': " + artist.image);
-
-        // wikipedia
-        let searchTerm = `${artist.artist}`.toLowerCase();
-        rp.get('https://fr.wikipedia.org/w/api.php', {
-          qs: {
-            action: "query",
-            list: 'search',
-            srsearch: searchTerm,
-            srwhat: 'text',
-            srprop: 'titlesnippet|snippet|hasrelated',
-            format: "json",
-            formatversion: 2
-          },
-          json: true
-        }).then(pages => {
-
-          var count = 0;
-          async.doWhilst((next) => {
-            let page = pages.query.search[count];
-            count += 1;
-
-            rp.get('https://fr.wikipedia.org/w/api.php', {
-              qs: {
-                action: "query",
-                prop: 'categories|extracts',
-                titles: page.title,
-                format: "json",
-                pslimit: 100,
-                formatversion: 2
-              },
-              json: true
-            }).then((detailPage) => {
-              let musicCategory = _.filter(detailPage.query.pages[0].categories, (category) => {
-                let categoryTitle = category.title.toLowerCase();
-                let isMusic = false;
-
-                let musicTerms = require('./music_terms.json');
-                for (let index = 0; index < musicTerms.length; index++) {
-                  const element = musicTerms[index];
-                  if (categoryTitle.indexOf(element) !== -1) {
-                    console.debug("found with: " + element + " matched with: " + categoryTitle);
-                    return true;
-                  }
-                }
-                return false;
-              });
-              if (musicCategory && musicCategory.length > 0) {
-                artist.wikipedia = detailPage.query.pages[0].extract;
-                console.debug(artist.name + " found in wiki page: " + page.title);
-              } else {
-                console.debug(artist.name + " not found in wiki");
-              }
-
-              next(null, musicCategory && musicCategory.length > 0);
-              return 0;
-            }).catch(error => {
-              console.error(error);
-            });
-          }, (found, err) => {
-            // console.log(count, pages.query.search.length -1 , pages.query.search[count], found);
-
-            // console.log(count < pages.query.search.length -1, !found);
-
-            return count < pages.query.search.length - 1 && !found;
-          }, () => {
-            // console.log("finished");
-          });
-
-          return 0;
-        }).catch((error) => {
-          console.error("wikipedia error", error);
-        });
       });
     }
   };
@@ -410,36 +278,33 @@ class Library {
       this.loadingCoverAlbums[artist.artist] = {};
     }
 
-    var alreadyScanned = this.loadingCoverAlbums[artist.artist][album.title] !== undefined;
+    var alreadyScanned = this.loadingCoverAlbums[artist.artist][album.title] !==
+      undefined;
 
     if (!alreadyScanned) {
-      this.loadingCoverAlbums[artist.artist][album.title] = "/static/img/album.png";
+      this.loadingCoverAlbums[artist.artist][album.title] =
+        "/static/img/album.png";
       this.loadingCoversAlbumsFlatten[album.title] = "/static/img/album.png";
       album.cover = ['/static/img/album.png'];
       album.image = ['/static/img/album.png'];
 
       if (fs.existsSync(path.resolve(location, 'cover.jpg'))) {
-        album.cover = [`/api/audio/static/covers/${artist.artist}/${album.title}/cover.jpg`];
-        album.image = [`/api/audio/static/covers/${artist.artist}/${album.title}/cover.jpg`];
+        album.cover = [
+          `/api/audio/static/covers/${artist.artist}/${album.title}/cover.jpg`
+        ];
+        album.image = [
+          `/api/audio/static/covers/${artist.artist}/${album.title}/cover.jpg`
+        ];
         this.loadingCoverAlbums[artist.artist][album.title] = album;
         this.loadingCoversAlbumsFlatten[album.title] = album;
         if (!this.coversLocation[artist.artist]) {
           this.coversLocation[artist.artist] = {};
         }
-        this.coversLocation[artist.artist][album.title] = path.resolve(location, 'cover.jpg');
+        this.coversLocation[artist.artist][album.title] = path.resolve(
+          location,
+          'cover.jpg');
       } else {
-        lfm.album.getInfo({
-          'artist': artist.artist.trim(),
-          'album': album.album_origin ? album.album_origin.trim() : album.title.trim()
-        }, (err, alb) => {
-          if (err) {
-            console.warn("[" + artist.artist + "] -> album:: '" + album.title + "' not found");
-          }
-
-          // parse function allow not defined images
-          album.cover = parseLastFm(alb);
-          album.image = album.cover;
-          album = _.extend(album, _.omit(alb, 'image'));
+        connector.getAlbumInfo(artist, album).then(data => {
           this.loadingCoverAlbums[artist.artist][album.title] = album;
           this.loadingCoversAlbumsFlatten[album.title] = album;
         });
@@ -456,7 +321,8 @@ class Library {
   }
 
   getAlbumCoverByName(artist, album) {
-    return this.coversLocation[artist] && this.coversLocation[artist][album] ? this.coversLocation[artist][album] : undefined;
+    return this.coversLocation[artist] && this.coversLocation[artist][album] ?
+      this.coversLocation[artist][album] : undefined;
   }
 
   /**
@@ -477,7 +343,10 @@ class Library {
     this.videoScanned = true;
     this.audioScanned = false;
     // Clear all datas.
-    this.data = { audio: [], video: [] };
+    this.data = {
+      audio: [],
+      video: []
+    };
     this.loadingCoverAlbums = [];
     this.loadingCoverArtists = [];
 
@@ -489,19 +358,27 @@ class Library {
           library.getSharedFolders((err, folders) => {
             if (folders) {
               var foldersScanning = _.map(folders, (folder) => {
-                return { path: folder, scanned: 0 };
+                return {
+                  path: folder,
+                  scanned: 0
+                };
               });
               async.each(folders, (folder, next) => {
                 var username = folder.split("[")[0];
                 var folderObject = {
-                  path: path.join(__dirname, `../../../public/user/${username}/imported/${folder.replace(username + "[", "").slice(0, -1)}`),
+                  path: path.join(__dirname,
+                    `../../../public/user/${username}/imported/${folder.replace(username + "[", "").slice(0, -1)}`
+                  ),
                   username: folder.split("[")[0]
                 };
-                console.info(`adding user shared folder: ${folderObject.path} ---> ${folderObject.username}`);
+                console.info(
+                  `adding user shared folder: ${folderObject.path} ---> ${folderObject.username}`
+                );
                 this.addFolder(folderObject, (scanResults) => {
-                  var scannedFolder = _.where(foldersScanning, {
-                    path: folder
-                  });
+                  var scannedFolder = _.where(
+                    foldersScanning, {
+                      path: folder
+                    });
                   scannedFolder.scanned += 1;
 
                   if (scannedFolder.scanned === 2) {
@@ -547,20 +424,25 @@ class Library {
       try {
         // Check if ffmetadata is best than mm
         ffmetadata.read(filePath, (err, metadataFFMPEG) => {
-          console.debug(`libelement: ${filePath}`, err, metadataFFMPEG)
+          console.debug(`libelement: ${filePath}`, err,
+            metadataFFMPEG)
           if (err) {
             console.error(`libelement: ${filePath}`, err);
             return reject(err);
           }
 
-          var parser = mm(fs.createReadStream(filePath), { duration: true }, (err, metadata) => {
-            console.debug(`libelement: ${filePath}`, err, metadataFFMPEG)
+          var parser = mm(fs.createReadStream(filePath), {
+            duration: true
+          }, (err, metadata) => {
+            console.debug(`libelement: ${filePath}`, err,
+              metadataFFMPEG)
             if (err) {
               console.error(`libelement: ${filePath}`, err);
               return reject(err);
             }
 
-            var element = new Decoder("audio").song(filePath, metadataFFMPEG, metadata.duration);
+            var element = new Decoder("audio").song(filePath,
+              metadataFFMPEG, metadata.duration);
 
             this.set(uuid, element);
             resolve(element);
@@ -574,20 +456,6 @@ class Library {
 
     return libElement.relativePath;
   }
-
-  /*
-    getAudio (groupby, sortby) {
-      if (groupby){
-        return this.search({
-          filter: "",
-          type: "audio",
-          groupby: groupby,
-          sortby: sortby
-        });
-      } else {
-        return this.data.audio;
-      }
-    };*/
 
   /**
    * Get audio contents using some filters and render properties
@@ -643,7 +511,8 @@ class Library {
     if (search) {
       artists = _.filter(artists, (name) => {
         if (name) {
-          return name.trim().toLowerCase().match(`.*${search.toLowerCase()}.*`);
+          return name.trim().toLowerCase().match(
+            `.*${search.toLowerCase()}.*`);
         }
         return false;
       });
@@ -679,8 +548,10 @@ class Library {
     if (search) {
       albums = _.filter(albums, (album) => {
         if (album && album.title) {
-          let albumNameMatches = album.title.trim().toLowerCase().match(`.*${search.toLowerCase()}.*`);
-          let artistNameMatches = album.artist.trim().toLowerCase().match(`.*${search.toLowerCase()}.*`);
+          let albumNameMatches = album.title.trim().toLowerCase().match(
+            `.*${search.toLowerCase()}.*`);
+          let artistNameMatches = album.artist.trim().toLowerCase().match(
+            `.*${search.toLowerCase()}.*`);
           return albumNameMatches || artistNameMatches;
         }
         return false;
@@ -725,7 +596,9 @@ class Library {
     uuid = uuid.replace(".ogg", "");
     uuid = uuid.replace(".wav", "");
 
-    return _.find(this.flatten, { uid: uuid });
+    return _.find(this.flatten, {
+      uid: uuid
+    });
   };
 
   /**
@@ -737,8 +610,12 @@ class Library {
     uuid = uuid.replace(".mp3", "");
     uuid = uuid.replace(".ogg", "");
     uuid = uuid.replace(".wav", "");
-    console.info("Update: ", _.findIndex(this.flatten, { uid: uuid }));
-    return this.flatten[_.findIndex(this.flatten, { uid: uuid })] = libElement;
+    console.info("Update: ", _.findIndex(this.flatten, {
+      uid: uuid
+    }));
+    return this.flatten[_.findIndex(this.flatten, {
+      uid: uuid
+    })] = libElement;
   };
 
   /**
@@ -751,7 +628,11 @@ class Library {
     uuid = uuid.replace(".ogg", "");
     uuid = uuid.replace(".wav", "");
 
-    return this.loadingCoverAlbums[_.find(this.flatten, { uuid: uuid }).artist][_.find(this.flatten, { uuid: uuid }).album];
+    return this.loadingCoverAlbums[_.find(this.flatten, {
+      uuid: uuid
+    }).artist][_.find(this.flatten, {
+      uuid: uuid
+    }).album];
   };
 
   /**
@@ -800,7 +681,8 @@ class Library {
     }
     if (filter) {
       searchResultList = _.filter(fromList, (obj) => {
-        var filterClause = ".*".concat(filter.latinize().toLowerCase().trim().replace(/ /g, ".*")).concat(".*"),
+        var filterClause = ".*".concat(filter.latinize().toLowerCase().trim()
+            .replace(/ /g, ".*")).concat(".*"),
           found = false;
         if (type === "video" && obj.type === type) {
           found = obj.name.toLowerCase().match(filterClause);
@@ -808,9 +690,12 @@ class Library {
           if (!obj.title) {
             console.error("error checking object: ", obj);
           }
-          found = obj.title.toString().latinize().toLowerCase().match(filterClause);
-          found = found ? found : obj.album.toString().latinize().toLowerCase().match(filterClause);
-          found = found ? found : obj.artist.toString().latinize().toLowerCase().match(filterClause);
+          found = obj.title.toString().latinize().toLowerCase().match(
+            filterClause);
+          found = found ? found : obj.album.toString().latinize().toLowerCase()
+            .match(filterClause);
+          found = found ? found : obj.artist.toString().latinize().toLowerCase()
+            .match(filterClause);
 
           if (!found) {
             _.each(obj.metadatas, (val, key) => {
@@ -821,7 +706,8 @@ class Library {
                   }
                 } else if (Array.isArray(val)) {
                   for (var value of val) {
-                    if (value.toString().latinize().toLowerCase().match(filterClause)) {
+                    if (value.toString().latinize().toLowerCase().match(
+                        filterClause)) {
                       found = true
                       break;
                     }
@@ -869,9 +755,12 @@ class Library {
     var output = _.map(groupedResultList, (val, groupObject) => {
       var rootGroupObject = {};
       if (groupbyClause[0] === "artist") {
-        rootGroupObject.artist_info = this.loadingCoverArtists[groupObject];
-      } else if (groupbyClause[0] === "album" && this.loadingCoverAlbums[val[0].artist]) {
-        rootGroupObject.album_info = this.loadingCoverAlbums[val[0].artist][groupObject];
+        rootGroupObject.artist_info = this.loadingCoverArtists[
+          groupObject];
+      } else if (groupbyClause[0] === "album" && this.loadingCoverAlbums[
+          val[0].artist]) {
+        rootGroupObject.album_info = this.loadingCoverAlbums[val[0].artist]
+          [groupObject];
       }
 
       if (groupbyClause.length > 1) {
@@ -885,13 +774,18 @@ class Library {
             })
           };
 
-          if (groupbyClause[1] === "album" && this.loadingCoverAlbums[groupObject]) {
-            albumObject.album_info = this.loadingCoverAlbums[groupObject][albumObject.title];
+          if (groupbyClause[1] === "album" && this.loadingCoverAlbums[
+              groupObject]) {
+            albumObject.album_info = this.loadingCoverAlbums[
+              groupObject][albumObject.title];
             if (!albumObject.album_info) {
-              albumObject.album_info = { cover: '/static/img/album.png' };
+              albumObject.album_info = {
+                cover: '/static/img/album.png'
+              };
             }
           } else if (groupbyClause[1] === "artist") {
-            albumObject.album_info = this.loadingCoverArtists[albumObject.title];
+            albumObject.album_info = this.loadingCoverArtists[
+              albumObject.title];
           }
 
           albumObject.tracks = _.sortBy(albumObject.tracks, (element) => {
@@ -900,7 +794,9 @@ class Library {
                 return parseInt(element.metadatas.track.no);
               } else {
                 if (element.metadatas.track.indexOf('/')) {
-                  return parseInt(element.metadatas.track.split('/')[0]);
+                  return parseInt(element.metadatas.track.split(
+                    '/')[
+                    0]);
                 }
                 return parseInt(element.metadatas.track);
               }
@@ -963,7 +859,8 @@ class Library {
    */
   getUserLibrary(ids, page, length, username, filter) {
     var searchResultList = _.filter(this.flatten, (obj) => {
-      return _.contains(ids, obj.uid) || (obj.private && obj.user === username);
+      return _.contains(ids, obj.uid) || (obj.private && obj.user ===
+        username);
     });
 
     if (filter) {
@@ -983,7 +880,9 @@ class Library {
         albums: _.map(val, (album, title) => {
           var albumObject = {
             title: title,
-            cover: artist && title && this.loadingCoverAlbums[artist] && this.loadingCoverAlbums[artist][title] ? this.loadingCoverAlbums[artist][title] : "/static/img/album.png",
+            cover: artist && title && this.loadingCoverAlbums[
+                artist] && this.loadingCoverAlbums[artist][title] ?
+              this.loadingCoverAlbums[artist][title] : "/static/img/album.png",
             tracks: _.map(album, (tracks, index) => {
               return tracks;
             })
@@ -1024,7 +923,8 @@ class Library {
         albums: _.map(val, (album, title) => {
           var albumObject = {
             title: title,
-            cover: this.loadingCoverAlbums[artist][title] ? this.loadingCoverAlbums[artist][title] : "/static/img/album.png",
+            cover: this.loadingCoverAlbums[artist][title] ? this.loadingCoverAlbums[
+              artist][title] : "/static/img/album.png",
             tracks: _.map(album, (tracks, index) => {
               return tracks;
             })
@@ -1060,7 +960,9 @@ class Library {
     var arrayResults;
     if (artist === "all") {
       arrayResults = this.groupby(this.flatten, ["album"]);
-      arrayResults = _.where(arrayResults, { album: album });
+      arrayResults = _.where(arrayResults, {
+        album: album
+      });
       const artists = [];
       _.each(arrayResults, (album) => {
         artists.push(album.album_info.artist);
@@ -1075,7 +977,9 @@ class Library {
       return albumsObject;
     } else {
       arrayResults = this.groupby(this.flatten);
-      arrayResults = _.where(arrayResults, { artist: artist });
+      arrayResults = _.where(arrayResults, {
+        artist: artist
+      });
       var albumSearched;
       _.each(arrayResults[0].albums, (albumObj, index) => {
         if (albumObj.title === album) {
@@ -1123,10 +1027,12 @@ class Library {
         return new Promise((resolve, reject) => {
           async.reduce(folders, 0, (currentSize, folder, next) => {
             getSize(folder, (err, size) => {
-              if (err) { throw err; }
+              if (err) {
+                throw err;
+              }
               next(null, currentSize + size);
             });
-          }, function (error, ret) {
+          }, function(error, ret) {
             if (error) {
               return reject(error);
             }
@@ -1136,7 +1042,9 @@ class Library {
       } else {
         var folder = nconf.get("library");
         getSize(folder, (err, size) => {
-          if (err) { throw err; }
+          if (err) {
+            throw err;
+          }
           resolve(size);
         });
       }

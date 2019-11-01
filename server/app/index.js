@@ -8,15 +8,16 @@ const library = require("./middleware/library");
 let instance = null;
 
 class Application {
-	constructor () {
-		if( !instance ) {
+	constructor() {
+		if (!instance) {
 			instance = this;
 		}
 		return instance;
 	}
 
-	async start () {
-        await library.connectSpotify();
+	async start() {
+
+		await library.setupConnectors();
 		var q = async.queue((task, callback) => {
 			console.info("Launch task: ".concat(task.name));
 			callback();
@@ -26,13 +27,15 @@ class Application {
 			console.info("All tasks have been processed.");
 		};
 
-		q.push({name: 'scan'}, (err) => {
+		q.push({
+			name: 'scan'
+		}, (err) => {
 			this.reload();
 		});
 	}
 
-	reload () {
-		return new Promise( (resolve, reject) => {
+	reload() {
+		return new Promise((resolve, reject) => {
 			library.scan().then(() => {
 				library.scanProgress = false;
 				console.info("Library fully scanned");
