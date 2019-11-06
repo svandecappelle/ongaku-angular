@@ -1,6 +1,8 @@
 const async = require("async");
 
 const library = require("./middleware/library");
+const downloader = require("./middleware/downloader");
+
 
 //const meta = require('./meta');
 
@@ -18,6 +20,8 @@ class Application {
 	async start() {
 
 		await library.setupConnectors();
+		downloader.watch();
+
 		var q = async.queue((task, callback) => {
 			console.info("Launch task: ".concat(task.name));
 			callback();
