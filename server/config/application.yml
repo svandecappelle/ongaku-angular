@@ -25,10 +25,10 @@ allowUpload: true
 allowRegisteration: 3
 third-party:
     spotify:
-        clientId: 564717a25ed042afacad631c55727689
-        secret: 024bc8f2e7294fb3a0db1ea6ee65f550
+        clientId:
+        secret:
     lastfm:
-        api-key: b23009f60a15fa74a6e41f426089ac2c
-        secret: a538d8cae9215df82d0d03804d67cb55
+        api-key:
+        secret:
 theme:
   base-color: rgb(230, 217, 45)
