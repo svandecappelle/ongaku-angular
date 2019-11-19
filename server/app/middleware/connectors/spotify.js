@@ -39,8 +39,14 @@ class SpotifyConnector {
 
   getArtistInfo(artist) {
     return new Promise((resolve, reject) => {
+      if (!artist.artist) {
+        return reject("Artist is undefined");
+      }
       if (this.setup) {
         this.spotifyApi.searchArtists(artist.artist.trim()).then((data) => {
+          if (_.isEmpty(data.body.artists.items)) {
+            return reject(`No artist found on spotify matching criterias ${artist.artist.trim()}`);
+          }
           artist.image = _.pluck(data.body.artists.items[0].images,
             "url");
 
@@ -48,14 +54,22 @@ class SpotifyConnector {
             this.wikipediaConnector.getArtistInfo(artist).then(
               data => {
                 resolve(artist);
+              }).catch(error => {
+                reject(error);
               });
+          }).catch(error => {
+            reject(error);
           });
+        }).catch(error => {
+          reject(error);
         });
       } else {
         artist.image = ['/static/img/album.png'];
 
         this.lastfmConnector.getArtistInfo(artist).then(data => {
           resolve(artist);
+        }).catch(error => {
+          reject(error);
         });
       }
     });

@@ -40,6 +40,9 @@ class LastfmConnector {
 
   getAlbumInfo(artist, album) {
     return new Promise((resolve, reject) => {
+      if (!artist.artist) {
+        return reject("Artist is undefined");
+      }
       this.lfm.album.getInfo({
         'artist': artist.artist.trim(),
         'album': album.album_origin ? album.album_origin.trim() : album

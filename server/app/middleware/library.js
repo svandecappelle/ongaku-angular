@@ -263,6 +263,8 @@ class Library {
       this.loadingCoverArtists[artist.artist] = "/static/img/artist.jpg";
       connector.getArtistInfo(artist).then(data => {
         this.loadingCoverArtists[artist.artist] = artist;
+      }).catch(error => {
+        console.warn("GetArtistInfo triggered an unexpected error on external apis: " + error);
       });
     }
   };
@@ -303,10 +305,12 @@ class Library {
         this.coversLocation[artist.artist][album.title] = path.resolve(
           location,
           'cover.jpg');
-      } else {
+      } else if (artist) {
         connector.getAlbumInfo(artist, album).then(data => {
           this.loadingCoverAlbums[artist.artist][album.title] = album;
           this.loadingCoversAlbumsFlatten[album.title] = album;
+        }).catch(error => {
+          console.warn("GetAlbumInfo triggerred unexpected error on external apis: " + error);
         });
       }
     }

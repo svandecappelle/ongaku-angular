@@ -23,6 +23,9 @@ class WikipediaConnector {
         var count = 0;
         async.doWhilst((next) => {
           let page = pages.query.search[count];
+          if (!page) {
+            return next();
+          }
           count += 1;
           rp.get('https://fr.wikipedia.org/w/api.php', {
             qs: {
