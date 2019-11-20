@@ -45,15 +45,26 @@ class TorrentDownloader {
     const folderContainer = userdir ? path.dirname(file) : nconf.get('library')[0];
     this.client.add(torrentContent, (torrent) => {
       // Got torrent metadata!
-      torrent.files.forEach((fileContent) => {
-        let folder = fileContent.path.split(('/')).slice(0, -1).join("/");
+      torrent.files.forEach((file) => {
+        let folder = file.path.split(('/')).slice(0, -1).join("/");
         if (folder) {
           console.log("Creating dir: ", folder);
           fs.mkdirSync(`${folderContainer}/${folder}`, { recursive: true });
         }
-        var newPath = `${folderContainer}/${fileContent.path}`;
-        fs.writeFileSync(newPath, fileContent);
+        var newPath = `${folderContainer}/${file.path}`;
+        console.log("create file: ", newPath);
+
+        const rstream = file.createReadStream();
+        var wstream = fs.createWriteStream(newPath);
+        rstream.pipe(wstream);
         // while still seeding need to make sure file.path points to the right place
+      });
+
+      torrent.on('download', function (bytes) {
+        console.log('just downloaded: ' + bytes)
+        console.log('total downloaded: ' + torrent.downloaded)
+        console.log('download speed: ' + torrent.downloadSpeed)
+        console.log('progress: ' + torrent.progress)
       });
 
       torrent.on('done', () => {
