@@ -72,9 +72,9 @@
     "xregexp": "^4.2.0"
   },
   "optionalDependencies": {
-    "nodegit": "^0.23.0",
     "identicon": ">2.1.2",
-    "node-wave": "0.0.4"
+    "node-wave": "git+ssh://git@github.com/svandecappelle/node-wave.git",
+    "nodegit": "^0.23.0"
   },
   "devDependencies": {
     "concurrently": "4.1.0",

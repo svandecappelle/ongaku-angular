@@ -1,3 +1,4 @@
+const fs = require('fs');
 const express = require('express');
 const _ = require("underscore");
 const nconf = require("nconf");
@@ -94,30 +95,46 @@ router.get("/track/:uid", (req, res) => {
 
 router.get("/waveform/:uid", (req, res) => {
     try {
-        var src = library.getRelativePath(path.basename(req.params.uid));
-        var color = 'white';
-
-
+        const src = library.getRelativePath(path.basename(req.params.uid));
+        let color = 'white';
         if (req.session.theme && _.contains(lights_themes, req.session.theme)) {
             color = '#929292';
         }
-
         if (req.query.color) {
             color = req.query.color;
         }
-        var options = {
+        const options = {
             waveColor: color,
             backgroundColor: "rgba(0,0,0,0)"
         };
-        var Waveform = require('node-wave');
+        const Waveform = require('node-wave');
+        const waveformPath = path.resolve(path.dirname(src), `waveforms/${req.params.uid}.png`);
 
-        res.writeHead(200, { 'Content-Type': 'image/png' });
-
-        Waveform(src, options, (err, buffer) => {
-            res.write(buffer);
-            res.end();
-        });
+        try {
+            const stat = fs.statSync(waveformPath);
+            if (stat) {
+                return res.sendFile(waveformPath);
+            }
+        } catch (error) {
+            const wavesDirectory = path.resolve(path.dirname(src), 'waveforms');
+            fs.stat(wavesDirectory, (error, stats) => {
+                if (error) {
+                    fs.mkdirSync(wavesDirectory);
+                }
+                res.writeHead(200, {
+                    'Content-Type': 'image/png'
+                })
+                Waveform(src, options, (err, buffer) => {
+                    res.write(buffer);
+                    fs.writeFile(waveformPath, buffer, (err) => {
+                        console.error(err);
+                        res.end();
+                    });
+                });
+            });
+        }
     } catch (error) {
+        console.error(error);
         res.status(500).send("");
         console.warn("Not compatible canvas generation wave.");
     }
