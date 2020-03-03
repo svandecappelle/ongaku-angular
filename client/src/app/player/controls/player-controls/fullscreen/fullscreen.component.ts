@@ -7,6 +7,7 @@ import {
   ElementRef
 } from '@angular/core';
 
+import { DomSanitizer } from '@angular/platform-browser';
 import { DOCUMENT } from '@angular/common';
 import { Observable ,  BehaviorSubject } from 'rxjs';
 import { DataSource } from '@angular/cdk/collections';
@@ -92,10 +93,13 @@ export class FullscreenComponent implements OnInit {
   @ViewChild('fullscreener', { read: ElementRef }) fullscreener: ElementRef;
   @ViewChild('fullscreenerBackground', { read: ElementRef }) background: ElementRef;
 
-  constructor(private store: Store<IAppState>,
+  constructor(
+    private store: Store<IAppState>,
     private actions: PlayerActions,
     @Inject(DOCUMENT) private document: Document,
-    private renderer: Renderer2) {
+    private renderer: Renderer2,
+    private _sanitizer: DomSanitizer,
+    ) {
   }
 
   ngOnInit() {
@@ -192,5 +196,12 @@ export class FullscreenComponent implements OnInit {
   onStepperClick($event) {
     const time = this.duration * $event.layerX / $event.target.offsetWidth;
     this.player.goTo(time);
+  }
+
+  getWaveform(track, color?: String) {
+    if (color) {
+      return  this._sanitizer.bypassSecurityTrustStyle(`url('/api/downloader/waveform/${track.uid}?color=${color}')`)
+    }
+    return this._sanitizer.bypassSecurityTrustStyle(`url('/api/downloader/waveform/${track.uid}')`)
   }
 }

@@ -16,6 +16,16 @@
       <br/>
 
       <div class="player-action">
+
+        <div class="waveforms">
+          <div class="waveform" [style.backgroundImage]="getWaveform(current)" (click)="onStepperClick($event)">
+            <div class="waveform active"
+              [style.width]="currentTime + '%'"
+              [style.backgroundImage]="getWaveform(current, 'rgb(77, 182, 172)')">
+            </div>
+          </div>
+        </div>
+
         <div class="actions top">
           <button mat-icon-button class="player-action play" (click)="play()" *ngIf="state === 'paused'">
             <mat-icon aria-label="Play">play_arrow</mat-icon>
@@ -31,11 +41,6 @@
           </button>
         </div>
 
-        <mat-progress-bar #progress class="audio-stepper"
-          [value]="currentTime"
-          (click)="onStepperClick($event)">
-        </mat-progress-bar>
-        
         <div class="actions right">
           <button mat-icon-button class="player-action right" (click)="next()">
             <mat-icon aria-label="Next track">skip_next</mat-icon>

@@ -13,6 +13,25 @@
     }
 }
 
+.waveforms {
+    height: 80px;
+    .waveform {
+        position: relative;
+        height: 80px;
+        background-repeat: no-repeat;
+        margin: auto;
+        width: 50%;
+        background-repeat: no-repeat;
+        &.active {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 0%;
+        }
+    }    
+}
+
 .fullscreener {
     position: fixed;
     overflow: auto;

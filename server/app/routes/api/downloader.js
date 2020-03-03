@@ -108,7 +108,7 @@ router.get("/waveform/:uid", (req, res) => {
             backgroundColor: "rgba(0,0,0,0)"
         };
         const Waveform = require('node-wave');
-        const waveformPath = path.resolve(path.dirname(src), `waveforms/${req.params.uid}.png`);
+        const waveformPath = path.resolve(path.dirname(src), `waveforms/${req.params.uid}-${color}.png`);
 
         try {
             const stat = fs.statSync(waveformPath);
@@ -126,8 +126,7 @@ router.get("/waveform/:uid", (req, res) => {
                 })
                 Waveform(src, options, (err, buffer) => {
                     res.write(buffer);
-                    fs.writeFile(waveformPath, buffer, (err) => {
-                        console.error(err);
+                    fs.writeFile(waveformPath, buffer, () => {
                         res.end();
                     });
                 });

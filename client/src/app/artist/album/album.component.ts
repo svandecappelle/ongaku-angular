@@ -89,6 +89,9 @@ export class AlbumComponent implements OnInit {
     return this._sanitizer.bypassSecurityTrustUrl(`${image}`);
   }
 
+  getWaveform(track) {
+    return this._sanitizer.bypassSecurityTrustStyle(`url('/api/downloader/waveform/${track.uid }')`)
+  }
 
   actionFrom (action, artist) {
     switch (action) {
