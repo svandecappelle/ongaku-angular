@@ -1,18 +1,9 @@
 const fs = require('fs');
 const express = require('express');
 const _ = require("underscore");
-const nconf = require("nconf");
-const passport = require("passport");
-const unzip = require("node-unzip-2");
 const path = require("path");
-const Busboy = require('busboy');
-const ffmetadata = require("ffmetadata");
 const library = require("./../../middleware/library");
-const middleware = require("./../../middleware/middleware");
 const exporter = require("./../../middleware/exporter");
-const meta = require("./../../meta");
-const communication = require("./../../communication");
-const user = require("./../../model/user");
 
 var router = express.Router();
 
@@ -85,13 +76,11 @@ router.get("/album/:artist/:album", (req, res) => {
 
 });
 
-
 router.get("/track/:uid", (req, res) => {
     helpers.callIfAuthenticated(req, res, () => {
         res.download(library.getFile(req.params.uid));
     });
 });
-
 
 router.get("/waveform/:uid", (req, res) => {
     try {
@@ -110,28 +99,38 @@ router.get("/waveform/:uid", (req, res) => {
         const Waveform = require('node-wave');
         const waveformPath = path.resolve(path.dirname(src), `waveforms/${req.params.uid}-${color}.png`);
 
-        try {
-            const stat = fs.statSync(waveformPath);
-            if (stat) {
-                return res.sendFile(waveformPath);
-            }
-        } catch (error) {
+        fs.stat(waveformPath, (err, stat) => {
             const wavesDirectory = path.resolve(path.dirname(src), 'waveforms');
-            fs.stat(wavesDirectory, (error, stats) => {
-                if (error) {
-                    fs.mkdirSync(wavesDirectory);
-                }
-                res.writeHead(200, {
-                    'Content-Type': 'image/png'
-                })
-                Waveform(src, options, (err, buffer) => {
-                    res.write(buffer);
-                    fs.writeFile(waveformPath, buffer, () => {
-                        res.end();
+
+            if (err) {
+                fs.stat(wavesDirectory, (error, stats) => {
+                    if (error) {
+                        try {
+                            fs.mkdirSync(wavesDirectory);
+                        } catch (err) {
+                            // concurrent create folder.
+                            // Should ignore this
+                        }
+                    }
+                    res.writeHead(200, {
+                        'Content-Type': 'image/png'
+                    });
+                    Waveform(src, options, (err, buffer) => {
+                        if (err) {
+                            console.error(err);
+                            res.end();
+                        } else {
+                            res.write(buffer);
+                            fs.writeFile(waveformPath, buffer, () => {
+                                res.end();
+                            });
+                        }
                     });
                 });
-            });
-        }
+            } else if (stat) {
+                return res.sendFile(waveformPath);
+            }
+        });
     } catch (error) {
         console.error(error);
         res.status(500).send("");
