@@ -32,7 +32,8 @@ export class LoginComponent implements OnInit {
       });
       this.form = this.fb.group({
         userName: ['', Validators.required],
-        password: ['', Validators.required]
+        password: ['', Validators.required],
+        rememberme: [true, Validators.required]
       });
     }
 
@@ -48,7 +49,11 @@ export class LoginComponent implements OnInit {
       this.loginInProgress = true;
       this.ref.markForCheck();
       if (this.form.valid) {
-        this.authService.login(this.form.value.userName, this.form.value.password);
+        this.authService.login(
+          this.form.value.userName,
+          this.form.value.password,
+          this.form.value.rememberme
+        );
         this.loginInProgress = false;
       }
       this.formSubmitAttempt = true;

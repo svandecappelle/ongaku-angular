@@ -1,7 +1,3 @@
-@import url(https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css);
-@import url(https://fonts.googleapis.com/css?family=Roboto:700,400,300);
-@import url(https://raw.github.com/necolas/normalize.css/master/normalize.css);
-
 $spacing: 24px;
 
 /**
@@ -42,13 +38,16 @@ body {
   line-height: 1.4;
   background-color: #e7e7e7;
 }
+:host {
+  position: sticky;
+  top: 64px;
+}
 
 .container {
   width: 70%;
   margin: 0 auto;
   padding: $spacing * 2;
 }
-
 
 /**
 * This can be extended to anything to make it get slightly bigger on hover,
@@ -83,8 +82,7 @@ p {
 */
 .flag {
   @extend .margin;
-  display: table;
-  width: 100%;
+  margin-left: 72px;
 }
 
 .flag__image,

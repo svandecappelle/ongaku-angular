@@ -25,8 +25,12 @@ export class AuthenticationService {
         return this.loggedIn; // {2}
     }
 
-    login(username: string, password: string) {
-        return this.http.post<any>('/api/auth/login', { username: username, password: password }).subscribe((data) => {
+    login(username: string, password: string, rememberme: boolean) {
+        return this.http.post<any>('/api/auth/login', {
+            username: username,
+            password: password,
+            remember: rememberme ? 'on' : 'off'
+        }).subscribe((data) => {
             if (data.user) {
                 const userConnected = new User();
                 userConnected.id = data.user.uid;
@@ -35,7 +39,7 @@ export class AuthenticationService {
                 this.loggedIn.next(true);
                 this.router.navigate(['/']);
             }
-        }, error => { console.log(error); });
+        }, error => { console.error(error); });
     }
 
     logout() {

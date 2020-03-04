@@ -20,16 +20,23 @@
         height: 80px;
         background-repeat: no-repeat;
         margin: auto;
-        width: 50%;
+        width: 600px;
         background-repeat: no-repeat;
         &.active {
             position: absolute;
+            cursor: pointer;
             top: 0;
             left: 0;
             bottom: 0;
             width: 0%;
         }
-    }    
+        &.pointing {
+            width: 600px;
+            position: absolute;
+            right: 0;
+            height: unset;
+        }
+    }
 }
 
 .fullscreener {
@@ -40,7 +47,7 @@
     left: 0;
     right: 0;
     padding-bottom: 1em;
-    background-color: rgba(0,0,0,0.25);
+    background-color: rgba(0, 0, 0, 0.94);
     transition: all linear 500ms;
 
     &.open {
@@ -89,7 +96,7 @@
 
     
     .close-button {
-        position: fixed;
+        position: absolute;
         top: 1em;
         right: 1em;
     }

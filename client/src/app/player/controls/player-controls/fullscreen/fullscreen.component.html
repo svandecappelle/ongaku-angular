@@ -1,7 +1,4 @@
-<div #fullscreenerBackground class="track-art-background" *ngIf="current" [style.backgroundImage]="'url(/api/audio/song-image/' + current.uid + ')'"></div>
-
-<div #fullscreener class="fullscreener" *ngIf="current">
-  
+<div #fullscreener class="fullscreener" *ngIf="current">  
   <button class="close-button" mat-icon-button (click)="close()" *ngIf="visible">
     <mat-icon aria-label="close">close</mat-icon>
   </button>
@@ -18,12 +15,13 @@
       <div class="player-action">
 
         <div class="waveforms">
-          <div class="waveform" [style.backgroundImage]="getWaveform(current)" (click)="onStepperClick($event)">
+          <div class="waveform" [style.backgroundImage]="getWaveform(current)">
             <div class="waveform active"
               [style.width]="currentTime + '%'"
               [style.backgroundImage]="getWaveform(current, 'rgb(77, 182, 172)')">
             </div>
           </div>
+          <div class="waveform active pointing" (click)="onStepperClick($event)"></div>
         </div>
 
         <div class="actions top">

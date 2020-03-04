@@ -142,7 +142,6 @@ export class FullscreenComponent implements OnInit {
     this.renderer.addClass(this.document.body, 'no-scroll');
     setTimeout(() => {
       this.renderer.addClass(this.fullscreener.nativeElement, 'open');
-      this.renderer.addClass(this.background.nativeElement, 'open');
       this.visible = true;
 
       // The timeout is because the animation playstate has no effect until the image
@@ -161,14 +160,13 @@ export class FullscreenComponent implements OnInit {
     this.visible = false;
     this.renderer.removeClass(this.document.body, 'no-scroll');
     this.renderer.removeClass(this.fullscreener.nativeElement, 'open');
-    this.renderer.removeClass(this.background.nativeElement, 'open');
   }
 
   time(time: number, duration: number) {
     if (this.visible) {
       this.currentTime = time;
       this.duration = duration;
-      this.percent = this.currentTime / this.duration * 100;
+      this.percent = parseFloat((this.currentTime / this.duration * 100).toPrecision(5));
     }
   }
 

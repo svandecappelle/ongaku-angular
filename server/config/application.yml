@@ -4,7 +4,7 @@ log-level: info
 port: 4000
 hostname: localhost
 uploader: false
-library: [/home/svandeca/Musique]
+library: [/Users/svandeca/Music]
 audio: [mp3,  wav, wma, ogg, flac]
 video: [mp4, webm, flv, ogv, mpg]
 defaultLanguage: fr
@@ -25,10 +25,10 @@ allowUpload: true
 allowRegisteration: 3
 third-party:
     spotify:
-        clientId:
-        secret:
+        clientId: 564717a25ed042afacad631c55727689
+        secret: 024bc8f2e7294fb3a0db1ea6ee65f550
     lastfm:
-        api-key:
-        secret:
+        api-key: b23009f60a15fa74a6e41f426089ac2c
+        secret: a538d8cae9215df82d0d03804d67cb55
 theme:
   base-color: rgb(230, 217, 45)
