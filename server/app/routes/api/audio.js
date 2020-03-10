@@ -481,10 +481,9 @@ router.post('/metadata/set/:id', (req, res) => {
             library.refreshMetadatas(id);
         }
     });
-
 });
 
-router.post('/metadata/selection/set/', (req, res) => {
+router.put('/metadata/selection/set/', (req, res) => {
     var ids = req.body.ids;
     var metadata = req.body.metadatas;
 
@@ -504,11 +503,6 @@ router.post('/metadata/selection/set/', (req, res) => {
             res.status(200).json('Data written');
         }
     });
-});
-
-// TODO ?
-router.get("/api/users", (req, res) => {
-    res.json();
 });
 
 router.get(['/my-library', '/my-library/:folder'], (req, res) => {

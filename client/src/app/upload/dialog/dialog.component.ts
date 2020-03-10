@@ -1,8 +1,8 @@
 import { Component, OnInit, ViewChild, Inject } from '@angular/core';
-import { MatDialogRef } from '@angular/material';
+import { MatDialogRef } from '@angular/material/dialog';
 import { UploadService } from '../upload.service';
 import { forkJoin } from 'rxjs';
-import { MAT_DIALOG_DATA } from '@angular/material';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-dialog',
@@ -10,7 +10,7 @@ import { MAT_DIALOG_DATA } from '@angular/material';
   styleUrls: ['./dialog.component.scss']
 })
 export class DialogComponent {
-  @ViewChild('file') file;
+  @ViewChild('file', { static: true }) file;
   public files: Set<File> = new Set();
 
   folder = '';

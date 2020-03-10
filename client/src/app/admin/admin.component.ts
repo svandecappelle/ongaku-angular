@@ -1,9 +1,9 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
-import { StatisticsService } from './statistics.service';
-import { AdminService } from './admin.service';
+import { StatisticsService } from 'app/services/statistics.service';
+import { AdminService } from 'app/services/admin.service';
 import { ReloadService } from '../library/reload.service';
 
-import { FormGroup, FormBuilder, Validators, ValidatorFn, AbstractControl, FormControl } from '@angular/forms';
+import { FormGroup, FormBuilder } from '@angular/forms';
 
 import * as moment from 'moment';
 import { Chart } from 'chart.js';
@@ -94,11 +94,11 @@ export class AdminComponent implements OnInit {
   public lineChartLegend: boolean = true;
   public lineChartType: string = 'line';
 
-  @ViewChild('access', { read: ElementRef }) canvasUserAccess: ElementRef;
+  @ViewChild('access', { read: ElementRef, static: true }) canvasUserAccess: ElementRef;
 
-  @ViewChild('activity', { read: ElementRef }) canvasActivity: ElementRef;
+  @ViewChild('activity', { read: ElementRef, static: true }) canvasActivity: ElementRef;
 
-  @ViewChild('storage', { read: ElementRef }) canvasStorage: ElementRef;
+  @ViewChild('storage', { read: ElementRef, static: true }) canvasStorage: ElementRef;
 
   constructor (private service: StatisticsService, private fb: FormBuilder, private configureService: AdminService, private reloadService: ReloadService) { }
 

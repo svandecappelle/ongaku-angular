@@ -13,6 +13,7 @@
   "license": "SEE LICENCE IN LICENCE",
   "private": true,
   "dependencies": {
+    "@ncstate/sat-popover": "^4.0.0",
     "@ngrx/core": "^1.2.0",
     "@ngrx/store": "^7.0.0",
     "async": "^2.6.1",

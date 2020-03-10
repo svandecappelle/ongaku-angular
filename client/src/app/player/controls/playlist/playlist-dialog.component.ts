@@ -7,7 +7,7 @@ import {
     ElementRef
 } from '@angular/core';
 import { Store, select } from '@ngrx/store';
-import { MAT_DIALOG_DATA } from '@angular/material';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { DragulaService } from 'ng2-dragula';
 
@@ -29,7 +29,7 @@ export class PlaylistDialogComponent implements OnDestroy {
     current: Song;
     displayedColumns = ['action', 'index', 'title', 'artist', 'album', 'duration'];
 
-    @ViewChild('filter') filter: ElementRef;
+    @ViewChild('filter', { static: false }) filter: ElementRef;
 
     constructor(@Inject(MAT_DIALOG_DATA) public data: any, private actions: PlayerActions, private dragulaService: DragulaService) {
         this.store = this.data.store;

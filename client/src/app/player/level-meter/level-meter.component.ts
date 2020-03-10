@@ -1,5 +1,4 @@
 import { Component, OnInit, Input, ViewChild, ElementRef } from '@angular/core';
-import { forEach } from '@angular/router/src/utils/collection';
 import { VuMetterFactory, VuMetter } from './level-vumetter';
 
 @Component({
@@ -22,8 +21,8 @@ export class LevelMeterComponent implements OnInit {
   private WIDTH = 170;
   private HEIGHT = 25;
 
-  @ViewChild('meterLeft', { read: ElementRef }) meterLeft: ElementRef;
-  @ViewChild('meterRight', { read: ElementRef }) meterRight: ElementRef;
+  @ViewChild('meterLeft', { read: ElementRef, static: true }) meterLeft: ElementRef;
+  @ViewChild('meterRight', { read: ElementRef, static: true }) meterRight: ElementRef;
 
   @Input()
   private audio;

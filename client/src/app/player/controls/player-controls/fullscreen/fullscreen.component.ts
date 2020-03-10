@@ -89,9 +89,9 @@ export class FullscreenComponent implements OnInit {
   displayedColumns: String[] = [];
   current: Song;
   
-  @ViewChild('animatedArt', { read: ElementRef }) animationElement: ElementRef;
-  @ViewChild('fullscreener', { read: ElementRef }) fullscreener: ElementRef;
-  @ViewChild('fullscreenerBackground', { read: ElementRef }) background: ElementRef;
+  @ViewChild('animatedArt', { read: ElementRef, static: false }) animationElement: ElementRef;
+  @ViewChild('fullscreener', { read: ElementRef, static: false }) fullscreener: ElementRef;
+  @ViewChild('fullscreenerBackground', { read: ElementRef, static: false }) background: ElementRef;
 
   constructor(
     private store: Store<IAppState>,
