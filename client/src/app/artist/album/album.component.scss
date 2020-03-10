@@ -1,3 +1,6 @@
+:host {
+    padding-bottom: 4rem;
+}
 .album-image {
     height: 120px;
     width: 120px;
@@ -10,25 +13,6 @@
     img.album {
         width: 120px;
     }   
-}
-
-.album-header {
-    z-index: 9;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    padding: 0.5em;
-}
-
-.albums {
-    margin-top: 140px;
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    top: 0;
-    margin-bottom: 1.5em;
 }
 
 .toggle-background {
@@ -141,6 +125,8 @@ ul {
 
     .track-title {
         flex: 1;
+        background-position: 95% 50%;
+        background-repeat: no-repeat;
     }
 
     .track-duration {

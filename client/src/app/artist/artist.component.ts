@@ -1,14 +1,14 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
-import { Router, ActivatedRoute, Params } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
+import { ActivatedRoute, Params } from '@angular/router';
 import { MatDialog } from '@angular/material';
 
 import { Song, IAppState } from '../app-state';
 import { AppendPlaylist } from '../player/state';
 import { ToggleBackgroundTypeAction, ToggleBackgroundType } from '../content/content-state';
 
-import { Store, Action, select } from '@ngrx/store';
-import { Observable, Subscription } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { Subscription } from 'rxjs';
 
 import { PlayerActions } from '../player/player-actions';
 import { MetadatasComponent } from '../metadatas/metadatas.component';
@@ -35,6 +35,9 @@ export class ArtistComponent implements OnInit {
   toggleBackground = true;
   artist: string;
   image;
+
+  artistBackground: SafeStyle;
+  coversBackgrounds: Object = {};
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -64,10 +67,19 @@ export class ArtistComponent implements OnInit {
       this.subscriptions.push(this.service.get(this.artist).subscribe((details) => {
         details.artist_info = details.info;
         this.details = details;
+
+        this.artistBackground = this.getArtistBackground(details.info);
+
         if (details) {
           this.image = `/api/audio/static/covers/${this.artist}/cover.jpg`;
           details.albums.forEach(album => {
             this.covers[album.album_info.title] = this.getImageSrc(album.album_info);
+            this.coversBackgrounds[album.album_info.title] = this.getBackground(album.album_info);
+            
+            album.tracks.forEach(track => {
+              track.waveform = this.getWaveform(track);
+            });
+
           });
         }
       }));
@@ -99,13 +111,16 @@ export class ArtistComponent implements OnInit {
 
   getBackground(src) {
     let image = src.image[0];
-    console.log(src.image[0]);
     return this._sanitizer.bypassSecurityTrustStyle(`url('${image}')`);
   }
 
   getImageSrc(src) {
     let image = src.image[0];
     return this._sanitizer.bypassSecurityTrustUrl(`${image}`);
+  }
+
+  getWaveform(track) {
+    return this._sanitizer.bypassSecurityTrustStyle(`url('/api/downloader/waveform/${track.uid }')`)
   }
 
   actionFrom (action, artist) {

@@ -38,6 +38,7 @@ export interface Song {
   index: number;
   metadatas: Object;
   artistDetails: Object;
+  waveform?: String;
 }
 
 export const AppStateModule: ModuleWithProviders = StoreModule.forRoot({

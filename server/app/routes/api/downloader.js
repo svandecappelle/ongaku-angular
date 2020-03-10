@@ -1,17 +1,9 @@
+const fs = require('fs');
 const express = require('express');
 const _ = require("underscore");
-const nconf = require("nconf");
-const passport = require("passport");
-const unzip = require("node-unzip-2");
 const path = require("path");
-const Busboy = require('busboy');
-const ffmetadata = require("ffmetadata");
 const library = require("./../../middleware/library");
-const middleware = require("./../../middleware/middleware");
 const exporter = require("./../../middleware/exporter");
-const meta = require("./../../meta");
-const communication = require("./../../communication");
-const user = require("./../../model/user");
 
 var router = express.Router();
 
@@ -84,40 +76,63 @@ router.get("/album/:artist/:album", (req, res) => {
 
 });
 
-
 router.get("/track/:uid", (req, res) => {
     helpers.callIfAuthenticated(req, res, () => {
         res.download(library.getFile(req.params.uid));
     });
 });
 
-
 router.get("/waveform/:uid", (req, res) => {
     try {
-        var src = library.getRelativePath(path.basename(req.params.uid));
-        var color = 'white';
-
-
+        const src = library.getRelativePath(path.basename(req.params.uid));
+        let color = 'white';
         if (req.session.theme && _.contains(lights_themes, req.session.theme)) {
             color = '#929292';
         }
-
         if (req.query.color) {
             color = req.query.color;
         }
-        var options = {
+        const options = {
             waveColor: color,
             backgroundColor: "rgba(0,0,0,0)"
         };
-        var Waveform = require('node-wave');
+        const Waveform = require('node-wave');
+        const waveformPath = path.resolve(path.dirname(src), `waveforms/${req.params.uid}-${color}.png`);
 
-        res.writeHead(200, { 'Content-Type': 'image/png' });
+        fs.stat(waveformPath, (err, stat) => {
+            const wavesDirectory = path.resolve(path.dirname(src), 'waveforms');
 
-        Waveform(src, options, (err, buffer) => {
-            res.write(buffer);
-            res.end();
+            if (err) {
+                fs.stat(wavesDirectory, (error, stats) => {
+                    if (error) {
+                        try {
+                            fs.mkdirSync(wavesDirectory);
+                        } catch (err) {
+                            // concurrent create folder.
+                            // Should ignore this
+                        }
+                    }
+                    res.writeHead(200, {
+                        'Content-Type': 'image/png'
+                    });
+                    Waveform(src, options, (err, buffer) => {
+                        if (err) {
+                            console.error(err);
+                            res.end();
+                        } else {
+                            res.write(buffer);
+                            fs.writeFile(waveformPath, buffer, () => {
+                                res.end();
+                            });
+                        }
+                    });
+                });
+            } else if (stat) {
+                return res.sendFile(waveformPath);
+            }
         });
     } catch (error) {
+        console.error(error);
         res.status(500).send("");
         console.warn("Not compatible canvas generation wave.");
     }

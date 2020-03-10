@@ -1,5 +1,8 @@
-<div *ngIf="isLoggedIn$ | async" class="background" [style.backgroundImage]="'url(/api/user/image/background)'"></div>
+<div class="background" [style.backgroundImage]="'url(/api/user/image/background)'"></div>
+<app-header *ngIf="isLoggedIn$ | async"></app-header>
 <app-menu *ngIf="isLoggedIn$ | async"></app-menu>
-<app-notifications *ngIf="isLoggedIn$ | async"></app-notifications>
-<router-outlet></router-outlet>
+<app-notifications></app-notifications>
 <app-player *ngIf="isLoggedIn$ | async"></app-player>
+<div class="routing-content">
+    <router-outlet></router-outlet>
+</div>

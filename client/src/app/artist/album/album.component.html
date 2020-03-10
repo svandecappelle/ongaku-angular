@@ -1,4 +1,4 @@
-<div class="background" *ngIf="details && toggleBackground" [style.backgroundImage]="getAlbumBackground()"></div>
+<div class="background" *ngIf="details && toggleBackground" [style.backgroundImage]="background"></div>
 
 <div class="content fixed-tab-header">
   <div class="album-header">
@@ -19,7 +19,7 @@
             <li *ngFor="let album of details[0].albums">
               <div>
                 <div>
-                  <div mat-card-avatar class="cover-image" [style.background-image]="getAlbumBackground(album.album_info)"></div>
+                  <div mat-card-avatar class="cover-image" [style.background-image]="background"></div>
                 </div>
                 <mat-divider mat-line></mat-divider>
                 
@@ -42,7 +42,9 @@
                           </button>
                         </span>
                         <span class="track-number">{{track.metadatas.track}}</span>
-                        <span class="track-title">{{track.title}}</span>
+                        <span class="track-title" [style.backgroundImage]="track.waveform">
+                          {{track.title}}
+                        </span>
                         <span class="track-duration">{{track.duration}}</span>
                         <span class="track-metadata">
                           <button mat-icon-button (click)="metadata(track, artist, $event)">

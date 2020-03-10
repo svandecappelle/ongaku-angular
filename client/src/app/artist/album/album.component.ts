@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 
-import { DomSanitizer } from '@angular/platform-browser';
+import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { ActivatedRoute, Params } from '@angular/router';
 import { MatDialog } from '@angular/material';
 
@@ -36,6 +36,7 @@ export class AlbumComponent implements OnInit {
   details: Object;
   image;
   toggleBackground = true;
+  background: SafeStyle;
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -67,6 +68,12 @@ export class AlbumComponent implements OnInit {
         };
         this.details = details;
         this.image = this.getImageSrc();
+        this.background = this.getAlbumBackground();
+
+        details[0].albums[0].tracks.forEach(track => {
+          track.waveform = this.getWaveform(track);
+        });
+
       }));
     });
 
@@ -89,6 +96,9 @@ export class AlbumComponent implements OnInit {
     return this._sanitizer.bypassSecurityTrustUrl(`${image}`);
   }
 
+  getWaveform(track) {
+    return this._sanitizer.bypassSecurityTrustStyle(`url('/api/downloader/waveform/${track.uid }')`)
+  }
 
   actionFrom (action, artist) {
     switch (action) {
