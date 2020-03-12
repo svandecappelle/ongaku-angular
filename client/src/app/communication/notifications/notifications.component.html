@@ -1,21 +1,23 @@
-<div class="flag note note--secondary" *ngFor='let message of messages'>
-  <div class="flag__image note__icon">
-    <i class="fa fa-comment"></i>
+<div class="notification-container">
+  <div class="flag note note--secondary" *ngFor='let message of messages'>
+    <div class="flag__image note__icon">
+      <i class="fa fa-comment"></i>
+    </div>
+    <div class="flag__body note__text">
+      {{ message.content }}
+    </div>
+    <a class="note__close" (click)='close(message)'>
+      <i class="fa fa-times"></i>
+    </a>
   </div>
-  <div class="flag__body note__text">
-    {{ message.content }}
-  </div>
-  <a class="note__close" (click)='close(message)'>
-    <i class="fa fa-times"></i>
-  </a>
-</div>
 
-<div class="flag note note--secondary" *ngIf='scanMessage'>
-  <div class="flag__image note__icon">
-    <i class="fa fa-comment"></i>
+  <div class="flag note note--secondary" *ngIf='scanMessage'>
+    <div class="flag__image note__icon">
+      <i class="fa fa-comment"></i>
+    </div>
+    <div class="flag__body note__text">
+      {{ scanMessage.content }}
+    </div>
+    <mat-progress-bar mode="determinate" value='{{scanProgressValue}}'></mat-progress-bar>
   </div>
-  <div class="flag__body note__text">
-    {{ scanMessage.content }}
-  </div>
-  <mat-progress-bar mode="determinate" value='{{scanProgressValue}}'></mat-progress-bar>
 </div>
