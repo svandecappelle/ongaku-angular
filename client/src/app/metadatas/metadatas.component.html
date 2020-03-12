@@ -8,7 +8,9 @@
             <mat-cell *cdkCellDef="let row">
               <input matInput name="{{row.key}}" *ngIf="column.editable"
                      [(ngModel)]="metadata[row.key]">
-              <span *ngIf="!column.editable">{{ column.cell(row) }}</span>
+              <input matInput name="{{row.key}}" [ngModelOptions]="{standalone: true}" *ngIf="!column.editable && row.keyEditable"
+                     [(ngModel)]="row.key" (change)="changeKey(row, $event.target.value)">
+              <span *ngIf="!column.editable && !row.keyEditable">{{ column.cell(row) }}</span>
             </mat-cell>
           </ng-container>
 
@@ -24,6 +26,10 @@
           <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
           <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
         </mat-table>
+
+        <button mat-icon-button aria-label="add metadata on track" (click)="add($event)">
+          <mat-icon>add</mat-icon>
+        </button>
       </div>
   </mat-dialog-content>
   <mat-dialog-actions>

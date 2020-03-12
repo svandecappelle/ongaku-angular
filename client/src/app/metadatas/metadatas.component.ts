@@ -21,6 +21,8 @@ import has from 'lodash/has';
 export interface Metadata {
   key: string;
   value: string;
+  originalKey: string;
+  keyEditable?: boolean;
 }
 
 
@@ -58,6 +60,7 @@ export class MetadatasComponent implements OnInit, OnDestroy {
   metadatasList: Array<Metadata>;
 
   tracks = Array<string>();
+  allowToEdit = Array<string>();
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
@@ -65,7 +68,7 @@ export class MetadatasComponent implements OnInit, OnDestroy {
   ) {
     this.metadatasList = [];
     if (isArray(data)) {
-      this.tracks = data.map(t => t.uuid);
+      this.tracks = data.map(t => t.uid);
       this.metadata = {};
       const ignore = [];
       data.forEach(track => {
@@ -82,7 +85,7 @@ export class MetadatasComponent implements OnInit, OnDestroy {
       });
 
     } else {
-      this.tracks = [data.uuid];
+      this.tracks = [data.uid];
       this.metadata = clone(data.metadatas);
     }
 
@@ -112,6 +115,8 @@ export class MetadatasComponent implements OnInit, OnDestroy {
       this.metadatasList.push({
         key: key,
         value: this.metadata[key],
+        originalKey: key,
+        keyEditable: this.allowToEdit.indexOf(key) !== -1
       });
     });
 
@@ -123,6 +128,22 @@ export class MetadatasComponent implements OnInit, OnDestroy {
     ev.stopPropagation();
     ev.preventDefault();
     delete this.metadata[key];
+    this.populateMetadataList();
+  }
+
+  add(ev: Event) {
+    ev.stopPropagation();
+    ev.preventDefault();
+    this.metadata["new"] = "";
+    this.allowToEdit.push("new");
+    this.populateMetadataList();
+  }
+
+  changeKey(row: Metadata, newKey: string) {
+    const i = this.allowToEdit.indexOf(row.originalKey);
+    this.allowToEdit[i] = newKey;
+    this.metadata[newKey] = this.metadata[row.originalKey];
+    delete this.metadata[row.originalKey];
     this.populateMetadataList();
   }
 }
@@ -159,7 +180,6 @@ export class MetadatasDatabase {
     });
   }
 
-  /** Adds a new user to the database. */
   addMetadata(element) {
     const copiedData = this.data.slice();
     copiedData.push(element);
