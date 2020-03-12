@@ -1,0 +1,9 @@
+input,
+textarea,
+[contenteditable] {
+    caret-color: white;
+}
+
+.mat-column-delete {
+    flex: 0 0 40px;
+}

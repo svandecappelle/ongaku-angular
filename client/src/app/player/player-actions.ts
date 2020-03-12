@@ -1,4 +1,5 @@
 import { Action } from '@ngrx/store';
+import { Injectable } from "@angular/core";
 // import { ITimes } from './state';
 
 export class PlayerAction implements Action{
@@ -6,6 +7,7 @@ export class PlayerAction implements Action{
 }
 
 
+@Injectable()
 export class PlayerActions {
   static AUDIO_ENDED = 'AUDIO_ENDED';
   static AUDIO_PAUSED = 'AUDIO_PAUSED';

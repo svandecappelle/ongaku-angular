@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, Renderer, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef, OnDestroy, Renderer2 } from '@angular/core';
 import { Store, select } from '@ngrx/store';
 import { BehaviorSubject, Subscription } from 'rxjs';
 
@@ -38,13 +38,13 @@ export class PlayerControlsComponent implements OnInit, OnDestroy {
   color = 'accent';
   metadataLoaded: Boolean = true;
 
-  @ViewChild('audio', { read: ElementRef }) player: ElementRef;
-  @ViewChild('progress', { read: ElementRef }) progressBar: ElementRef;
-  @ViewChild('volume', { read: ElementRef }) volumeSlider: ElementRef;
+  @ViewChild('audio', { read: ElementRef, static: true }) player: ElementRef;
+  @ViewChild('progress', { read: ElementRef, static: false }) progressBar: ElementRef;
+  @ViewChild('volume', { read: ElementRef, static: true }) volumeSlider: ElementRef;
 
-  @ViewChild('fullscreener', { read: FullscreenComponent }) fullscreener: FullscreenComponent;
+  @ViewChild('fullscreener', { read: FullscreenComponent, static: false }) fullscreener: FullscreenComponent;
 
-  constructor(public renderer: Renderer, private store: Store<IAppState>, private actions: PlayerActions) {
+  constructor(public renderer: Renderer2, private store: Store<IAppState>, private actions: PlayerActions) {
     this.isInit = false;
   }
 

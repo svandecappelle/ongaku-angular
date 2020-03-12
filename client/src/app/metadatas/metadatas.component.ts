@@ -7,10 +7,22 @@ import {
   ElementRef
 } from '@angular/core';
 
-import { DOCUMENT } from '@angular/common';
+
+import { MetadataService } from 'app/services/metadata.service';
+import {NgForm} from '@angular/forms';
+
 import { Observable ,  BehaviorSubject } from 'rxjs';
-import { MatDialog, MAT_DIALOG_DATA, MatTableDataSource } from '@angular/material';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DataSource } from "@angular/cdk/collections";
+import clone from 'lodash/clone';
+import isArray from 'lodash/isArray';
+import has from 'lodash/has';
+
+export interface Metadata {
+  key: string;
+  value: string;
+}
+
 
 @Component({
   selector: 'app-metadatas',
@@ -19,49 +31,100 @@ import { DataSource } from "@angular/cdk/collections";
 })
 export class MetadatasComponent implements OnInit, OnDestroy {
 
-  @ViewChild('filter') filter: ElementRef;
+  @ViewChild('filter', { static: false }) filter: ElementRef;
   dataSource: MetadatasDataSource | null;
   metadatasDatabase:MetadatasDatabase;
 
-  columns = [
-    { columnDef: 'key', header: 'Key', cell: (row:Metadata) => `${row.key}`},
-    { columnDef: 'value', header: 'Value', cell: (row:Metadata) => `${row.value}`},
-    
+  columns = [{
+      columnDef: 'key',
+      header: 'Key',
+      cell: (row:Metadata) => `${row.key}`,
+      data: true
+    }, {
+      editable: true,
+      columnDef: 'value',
+      header: 'Value',
+      cell: (row:Metadata) => `${row.value}`,
+      data: true
+    }, {
+      columnDef: 'delete',
+      header: 'Delete'
+    }
   ];
-  displayedColumns:String[] = [];
+  displayedColumns: String[] = [];
+  
+  dataColumns: any[] = [];
+  metadata: any;
+  metadatasList: Array<Metadata>;
 
-  constructor( @Inject(MAT_DIALOG_DATA) public data: any) {
-    let metadatas = [];
+  tracks = Array<string>();
 
-    Object.keys(data.metadatas).forEach((key) => {
-      metadatas.push({
-        key: key,
-        value: data.metadatas[key]
-      });     
-    });
+  constructor(
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    private metadataService: MetadataService
+  ) {
+    this.metadatasList = [];
+    if (isArray(data)) {
+      this.tracks = data.map(t => t.uuid);
+      this.metadata = {};
+      const ignore = [];
+      data.forEach(track => {
+        Object.keys(track.metadatas).forEach(metadata => {
+          if (!has(this.metadata, metadata)) {
+            this.metadata[metadata] = track.metadatas[metadata];
+          } else if (this.metadata[metadata] !== track.metadatas[metadata]) {
+            ignore.push(metadata);
+          }
+        });
+      });
+      ignore.forEach(metadata => {
+        delete this.metadata[metadata];
+      });
+
+    } else {
+      this.tracks = [data.uuid];
+      this.metadata = clone(data.metadatas);
+    }
 
     this.displayedColumns = this.columns.map(x => x.columnDef);
-    this.metadatasDatabase = new MetadatasDatabase(metadatas);
-    this.dataSource = new MetadatasDataSource(this.metadatasDatabase);
+    this.dataColumns = this.columns.filter(x => x.data);
   }
 
   ngOnInit() {
-  }
-
-  applyFilter(filterValue: string) {
-    filterValue = filterValue.trim(); // Remove whitespace
-    filterValue = filterValue.toLowerCase(); // MatTableDataSource defaults to lowercase matches
-    // this.dataSource.filter = filterValue;
+    this.populateMetadataList();
   }
 
   ngOnDestroy() {
 
   }
-}
 
-export interface Metadata {
-  key: string;
-  value: string;
+  onSubmit(f: NgForm) {
+    this.metadataService.set(this.tracks, f.value).subscribe(r => {
+      if (r) {
+        console.log("close popup");
+      }
+    });
+  }
+
+  populateMetadataList() {
+    this.metadatasList = [];
+    Object.keys(this.metadata).forEach((key) => {
+      this.metadatasList.push({
+        key: key,
+        value: this.metadata[key],
+      });
+    });
+
+    this.metadatasDatabase = new MetadatasDatabase(this.metadatasList);
+    this.dataSource = new MetadatasDataSource(this.metadatasDatabase);
+  }
+
+  delete(ev: Event, key: string) {
+    ev.stopPropagation();
+    ev.preventDefault();
+    delete this.metadata[key];
+    this.populateMetadataList();
+  }
 }
 
 /**

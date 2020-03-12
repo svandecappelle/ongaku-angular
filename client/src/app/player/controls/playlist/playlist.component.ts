@@ -8,7 +8,8 @@ import {
 import { DOCUMENT } from '@angular/common';
 import { Observable } from 'rxjs';
 import { Store, select } from '@ngrx/store';
-import { MatDialog, MAT_DIALOG_DATA, MatTableDataSource } from '@angular/material';
+import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatTableDataSource } from '@angular/material/table';
 
 import { Song, IAppState } from '../../../app-state';
 import { PlayerAction, PlayerActions } from '../../player-actions';
@@ -47,7 +48,7 @@ export class PlaylistComponent implements OnInit {
       this.current = val.track;
     });
 
-    this.dialog.afterOpen.subscribe(() => {
+    this.dialog.afterOpened.subscribe(() => {
       this.renderer.addClass(this.document.body, 'no-scroll');
     });
     this.dialog.afterAllClosed.subscribe(() => {

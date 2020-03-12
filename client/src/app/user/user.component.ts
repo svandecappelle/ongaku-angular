@@ -29,19 +29,19 @@ export class UserComponent implements OnInit {
     private _sanitizer: DomSanitizer,
     private activatedRoute: ActivatedRoute) { }
 
-  @ViewChild('storage') set contentStorage(elRef: ElementRef) {
+  @ViewChild('storage', { static: false }) set contentStorage(elRef: ElementRef) {
     this.canvasStorage = elRef;
   }
 
-  @ViewChild('avatarFiler') set contentAvatar(elRef: ElementRef) {
+  @ViewChild('avatarFiler', { static: false }) set contentAvatar(elRef: ElementRef) {
     this.avatarFiler = elRef;
   }
 
-  @ViewChild('coverFiler') set contentCover(elRef: ElementRef) {
+  @ViewChild('coverFiler', { static: false }) set contentCover(elRef: ElementRef) {
     this.coverFiler = elRef;
   }
 
-  @ViewChild('backgroundFiler') set contentBackground(elRef: ElementRef) {
+  @ViewChild('backgroundFiler', { static: false }) set contentBackground(elRef: ElementRef) {
     this.backgroundFiler = elRef;
   }
 

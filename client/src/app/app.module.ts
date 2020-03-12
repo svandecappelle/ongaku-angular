@@ -12,8 +12,6 @@ import { HttpClientModule } from '@angular/common/http';  // replaces previous H
 
 import { DragulaModule } from 'ng2-dragula';
 import { MomentModule } from 'ngx-moment';
-import { Ng2PageScrollModule } from 'ng2-page-scroll';
-import { ChartsModule } from 'ng2-charts/ng2-charts';
 
 import { AppComponent } from './app.component';
 import { HeaderComponent } from './header/header.component';
@@ -32,13 +30,24 @@ import { PlayerModule } from './player/player.module';   // our custom service, 
 import { AppStateModule } from './app-state';
 import { LoginComponent } from './login/login.component';
 
-import { AlertService, AuthenticationService, UserService } from './services/index';
+import {
+  AlertService,
+  AuthenticationService,
+  UserService,
+  StatisticsService,
+  AdminService,
+  AlbumService,
+  ArtistService,
+  MetadataService
+} from './services';
 import { AuthGuard } from './guards/index';
+
+// import { EditMetadataComponent } from './metadatas/edit-metadata/edit-metadata.component';
 import { MetadatasComponent } from './metadatas/metadatas.component';
-import { AdminComponent, StatisticsService, AdminService } from './admin/';
+import { AdminComponent } from './admin/';
 import { SearchComponent } from './search/search.component';
-import { ArtistComponent, ArtistService } from './artist';
-import { AlbumComponent, AlbumService } from './artist/album/';
+import { ArtistComponent } from './artist';
+import { AlbumComponent } from './artist/album/';
 import { UsersComponent } from './users/users.component';
 import { LibraryComponent } from './library/library.component';
 import { RadiosComponent } from './radios/radios.component';
@@ -76,8 +85,6 @@ import { UserModule } from './user/user.module';
     BrowserAnimationsModule,
     DragulaModule.forRoot(),
     MomentModule,
-    Ng2PageScrollModule,
-    ChartsModule,
     FormsModule,
     ReactiveFormsModule,
     MaterialModule,
@@ -103,6 +110,7 @@ import { UserModule } from './user/user.module';
     StatisticsService,
     AdminService,
     UsersService,
+    MetadataService,
     UploadService,
     InstallService,
     ReloadService

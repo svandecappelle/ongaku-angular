@@ -6,12 +6,14 @@ import { Action } from '@ngrx/store';
 import { Observable ,  Subject } from 'rxjs';
 import { AudioSource } from './audio-source';
 import { Song } from '../app-state';
+import { Injectable } from "@angular/core";
 
 class UtilityService {
   
 }
 
 
+@Injectable()
 export class AudioService {
   events$: Observable<Action>;
 

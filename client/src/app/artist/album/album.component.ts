@@ -2,19 +2,19 @@ import { Component, OnInit } from '@angular/core';
 
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { ActivatedRoute, Params } from '@angular/router';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 
-import { Song, IAppState } from '../../app-state';
-import { AppendPlaylist } from '../../player/state';
-import { ToggleBackgroundTypeAction, ToggleBackgroundType } from '../../content/content-state';
+import { Song, IAppState } from 'app/app-state';
+import { AppendPlaylist } from 'app/player/state';
+import { ToggleBackgroundTypeAction, ToggleBackgroundType } from 'app/content/content-state';
 
 import { Store } from '@ngrx/store';
 import { Subscription } from 'rxjs';
 
-import { PlayerActions } from '../../player/player-actions';
-import { MetadatasComponent } from '../../metadatas/metadatas.component';
+import { PlayerActions } from 'app/player/player-actions';
+import { MetadatasComponent } from 'app/metadatas/metadatas.component';
 
-import { AlbumService } from './album.service';
+import { AlbumService } from 'app/services/album.service';
 
 
 @Component({

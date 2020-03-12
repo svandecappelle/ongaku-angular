@@ -5,7 +5,6 @@ import { CollectionViewer, DataSource } from '@angular/cdk/collections';
 import { Song, IAppState } from '../../../app-state';
 import { Observable ,  BehaviorSubject } from 'rxjs';
 import { merge, map } from 'rxjs/operators';
-import { forEach } from '@angular/router/src/utils/collection';
 
 import { Store, select } from '@ngrx/store';
 import {

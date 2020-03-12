@@ -10,9 +10,21 @@
   z-index: -1;
 }
 
+.background-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  background-position: 0px 0px;
+  background-attachment: fixed;
+  background-size: cover;
+  z-index: -1;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
 .routing-content {
   margin-left: 72px;
   margin-top: 64px;
-  background-color: rgba(0, 0, 0, 0.5);
   position: relative;
 }

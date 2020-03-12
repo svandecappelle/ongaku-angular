@@ -1,27 +1,33 @@
 <h2 mat-dialog-title>Metadatas</h2>
-<mat-dialog-content>
-  <!--
-    <div class="filter-header">
-    <mat-form-field>
-      <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
-    </mat-form-field>
-  </div>
-  -->
+<form #f="ngForm" (ngSubmit)="onSubmit(f)">
+  <mat-dialog-content>
+      <div class="table-container">
+        <mat-table #table [dataSource]="dataSource">
+          <ng-container *ngFor="let column of dataColumns" [cdkColumnDef]="column.columnDef">
+            <mat-header-cell *cdkHeaderCellDef>{{ column.header }}</mat-header-cell>
+            <mat-cell *cdkCellDef="let row">
+              <input matInput name="{{row.key}}" *ngIf="column.editable"
+                     [(ngModel)]="metadata[row.key]">
+              <span *ngIf="!column.editable">{{ column.cell(row) }}</span>
+            </mat-cell>
+          </ng-container>
 
-  <div class="table-container">
+          <ng-container cdkColumnDef="delete">
+            <mat-header-cell *cdkHeaderCellDef>Actions</mat-header-cell>
+            <mat-cell *cdkCellDef="let row">
+              <button mat-icon-button aria-label="Remove metadata from track" (click)="delete($event, row.key)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
 
-    <mat-table #table [dataSource]="dataSource">  
-      <ng-container *ngFor="let column of columns" [cdkColumnDef]="column.columnDef">
-        <mat-header-cell *cdkHeaderCellDef>{{ column.header }}</mat-header-cell>
-        <mat-cell *cdkCellDef="let row">{{ column.cell(row) }}</mat-cell>
-      </ng-container>
-
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-    </mat-table>
-
-  </div>
-</mat-dialog-content>
-<mat-dialog-actions>
-  <button mat-button mat-dialog-close>Close</button>
-</mat-dialog-actions>
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+      </div>
+  </mat-dialog-content>
+  <mat-dialog-actions>
+    <button mat-button mat-dialog-close>Close</button>
+    <button mat-button>Save</button>
+  </mat-dialog-actions>
+</form>

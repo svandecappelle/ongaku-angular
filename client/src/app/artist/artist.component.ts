@@ -1,19 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { ActivatedRoute, Params } from '@angular/router';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 
-import { Song, IAppState } from '../app-state';
-import { AppendPlaylist } from '../player/state';
-import { ToggleBackgroundTypeAction, ToggleBackgroundType } from '../content/content-state';
+import { Song, IAppState } from 'app/app-state';
+import { AppendPlaylist } from 'app/player/state';
+import { ToggleBackgroundTypeAction, ToggleBackgroundType } from 'app/content/content-state';
 
 import { Store } from '@ngrx/store';
 import { Subscription } from 'rxjs';
 
-import { PlayerActions } from '../player/player-actions';
-import { MetadatasComponent } from '../metadatas/metadatas.component';
+import { PlayerActions } from 'app/player/player-actions';
+import { MetadatasComponent } from 'app/metadatas/metadatas.component';
 
-import { ArtistService } from './artist.service';
+import { ArtistService } from 'app/services/artist.service';
 
 @Component({
   selector: 'app-artist',
@@ -137,6 +137,20 @@ export class ArtistComponent implements OnInit {
         this.selectedOptions[artist] = [];
         break;
       case 'like':
+        break;
+      case 'metadata':
+        event.preventDefault();
+        event.stopPropagation();
+        let tracks = this.selectedOptions[artist];
+        tracks.forEach(track => {
+          track.artistDetails = this.details;
+        });
+        this.dialog.open(MetadatasComponent, {
+          width: '80%',
+          hasBackdrop: true,
+          panelClass: 'custom-overlay-pane-class',
+          data: tracks
+        });
         break;
     }
   }
