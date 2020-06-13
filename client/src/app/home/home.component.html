@@ -70,5 +70,43 @@
       </button>
     </div>
   </div>
+
+  <h1>
+    Tracks
+  </h1>
+
+  <div class="discover-container">
+    <mat-selection-list #tracks>
+      <mat-list-option *ngFor="let track of trackList">
+        <div class="track">
+          <span>
+            <button mat-icon-button (click)="playNow(track, $event)">
+              <mat-icon aria-label="play now">play_arrow</mat-icon>
+            </button>
+          </span>
+          <span>
+            <button mat-icon-button (click)="appendToPlaylist(track, $event)">
+              <mat-icon aria-label="Append to playlist">playlist_add</mat-icon>
+            </button>
+          </span>
+          <span class="track-number">{{track.metadatas.track}}</span>
+          <span class="track-title" [style.backgroundImage]="track.waveform">
+            {{track.title}}
+          </span>
+          <span class="track-duration">{{track.duration}}</span>
+          <span class="track-metadata">
+            <button mat-icon-button (click)="metadata(track, $event)">
+              <mat-icon aria-label="details">description</mat-icon>
+            </button>
+          </span>
+        </div>
+      </mat-list-option>
+    </mat-selection-list>
+    <div class="actions-container" *ngIf="trackList && trackList.length > 0">
+      <button mat-icon-button color="accent" (click)="loadMore('tracks')" *ngIf="!loading.tracks">
+        <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
+      </button>
+    </div>
+  </div>
   <div style="margin-top: 1em"></div>
 </div>

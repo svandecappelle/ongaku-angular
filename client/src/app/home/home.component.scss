@@ -33,8 +33,33 @@
   padding-bottom: 4em;
 }
 
-// Loader animations
 
+.track {
+  span {
+      vertical-align: middle;
+      line-height: 40px;
+  }
+  display: flex;
+  justify-content: space-between;
+  
+  .track-number {
+      width: 25px;
+      text-align: right;
+      margin-right: 25px;
+  }
+
+  .track-title {
+      flex: 1;
+      background-position: 95% 50%;
+      background-repeat: no-repeat;
+  }
+
+  .track-duration {
+      width: 100px;
+  }
+}
+
+// Loader animations
 
 @mixin transform($transforms) {
     -moz-transform: $transforms;

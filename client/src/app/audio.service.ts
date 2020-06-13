@@ -27,6 +27,12 @@ export class PageElement {
   ]
 }
 
+export class FeaturePage {
+  stats: {
+    plays: Object[];
+  }
+}
+
 @Injectable()
 export class AudioService {
 
@@ -41,6 +47,8 @@ export class AudioService {
       return this.getArtists(page);
       case 'album':
         return this.getAlbums(page);
+      case 'tracks':
+        return this.getTracks(page);
       default:
         return this.getPage(page);
     }
@@ -67,6 +75,16 @@ export class AudioService {
       return this.http.get(`/api/audio/albums/filter/${this.filter}/${page}`);
     } else {
       return this.http.get(`/api/audio/albums/${page}`);
+    }
+  }
+
+  getTracks (page): Observable<any> {
+    if (this.filter && this.filter !== '') {
+      return this.http.get(`/api/audio/tracks/filter/${this.filter}/${page}`);
+    } else {
+      return this.http.get(`/api/audio/featured/${page}`)
+        .pipe(map(r => r as FeaturePage))
+        .pipe(map(page => page.stats.plays));
     }
   }
 }

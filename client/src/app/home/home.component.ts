@@ -29,11 +29,13 @@ export class HomeComponent implements OnInit {
 
   public artists = [];
   public albums = [];
+  public trackList = [];
   public breakpoint: number = 5;
 
   public _page = {
     artist: 0,
-    album: 0
+    album: 0,
+    tracks: 0
   };
   private selectedOptions = [];
   private loading: Object = {
@@ -56,6 +58,7 @@ export class HomeComponent implements OnInit {
     private router: Router) {
     this._page.artist = 0;
     this._page.album = 0;
+    this._page.tracks = 0;
   }
 
   ngOnInit() {
@@ -84,16 +87,18 @@ export class HomeComponent implements OnInit {
         switch (type) {
           case 'artist':
             data.forEach(artist => {
-              this.images.artists[artist.name] = this.getImageSrc(artist.info);
+              this.images.artists[artist.name] = `/api/audio/static/covers/${artist.name}/cover.jpg`;
             });
             this.artists = this.artists.concat(data);
             break;
           case 'album':
             data.forEach(album => {
-              console.log(album.info);
               this.images.albums[album.name] = this.getImageSrc(album.info);
             });
             this.albums = this.albums.concat(data);
+            break;
+          case 'tracks':
+            this.trackList = this.trackList.concat(data);
             break;
         }
       },
@@ -115,12 +120,41 @@ export class HomeComponent implements OnInit {
   search(criterion) {
     this._page.artist = 0;
     this._page.album = 0;
+    this._page.tracks = 0;
 
     this.artists = [];
     this.albums = [];
+    this.trackList = [];
     this._audioService.filter = criterion;
     this.loadMore('artist');
     this.loadMore('album');
+    this.loadMore('tracks');
+  }
+
+  appendToPlaylist (track: Song, event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    track.index = this.tracklist.length;
+    this.store.dispatch(new AppendPlaylist(track));
+  }
+
+  playNow (track: Song, event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    track.index = this.tracklist.length;
+    this.store.dispatch(new AppendPlaylist(track));
+    this.store.dispatch(this.actions.playSelectedTrack(track));
+  }
+
+  metadata(track: Song, event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.dialog.open(MetadatasComponent, {
+      width: '80%',
+      hasBackdrop: true,
+      panelClass: 'custom-overlay-pane-class',
+      data: track
+    });
   }
 
   openArtistDetail(artist) {

@@ -411,6 +411,36 @@ router.get('/albums/filter/:search/:page', (req, res) => {
     middleware.json(req, res, libraryDatas);
 });
 
+router.get('/tracks/filter/:search/:page', (req, res) => {
+    // load by page of 3 items.
+    // var groupby = 'tracks' // req.session.groupby ? req.session.groupby : DEFAULT_GROUP_BY;
+    const sortby = req.session.sortby ? req.session.sortby : DEFAULT_SORT_BY;
+    let username = undefined;
+    if (req.session.passport) {
+        username = req.session.passport.user.username
+    }
+    const opts = {
+        user: username,
+        filter: req.params.search,
+        type: 'audio',
+        groupby: undefined,
+        sortby: sortby,
+        page: req.params.page,
+        lenght: req.query.lenght ? req.query.lenght : 10,
+    };
+
+    logger.debug("Get all one page of tracks ".concat(req.params.page));
+    let libraryDatas = null;
+
+    if (req.params.page === "all") {
+        libraryDatas = library.search(opts);
+    } else {
+        libraryDatas = library.searchPage(opts);
+    }
+    console.log(libraryDatas);
+    middleware.json(req, res, libraryDatas);
+});
+
 router.get('/stream/:media', (req, res) => {
     var stream = function () {
         return new Promise((resolve, reject) => {
@@ -658,13 +688,14 @@ router.post(['/upload', '/upload/:folder'], (req, res) => {
     }*/
 });
 
-
-
-router.get("/api/featured", (req, res) => {
-    var stats = [{ name: 'plays', type: 'track' },
+router.get("/featured/:page", (req, res) => {
+    const page = req.params.page;
+    const lenght = req.query.lenght;
+    const stats = [{ name: 'plays', type: 'track' },
     { name: 'plays-genre' }];
     getStatistics(stats, function (err, entries) {
-        middleware.json(req, res, { stats: entries });
+        const tracks = _.first(_.rest(entries, page * lenght), lenght);
+        middleware.json(req, res, { stats: tracks });
     });
 });
 
