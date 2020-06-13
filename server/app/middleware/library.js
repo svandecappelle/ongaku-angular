@@ -675,8 +675,8 @@ class Library {
 
     if (!fromList) {
       fromList = this.flatten;
-      if (opts.user && this.flattenDestination) {
-        fromList = _.union(fromList, this.flattenDestination[opts.user]);
+      if (opts.user && this.flatten) {
+        fromList = _.union(fromList, this.flatten[opts.user]);
       } else {
         fromList = _.filter(fromList, (track) => {
           return track.private === undefined || !track.private;
