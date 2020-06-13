@@ -437,7 +437,6 @@ router.get('/tracks/filter/:search/:page', (req, res) => {
     } else {
         libraryDatas = library.searchPage(opts);
     }
-    console.log(libraryDatas);
     middleware.json(req, res, libraryDatas);
 });
 
