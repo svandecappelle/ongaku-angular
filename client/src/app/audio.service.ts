@@ -29,7 +29,7 @@ export class PageElement {
 
 export class FeaturePage {
   stats: {
-    plays: Object[];
+    plays: any[];
   }
 }
 
@@ -83,8 +83,17 @@ export class AudioService {
       return this.http.get(`/api/audio/tracks/filter/${this.filter}/${page}`);
     } else {
       return this.http.get(`/api/audio/featured/${page}`)
-        .pipe(map(r => r as FeaturePage))
-        .pipe(map(page => page.stats.plays));
+        .pipe(map((r: FeaturePage): FeaturePage => {
+          if (r && r.stats) {
+            return r as FeaturePage;
+          }
+          return {
+            stats: {
+              plays: []
+            }
+          };
+        }))
+        .pipe(map((page: FeaturePage) => page.stats.plays));
     }
   }
 }

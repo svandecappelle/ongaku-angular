@@ -157,6 +157,38 @@ export class HomeComponent implements OnInit {
     });
   }
 
+  actionFrom (action) {
+    switch (action) {
+      case 'play':
+        this.store.dispatch(new AppendPlaylist(this.selectedOptions));
+        this.selectedOptions = [];
+        break;
+      case 'like':
+        break;
+      case 'metadata':
+        event.preventDefault();
+        event.stopPropagation();
+        let tracks = this.selectedOptions;
+        this.dialog.open(MetadatasComponent, {
+          width: '80%',
+          hasBackdrop: true,
+          panelClass: 'custom-overlay-pane-class',
+          data: tracks
+        });
+        break;
+    }
+  }
+
+  selectAll() {
+    console.log(this.trackList.length);
+    console.log(this.selectedOptions.length);
+    if (this.trackList.length > this.selectedOptions.length) {
+      this.selectedOptions = this.trackList;
+    } else {
+      this.selectedOptions = [];
+    }
+  }
+
   openArtistDetail(artist) {
     this.router.navigate(['artist', artist]);
   }
