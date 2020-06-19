@@ -105,13 +105,13 @@ export class ArtistComponent implements OnInit {
   }
 
   getArtistBackground(src) {
-    let image = src.image[0];
-    return this._sanitizer.bypassSecurityTrustStyle(`linear-gradient(rgba(29, 29, 29, 0), rgba(16, 16, 23, 0.5)), url('${image}')`);
+    let image = src.image[0] ? src.image[0] : '';
+    return this._sanitizer.bypassSecurityTrustStyle(`linear-gradient(rgba(29, 29, 29, 0), rgba(16, 16, 23, 0.5)), url('${this.image}')`);
   }
 
   getBackground(src) {
     let image = src.image[0];
-    return this._sanitizer.bypassSecurityTrustStyle(`url('${image}')`);
+    return this._sanitizer.bypassSecurityTrustStyle(`url('${this.image}')`);
   }
 
   getImageSrc(src) {

@@ -87,7 +87,7 @@ export class AlbumComponent implements OnInit {
   getAlbumBackground() {
     const src = this.details[0].albums[0].album_info;
     let image = src.image[0];
-    return this._sanitizer.bypassSecurityTrustStyle(`linear-gradient(rgba(29, 29, 29, 0), rgba(16, 16, 23, 0.5)), url('${image}')`);
+    return this._sanitizer.bypassSecurityTrustStyle(`linear-gradient(rgba(29, 29, 29, 0), rgba(16, 16, 23, 0.5)), url('${this.image}')`);
   }
 
   getImageSrc() {
