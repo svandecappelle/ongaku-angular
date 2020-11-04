@@ -101,7 +101,7 @@
       </mat-tab>
       <mat-tab label="Biography">
         <div class="tab-content">
-          <p [innerHTML]="details.info.bio.content" *ngIf="!details.info.wikipedia"></p>
+          <p [innerHTML]="details.info.bio.content" *ngIf="!details.info.wikipedia && details.info.bio"></p>
           <p [innerHTML]="details.info.wikipedia" *ngIf="details.info.wikipedia"></p>
         </div>
       </mat-tab>

@@ -317,7 +317,7 @@ class Library {
   };
 
   getArtistImage(artist) {
-    return this.loadingCoverArtists[artist].image[0];
+    return this.loadingCoverArtists[artist].image ? this.loadingCoverArtists[artist].image[0] : null;
   }
 
   getCoverImage(artist, album) {
