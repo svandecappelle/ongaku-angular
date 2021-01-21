@@ -62,7 +62,7 @@
     "semver-sort": "0.0.4",
     "sequelize": "^4.44.3",
     "serve-favicon": "^2.5.0",
-    "socket.io": "^2.2.0",
+    "socket.io": "^2.4.0",
     "spotify-web-api-node": "^4.0.0",
     "throttle": "^1.0.3",
     "tinycolor2": "^1.4.1",
