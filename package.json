@@ -66,7 +66,7 @@
     "spotify-web-api-node": "^4.0.0",
     "throttle": "^1.0.3",
     "tinycolor2": "^1.4.1",
-    "underscore": "^1.9.1",
+    "underscore": "^1.12.1",
     "uuid": "^3.3.2",
     "webtorrent": "^0.107.16",
     "winston": "^3.1.0",
