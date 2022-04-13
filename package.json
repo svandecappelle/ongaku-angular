@@ -16,7 +16,7 @@
     "@ncstate/sat-popover": "^4.0.0",
     "@ngrx/core": "^1.2.0",
     "@ngrx/store": "^7.0.0",
-    "async": "^2.6.1",
+    "async": "^3.2.2",
     "bcrypt": "^3.0.3",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.3",
