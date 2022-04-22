@@ -43,7 +43,7 @@
     "mongoose": "^5.7.7",
     "morgan": "^1.9.1",
     "musicmetadata": "^2.0.5",
-    "nconf": "^0.10.0",
+    "nconf": "^0.11.4",
     "nconf-yaml": "^1.0.2",
     "node-unzip-2": "^0.2.7",
     "node-yaml-config": "0.0.5",
