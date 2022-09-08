@@ -37,7 +37,7 @@
     "get-folder-size": "^2.0.0",
     "gravatar": "^1.8.0",
     "he": "^1.2.0",
-    "jszip": "^3.1.5",
+    "jszip": "^3.7.0",
     "lastfmapi": "^0.1.1",
     "log4js": "^3.0.6",
     "mongoose": "^5.7.7",
