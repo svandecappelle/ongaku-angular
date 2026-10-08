@@ -1,15 +1,19 @@
 <div class="content">
   <mat-grid-list cols="7">
-    <mat-grid-tile *ngFor="let user of users">
-      <a class="user" routerLink='/profile/{{user.username}}'>
-        <mat-card appearance="outlined" class="user" *ngIf="user" [style.backgroundImage]="'url(/static' + user.avatar + ')'">
-          <mat-card-header>
-            <mat-card-title>{{user.username}}</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-          </mat-card-content>
-        </mat-card>
-      </a>
-    </mat-grid-tile>
+    @for (user of users; track user) {
+      <mat-grid-tile>
+        <a class="user" routerLink='/profile/{{user.username}}'>
+          @if (user) {
+            <mat-card appearance="outlined" class="user" [style.backgroundImage]="'url(/static' + user.avatar + ')'">
+              <mat-card-header>
+                <mat-card-title>{{user.username}}</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+              </mat-card-content>
+            </mat-card>
+          }
+        </a>
+      </mat-grid-tile>
+    }
   </mat-grid-list>
 </div>

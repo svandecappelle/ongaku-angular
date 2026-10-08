@@ -1,1 +1,1 @@
-<button mat-raised-button color="primary" (click)="reload()" *ngIf='!reloading'>Reload library</button>
+@if (!reloading) {<button mat-raised-button color="primary" (click)="reload()">Reload library</button>}

@@ -1,62 +1,89 @@
 <ul class="library">
-  <li class="artist" *ngFor="let artist of artists">
-    <mat-card appearance="outlined" class="example-card">
-      <mat-card-header>
-        <div mat-card-avatar class="header-image" [style.background-image]="getImage(artist.artist_info)"></div>
-        <mat-card-title>{{artist.artist}}</mat-card-title>
-      </mat-card-header>
-        
-      <mat-card-content>
-        <div *ngIf="artist.artist_info.bio" class="artist-bio" [innerHTML]="artist.artist_info.bio.summary">
-        </div>
-        <mat-chip-listbox *ngIf='artist.artist_info.tags' class='artist-tags'>
-          <h4>Tags:</h4>
-          <mat-chip-option *ngFor='let tag of artist.artist_info.tags.tag' color="primary" selected="true">{{ tag['name'] }}</mat-chip-option>
-        </mat-chip-listbox>
-          
-        <ul>
-          <li *ngFor="let album of artist.albums">
-            <div>
-              <div>
-                <mat-icon mat-list-icon class="cover-icon" *ngIf="album.album_info.cover === '/img/album.jpg'">album</mat-icon>
-                <div mat-card-avatar class="cover-image" *ngIf="album.album_info.cover !== '/img/album.jpg'" [style.background-image]="getImage(album.album_info)"></div>
-                <h4>{{album.title}}</h4>
-              </div>
-              <mat-divider mat-line></mat-divider>
-              
-              <div class="album-actions">
-                <button mat-icon-button (click)="selectAll(artist.artist, album)">
-                  <mat-icon aria-label="select all">done_all</mat-icon>
-                </button>
-              </div>
-              <mat-selection-list #tracks [(ngModel)]="selectedOptions[artist.artist]" (ngModelChange)="onTracksSelectionChanged($event)">
-                  <mat-list-option *ngFor="let track of album.tracks" [value]="track">
-                    <div class="track">
-                      <span>
-                        <button mat-icon-button (click)="playNow(track, artist, $event)">
-                          <mat-icon aria-label="play now">play_arrow</mat-icon>
-                        </button>
-                      </span>
-                      <span>
-                        <button mat-icon-button (click)="appendToPlaylist(track, artist, $event)">
-                          <mat-icon aria-label="Append to playlist">playlist_add</mat-icon>
-                        </button>
-                      </span>
-                      <span class="track-number">{{track.metadatas.track}}</span>
-                      <span class="track-title">{{track.title}}</span>
-                      <span class="track-duration">{{track.duration}}</span>
-                      <span class="track-metadata">
-                        <button mat-icon-button (click)="metadata(track, artist, $event)">
-                          <mat-icon aria-label="details">description</mat-icon>
-                        </button>
-                      </span>
-                    </div>
-                  </mat-list-option>
-                  <p>
-                    Tracks selected: {{tracks.selectedOptions.selected.length}}
-                  </p>
-              </mat-selection-list>
+  @for (artist of artists; track artist) {
+    <li class="artist">
+      <mat-card appearance="outlined" class="example-card">
+        <mat-card-header>
+          <div mat-card-avatar class="header-image" [style.background-image]="getImage(artist.artist_info)"></div>
+          <mat-card-title>{{artist.artist}}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (artist.artist_info.bio) {
+            <div class="artist-bio" [innerHTML]="artist.artist_info.bio.summary">
             </div>
+          }
+          @if (artist.artist_info.tags) {
+            <mat-chip-listbox class='artist-tags'>
+              <h4>Tags:</h4>
+              @for (tag of artist.artist_info.tags.tag; track tag) {
+                <mat-chip-option color="primary" selected="true">{{ tag['name'] }}</mat-chip-option>
+              }
+            </mat-chip-listbox>
+          }
+          <ul>
+            @for (album of artist.albums; track album) {
+              <li>
+                <div>
+                  <div>
+                    @if (album.album_info.cover === '/img/album.jpg') {
+                      <mat-icon mat-list-icon class="cover-icon">album</mat-icon>
+                    }
+                    @if (album.album_info.cover !== '/img/album.jpg') {
+                      <div mat-card-avatar class="cover-image" [style.background-image]="getImage(album.album_info)"></div>
+                    }
+                    <h4>{{album.title}}</h4>
+                  </div>
+                  <mat-divider mat-line></mat-divider>
+                  <div class="album-actions">
+                    <button mat-icon-button (click)="selectAll(artist.artist, album)">
+                      <mat-icon aria-label="select all">done_all</mat-icon>
+                    </button>
+                  </div>
+                  <mat-selection-list #tracks [(ngModel)]="selectedOptions[artist.artist]" (ngModelChange)="onTracksSelectionChanged($event)">
+                    @for (track of album.tracks; track track) {
+                      <mat-list-option [value]="track">
+                        <div class="track">
+                          <span>
+                            <button mat-icon-button (click)="playNow(track, artist, $event)">
+                              <mat-icon aria-label="play now">play_arrow</mat-icon>
+                            </button>
+                          </span>
+                          <span>
+                            <button mat-icon-button (click)="appendToPlaylist(track, artist, $event)">
+                              <mat-icon aria-label="Append to playlist">playlist_add</mat-icon>
+                            </button>
+                          </span>
+                          <span class="track-number">{{track.metadatas.track}}</span>
+                          <span class="track-title">{{track.title}}</span>
+                          <span class="track-duration">{{track.duration}}</span>
+                          <span class="track-metadata">
+                            <button mat-icon-button (click)="metadata(track, artist, $event)">
+                              <mat-icon aria-label="details">description</mat-icon>
+                            </button>
+                          </span>
+                        </div>
+                      </mat-list-option>
+                    }
+                    <p>
+                      Tracks selected: {{tracks.selectedOptions.selected.length}}
+                    </p>
+                  </mat-selection-list>
+                </div>
+                <button mat-icon-button (click)="actionFrom('play', artist)">
+                  <mat-icon aria-label="play">playlist_add</mat-icon>
+                </button>
+                <button mat-icon-button (click)="actionFrom('like', artist)">
+                  <mat-icon aria-label="like">favorite</mat-icon>
+                </button>
+                <button mat-icon-button (click)="actionFrom('share', artist)">
+                  <mat-icon aria-label="share">share</mat-icon>
+                </button>
+              </li>
+            }
+          </ul>
+        </mat-card-content>
+        @if (artist.albums && artist.albums.length > 1) {
+          <div>
+            <!--<img mat-card-image src="{{artist.image[0]}}" alt="Photo of a Shiba Inu">-->
             <button mat-icon-button (click)="actionFrom('play', artist)">
               <mat-icon aria-label="play">playlist_add</mat-icon>
             </button>
@@ -66,42 +93,33 @@
             <button mat-icon-button (click)="actionFrom('share', artist)">
               <mat-icon aria-label="share">share</mat-icon>
             </button>
-          </li>
-        </ul>
-      </mat-card-content>
-        <div *ngIf="artist.albums && artist.albums.length > 1">
-          <!--<img mat-card-image src="{{artist.image[0]}}" alt="Photo of a Shiba Inu">-->
-          <button mat-icon-button (click)="actionFrom('play', artist)">
-            <mat-icon aria-label="play">playlist_add</mat-icon>
-          </button>
-          <button mat-icon-button (click)="actionFrom('like', artist)">
-            <mat-icon aria-label="like">favorite</mat-icon>
-          </button>
-          <button mat-icon-button (click)="actionFrom('share', artist)">
-            <mat-icon aria-label="share">share</mat-icon>
-          </button>
-        </div>
-      <mat-card-actions>
-        
-      </mat-card-actions>
-    </mat-card>
-  </li>
+          </div>
+        }
+        <mat-card-actions>
+        </mat-card-actions>
+      </mat-card>
+    </li>
+  }
 
   <div class="actions-container">
-    <div class="loader-lib" *ngIf="loading">
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-      <span class="loader-block"></span>
-    </div>
-    
-    <button mat-icon-button color="accent" (click)="loadMore()" *ngIf="!loading">
-      <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
-    </button>
+    @if (loading) {
+      <div class="loader-lib">
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+        <span class="loader-block"></span>
+      </div>
+    }
+
+    @if (!loading) {
+      <button mat-icon-button color="accent" (click)="loadMore()">
+        <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
+      </button>
+    }
   </div>
 </ul>

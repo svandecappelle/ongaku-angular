@@ -2,136 +2,166 @@
   <h1 class="mat-h1">Artists</h1>
   <div class="discover-container">
 
-    <span *ngIf="!artists || artists.length === 0">No results</span>
-    <mat-grid-list [cols]="breakpoint" (window:resize)="onResize($event)" *ngIf="artists && artists.length > 0">
-      <mat-grid-tile *ngFor="let artist of artists">
-        <mat-card appearance="outlined" class="artist" (click)="openArtistDetail(artist.name)">
-          <mat-card-header>
-            <mat-card-title>{{artist.name}}</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <img [src]="images.artists[artist.name]" />
-          </mat-card-content>
-        </mat-card>
-      </mat-grid-tile>
-      <mat-grid-tile *ngIf="loading.artist">
-        <div class="loader-lib">
-          <span class="loader-block"></span>
-          <span class="loader-block"></span>
-          <span class="loader-block"></span>
-          <span class="loader-block"></span>
-          <span class="loader-block"></span>
-          <span class="loader-block"></span>
-          <span class="loader-block"></span>
-          <span class="loader-block"></span>
-          <span class="loader-block"></span>
-        </div>
-      </mat-grid-tile>
-    </mat-grid-list>
-    <div class="actions-container" *ngIf="artists && artists.length > 0">
-      <button mat-icon-button color="accent" (click)="loadMore('artist')" *ngIf="!loading.artist">
-        <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
-      </button>
-    </div>
+    @if (!artists || artists.length === 0) {
+      <span>No results</span>
+    }
+    @if (artists && artists.length > 0) {
+      <mat-grid-list [cols]="breakpoint" (window:resize)="onResize($event)">
+        @for (artist of artists; track artist) {
+          <mat-grid-tile>
+            <mat-card appearance="outlined" class="artist" (click)="openArtistDetail(artist.name)">
+              <mat-card-header>
+                <mat-card-title>{{artist.name}}</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <img [src]="images.artists[artist.name]" />
+              </mat-card-content>
+            </mat-card>
+          </mat-grid-tile>
+        }
+        @if (loading.artist) {
+          <mat-grid-tile>
+            <div class="loader-lib">
+              <span class="loader-block"></span>
+              <span class="loader-block"></span>
+              <span class="loader-block"></span>
+              <span class="loader-block"></span>
+              <span class="loader-block"></span>
+              <span class="loader-block"></span>
+              <span class="loader-block"></span>
+              <span class="loader-block"></span>
+              <span class="loader-block"></span>
+            </div>
+          </mat-grid-tile>
+        }
+      </mat-grid-list>
+    }
+    @if (artists && artists.length > 0) {
+      <div class="actions-container">
+        @if (!loading.artist) {
+          <button mat-icon-button color="accent" (click)="loadMore('artist')">
+            <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
+          </button>
+        }
+      </div>
+    }
   </div>
 
   <mat-divider mat-line></mat-divider>
   <h1 class="mat-h1">Albums</h1>
   <div class="discover-container">
 
-    <span *ngIf="!albums || albums.length === 0">No results</span>
-    <mat-grid-list [cols]="breakpoint" *ngIf="albums && albums.length > 0">
-      <mat-grid-tile *ngFor="let album of albums">
-        <mat-card appearance="outlined" class="album" (click)="openAlbumDetail(album)">
-          <mat-card-header>
-            <mat-card-title>{{album.name}}</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <img [src]="images.albums[album.name]" />
-          </mat-card-content>
-        </mat-card>
-      </mat-grid-tile>
-      <mat-grid-tile *ngIf="loading.album">
-        <div class="loader-lib">
-          <span class="loader-block"></span>
-          <span class="loader-block"></span>
-          <span class="loader-block"></span>
-          <span class="loader-block"></span>
-          <span class="loader-block"></span>
-          <span class="loader-block"></span>
-          <span class="loader-block"></span>
-          <span class="loader-block"></span>
-          <span class="loader-block"></span>
+    @if (!albums || albums.length === 0) {
+      <span>No results</span>
+    }
+    @if (albums && albums.length > 0) {
+      <mat-grid-list [cols]="breakpoint">
+        @for (album of albums; track album) {
+          <mat-grid-tile>
+            <mat-card appearance="outlined" class="album" (click)="openAlbumDetail(album)">
+              <mat-card-header>
+                <mat-card-title>{{album.name}}</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <img [src]="images.albums[album.name]" />
+              </mat-card-content>
+            </mat-card>
+          </mat-grid-tile>
+        }
+        @if (loading.album) {
+          <mat-grid-tile>
+            <div class="loader-lib">
+              <span class="loader-block"></span>
+              <span class="loader-block"></span>
+              <span class="loader-block"></span>
+              <span class="loader-block"></span>
+              <span class="loader-block"></span>
+              <span class="loader-block"></span>
+              <span class="loader-block"></span>
+              <span class="loader-block"></span>
+              <span class="loader-block"></span>
+            </div>
+          </mat-grid-tile>
+        }
+      </mat-grid-list>
+    }
+    @if (albums && albums.length > 0) {
+      <div class="actions-container">
+        @if (!loading.album) {
+          <button mat-icon-button color="accent" (click)="loadMore('album')">
+            <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  @if (trackList && trackList.length > 0) {
+    <div>
+      <mat-divider mat-line></mat-divider>
+      <h1 class="mat-h1">
+        Tracks
+      </h1>
+      <div class="discover-container">
+        <div class="tracks-actions">
+          <button mat-icon-button (click)="selectAll()">
+            <mat-icon aria-label="select all">done_all</mat-icon>
+          </button>
         </div>
-      </mat-grid-tile>
-    </mat-grid-list>
-    <div class="actions-container" *ngIf="albums && albums.length > 0">
-      <button mat-icon-button color="accent" (click)="loadMore('album')" *ngIf="!loading.album">
-        <mat-icon aria-label="Example icon-button with a heart icon">keyboard_arrow_down</mat-icon>
-      </button>
-    </div>
-  </div>
-
-  <div *ngIf="trackList && trackList.length > 0">
-    <mat-divider mat-line></mat-divider>
-
-    <h1 class="mat-h1">
-      Tracks
-    </h1>
-
-    <div class="discover-container">
-      <div class="tracks-actions">
-        <button mat-icon-button (click)="selectAll()">
-          <mat-icon aria-label="select all">done_all</mat-icon>
+        <mat-selection-list #tracks [(ngModel)]="selectedOptions">
+          @for (track of trackList; track track) {
+            <mat-list-option [value]="track">
+              <div class="track">
+                <span>
+                  <button mat-icon-button (click)="playNow(track, $event)">
+                    <mat-icon aria-label="play now">play_arrow</mat-icon>
+                  </button>
+                </span>
+                <span>
+                  <button mat-icon-button (click)="appendToPlaylist(track, $event)">
+                    <mat-icon aria-label="Append to playlist">playlist_add</mat-icon>
+                  </button>
+                </span>
+                <span class="track-number">{{track.metadatas.track}}</span>
+                <span class="track-title" [style.backgroundImage]="track.waveform">
+                  {{track.title}}
+                </span>
+                <span class="track-duration">{{track.duration}}</span>
+                <span class="track-metadata">
+                  <button mat-icon-button (click)="metadata(track, $event)">
+                    <mat-icon aria-label="details">description</mat-icon>
+                  </button>
+                </span>
+              </div>
+            </mat-list-option>
+          }
+        </mat-selection-list>
+        <p>
+          Tracks selected: {{tracks.selectedOptions.selected.length}}
+        </p>
+        <button mat-icon-button (click)="actionFrom('play')">
+          <mat-icon aria-label="play">playlist_add</mat-icon>
         </button>
-      </div>
-      <mat-selection-list #tracks [(ngModel)]="selectedOptions">
-        <mat-list-option *ngFor="let track of trackList" [value]="track">
-          <div class="track">
-            <span>
-              <button mat-icon-button (click)="playNow(track, $event)">
-                <mat-icon aria-label="play now">play_arrow</mat-icon>
+        <button mat-icon-button (click)="actionFrom('like')">
+          <mat-icon aria-label="like">favorite</mat-icon>
+        </button>
+        <button mat-icon-button (click)="actionFrom('metadata')">
+          <mat-icon aria-label="share">description</mat-icon>
+        </button>
+        <button mat-icon-button (click)="actionFrom('share')">
+          <mat-icon aria-label="share">share</mat-icon>
+        </button>
+        @if (trackList && trackList.length > 0) {
+          <div class="actions-container">
+            @if (!loading.tracks) {
+              <button mat-icon-button color="accent" (click)="loadMore('tracks')">
+                <mat-icon>keyboard_arrow_down</mat-icon>
               </button>
-            </span>
-            <span>
-              <button mat-icon-button (click)="appendToPlaylist(track, $event)">
-                <mat-icon aria-label="Append to playlist">playlist_add</mat-icon>
-              </button>
-            </span>
-            <span class="track-number">{{track.metadatas.track}}</span>
-            <span class="track-title" [style.backgroundImage]="track.waveform">
-              {{track.title}}
-            </span>
-            <span class="track-duration">{{track.duration}}</span>
-            <span class="track-metadata">
-              <button mat-icon-button (click)="metadata(track, $event)">
-                <mat-icon aria-label="details">description</mat-icon>
-              </button>
-            </span>
+            }
           </div>
-        </mat-list-option>
-      </mat-selection-list>
-      <p>
-        Tracks selected: {{tracks.selectedOptions.selected.length}}
-      </p>
-      <button mat-icon-button (click)="actionFrom('play')">
-        <mat-icon aria-label="play">playlist_add</mat-icon>
-      </button>
-      <button mat-icon-button (click)="actionFrom('like')">
-        <mat-icon aria-label="like">favorite</mat-icon>
-      </button>
-      <button mat-icon-button (click)="actionFrom('metadata')">
-        <mat-icon aria-label="share">description</mat-icon>
-      </button>
-      <button mat-icon-button (click)="actionFrom('share')">
-        <mat-icon aria-label="share">share</mat-icon>
-      </button>
-      <div class="actions-container" *ngIf="trackList && trackList.length > 0">
-        <button mat-icon-button color="accent" (click)="loadMore('tracks')" *ngIf="!loading.tracks">
-          <mat-icon>keyboard_arrow_down</mat-icon>
-        </button>
+        }
       </div>
     </div>
-  </div>
+  }
   <div style="margin-top: 1em"></div>
 </div>

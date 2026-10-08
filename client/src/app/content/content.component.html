@@ -1,11 +1,21 @@
-<div class="background" *ngIf="isLoggedIn$ | async" [style.backgroundImage]="'url(/api/user/image/background)'"></div>
-<div class="background-overlay" *ngIf="isLoggedIn$ | async"></div>
+@if (isLoggedIn$ | async) {
+  <div class="background" [style.backgroundImage]="'url(/api/user/image/background)'"></div>
+}
+@if (isLoggedIn$ | async) {
+  <div class="background-overlay"></div>
+}
 
-<app-header *ngIf="isLoggedIn$ | async"></app-header>
-<app-menu *ngIf="isLoggedIn$ | async"></app-menu>
+@if (isLoggedIn$ | async) {
+  <app-header></app-header>
+}
+@if (isLoggedIn$ | async) {
+  <app-menu></app-menu>
+}
 <app-notifications></app-notifications>
-<app-player *ngIf="isLoggedIn$ | async"></app-player>
+@if (isLoggedIn$ | async) {
+  <app-player></app-player>
+}
 
 <div class="routing-content" >
-    <router-outlet></router-outlet>
+  <router-outlet></router-outlet>
 </div>

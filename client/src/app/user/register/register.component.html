@@ -3,37 +3,47 @@
     <mat-card-content>
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
         <mat-form-field class="full-width-input">
-          <input matInput placeholder="User" 
-                 formControlName="userName" required>
-          <mat-error *ngIf="isFieldInvalid('userName')">
-            Choose your user name
-          </mat-error>
+          <input matInput placeholder="User"
+            formControlName="userName" required>
+          @if (isFieldInvalid('userName')) {
+            <mat-error>
+              Choose your user name
+            </mat-error>
+          }
         </mat-form-field>
         <mat-form-field class="full-width-input">
-          <input matInput placeholder="Email" 
-                 formControlName="email" required>
-          <mat-error *ngIf="isFieldInvalid('email')">
-            Enter your email
-          </mat-error>
+          <input matInput placeholder="Email"
+            formControlName="email" required>
+          @if (isFieldInvalid('email')) {
+            <mat-error>
+              Enter your email
+            </mat-error>
+          }
         </mat-form-field>
         <mat-form-field class="full-width-input">
-          <input matInput type="password" placeholder="Password" 
-                 formControlName="password" required>
-          <mat-error *ngIf="isFieldInvalid('password')">
-            Choose your password
-          </mat-error>
+          <input matInput type="password" placeholder="Password"
+            formControlName="password" required>
+          @if (isFieldInvalid('password')) {
+            <mat-error>
+              Choose your password
+            </mat-error>
+          }
         </mat-form-field>
         <mat-form-field class="full-width-input">
-          <input matInput type="password" placeholder="Password confirmation" 
-                 formControlName="confirmPassword" required>
-          <mat-error *ngIf="isFieldInvalid('confirmPassword')">
-            Confirm your password
-          </mat-error>
+          <input matInput type="password" placeholder="Password confirmation"
+            formControlName="confirmPassword" required>
+          @if (isFieldInvalid('confirmPassword')) {
+            <mat-error>
+              Confirm your password
+            </mat-error>
+          }
         </mat-form-field>
-        
+
         <button mat-raised-button color="primary" type="submit">Register</button>
       </form>
-      <mat-progress-bar class="register-in-progress" [mode]="'indeterminate'" *ngIf="inProgress"></mat-progress-bar>
+      @if (inProgress) {
+        <mat-progress-bar class="register-in-progress" [mode]="'indeterminate'"></mat-progress-bar>
+      }
     </mat-card-content>
   </mat-card>
 </div>

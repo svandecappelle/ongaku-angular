@@ -1,67 +1,73 @@
-<div #fullscreener class="fullscreener" *ngIf="current">  
-  <button class="close-button" mat-icon-button (click)="close()" *ngIf="visible">
-    <mat-icon aria-label="close">close</mat-icon>
-  </button>
-  <img #animatedArt class="track-art-animated" [class.playing]="state === 'playing'" src="/api/audio/song-image/{{current.uid}}"/>
-  <img class="track-art" src="/api/audio/song-image/{{current.uid}}"/>
-  <div class="track-playing">
-
-
-    <div class="track-info">
-      <div class="track">{{current.title}}</div>
-      <span class="track-album">{{current.album}}</span><span> ─ </span><span class="track-artist">{{current.artist}}</span>
-      <br/>
-
-      <div class="player-action">
-
-        <div class="waveforms">
-          <div class="waveform" [style.backgroundImage]="getWaveform(current)">
-            <div class="waveform active"
-              [style.width]="currentTime + '%'"
-              [style.backgroundImage]="getWaveform(current, 'rgb(77, 182, 172)')">
+@if (current) {
+  <div #fullscreener class="fullscreener">
+    @if (visible) {
+      <button class="close-button" mat-icon-button (click)="close()">
+        <mat-icon aria-label="close">close</mat-icon>
+      </button>
+    }
+    <img #animatedArt class="track-art-animated" [class.playing]="state === 'playing'" src="/api/audio/song-image/{{current.uid}}"/>
+    <img class="track-art" src="/api/audio/song-image/{{current.uid}}"/>
+    <div class="track-playing">
+      <div class="track-info">
+        <div class="track">{{current.title}}</div>
+        <span class="track-album">{{current.album}}</span><span> ─ </span><span class="track-artist">{{current.artist}}</span>
+        <br/>
+        <div class="player-action">
+          <div class="waveforms">
+            <div class="waveform" [style.backgroundImage]="getWaveform(current)">
+              <div class="waveform active"
+                [style.width]="currentTime + '%'"
+                [style.backgroundImage]="getWaveform(current, 'rgb(77, 182, 172)')">
+              </div>
             </div>
+            <div class="waveform active pointing" (click)="onStepperClick($event)"></div>
           </div>
-          <div class="waveform active pointing" (click)="onStepperClick($event)"></div>
-        </div>
-
-        <div class="actions top">
-          <button mat-icon-button class="player-action play" (click)="play()" *ngIf="state === 'paused'">
-            <mat-icon aria-label="Play">play_arrow</mat-icon>
-          </button>
-          <button mat-icon-button class="player-action play" (click)="pause()" *ngIf="state === 'playing'">
-            <mat-icon aria-label="Pause">pause</mat-icon>
-          </button>
-        </div>
-
-        <div class="actions left">
-          <button mat-icon-button  (click)="previous()">
-            <mat-icon aria-label="Previous track">skip_previous</mat-icon>
-          </button>
-        </div>
-
-        <div class="actions right">
-          <button mat-icon-button class="player-action right" (click)="next()">
-            <mat-icon aria-label="Next track">skip_next</mat-icon>
-          </button>
+          <div class="actions top">
+            @if (state === 'paused') {
+              <button mat-icon-button class="player-action play" (click)="play()">
+                <mat-icon aria-label="Play">play_arrow</mat-icon>
+              </button>
+            }
+            @if (state === 'playing') {
+              <button mat-icon-button class="player-action play" (click)="pause()">
+                <mat-icon aria-label="Pause">pause</mat-icon>
+              </button>
+            }
+          </div>
+          <div class="actions left">
+            <button mat-icon-button  (click)="previous()">
+              <mat-icon aria-label="Previous track">skip_previous</mat-icon>
+            </button>
+          </div>
+          <div class="actions right">
+            <button mat-icon-button class="player-action right" (click)="next()">
+              <mat-icon aria-label="Next track">skip_next</mat-icon>
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-
-  <div class="track-details">  
-      <mat-table #table [dataSource]="dataSource">  
-        <ng-container *ngFor="let column of columns" [cdkColumnDef]="column.columnDef">
-          <mat-header-cell *cdkHeaderCellDef style="display: none">{{ column.header }}</mat-header-cell>
-          <mat-cell *cdkCellDef="let row">{{ column.cell(row) }}</mat-cell>
-        </ng-container>
-  
+    <div class="track-details">
+      <mat-table #table [dataSource]="dataSource">
+        @for (column of columns; track column) {
+          <ng-container [cdkColumnDef]="column.columnDef">
+            <mat-header-cell *cdkHeaderCellDef style="display: none">{{ column.header }}</mat-header-cell>
+            <mat-cell *cdkCellDef="let row">{{ column.cell(row) }}</mat-cell>
+          </ng-container>
+        }
         <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
         <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
       </mat-table>
+    </div>
+    @if (current.artistDetails && current.artistDetails.artist_info) {
+      <div class="track-details">
+        @if (!current.artistDetails.artist_info.wikipedia) {
+          <p [innerHTML]="current.artistDetails.artist_info.bio.content"></p>
+        }
+        @if (current.artistDetails.artist_info.wikipedia) {
+          <p [innerHTML]="current.artistDetails.artist_info.wikipedia"></p>
+        }
+      </div>
+    }
   </div>
-
-  <div class="track-details" *ngIf="current.artistDetails && current.artistDetails.artist_info">
-      <p [innerHTML]="current.artistDetails.artist_info.bio.content" *ngIf="!current.artistDetails.artist_info.wikipedia"></p>
-      <p [innerHTML]="current.artistDetails.artist_info.wikipedia" *ngIf="current.artistDetails.artist_info.wikipedia"></p>
-  </div>
-</div>
+}

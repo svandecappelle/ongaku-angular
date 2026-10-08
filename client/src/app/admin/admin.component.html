@@ -6,16 +6,20 @@
           <h2 class="example-h2">Summary</h2>
         </mat-card-title>
         <mat-card-content>
-          <div *ngIf="details">
-            <div>Version: {{details.version}}</div>
-            <div>sha: {{details.sha}}</div>
-          </div>
+          @if (details) {
+            <div>
+              <div>Version: {{details.version}}</div>
+              <div>sha: {{details.sha}}</div>
+            </div>
+          }
           <div class="actions">
             <button mat-raised-button color="primary" type="button" (click)="update()">Update application</button>
             <button mat-raised-button color="primary" type="button" (click)="restart()">Restart application</button>
             <button mat-raised-button color="primary" type="button" (click)="reload()">Reload library</button>
           </div>
-          <mat-spinner *ngIf="details === undefined || reloading"></mat-spinner>
+          @if (details === undefined || reloading) {
+            <mat-spinner></mat-spinner>
+          }
         </mat-card-content>
       </mat-card>
     </mat-grid-tile>
@@ -27,34 +31,38 @@
             <h2 class="example-h2">Configuration</h2>
           </mat-card-title>
           <mat-card-content>
-            <mat-spinner *ngIf="properties === undefined"></mat-spinner>
-            <div *ngIf="properties">
-              <section class="inline-section">
-                <label class="example-margin">Allow user register</label>
-                <mat-form-field>
-                  <input matInput formControlName="allowRegisteration" placeholder="User count" type="number" value="{{properties.allowRegisteration}}"
-                    required/>
-                </mat-form-field>
-              </section>
-              <section class="inline-section">
-                <mat-slide-toggle formControlName="requireLogin" class="example-margin" [color]="warn" [checked]="properties.requireLogin">
-                  Require authentication to stream
-                </mat-slide-toggle>
-              </section>
-              <section class="inline-section">
-                <mat-slide-toggle formControlName="allowUpload" class="example-margin" [color]="warn" [checked]="properties.allowUpload">
-                  Allow user upload
-                </mat-slide-toggle>
-              </section>
-              <section class="inline-section">
-                <mat-slide-toggle formControlName="allowDownload" class="example-margin" [color]="warn" [checked]="properties.allowDownload">
-                  Allow user download
-                </mat-slide-toggle>
-              </section>
-              <div class="actions">
-                <button mat-raised-button color="primary" type="submit">Save</button>
+            @if (properties === undefined) {
+              <mat-spinner></mat-spinner>
+            }
+            @if (properties) {
+              <div>
+                <section class="inline-section">
+                  <label class="example-margin">Allow user register</label>
+                  <mat-form-field>
+                    <input matInput formControlName="allowRegisteration" placeholder="User count" type="number" value="{{properties.allowRegisteration}}"
+                      required/>
+                  </mat-form-field>
+                </section>
+                <section class="inline-section">
+                  <mat-slide-toggle formControlName="requireLogin" class="example-margin" [color]="warn" [checked]="properties.requireLogin">
+                    Require authentication to stream
+                  </mat-slide-toggle>
+                </section>
+                <section class="inline-section">
+                  <mat-slide-toggle formControlName="allowUpload" class="example-margin" [color]="warn" [checked]="properties.allowUpload">
+                    Allow user upload
+                  </mat-slide-toggle>
+                </section>
+                <section class="inline-section">
+                  <mat-slide-toggle formControlName="allowDownload" class="example-margin" [color]="warn" [checked]="properties.allowDownload">
+                    Allow user download
+                  </mat-slide-toggle>
+                </section>
+                <div class="actions">
+                  <button mat-raised-button color="primary" type="submit">Save</button>
+                </div>
               </div>
-            </div>
+            }
           </mat-card-content>
         </form>
       </mat-card>
@@ -65,28 +73,32 @@
           <h2 class="example-h2">Statistics</h2>
         </mat-card-title>
         <mat-card-content>
-          <div class="counters" *ngIf="statistics">
-            <h4>Counters</h4>
-            <mat-list dense>
-              <mat-list-item>
-                Users count: {{ statistics.usersCount }}
-              </mat-list-item>
-              <mat-list-item>
-                Library album count: {{ statistics.albumsCount }}
-              </mat-list-item>
-              <mat-list-item>
-                Library tracks count: {{ statistics.tracksCount }}
-              </mat-list-item>
-              <mat-list-item>
-                Users count: {{ statistics.usersCount }}
-              </mat-list-item>
-            </mat-list>
-          </div>
+          @if (statistics) {
+            <div class="counters">
+              <h4>Counters</h4>
+              <mat-list dense>
+                <mat-list-item>
+                  Users count: {{ statistics.usersCount }}
+                </mat-list-item>
+                <mat-list-item>
+                  Library album count: {{ statistics.albumsCount }}
+                </mat-list-item>
+                <mat-list-item>
+                  Library tracks count: {{ statistics.tracksCount }}
+                </mat-list-item>
+                <mat-list-item>
+                  Users count: {{ statistics.usersCount }}
+                </mat-list-item>
+              </mat-list>
+            </div>
+          }
           <div class="storage-graph">
             <h4>Storage</h4>
             <canvas #storage></canvas>
           </div>
-          <mat-spinner *ngIf="statistics === undefined"></mat-spinner>
+          @if (statistics === undefined) {
+            <mat-spinner></mat-spinner>
+          }
         </mat-card-content>
       </mat-card>
     </mat-grid-tile>
@@ -110,16 +122,16 @@
     </mat-grid-tile>
 
     <!--<mat-grid-tile [colspan]=2 [rowspan]=2>
-      <mat-card>
-        <mat-card-title>
-          <h2 class="example-h2">Other statistics</h2>
-        </mat-card-title>
-        <mat-card-content>
-          <span>Graph of other</span>
-    
-          <canvas #others>{{ chart }}</canvas>
-        </mat-card-content>
-      </mat-card>
-    </mat-grid-tile>-->
-  </mat-grid-list>
+    <mat-card>
+      <mat-card-title>
+        <h2 class="example-h2">Other statistics</h2>
+      </mat-card-title>
+      <mat-card-content>
+        <span>Graph of other</span>
+
+        <canvas #others>{{ chart }}</canvas>
+      </mat-card-content>
+    </mat-card>
+  </mat-grid-tile>-->
+</mat-grid-list>
 </div>

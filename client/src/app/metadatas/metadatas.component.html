@@ -1,36 +1,44 @@
 <h2 mat-dialog-title>Metadatas</h2>
 <form #f="ngForm" (ngSubmit)="onSubmit(f)">
   <mat-dialog-content>
-      <div class="table-container">
-        <mat-table #table [dataSource]="dataSource">
-          <ng-container *ngFor="let column of dataColumns" [cdkColumnDef]="column.columnDef">
+    <div class="table-container">
+      <mat-table #table [dataSource]="dataSource">
+        @for (column of dataColumns; track column) {
+          <ng-container [cdkColumnDef]="column.columnDef">
             <mat-header-cell *cdkHeaderCellDef>{{ column.header }}</mat-header-cell>
             <mat-cell *cdkCellDef="let row">
-              <input matInput name="{{row.key}}" *ngIf="column.editable"
-                     [(ngModel)]="metadata[row.key]">
-              <input matInput name="{{row.key}}" [ngModelOptions]="{standalone: true}" *ngIf="!column.editable && row.keyEditable"
-                     [(ngModel)]="row.key" (change)="changeKey(row, $event.target.value)">
-              <span *ngIf="!column.editable && !row.keyEditable">{{ column.cell(row) }}</span>
+              @if (column.editable) {
+                <input matInput name="{{row.key}}"
+                  [(ngModel)]="metadata[row.key]">
+              }
+              @if (!column.editable && row.keyEditable) {
+                <input matInput name="{{row.key}}" [ngModelOptions]="{standalone: true}"
+                  [(ngModel)]="row.key" (change)="changeKey(row, $event.target.value)">
+              }
+              @if (!column.editable && !row.keyEditable) {
+                <span>{{ column.cell(row) }}</span>
+              }
             </mat-cell>
           </ng-container>
+        }
 
-          <ng-container cdkColumnDef="delete">
-            <mat-header-cell *cdkHeaderCellDef>Actions</mat-header-cell>
-            <mat-cell *cdkCellDef="let row">
-              <button mat-icon-button aria-label="Remove metadata from track" (click)="delete($event, row.key)">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </mat-cell>
-          </ng-container>
+        <ng-container cdkColumnDef="delete">
+          <mat-header-cell *cdkHeaderCellDef>Actions</mat-header-cell>
+          <mat-cell *cdkCellDef="let row">
+            <button mat-icon-button aria-label="Remove metadata from track" (click)="delete($event, row.key)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
 
-          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-        </mat-table>
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+      </mat-table>
 
-        <button mat-icon-button aria-label="add metadata on track" (click)="add($event)">
-          <mat-icon>add</mat-icon>
-        </button>
-      </div>
+      <button mat-icon-button aria-label="add metadata on track" (click)="add($event)">
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
   </mat-dialog-content>
   <mat-dialog-actions>
     <button mat-button mat-dialog-close>Close</button>

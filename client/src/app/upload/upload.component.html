@@ -1,52 +1,68 @@
 <div class="content">
   <h3>
     Folder: {{location.name}}
-    <mat-form-field class="search" *ngIf="showCreateFolderInput">
+    @if (showCreateFolderInput) {
+      <mat-form-field class="search">
         <input matInput  (change)="setNewFolderName($event.target.value)">
-    </mat-form-field>
-    <button mat-icon-button (click)="createFolder($event, false)" *ngIf="!showCreateFolderInput">
-      <mat-icon arial-label="New folder" matSuffix>add_circle_outline</mat-icon>
-    </button>
-    <button mat-icon-button (click)="createFolder($event, true)" *ngIf="showCreateFolderInput">
-      <mat-icon arial-label="Create" matSuffix>done</mat-icon>
-    </button>
-    <a routerLink="/my-library/{{location.parent}}" *ngIf="location">Parent</a>
+      </mat-form-field>
+    }
+    @if (!showCreateFolderInput) {
+      <button mat-icon-button (click)="createFolder($event, false)">
+        <mat-icon arial-label="New folder" matSuffix>add_circle_outline</mat-icon>
+      </button>
+    }
+    @if (showCreateFolderInput) {
+      <button mat-icon-button (click)="createFolder($event, true)">
+        <mat-icon arial-label="Create" matSuffix>done</mat-icon>
+      </button>
+    }
+    @if (location) {
+      <a routerLink="/my-library/{{location.parent}}">Parent</a>
+    }
   </h3>
 
   <h4>Files in this folder</h4>
   <div>
     <mat-grid-list cols="2" rowHeight="470px">
       <mat-grid-tile>
-        <mat-selection-list class="files-panel" *ngIf="files">
-          <mat-list-option *ngFor="let file of directories(files)" [value]="file">
-            <div class="track">
-              <span>
-                <button mat-icon-button (click)="appendToPlaylist(track, artist, $event)">
-                  <mat-icon aria-label="File type">{{getFileIcon(file)}}</mat-icon>
-                </button>
-              </span>
-              <a routerLink="/my-library/{{file.location}}">{{file.name}}</a>
-            </div>
-          </mat-list-option>
-        </mat-selection-list>
+        @if (files) {
+          <mat-selection-list class="files-panel">
+            @for (file of directories(files); track file) {
+              <mat-list-option [value]="file">
+                <div class="track">
+                  <span>
+                    <button mat-icon-button (click)="appendToPlaylist(track, artist, $event)">
+                      <mat-icon aria-label="File type">{{getFileIcon(file)}}</mat-icon>
+                    </button>
+                  </span>
+                  <a routerLink="/my-library/{{file.location}}">{{file.name}}</a>
+                </div>
+              </mat-list-option>
+            }
+          </mat-selection-list>
+        }
       </mat-grid-tile>
 
       <mat-grid-tile>
-        <mat-selection-list class="files-panel" *ngIf="files">
-          <mat-list-option *ngFor="let file of regularFiles(files)" [value]="file">
-            <div class="track">
-              <span>
-                <button mat-icon-button (click)="select(file, $event)">
-                  <mat-icon aria-label="File type">{{getFileIcon(file)}}</mat-icon>
-                </button>
-              </span>
-              <span class="file-name">{{file.name}}</span>
-              <button mat-icon-button (click)="details(file, $event)">
-                <mat-icon aria-label="File type">search</mat-icon>
-              </button>
-            </div>
-          </mat-list-option>
-        </mat-selection-list>
+        @if (files) {
+          <mat-selection-list class="files-panel">
+            @for (file of regularFiles(files); track file) {
+              <mat-list-option [value]="file">
+                <div class="track">
+                  <span>
+                    <button mat-icon-button (click)="select(file, $event)">
+                      <mat-icon aria-label="File type">{{getFileIcon(file)}}</mat-icon>
+                    </button>
+                  </span>
+                  <span class="file-name">{{file.name}}</span>
+                  <button mat-icon-button (click)="details(file, $event)">
+                    <mat-icon aria-label="File type">search</mat-icon>
+                  </button>
+                </div>
+              </mat-list-option>
+            }
+          </mat-selection-list>
+        }
       </mat-grid-tile>
     </mat-grid-list>
   </div>
