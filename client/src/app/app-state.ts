@@ -1,5 +1,5 @@
 import { ModuleWithProviders } from '@angular/core';
-import { StoreModule } from '@ngrx/store';
+import { StoreModule, StoreRootModule } from '@ngrx/store';
 
 import {
   IPlayerState,
@@ -41,7 +41,7 @@ export interface Song {
   waveform?: String;
 }
 
-export const AppStateModule: ModuleWithProviders = StoreModule.forRoot({
+export const AppStateModule: ModuleWithProviders<StoreRootModule> = StoreModule.forRoot({
   search: searchReducer,
   player: playerReducer,
   trackList: PlaylistReducer,
