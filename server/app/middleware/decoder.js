@@ -7,7 +7,7 @@ const nconf = require("nconf");
 const uuid = require('uuid');
 const crypto = require('crypto');
 const ffmetadata = require("ffmetadata");
-const mm = require('musicmetadata');
+const mm = require('music-metadata');
 
 class Decoder {
 
@@ -133,14 +133,12 @@ class Decoder {
               return reject(err);
             }
 
-            var parser = mm(fs.createReadStream(filePath), { duration: true }, (err, metadata) => {
-              logger.debug(`libelement: ${filePath}`, err, metadataFFMPEG)
-              if (err) {
-                logger.error(`libelement: ${filePath}`, err);
-                return reject(err);
-              }
-
-              resolve(this.song(filePath, metadataFFMPEG, metadata.duration));
+            mm.parseFile(filePath, { duration: true }).then((metadata) => {
+              logger.debug(`libelement: ${filePath}`, metadataFFMPEG)
+              resolve(this.song(filePath, metadataFFMPEG, metadata.format.duration));
+            }).catch((err) => {
+              logger.error(`libelement: ${filePath}`, err);
+              reject(err);
             });
           });
 

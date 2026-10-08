@@ -6,7 +6,6 @@ const winston = require('winston');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const errorhandler = require('errorhandler');
-const csrf = require('csurf');
 const favicon = require('serve-favicon');
 const session = require('express-session');
 const yaml_config = require('node-yaml-config');

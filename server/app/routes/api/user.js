@@ -4,7 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const async = require("async");
 const _ = require("underscore");
-const getSize = require('get-folder-size');
+const getFolderSize = require('get-folder-size').default;
+const getSize = (folder, callback) => getFolderSize.strict(folder).then((size) => callback(null, size), callback);
 
 const library = require("./../../middleware/library");
 const middleware = require("./../../middleware/middleware");
@@ -140,10 +141,10 @@ router.post(['/image/:type'], (req, res) => {
         });
     }
 
-    var busboy = new Busboy({ headers: req.headers });
+    var busboy = Busboy({ headers: req.headers });
     req.session.save(function () {
         res.setHeader('Access-Control-Allow-Credentials', 'true');
-        busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
+        busboy.on('file', function (fieldname, file) {
             var userdir = path.resolve(__dirname, `../../../../public/user/${username}`);
 
             if (!fs.existsSync(userdir)) {
@@ -152,7 +153,7 @@ router.post(['/image/:type'], (req, res) => {
             var saveTo = path.resolve(userdir, `${type}`);
             file.pipe(fs.createWriteStream(saveTo));
         });
-        busboy.on('finish', function () {
+        busboy.on('close', function () {
             res.json("ok upload");
         });
 

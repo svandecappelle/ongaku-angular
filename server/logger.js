@@ -1,6 +1,6 @@
 const nconf = require('nconf');
 const util = require('util');
-const dateFormat = require('dateformat');
+const dateFormat = require('dateformat').default;
 const { createLogger, format, transports } = require('winston');
 var environment = process.env.NODE_ENV || 'development';
 

@@ -300,7 +300,7 @@ class Middleware {
         if (!fs.existsSync(USERS_IMAGE_DIRECTORY + username)) {
           fs.mkdirSync(USERS_IMAGE_DIRECTORY + username);
         }
-        identicon.generate(type === "avatar" ? username : username + "-" + type, type === "avatar" ? 150 : 600, function (err, buffer) {
+        identicon.generate({ id: type === "avatar" ? username : username + "-" + type, size: type === "avatar" ? 150 : 600 }, function (err, buffer) {
           if (err) {
             throw err;
           }
@@ -324,7 +324,7 @@ class Middleware {
           if (!fs.existsSync(USERS_IMAGE_DIRECTORY + username)) {
             fs.mkdirSync(USERS_IMAGE_DIRECTORY + username);
           }
-          identicon.generate(username, 150, function (err, buffer) {
+          identicon.generate({ id: username, size: 150 }, function (err, buffer) {
             if (err) {
               throw err;
             }

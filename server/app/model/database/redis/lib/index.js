@@ -4,8 +4,6 @@
 
     var nconf = require('nconf'),
         redis,
-        ConnectRedis,
-        reds,
         redisClient;
 
     module.questions = [{
@@ -28,60 +26,48 @@
 
     module.init = function (callback) {
         try {
-            var session = require('express-session')
             redis = require('redis');
-            //connectRedis = require('connect-redis')(express);
-            ConnectRedis = require('connect-redis')(session);
-            reds = require('reds');
         } catch (err) {
             console.error('Unable to initialize Redis! Is Redis installed? Error :' + err.message);
             process.exit();
         }
 
         var redis_socket_or_host = nconf.get('redis:host');
+        var db = parseInt(nconf.get('redis:database'), 10);
+        var options = {
+            // RESP2 keeps the reply format of the historical node_redis v2 API
+            RESP: 2,
+            database: db || 0
+        };
 
         if (redis_socket_or_host && redis_socket_or_host.indexOf('/')>=0) {
             /* If redis.host contains a path name character, use the unix dom sock connection. ie, /tmp/redis.sock */
-            redisClient = redis.createClient(nconf.get('redis:host'));
+            options.socket = { path: redis_socket_or_host };
         } else {
             /* Else, connect over tcp/ip */
-            redisClient = redis.createClient(nconf.get('redis:port'), nconf.get('redis:host'));
+            options.socket = { host: redis_socket_or_host || '127.0.0.1', port: Number(nconf.get('redis:port')) || 6379 };
         }
 
         if (nconf.get('redis:password')) {
-            redisClient.auth(nconf.get('redis:password'));
+            options.password = nconf.get('redis:password');
         } else {
             console.warn('You have no redis password setup!');
         }
 
-        redisClient.on('error', function (err) {
+        var client = redis.createClient(options);
+
+        client.on('error', function (err) {
             console.error(err, new Error());
         });
 
-        module.client = redisClient;
-
-        module.sessionStore = new ConnectRedis({
-            client: redisClient,
-            ttl: 60 * 60 * 24 * 14
+        client.connect().catch(function (error) {
+            console.error("Ongaku could not connect to your Redis database. Redis returned the following error: " + error.message);
+            process.exit();
         });
 
-        reds.createClient = function () {
-            return reds.client || (reds.client = redisClient);
-        };
+        redisClient = require('./compat')(client);
 
-        //module.postSearch = reds.createSearch('nodebbpostsearch');
-        //module.topicSearch = reds.createSearch('nodebbtopicsearch');
-
-        var db = parseInt(nconf.get('redis:database'), 10);
-
-        if (db) {
-            redisClient.select(db, function(error) {
-                if (error) {
-                    console.error("NodeBB could not connect to your Redis database. Redis returned the following error: " + error.message);
-                    process.exit();
-                }
-            });
-        }
+        module.client = redisClient;
 
         require('./main')(redisClient, module);
         require('./hash')(redisClient, module);

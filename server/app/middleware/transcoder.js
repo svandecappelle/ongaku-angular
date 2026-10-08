@@ -1,6 +1,6 @@
 "use strict";
 var childProcess = require("child_process"),
-    ora = require("ora"),
+    ora = require("ora").default,
     logger = require('log4js').getLogger("Transcoder"),
     fs = require("fs"),
     assert = require('assert'),

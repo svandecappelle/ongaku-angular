@@ -33,7 +33,15 @@ class Authority {
           communication.emit(username, "notification", { message: 'disconnected from application' });
         }, 1500);
 
-        req.logout();
+        return req.logout((err) => {
+          if (err) {
+            logger.error('[Auth] logout error', err);
+          }
+          res.json({
+            msg: 'disconnected',
+            connected: false
+          });
+        });
       }
 
       res.json({
@@ -45,7 +53,7 @@ class Authority {
     authenticate (req, res, next) {
       
       if (meta.config.allowLocalLogin !== undefined && parseInt(meta.config.allowLocalLogin, 10) === 0) {
-        return res.send(404);
+        return res.sendStatus(404);
       }
       passport.authenticate('local', (err, userData, info) => {
         var duration;
@@ -55,7 +63,7 @@ class Authority {
         
         if (!userData) {
           logger.warn("login attempt fails: ", info);
-          return res.json(403, info);
+          return res.status(403).json(info);
         }
 
         // Alter user cookie depending on passed-in option

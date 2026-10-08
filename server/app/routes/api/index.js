@@ -1,4 +1,5 @@
 var express = require('express');
+const he = require('he');
 const audio = require('./audio');
 const user = require('./user');
 const users = require('./users');
@@ -20,11 +21,11 @@ router.use('/user', user);
 router.use('/users', users);
 router.use('/admin', admin);
 
-router.post("/api/files/set-properties/imported/:filename(*)", (req, res) => {
+router.post("/api/files/set-properties/imported/*filename", (req, res) => {
     if (nconf.get("allowUpload") === 'true') {
         helpers.redirectIfNotAuthenticated(req, res, () => {
             var username = req.session.passport.user.username;
-            var file = req.params.filename;
+            var file = req.params.filename.join('/');
             var isPublic = req.query.public === 'true';
             var folder = DEFAULT_USERS__DIRECTORY + username + "/imported/" + file;
             folder = he.decode(folder);

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const dateFormat = require('dateformat');
+const dateFormat = require('dateformat').default;
 const async = require('async');
 const semver = require('semver');
 const semverSort = require('semver-sort');

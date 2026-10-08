@@ -5,7 +5,8 @@ const nconf = require("nconf");
 const path = require("path");
 const fs = require("fs");
 const async = require("async");
-const getSize = require('get-folder-size');
+const getFolderSize = require('get-folder-size').default;
+const getSize = (folder, callback) => getFolderSize.strict(folder).then((size) => callback(null, size), callback);
 const connector = require("./connectors");
 
 var library;
@@ -16,7 +17,7 @@ try {
 }
 
 const ffmetadata = require("ffmetadata");
-const mm = require('musicmetadata');
+const mm = require('music-metadata');
 var Decoder = require('./decoder').class;
 
 _.mixin({
@@ -435,21 +436,19 @@ class Library {
             return reject(err);
           }
 
-          var parser = mm(fs.createReadStream(filePath), {
+          mm.parseFile(filePath, {
             duration: true
-          }, (err, metadata) => {
-            console.debug(`libelement: ${filePath}`, err,
-              metadataFFMPEG)
-            if (err) {
-              console.error(`libelement: ${filePath}`, err);
-              return reject(err);
-            }
+          }).then((metadata) => {
+            console.debug(`libelement: ${filePath}`, metadataFFMPEG)
 
             var element = new Decoder("audio").song(filePath,
-              metadataFFMPEG, metadata.duration);
+              metadataFFMPEG, metadata.format.duration);
 
             this.set(uuid, element);
             resolve(element);
+          }).catch((err) => {
+            console.error(`libelement: ${filePath}`, err);
+            reject(err);
           });
         });
 

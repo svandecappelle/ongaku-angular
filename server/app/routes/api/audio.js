@@ -659,12 +659,12 @@ router.post(['/upload', '/upload/:folder'], (req, res) => {
             folderReading = path.join(folderReading, folder);
         }
 
-        var busboy = new Busboy({ headers: req.headers });
-        busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+        var busboy = Busboy({ headers: req.headers });
+        busboy.on('file', (fieldname, file, { filename }) => {
             var saveTo = path.join(folderReading, filename);
             file.pipe(fs.createWriteStream(saveTo));
         });
-        busboy.on('finish', () => {
+        busboy.on('close', () => {
             var type = ['audio', 'video'];
 
             library.addFolder({

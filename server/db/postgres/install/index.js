@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const dateFormat = require('dateformat');
+const dateFormat = require('dateformat').default;
 const models = require(path.resolve(__dirname, '../../../app/models'));
 const async = require('async');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const version = require(path.resolve(__dirname, '../../../app/utils/version'));
 

@@ -1,6 +1,16 @@
 const _ = require("underscore");
 const async = require("async");
-const rp = require('request-promise');
+
+const WIKIPEDIA_API = 'https://fr.wikipedia.org/w/api.php';
+
+function getJson(url, qs) {
+  return fetch(`${url}?${new URLSearchParams(qs)}`).then((response) => {
+    if (!response.ok) {
+      throw new Error(`${response.status} ${response.statusText}`);
+    }
+    return response.json();
+  });
+}
 
 
 class WikipediaConnector {
@@ -8,17 +18,14 @@ class WikipediaConnector {
   getArtistInfo(artist) {
     let searchTerm = `${artist.artist}`.toLowerCase();
     return new Promise((resolve, reject) => {
-      rp.get('https://fr.wikipedia.org/w/api.php', {
-        qs: {
-          action: "query",
-          list: 'search',
-          srsearch: searchTerm,
-          srwhat: 'text',
-          srprop: 'titlesnippet|snippet|hasrelated',
-          format: "json",
-          formatversion: 2
-        },
-        json: true
+      getJson(WIKIPEDIA_API, {
+        action: "query",
+        list: 'search',
+        srsearch: searchTerm,
+        srwhat: 'text',
+        srprop: 'titlesnippet|snippet|hasrelated',
+        format: "json",
+        formatversion: 2
       }).then(pages => {
         var count = 0;
         async.doWhilst((next) => {
@@ -27,16 +34,13 @@ class WikipediaConnector {
             return next();
           }
           count += 1;
-          rp.get('https://fr.wikipedia.org/w/api.php', {
-            qs: {
-              action: "query",
-              prop: 'categories|extracts',
-              titles: page.title,
-              format: "json",
-              pslimit: 100,
-              formatversion: 2
-            },
-            json: true
+          getJson(WIKIPEDIA_API, {
+            action: "query",
+            prop: 'categories|extracts',
+            titles: page.title,
+            format: "json",
+            pslimit: 100,
+            formatversion: 2
           }).then((detailPage) => {
             let musicCategory = _.filter(detailPage.query.pages[
               0].categories, (
@@ -65,8 +69,8 @@ class WikipediaConnector {
           }).catch(error => {
             console.error(error);
           });
-        }, (found, err) => {
-          return count < pages.query.search.length - 1 && !found;
+        }, (found, callback) => {
+          callback(null, count < pages.query.search.length - 1 && !found);
         }, () => {
           resolve();
         });

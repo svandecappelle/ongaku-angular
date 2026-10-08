@@ -2,15 +2,18 @@ const chokidar = require('chokidar');
 const path = require("path");
 const nconf = require("nconf");
 const fs = require("fs");
-const WebTorrent = require('webtorrent');
-const parseTorrent = require('parse-torrent')
+// webtorrent and parse-torrent are ESM only (with top-level await), so they must be loaded with import()
+const loadWebTorrent = () => import('webtorrent').then((module) => module.default);
+const loadParseTorrent = () => import('parse-torrent').then((module) => module.default);
 
 
 class TorrentDownloader {
 
-  constructor() {
-
-    this.client = new WebTorrent();
+  getClient() {
+    if (!this.client) {
+      this.client = loadWebTorrent().then((WebTorrent) => new WebTorrent());
+    }
+    return this.client;
   }
 
   watch() {
@@ -24,7 +27,7 @@ class TorrentDownloader {
 
     watcher.on('add', (file) => {
       if (path.extname(file) === ".torrent") {
-        this.add(file, false);
+        this.add(file, false).catch((err) => console.error(`Unable to add torrent ${file}`, err));
       }
     });
 
@@ -35,15 +38,17 @@ class TorrentDownloader {
     watcherUsers.on('add', (file) => {
       if (path.extname(file) === ".torrent") {
         console.log('File', file, 'has been added');
-        this.add(file, true);
+        this.add(file, true).catch((err) => console.error(`Unable to add torrent ${file}`, err));
       }
     });
   }
 
-  add(file, userdir) {
-    const torrentContent = parseTorrent(fs.readFileSync(file));
+  async add(file, userdir) {
+    const parseTorrent = await loadParseTorrent();
+    const torrentContent = await parseTorrent(fs.readFileSync(file));
     const folderContainer = userdir ? path.dirname(file) : nconf.get('library')[0];
-    this.client.add(torrentContent, (torrent) => {
+    const client = await this.getClient();
+    client.add(torrentContent, (torrent) => {
       // Got torrent metadata!
       torrent.files.forEach((file) => {
         let folder = file.path.split(('/')).slice(0, -1).join("/");

@@ -57,7 +57,7 @@ class Routes {
     app.use('/node_modules', express.static(path.join(__dirname, '../../../client/node_modules')));
     app.use('/static', express.static(path.join(__dirname, '../../../public')));
     app.use(express.static(path.join(__dirname, '../../../client/dist')));
-    app.get('*', (req, res) => {
+    app.get('/{*splat}', (req, res) => {
       res.sendFile(path.join(__dirname, '../../../client/dist/index.html'));
     });
   }
