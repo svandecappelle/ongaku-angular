@@ -2,9 +2,10 @@ import {Component, OnInit, ElementRef, ViewChild} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 
 @Component({
-  selector: 'app-library',
-  templateUrl: './library.component.html',
-  styleUrls: ['./library.component.scss']
+    selector: 'app-library',
+    templateUrl: './library.component.html',
+    styleUrls: ['./library.component.scss'],
+    standalone: false
 })
 export class LibraryComponent implements OnInit {
 

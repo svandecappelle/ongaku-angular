@@ -3,9 +3,10 @@ import { Component, OnInit } from '@angular/core';
 import { ReloadService } from '../reload.service';
 
 @Component({
-  selector: 'app-reload',
-  templateUrl: './reload.component.html',
-  styleUrls: ['./reload.component.scss']
+    selector: 'app-reload',
+    templateUrl: './reload.component.html',
+    styleUrls: ['./reload.component.scss'],
+    standalone: false
 })
 export class ReloadComponent implements OnInit {
 

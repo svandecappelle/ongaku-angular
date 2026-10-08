@@ -10,9 +10,10 @@ import { PlayerAction, PlayerActions } from '../../player-actions';
 import { FullscreenComponent } from './fullscreen/fullscreen.component';
 
 @Component({
-  selector: 'app-player-controls',
-  templateUrl: './player-controls.component.html',
-  styleUrls: ['./player-controls.component.scss']
+    selector: 'app-player-controls',
+    templateUrl: './player-controls.component.html',
+    styleUrls: ['./player-controls.component.scss'],
+    standalone: false
 })
 export class PlayerControlsComponent implements OnInit, OnDestroy {
 

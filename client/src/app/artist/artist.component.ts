@@ -16,9 +16,10 @@ import { MetadatasComponent } from 'app/metadatas/metadatas.component';
 import { ArtistService } from 'app/services/artist.service';
 
 @Component({
-  selector: 'app-artist',
-  templateUrl: './artist.component.html',
-  styleUrls: ['./artist.component.scss']
+    selector: 'app-artist',
+    templateUrl: './artist.component.html',
+    styleUrls: ['./artist.component.scss'],
+    standalone: false
 })
 export class ArtistComponent implements OnInit {
 

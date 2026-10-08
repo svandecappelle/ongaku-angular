@@ -27,9 +27,10 @@ export interface Metadata {
 
 
 @Component({
-  selector: 'app-metadatas',
-  templateUrl: './metadatas.component.html',
-  styleUrls: ['./metadatas.component.scss']
+    selector: 'app-metadatas',
+    templateUrl: './metadatas.component.html',
+    styleUrls: ['./metadatas.component.scss'],
+    standalone: false
 })
 export class MetadatasComponent implements OnInit, OnDestroy {
 

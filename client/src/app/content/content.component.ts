@@ -4,9 +4,10 @@ import { Observable } from 'rxjs';
 import { AuthenticationService } from './../services/authentication.service';
 
 @Component({
-  selector: 'app-content',
-  templateUrl: './content.component.html',
-  styleUrls: ['./content.component.scss']
+    selector: 'app-content',
+    templateUrl: './content.component.html',
+    styleUrls: ['./content.component.scss'],
+    standalone: false
 })
 export class ContentComponent implements OnInit {
   isLoggedIn$: Observable<boolean>;

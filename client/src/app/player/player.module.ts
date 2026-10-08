@@ -22,7 +22,8 @@ import { FullscreenComponent } from './controls/player-controls/fullscreen/fulls
 import { LevelMeterComponent } from './level-meter/level-meter.component';
 
 @Pipe({
-  name: 'duration'
+    name: 'duration',
+    standalone: false
 })
 export class DurationPipe implements PipeTransform {
   transform(value: string, fallback: string): string {

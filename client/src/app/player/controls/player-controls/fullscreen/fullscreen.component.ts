@@ -64,9 +64,10 @@ class MetadatasDatabase {
 }
 
 @Component({
-  selector: 'app-fullscreen',
-  templateUrl: './fullscreen.component.html',
-  styleUrls: ['./fullscreen.component.scss']
+    selector: 'app-fullscreen',
+    templateUrl: './fullscreen.component.html',
+    styleUrls: ['./fullscreen.component.scss'],
+    standalone: false
 })
 export class FullscreenComponent implements OnInit {
 

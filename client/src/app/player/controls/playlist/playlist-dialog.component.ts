@@ -19,7 +19,8 @@ import { Subscription } from 'rxjs';
 @Component({
     selector: 'playlist-dialog',
     templateUrl: 'playlist-dialog.html',
-    styleUrls: ['./playlist-dialog.component.scss']
+    styleUrls: ['./playlist-dialog.component.scss'],
+    standalone: false
 })
 export class PlaylistDialogComponent implements OnDestroy {
 

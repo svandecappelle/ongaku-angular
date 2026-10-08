@@ -16,9 +16,10 @@ import { PlayerAction, PlayerActions } from '../../player-actions';
 import { PlaylistDialogComponent } from './playlist-dialog.component';
 
 @Component({
-  selector: 'app-playlist',
-  templateUrl: './playlist.component.html',
-  styleUrls: ['./playlist.component.scss']
+    selector: 'app-playlist',
+    templateUrl: './playlist.component.html',
+    styleUrls: ['./playlist.component.scss'],
+    standalone: false
 })
 export class PlaylistComponent implements OnInit {
 

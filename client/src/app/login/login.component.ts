@@ -6,9 +6,10 @@ import { AlertService, AuthenticationService } from '../services/index';
 import { InstallService } from '../install/install.service';
 
 @Component({
-  selector: 'app-login',
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss']
+    selector: 'app-login',
+    templateUrl: './login.component.html',
+    styleUrls: ['./login.component.scss'],
+    standalone: false
 })
 export class LoginComponent implements OnInit {
     private formSubmitAttempt: boolean;
