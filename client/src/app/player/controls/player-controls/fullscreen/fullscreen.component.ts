@@ -4,11 +4,12 @@ import {
   Inject,
   Renderer2,
   ViewChild,
-  ElementRef
+  ElementRef,
+  DOCUMENT
 } from '@angular/core';
 
 import { DomSanitizer } from '@angular/platform-browser';
-import { DOCUMENT } from '@angular/common';
+
 import { Observable ,  BehaviorSubject } from 'rxjs';
 import { DataSource } from '@angular/cdk/collections';
 import { Store } from '@ngrx/store';

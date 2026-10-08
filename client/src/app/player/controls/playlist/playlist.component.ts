@@ -3,9 +3,10 @@ import {
   OnInit,
   Inject,
   OnDestroy,
-  Renderer2
+  Renderer2,
+  DOCUMENT
 } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
+
 import { Observable } from 'rxjs';
 import { Store, select } from '@ngrx/store';
 import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
