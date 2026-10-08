@@ -12,7 +12,7 @@ import { MetadataService } from 'app/services/metadata.service';
 import {NgForm} from '@angular/forms';
 
 import { Observable ,  BehaviorSubject } from 'rxjs';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA } from '@angular/material/legacy-dialog';
 import { DataSource } from "@angular/cdk/collections";
 import clone from 'lodash/clone';
 import isArray from 'lodash/isArray';

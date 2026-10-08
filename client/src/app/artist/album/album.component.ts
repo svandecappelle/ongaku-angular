@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { ActivatedRoute, Params } from '@angular/router';
-import { MatDialog } from '@angular/material/dialog';
+import { MatLegacyDialog as MatDialog } from '@angular/material/legacy-dialog';
 
 import { Song, IAppState } from 'app/app-state';
 import { AppendPlaylist } from 'app/player/state';
