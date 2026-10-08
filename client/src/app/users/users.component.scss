@@ -20,12 +20,14 @@ img.user-avatar {
         margin: 0.5em;
 
         &:hover {
+            /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
             mat-card {
                 transition: all linear 150ms;
                 margin-top: -0.5em;
             }
         }
-
+        /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
+        /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
         mat-card {
             width: 100%;
             height: 100%;
@@ -34,11 +36,11 @@ img.user-avatar {
             background-position: center;
             transition: all linear 150ms;
 
-            .mat-card-header {
+            .mat-mdc-card-header {
                 position: relative;
             }
 
-            .mat-card-title {
+            .mat-mdc-card-title {
                 position: absolute;
                 z-index: 1;
                 top: 0;

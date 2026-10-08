@@ -26,7 +26,7 @@
     }
 }
 
-.mat-chip {
+.mat-mdc-chip {
     padding: 3px 8px;
 }
 
@@ -39,13 +39,15 @@ ul.library {
         list-style-type: none;
         margin-bottom: 2rem;
 
-        .mat-card-image {
+        .mat-mdc-card-image {
             display: inline-block;
             max-width: 100px;
         }
+        /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
         mat-card-title {
             margin: 10px 5px;
         }
+        /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.*/
         mat-card-header {
             margin-bottom: 0.5rem;
         }
@@ -110,7 +112,7 @@ ul.library {
 .filter-header {
     min-height: 64px;
     padding: 8px 24px 0;
-    .mat-form-field {
+    .mat-mdc-form-field {
         font-size: 14px;
         width: 100%;
     }

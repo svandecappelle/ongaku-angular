@@ -43,9 +43,9 @@
       <h1 class="fullname">{{infos.username}}</h1>
       <h2 class="username">@{{infos.username}}</h2>
       <div class="text-center">
-        <mat-chip-list>
-          <mat-chip *ngFor="let group of infos.groups">{{group}}</mat-chip>
-        </mat-chip-list>
+        <mat-chip-listbox>
+          <mat-chip-option *ngFor="let group of infos.groups">{{group}}</mat-chip-option>
+        </mat-chip-listbox>
       </div>
       <br>
       <div class="account-stats">

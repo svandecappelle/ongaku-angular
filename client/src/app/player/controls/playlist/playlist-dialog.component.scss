@@ -1,10 +1,10 @@
 .table-container {
     position: relative;
     margin-top: 50px;
-    .mat-table {
+    .mat-mdc-table {
         max-height: calc(100vh - 465px);
         overflow-y: auto;
-        .mat-header-row {
+        .mat-mdc-header-row {
             position: absolute;
             top: -50px;
             left: 0px;
@@ -16,7 +16,7 @@
 .filter-header {
     min-height: 64px;
     padding: 8px 24px 0;
-    .mat-form-field {
+    .mat-mdc-form-field {
         font-size: 14px;
         width: 100%;
     }
@@ -47,6 +47,6 @@ button {
     flex: 0 0 75px;
 }
 
-.mat-table {
+.mat-mdc-table {
     background-color: transparent;
 }

@@ -58,6 +58,7 @@
     right: 1em;
 }
 
+/* TODO(mdc-migration): The following rule targets internal classes of tabs that may no longer apply for the MDC version. */
 mat-tab-body.mat-tab-body-active {
     z-index: 0;
 }
@@ -71,13 +72,15 @@ ul {
         list-style-type: none;
         margin-bottom: 2rem;
 
-        .mat-card-image {
+        .mat-mdc-card-image {
             display: inline-block;
             max-width: 100px;
         }
+        /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
         mat-card-title {
             margin: 10px 5px;
         }
+        /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
         mat-card-header {
             margin-bottom: 0.5rem;
         }
@@ -157,6 +160,7 @@ ul {
     }
 }
 
+/* TODO(mdc-migration): The following rule targets internal classes of tabs that may no longer apply for the MDC version. */
 .mat-tab-label.mat-tab-label-active {
     background-color: rgba(0,150,136,.3);
 }

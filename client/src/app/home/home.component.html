@@ -5,7 +5,7 @@
     <span *ngIf="!artists || artists.length === 0">No results</span>
     <mat-grid-list [cols]="breakpoint" (window:resize)="onResize($event)" *ngIf="artists && artists.length > 0">
       <mat-grid-tile *ngFor="let artist of artists">
-        <mat-card class="artist" (click)="openArtistDetail(artist.name)">
+        <mat-card appearance="outlined" class="artist" (click)="openArtistDetail(artist.name)">
           <mat-card-header>
             <mat-card-title>{{artist.name}}</mat-card-title>
           </mat-card-header>
@@ -42,7 +42,7 @@
     <span *ngIf="!albums || albums.length === 0">No results</span>
     <mat-grid-list [cols]="breakpoint" *ngIf="albums && albums.length > 0">
       <mat-grid-tile *ngFor="let album of albums">
-        <mat-card class="album" (click)="openAlbumDetail(album)">
+        <mat-card appearance="outlined" class="album" (click)="openAlbumDetail(album)">
           <mat-card-header>
             <mat-card-title>{{album.name}}</mat-card-title>
           </mat-card-header>
