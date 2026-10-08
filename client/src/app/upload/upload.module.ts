@@ -5,14 +5,10 @@ import { MaterialModule } from '../modules/material.module';
 import { DialogComponent } from './dialog/dialog.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { UploadService } from './upload.service';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { DetailsComponent } from './details/details.component';
 
-@NgModule({
-    imports: [CommonModule, MaterialModule, HttpClientModule, BrowserAnimationsModule, RouterModule],
-    declarations: [UploadComponent, DialogComponent, DetailsComponent],
-    exports: [UploadComponent, RouterModule],
-    providers: [UploadService]
-})
+@NgModule({ declarations: [UploadComponent, DialogComponent, DetailsComponent],
+    exports: [UploadComponent, RouterModule], imports: [CommonModule, MaterialModule, BrowserAnimationsModule, RouterModule], providers: [UploadService, provideHttpClient(withInterceptorsFromDi())] })
 export class UploadModule {}

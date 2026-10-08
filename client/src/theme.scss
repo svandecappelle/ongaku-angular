@@ -10,19 +10,19 @@
 @include mat.all-component-typographies();
 @include mat.core();
 
-$my-app-primary: mat.define-palette(mat.$grey-palette, 900);
-$my-app-accent:  mat.define-palette(mat.$teal-palette, 300, 500, A100);
-$my-app-warn:    mat.define-palette(mat.$deep-orange-palette);
+$my-app-primary: mat.m2-define-palette(mat.$m2-grey-palette, 900);
+$my-app-accent:  mat.m2-define-palette(mat.$m2-teal-palette, 300, 500, A100);
+$my-app-warn:    mat.m2-define-palette(mat.$m2-deep-orange-palette);
 
-$my-app-theme: mat.define-dark-theme($my-app-primary, $my-app-accent, $my-app-warn);
+$my-app-theme: mat.m2-define-dark-theme($my-app-primary, $my-app-accent, $my-app-warn);
 
 @include mat.all-component-themes($my-app-theme);
 
 .alternate-theme {
-  $alternate-primary: mat.define-palette(mat.$grey-palette, 900);
-  $alternate-accent:  mat.define-palette(mat.$teal-palette, 300);
+  $alternate-primary: mat.m2-define-palette(mat.$m2-grey-palette, 900);
+  $alternate-accent:  mat.m2-define-palette(mat.$m2-teal-palette, 300);
 
-  $alternate-theme: mat.define-dark-theme($alternate-primary, $alternate-accent);
+  $alternate-theme: mat.m2-define-dark-theme($alternate-primary, $alternate-accent);
 
   @include mat.all-component-themes($alternate-theme);
 }
@@ -30,15 +30,15 @@ $my-app-theme: mat.define-dark-theme($my-app-primary, $my-app-accent, $my-app-wa
 .mat-focused {
   /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
   .mat-form-field-label {
-    color: mat.get-color-from-palette($my-app-accent) !important;
+    color: mat.m2-get-color-from-palette($my-app-accent) !important;
   }
 }
 
 /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
 .mat-form-field-ripple {
-  background-color: mat.get-color-from-palette($my-app-accent) !important;
+  background-color: mat.m2-get-color-from-palette($my-app-accent) !important;
 }
 
 a {
-  color: mat.get-color-from-palette($my-app-accent);
+  color: mat.m2-get-color-from-palette($my-app-accent);
 }

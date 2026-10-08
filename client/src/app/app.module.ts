@@ -8,7 +8,7 @@ import 'moment-duration-format';
 import { MaterialModule } from './modules/material.module';
 
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';  // replaces previous Http service
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';  // replaces previous Http service
 
 import { DragulaModule } from 'ng2-dragula';
 import { MomentModule } from 'ngx-moment';
@@ -60,8 +60,7 @@ import { ReloadService } from './library/reload.service';
 import { CommunicationModule } from './communication/communication.module';
 import { UserModule } from './user/user.module';
 
-@NgModule({
-    declarations: [
+@NgModule({ declarations: [
         AppComponent,
         HeaderComponent,
         ContentComponent,
@@ -80,8 +79,7 @@ import { UserModule } from './user/user.module';
         RadiosComponent,
         ReloadComponent
     ],
-    imports: [
-        BrowserModule,
+    bootstrap: [AppComponent], imports: [BrowserModule,
         BrowserAnimationsModule,
         DragulaModule.forRoot(),
         MomentModule,
@@ -89,14 +87,11 @@ import { UserModule } from './user/user.module';
         ReactiveFormsModule,
         MaterialModule,
         AppRoutingModule,
-        HttpClientModule,
         AppStateModule,
         PlayerModule,
         UploadModule,
         CommunicationModule,
-        UserModule
-    ],
-    providers: [
+        UserModule], providers: [
         AuthGuard,
         AlertService,
         AuthenticationService,
@@ -110,8 +105,7 @@ import { UserModule } from './user/user.module';
         MetadataService,
         UploadService,
         InstallService,
-        ReloadService
-    ],
-    bootstrap: [AppComponent]
-})
+        ReloadService,
+        provideHttpClient(withInterceptorsFromDi())
+    ] })
 export class AppModule { }
