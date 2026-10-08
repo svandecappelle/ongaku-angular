@@ -35,7 +35,6 @@
 // import 'core-js/es6/set';
 
 /** Evergreen browsers require these. **/
-import 'core-js/es6/reflect';
 
 
 

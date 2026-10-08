@@ -15,9 +15,7 @@ import {NgForm} from '@angular/forms';
 import { Observable ,  BehaviorSubject } from 'rxjs';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DataSource } from "@angular/cdk/collections";
-import clone from 'lodash/clone';
-import isArray from 'lodash/isArray';
-import has from 'lodash/has';
+import { clone, isArray } from 'lodash-es';
 
 export interface Metadata {
   key: string;
@@ -73,10 +71,10 @@ export class MetadatasComponent implements OnInit, OnDestroy {
     if (isArray(data)) {
       this.tracks = data.map(t => t.uid);
       this.metadata = {};
-      const ignore = [];
+      const ignore: string[] = [];
       data.forEach(track => {
         Object.keys(track.metadatas).forEach(metadata => {
-          if (!has(this.metadata, metadata)) {
+          if (!Object.prototype.hasOwnProperty.call(this.metadata, metadata)) {
             this.metadata[metadata] = track.metadatas[metadata];
           } else if (this.metadata[metadata] !== track.metadatas[metadata]) {
             ignore.push(metadata);

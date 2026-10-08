@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { DragulaModule } from 'ng2-dragula';
 import { MomentModule } from 'ngx-moment';
 
-import * as moment from 'moment';
+import moment from 'moment';
 import 'moment-duration-format';
 
 import { PlayerComponent } from './player.component';

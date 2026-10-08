@@ -5,8 +5,10 @@ import { ReloadService } from '../library/reload.service';
 
 import { UntypedFormGroup, UntypedFormBuilder } from '@angular/forms';
 
-import * as moment from 'moment';
-import { Chart } from 'chart.js';
+import moment from 'moment';
+import { Chart, registerables } from 'chart.js';
+
+Chart.register(...registerables);
 
 @Component({
     selector: 'app-admin',
@@ -189,15 +191,15 @@ export class AdminComponent implements OnInit {
         },
         options: {
           maintainAspectRatio: false,
-          legend: {
-            display: true
+          plugins: {
+            legend: {
+              display: true
+            }
           },
           scales: {
-            yAxes: [{
-              ticks: {
-                suggestedMax: maxYValue
-              }
-            }]
+            y: {
+              suggestedMax: maxYValue
+            }
           }
         }
       });
@@ -246,15 +248,15 @@ export class AdminComponent implements OnInit {
         },
         options: {
           maintainAspectRatio: false,
-          legend: {
-            display: true
+          plugins: {
+            legend: {
+              display: true
+            }
           },
           scales: {
-            yAxes: [{
-              ticks: {
-                suggestedMax: maxYValue
-              }
-            }]
+            y: {
+              suggestedMax: maxYValue
+            }
           }
         }
       });

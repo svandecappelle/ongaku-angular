@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable ,  Observer } from 'rxjs';
 import { Message } from '../model/message';
 import { Event } from '../model/event';
-import * as socketIo from 'socket.io-client';
+import { io } from 'socket.io-client';
 
 @Injectable()
 export class NotificationsService {
@@ -12,7 +12,7 @@ export class NotificationsService {
   constructor() { }
 
   public initSocket(): void {
-    this.socket = socketIo();
+    this.socket = io();
   }
 
   public send(message: Message): void {
