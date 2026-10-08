@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, Inject } from '@angular/core';
+import { Component, OnInit, ViewChild, Inject, ChangeDetectionStrategy } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { UploadService } from '../upload.service';
 import { forkJoin } from 'rxjs';
@@ -8,6 +8,7 @@ import { MAT_DIALOG_DATA } from '@angular/material/dialog';
     selector: 'app-dialog',
     templateUrl: './dialog.component.html',
     styleUrls: ['./dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class DialogComponent {

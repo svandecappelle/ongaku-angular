@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { AudioService } from './player.service';
 import { Song, IAppState } from '../app-state';
 
@@ -10,6 +10,7 @@ import { Subject ,  Observable } from 'rxjs';
     selector: 'app-player',
     templateUrl: './player.component.html',
     styleUrls: ['./player.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class PlayerComponent implements OnInit, OnDestroy {

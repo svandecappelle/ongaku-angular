@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef, OnDestroy, Renderer2 } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef, OnDestroy, Renderer2, ChangeDetectionStrategy } from '@angular/core';
 import { Store, select } from '@ngrx/store';
 import { BehaviorSubject, Subscription } from 'rxjs';
 
@@ -13,6 +13,7 @@ import { FullscreenComponent } from './fullscreen/fullscreen.component';
     selector: 'app-player-controls',
     templateUrl: './player-controls.component.html',
     styleUrls: ['./player-controls.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class PlayerControlsComponent implements OnInit, OnDestroy {

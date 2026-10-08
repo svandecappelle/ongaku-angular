@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 
 import { ActivatedRoute, Params } from '@angular/router';
 import { HttpEventType, HttpResponse } from '@angular/common/http';
@@ -12,6 +12,7 @@ import { Chart } from 'chart.js';
     selector: 'app-user',
     templateUrl: './user.component.html',
     styleUrls: ['./user.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class UserComponent implements OnInit {

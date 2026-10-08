@@ -4,7 +4,8 @@ import {
   Inject,
   OnDestroy,
   Renderer2,
-  DOCUMENT
+  DOCUMENT,
+  ChangeDetectionStrategy
 } from '@angular/core';
 
 import { Observable } from 'rxjs';
@@ -20,6 +21,7 @@ import { PlaylistDialogComponent } from './playlist-dialog.component';
     selector: 'app-playlist',
     templateUrl: './playlist.component.html',
     styleUrls: ['./playlist.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class PlaylistComponent implements OnInit {

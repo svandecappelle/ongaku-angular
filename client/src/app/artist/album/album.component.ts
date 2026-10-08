@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { ActivatedRoute, Params } from '@angular/router';
@@ -21,6 +21,7 @@ import { AlbumService } from 'app/services/album.service';
     selector: 'app-album',
     templateUrl: './album.component.html',
     styleUrls: ['./album.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class AlbumComponent implements OnInit {

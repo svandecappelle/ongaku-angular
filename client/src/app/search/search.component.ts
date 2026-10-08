@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
 import { MatDialog } from '@angular/material/dialog';
 
@@ -20,6 +20,7 @@ import { searchReducer } from '../header/search-reducer';
     selector: 'app-search',
     templateUrl: './search.component.html',
     styleUrls: ['./search.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class SearchComponent implements OnInit, OnDestroy {

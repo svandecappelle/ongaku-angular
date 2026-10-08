@@ -4,7 +4,8 @@ import {
   Inject,
   OnDestroy,
   ViewChild,
-  ElementRef
+  ElementRef,
+  ChangeDetectionStrategy
 } from '@angular/core';
 
 
@@ -30,6 +31,7 @@ export interface Metadata {
     selector: 'app-metadatas',
     templateUrl: './metadatas.component.html',
     styleUrls: ['./metadatas.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class MetadatasComponent implements OnInit, OnDestroy {

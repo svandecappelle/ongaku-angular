@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
 import { UntypedFormGroup, UntypedFormBuilder, Validators, ValidatorFn, AbstractControl, FormControl } from '@angular/forms';
@@ -19,6 +19,7 @@ export function equalityValidator(testing: String): ValidatorFn {
     selector: 'app-register',
     templateUrl: './register.component.html',
     styleUrls: ['./register.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class RegisterComponent implements OnInit {

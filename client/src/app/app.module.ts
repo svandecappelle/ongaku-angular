@@ -8,7 +8,7 @@ import 'moment-duration-format';
 import { MaterialModule } from './modules/material.module';
 
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';  // replaces previous Http service
+import { provideHttpClient, withInterceptorsFromDi, withXhr } from '@angular/common/http';  // replaces previous Http service
 
 import { DragulaModule } from 'ng2-dragula';
 import { MomentModule } from 'ngx-moment';
@@ -106,6 +106,6 @@ import { UserModule } from './user/user.module';
         UploadService,
         InstallService,
         ReloadService,
-        provideHttpClient(withInterceptorsFromDi())
+        provideHttpClient(withXhr(), withInterceptorsFromDi())
     ] })
 export class AppModule { }

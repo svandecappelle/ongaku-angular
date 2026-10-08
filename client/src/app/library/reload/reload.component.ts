@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
 import { ReloadService } from '../reload.service';
 
@@ -6,6 +6,7 @@ import { ReloadService } from '../reload.service';
     selector: 'app-reload',
     templateUrl: './reload.component.html',
     styleUrls: ['./reload.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class ReloadComponent implements OnInit {

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { StatisticsService } from 'app/services/statistics.service';
 import { AdminService } from 'app/services/admin.service';
 import { ReloadService } from '../library/reload.service';
@@ -12,6 +12,7 @@ import { Chart } from 'chart.js';
     selector: 'app-admin',
     templateUrl: './admin.component.html',
     styleUrls: ['./admin.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class AdminComponent implements OnInit {

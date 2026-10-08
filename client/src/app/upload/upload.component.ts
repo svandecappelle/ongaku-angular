@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogComponent } from './dialog/dialog.component';
@@ -9,6 +9,7 @@ import { UploadService } from './upload.service';
     selector: 'app-upload',
     templateUrl: './upload.component.html',
     styleUrls: ['./upload.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class UploadComponent implements OnInit {

@@ -5,7 +5,8 @@ import {
   Renderer2,
   ViewChild,
   ElementRef,
-  DOCUMENT
+  DOCUMENT,
+  ChangeDetectionStrategy
 } from '@angular/core';
 
 import { DomSanitizer } from '@angular/platform-browser';
@@ -68,6 +69,7 @@ class MetadatasDatabase {
     selector: 'app-fullscreen',
     templateUrl: './fullscreen.component.html',
     styleUrls: ['./fullscreen.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class FullscreenComponent implements OnInit {

@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, ChangeDetectionStrategy } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { UploadService } from '../upload.service';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -8,6 +8,7 @@ import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browse
     selector: 'app-details',
     templateUrl: './details.component.html',
     styleUrls: ['./details.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class DetailsComponent {

@@ -1,10 +1,11 @@
-import { Component, OnInit, Input, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { VuMetterFactory, VuMetter } from './level-vumetter';
 
 @Component({
     selector: 'app-level-meter',
     templateUrl: './level-meter.component.html',
     styleUrls: ['./level-meter.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class LevelMeterComponent implements OnInit {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
 import { Observable } from 'rxjs';
 import { AuthenticationService } from './../services/authentication.service';
@@ -7,6 +7,7 @@ import { AuthenticationService } from './../services/authentication.service';
     selector: 'app-content',
     templateUrl: './content.component.html',
     styleUrls: ['./content.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class ContentComponent implements OnInit {

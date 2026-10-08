@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { NotificationsService } from './notifications.service';
 import { Event } from '../model/event';
 import { Message } from '../model/message';
@@ -9,6 +9,7 @@ import { User } from '../model/user';
     selector: 'app-notifications',
     templateUrl: './notifications.component.html',
     styleUrls: ['./notifications.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class NotificationsComponent implements OnInit {

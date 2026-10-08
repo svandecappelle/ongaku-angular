@@ -1,10 +1,11 @@
 import {
-    Component,
-    OnInit,
-    Inject,
-    OnDestroy,
-    ViewChild,
-    ElementRef
+  Component,
+  OnInit,
+  Inject,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { Store, select } from '@ngrx/store';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -20,6 +21,7 @@ import { Subscription } from 'rxjs';
     selector: 'playlist-dialog',
     templateUrl: 'playlist-dialog.html',
     styleUrls: ['./playlist-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class PlaylistDialogComponent implements OnDestroy {

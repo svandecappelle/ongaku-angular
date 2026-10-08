@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { ActivatedRoute, Params } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
@@ -19,6 +19,7 @@ import { ArtistService } from 'app/services/artist.service';
     selector: 'app-artist',
     templateUrl: './artist.component.html',
     styleUrls: ['./artist.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class ArtistComponent implements OnInit {

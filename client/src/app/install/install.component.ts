@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
 
@@ -8,6 +8,7 @@ import { InstallService } from './install.service';
     selector: 'app-install',
     templateUrl: './install.component.html',
     styleUrls: ['./install.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class InstallComponent implements OnInit {
