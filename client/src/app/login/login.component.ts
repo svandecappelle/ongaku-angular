@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
 import { AlertService, AuthenticationService } from '../services/index';
 import { InstallService } from '../install/install.service';
 
@@ -13,12 +13,12 @@ import { InstallService } from '../install/install.service';
 export class LoginComponent implements OnInit {
     private formSubmitAttempt: boolean;
 
-    form: FormGroup;
+    form: UntypedFormGroup;
     loginInProgress: boolean;
 
     constructor(
       private ref: ChangeDetectorRef,
-      private fb: FormBuilder,
+      private fb: UntypedFormBuilder,
       private authService: AuthenticationService,
       private installService: InstallService,
       private router: Router

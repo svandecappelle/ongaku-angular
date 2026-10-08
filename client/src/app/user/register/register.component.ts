@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
-import { FormGroup, FormBuilder, Validators, ValidatorFn, AbstractControl, FormControl } from '@angular/forms';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ValidatorFn, AbstractControl, FormControl } from '@angular/forms';
 // TODO maybe auto authenticate
 // import { AlertService, AuthenticationService } from '../services/index';
 
@@ -23,10 +23,10 @@ export function equalityValidator(testing: String): ValidatorFn {
 export class RegisterComponent implements OnInit {
   private formSubmitAttempt: boolean;
 
-  form: FormGroup;
+  form: UntypedFormGroup;
   inProgress: boolean = true;
 
-  constructor(private fb: FormBuilder, private service: RegisterService,
+  constructor(private fb: UntypedFormBuilder, private service: RegisterService,
     private router: Router) {
     }
 

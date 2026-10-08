@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
 
 @Component({
   selector: 'app-menu',
@@ -8,7 +8,7 @@ import { FormControl } from '@angular/forms';
 })
 export class MenuComponent implements OnInit {
 
-  mode = new FormControl('over');
+  mode = new UntypedFormControl('over');
   constructor() { }
 
   ngOnInit() {

@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
 
 import { InstallService } from './install.service';
 
@@ -12,11 +12,11 @@ import { InstallService } from './install.service';
 export class InstallComponent implements OnInit {
   private formSubmitAttempt: boolean;
 
-  form: FormGroup;
+  form: UntypedFormGroup;
   loginInProgress: boolean;
 
   constructor(private ref: ChangeDetectorRef,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private router: Router,
     private installService: InstallService) { }
 

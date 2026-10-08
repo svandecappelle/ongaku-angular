@@ -3,7 +3,7 @@ import { StatisticsService } from 'app/services/statistics.service';
 import { AdminService } from 'app/services/admin.service';
 import { ReloadService } from '../library/reload.service';
 
-import { FormGroup, FormBuilder } from '@angular/forms';
+import { UntypedFormGroup, UntypedFormBuilder } from '@angular/forms';
 
 import * as moment from 'moment';
 import { Chart } from 'chart.js';
@@ -16,7 +16,7 @@ import { Chart } from 'chart.js';
 export class AdminComponent implements OnInit {
   private formSubmitAttempt: boolean;
 
-  form: FormGroup;
+  form: UntypedFormGroup;
   properties: any;
   reloading: boolean = false;
 
@@ -100,7 +100,7 @@ export class AdminComponent implements OnInit {
 
   @ViewChild('storage', { read: ElementRef, static: true }) canvasStorage: ElementRef;
 
-  constructor (private service: StatisticsService, private fb: FormBuilder, private configureService: AdminService, private reloadService: ReloadService) { }
+  constructor (private service: StatisticsService, private fb: UntypedFormBuilder, private configureService: AdminService, private reloadService: ReloadService) { }
 
   ngOnInit() {
     setTimeout(() => {
