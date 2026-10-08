@@ -61,60 +61,57 @@ import { CommunicationModule } from './communication/communication.module';
 import { UserModule } from './user/user.module';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    HeaderComponent,
-    ContentComponent,
-    HomeComponent,
-    InstallComponent,
-    UpgradeComponent,
-    MenuComponent,
-    LoginComponent,
-    MetadatasComponent,
-    AdminComponent,
-    SearchComponent,
-    ArtistComponent,
-    AlbumComponent,
-    UsersComponent,
-    LibraryComponent,
-    RadiosComponent,
-    ReloadComponent
-  ],
-  imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
-    DragulaModule.forRoot(),
-    MomentModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MaterialModule,
-    AppRoutingModule,
-    HttpClientModule,
-    AppStateModule,
-    PlayerModule,
-    UploadModule,
-    CommunicationModule,
-    UserModule
-  ],
-  entryComponents: [
-    MetadatasComponent
-  ],
-  providers: [
-    AuthGuard,
-    AlertService,
-    AuthenticationService,
-    UserService,
-    AudioService,
-    ArtistService,
-    AlbumService,
-    StatisticsService,
-    AdminService,
-    UsersService,
-    MetadataService,
-    UploadService,
-    InstallService,
-    ReloadService
-  ],
-  bootstrap: [AppComponent]
+    declarations: [
+        AppComponent,
+        HeaderComponent,
+        ContentComponent,
+        HomeComponent,
+        InstallComponent,
+        UpgradeComponent,
+        MenuComponent,
+        LoginComponent,
+        MetadatasComponent,
+        AdminComponent,
+        SearchComponent,
+        ArtistComponent,
+        AlbumComponent,
+        UsersComponent,
+        LibraryComponent,
+        RadiosComponent,
+        ReloadComponent
+    ],
+    imports: [
+        BrowserModule,
+        BrowserAnimationsModule,
+        DragulaModule.forRoot(),
+        MomentModule,
+        FormsModule,
+        ReactiveFormsModule,
+        MaterialModule,
+        AppRoutingModule,
+        HttpClientModule,
+        AppStateModule,
+        PlayerModule,
+        UploadModule,
+        CommunicationModule,
+        UserModule
+    ],
+    providers: [
+        AuthGuard,
+        AlertService,
+        AuthenticationService,
+        UserService,
+        AudioService,
+        ArtistService,
+        AlbumService,
+        StatisticsService,
+        AdminService,
+        UsersService,
+        MetadataService,
+        UploadService,
+        InstallService,
+        ReloadService
+    ],
+    bootstrap: [AppComponent]
 })
 export class AppModule { }

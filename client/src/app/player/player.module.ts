@@ -33,32 +33,29 @@ export class DurationPipe implements PipeTransform {
 
 @NgModule({
     declarations: [
-      // components
-      PlayerComponent,
-      PlayerControlsComponent,
-      PlaylistComponent,
-      PlaylistDialogComponent,
-      DurationPipe,
-      FullscreenComponent,
-      LevelMeterComponent
-    ],
-    entryComponents: [
-      PlaylistDialogComponent
+        // components
+        PlayerComponent,
+        PlayerControlsComponent,
+        PlaylistComponent,
+        PlaylistDialogComponent,
+        DurationPipe,
+        FullscreenComponent,
+        LevelMeterComponent
     ],
     imports: [
-      MaterialModule,
-      BrowserModule,
-      FormsModule,
-      DragulaModule,
-      MomentModule
+        MaterialModule,
+        BrowserModule,
+        FormsModule,
+        DragulaModule,
+        MomentModule
     ],
     exports: [
-      PlayerComponent
+        PlayerComponent
     ],
     providers: [
-      AudioService,
-      PlaylistService,
-      PlayerActions
+        AudioService,
+        PlaylistService,
+        PlayerActions
     ]
-  })
+})
 export class PlayerModule {}

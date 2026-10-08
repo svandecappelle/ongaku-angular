@@ -10,10 +10,9 @@ import { RouterModule } from '@angular/router';
 import { DetailsComponent } from './details/details.component';
 
 @NgModule({
-  imports: [CommonModule, MaterialModule, HttpClientModule, BrowserAnimationsModule, RouterModule],
-  declarations: [UploadComponent, DialogComponent, DetailsComponent],
-  exports: [UploadComponent, RouterModule],
-  entryComponents: [DialogComponent, DetailsComponent], // Add the DialogComponent as entry component
-  providers: [UploadService]
+    imports: [CommonModule, MaterialModule, HttpClientModule, BrowserAnimationsModule, RouterModule],
+    declarations: [UploadComponent, DialogComponent, DetailsComponent],
+    exports: [UploadComponent, RouterModule],
+    providers: [UploadService]
 })
 export class UploadModule {}
