@@ -155,7 +155,7 @@ class Transcoder {
     }
 
     startStream(req, res, outputFile, sessionId) {
-        var reqStreaming = _.clone(req),
+        var reqStreaming = { headers: req.headers, method: req.method, url: req.url },
             settings = {
                 "mode": "development",
                 "forceDownload": false,

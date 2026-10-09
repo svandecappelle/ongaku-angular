@@ -67,5 +67,11 @@
   "devDependencies": {
     "concurrently": "^10.0.6",
     "nodemon": "^3.1.14"
+  },
+  "overrides": {
+    "canvas": "^3.2.3"
+  },
+  "allowScripts": {
+    "canvas@3.2.3": true
   }
 }

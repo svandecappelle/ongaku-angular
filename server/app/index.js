@@ -27,9 +27,9 @@ class Application {
 			callback();
 		});
 
-		q.drain = () => {
+		q.drain(() => {
 			console.info("All tasks have been processed.");
-		};
+		});
 
 		q.push({
 			name: 'scan'

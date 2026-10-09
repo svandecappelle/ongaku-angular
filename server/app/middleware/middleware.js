@@ -148,7 +148,7 @@ class Middleware {
         logger.debug(audio);
         transcoder.transcode(audio, req, res);
       } else {
-        var reqStreaming = _.clone(req),
+        var reqStreaming = { headers: req.headers, method: req.method, url: req.url },
           settings = {
             "mode": "development",
             "forceDownload": false,
