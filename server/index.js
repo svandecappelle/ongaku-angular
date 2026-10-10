@@ -8,6 +8,8 @@ const cookieParser = require('cookie-parser');
 const errorhandler = require('errorhandler');
 const favicon = require('serve-favicon');
 const session = require('express-session');
+const { RedisStore } = require('connect-redis');
+const redis = require('redis');
 const yaml_config = require('node-yaml-config');
 const http = require('http');
 
@@ -74,6 +76,7 @@ class Server {
 
     // The secret of application.yml signs the session cookies
     app.use(session({
+      store: this.sessionStore(),
       resave: false,
       saveUninitialized: true,
       secret: nconf.get('secret') || 'keyboard cat',
@@ -99,6 +102,30 @@ class Server {
       console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
       // application specific logging, throwing an error, or other logic here
     });
+  }
+
+  /**
+   * Sessions in Redis when it is the database, so that they survive a restart;
+   * in memory otherwise (express-session default).
+   */
+  sessionStore () {
+    if (nconf.get('database') !== 'redis') {
+      return undefined;
+    }
+    const host = nconf.get('redis:host');
+    const options = { database: parseInt(nconf.get('redis:database'), 10) || 0 };
+    if (host && host.indexOf('/') >= 0) {
+      options.socket = { path: host };
+    } else {
+      options.socket = { host: host || '127.0.0.1', port: Number(nconf.get('redis:port')) || 6379 };
+    }
+    if (nconf.get('redis:password')) {
+      options.password = nconf.get('redis:password');
+    }
+    const client = redis.createClient(options);
+    client.on('error', (err) => console.error(`Session store: ${err.message}`));
+    client.connect().catch((err) => console.error(`Session store: cannot connect to Redis (${err.message})`));
+    return new RedisStore({ client, prefix: 'ongaku:sess:' });
   }
 
   initRoutes () {

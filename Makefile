@@ -116,9 +116,17 @@ app:
 	elif [ -n "$(DOMAIN)" ] && ! grep -qx "hostname: $(DOMAIN)" "$(CONFIG)"; then
 	  sed -i "s/^hostname: .*/hostname: $(DOMAIN)/" "$(CONFIG)"
 	fi
-	# Settings of docker-compose.yml, rewritten only when they change.
-	settings="$$( { grep -vE '^(MUSIC_DIR|ONGAKU_PORT)=' "$(ENV_FILE)" 2>/dev/null || true; printf 'MUSIC_DIR=%s\nONGAKU_PORT=%s\n' "$$music" "$(PORT)"; } )"
-	if [ "$$settings" != "$$(cat "$(ENV_FILE)" 2>/dev/null)" ]; then printf '%s\n' "$$settings" > "$(ENV_FILE)"; fi
+	# Redis password: generated once (also for an install made before it existed) and kept in the
+	# configuration, the only "password:" key of the template; docker-compose.yml gives it to Redis.
+	redis_password="$$(sed -n 's/^    password: *//p' "$(CONFIG)")"
+	if [ -z "$$redis_password" ]; then
+	  redis_password="$$(openssl rand -hex 24 2>/dev/null || head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+	  sed -i "s/^    password:.*/    password: $$redis_password/" "$(CONFIG)"
+	  echo "Generated a Redis password ($(CONFIG))."
+	fi
+	# Settings of docker-compose.yml, rewritten only when they change; the file holds the Redis password.
+	settings="$$( { grep -vE '^(MUSIC_DIR|ONGAKU_PORT|REDIS_PASSWORD)=' "$(ENV_FILE)" 2>/dev/null || true; printf 'MUSIC_DIR=%s\nONGAKU_PORT=%s\nREDIS_PASSWORD=%s\n' "$$music" "$(PORT)" "$$redis_password"; } )"
+	if [ "$$settings" != "$$(cat "$(ENV_FILE)" 2>/dev/null)" ]; then (umask 077; printf '%s\n' "$$settings" > "$(ENV_FILE)"); chmod 600 "$(ENV_FILE)"; fi
 	echo "Building and starting the containers on 127.0.0.1:$(PORT) (the first build takes a few minutes)…"
 	$(COMPOSE) up -d --build
 	for i in $$(seq 1 60); do

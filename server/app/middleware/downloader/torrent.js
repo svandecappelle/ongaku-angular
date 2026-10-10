@@ -17,19 +17,22 @@ class TorrentDownloader {
   }
 
   watch() {
-    if (!fs.existsSync(`${nconf.get('library')[0]}/.torrents`)) {
-      fs.mkdirSync(`${nconf.get('library')[0]}/.torrents`);
+    // Torrents dropped in the .torrents folder of the library; the library can be read only (Docker)
+    const libraryTorrents = `${nconf.get('library')[0]}/.torrents`;
+    try {
+      fs.mkdirSync(libraryTorrents, { recursive: true });
+      var watcher = chokidar.watch(libraryTorrents, {
+        ignored: /^\./,
+        persistent: true
+      });
+      watcher.on('add', (file) => {
+        if (path.extname(file) === ".torrent") {
+          this.add(file, false).catch((err) => console.error(`Unable to add torrent ${file}`, err));
+        }
+      });
+    } catch (err) {
+      console.info(`Torrents of the library folder disabled: ${libraryTorrents} can't be created (${err.code})`);
     }
-    var watcher = chokidar.watch(`${nconf.get('library')[0]}/.torrents`, {
-      ignored: /^\./,
-      persistent: true
-    });
-
-    watcher.on('add', (file) => {
-      if (path.extname(file) === ".torrent") {
-        this.add(file, false).catch((err) => console.error(`Unable to add torrent ${file}`, err));
-      }
-    });
 
     var watcherUsers = chokidar.watch(`${path.resolve(__dirname, "../../../../public/user")}`, {
       ignored: /^\./,

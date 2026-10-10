@@ -76,11 +76,8 @@ class SpotifyConnector {
   }
 
   async getAlbumInfo(artist, album) {
-    return new Promise((resolve, reject) => {
-      return this.lastfmConnector.getAlbumInfo(artist, album).then(data => {
-        resolve(data);
-      });
-    });
+    // Errors reach the caller (Library.getAlbumCover logs them)
+    return this.lastfmConnector.getAlbumInfo(artist, album);
   }
 }
 

@@ -7,7 +7,6 @@ const moment = require('moment');
 const nconf = require('nconf');
 const getFolderSize = require('get-folder-size').default;
 const getSize = (folder, callback) => getFolderSize.strict(folder).then((size) => callback(null, size), callback);
-const forever = require('forever');
 
 const library = require("./../../middleware/library");
 const middleware = require("./../../middleware/middleware");

@@ -24,8 +24,12 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    # Saves the database on disk (users, playlists, statistics)
-    command: ["redis-server", "--appendonly", "yes"]
+    # Saves the database on disk (users, playlists, statistics, sessions); password set by "make app"
+    command: ["sh", "-c", "exec redis-server --appendonly yes $${REDIS_PASSWORD:+--requirepass \"$$REDIS_PASSWORD\"}"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      # Used by redis-cli for the health check
+      REDISCLI_AUTH: ${REDIS_PASSWORD:-}
     volumes:
       - redis-data:/data
     healthcheck:

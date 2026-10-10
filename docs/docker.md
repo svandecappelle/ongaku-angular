@@ -51,7 +51,10 @@ obligatoire** si le serveur est accessible depuis Internet.
   avec un secret aléatoire (une seule fois : il est ensuite conservé ; seul le
   nom d'hôte est mis à jour). Ajoutez-y vos clés d'API Last.fm / Spotify pour
   les pochettes, photos et biographies, puis `make app`.
-- Écrit `MUSIC_DIR` et `ONGAKU_PORT` dans `.env`, lu par `docker-compose.yml`.
+- Génère un mot de passe Redis (une seule fois, y compris pour une installation
+  plus ancienne qui n'en avait pas) : il est gardé dans `config/application.yml`.
+- Écrit `MUSIC_DIR`, `ONGAKU_PORT` et `REDIS_PASSWORD` dans `.env` (lisible par
+  son propriétaire seulement), lu par `docker-compose.yml`.
 - Construit l'image et démarre les conteneurs, puis attend que l'application
   réponde sur `127.0.0.1:PORT`.
 
@@ -118,7 +121,7 @@ Sans nginx, pour un essai : `make app MUSIC_DIR=…`, puis depuis votre poste
 
 | Volume | Contenu |
 |---|---|
-| `redis-data` | Base Redis : comptes, playlists, statistiques, réglages. |
+| `redis-data` | Base Redis : comptes, playlists, statistiques, réglages et sessions (on reste connecté après un redémarrage). |
 | `ongaku-users` | Avatars, fonds d'écran et fichiers envoyés par les utilisateurs. |
 | `ongaku-covers` | Photos d'artistes enregistrées. |
 
@@ -140,7 +143,7 @@ vérifiez-le avec `docker volume ls`.
 | `413 Request Entity Too Large` à l'envoi | Augmenter `client_max_body_size` dans le modèle, puis `sudo make nginx`. |
 | `nginx does not load …` | `nginx.conf` n'inclut pas le dossier du site : ajouter l'`include` dans son bloc `http`. |
 | certbot échoue | Le DNS du domaine doit pointer sur le serveur et le port 80 être ouvert. |
-| Déconnexion après un redémarrage | Normal : les sessions sont gardées en mémoire par le serveur. |
+| `NOAUTH Authentication required` dans les journaux | Le mot de passe Redis de `config/application.yml` et celui de `.env` diffèrent : relancer `make app`. |
 
 ## Limites de l'image
 
