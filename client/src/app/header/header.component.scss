@@ -17,16 +17,14 @@
 }
 
 .search {
-	font-size: 0.8em;
-	.mat-icon{
-		font-size: 100%;
-	}
-	/* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
-	.mat-form-field-infix.mat-form-field-infix{
-		padding: 2px 0px;
+	width: 280px;
+	max-width: 40vw;
+	font-size: 14px;
+	margin-right: 8px;
+	.mat-icon {
+		padding: 0 4px 0 8px;
 	}
 }
-
 .theme-item {
 	min-width: 260px;
 	::ng-deep .mat-mdc-menu-item-text {

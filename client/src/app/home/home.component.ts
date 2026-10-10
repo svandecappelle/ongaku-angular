@@ -115,7 +115,7 @@ export class HomeComponent implements OnInit {
   }
 
   getImageSrc(src) {
-    let image = src.image ? src.image[0] : '/static/img/album.jpg';
+    let image = src.image && src.image[0] ? src.image[0] : '/static/img/album.png';
     return this._sanitizer.bypassSecurityTrustUrl(`${image}`);
   }
 

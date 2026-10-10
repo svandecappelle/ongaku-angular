@@ -2,7 +2,8 @@
 <mat-dialog-content>
   <div class="filter-header">
     <mat-form-field>
-      <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+      <mat-label>Filter</mat-label>
+      <input matInput (keyup)="applyFilter($event.target.value)">
     </mat-form-field>
   </div>
 

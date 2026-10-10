@@ -2,8 +2,8 @@
   <h3>
     Folder: {{location.name}}
     @if (showCreateFolderInput) {
-      <mat-form-field class="search">
-        <input matInput  (change)="setNewFolderName($event.target.value)">
+      <mat-form-field class="folder-name dense-field">
+        <input matInput placeholder="New folder name" aria-label="New folder name" (change)="setNewFolderName($event.target.value)">
       </mat-form-field>
     }
     @if (!showCreateFolderInput) {

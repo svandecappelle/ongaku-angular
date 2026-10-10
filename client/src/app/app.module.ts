@@ -2,6 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { NgModule, inject, provideAppInitializer } from '@angular/core';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 
 import 'moment-duration-format';
 
@@ -97,6 +98,7 @@ import { ShellComponent } from './v3/shell/shell.component';
         UserModule,
         ShellComponent], providers: [
         AuthGuard,
+        { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'outline', subscriptSizing: 'dynamic', color: 'accent' } },
         AlertService,
         AuthenticationService,
         UserService,

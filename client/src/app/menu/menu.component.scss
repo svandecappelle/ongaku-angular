@@ -8,11 +8,22 @@ button {
 	color: inherit;
 }
 
+.mat-mdc-list-item {
+	padding: 0 12px;
+}
+
 :host {
 	position: fixed;
-	top: 55px;
+	top: 64px;
 	left: 0;
 	bottom: 0;
 	z-index: 91;
 	box-shadow: 0 3px 5px 0px rgba(0,0,0,0),0 10px 10px 0 rgba(0,0,0,.5);
+}
+
+// mat-toolbar is 56px tall on small screens
+@media (max-width: 599px) {
+	:host {
+		top: 56px;
+	}
 }

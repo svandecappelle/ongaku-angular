@@ -1,11 +1,11 @@
 /* You can add global styles to this file, and also import other style files */
-@import "@angular/material/prebuilt-themes/indigo-pink.css";
 @import "../node_modules/dragula/dist/dragula.css";
 
 body {
   margin: 0px;
   background-color: var(--ongaku-bg);
   color: var(--ongaku-text);
+  font-family: Roboto, "Helvetica Neue", sans-serif;
   &.no-scroll {
     overflow: hidden;
   }
@@ -49,7 +49,7 @@ mat-card.album, mat-card.artist {
       cursor: pointer;
       /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
       /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
-      .mat-card-header-text {
+      .mat-mdc-card-header-text {
           width: 100%;
           text-align: center;
           vertical-align: middle;

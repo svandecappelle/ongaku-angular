@@ -3,7 +3,8 @@
     <mat-card-content>
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
         <mat-form-field class="full-width-input">
-          <input matInput placeholder="User"
+          <mat-label>User</mat-label>
+          <input matInput
             formControlName="userName" required>
           @if (isFieldInvalid('userName')) {
             <mat-error>
@@ -12,7 +13,8 @@
           }
         </mat-form-field>
         <mat-form-field class="full-width-input">
-          <input matInput placeholder="Email"
+          <mat-label>Email</mat-label>
+          <input matInput
             formControlName="email" required>
           @if (isFieldInvalid('email')) {
             <mat-error>
@@ -21,7 +23,8 @@
           }
         </mat-form-field>
         <mat-form-field class="full-width-input">
-          <input matInput type="password" placeholder="Password"
+          <mat-label>Password</mat-label>
+          <input matInput type="password"
             formControlName="password" required>
           @if (isFieldInvalid('password')) {
             <mat-error>
@@ -30,7 +33,8 @@
           }
         </mat-form-field>
         <mat-form-field class="full-width-input">
-          <input matInput type="password" placeholder="Password confirmation"
+          <mat-label>Password confirmation</mat-label>
+          <input matInput type="password"
             formControlName="confirmPassword" required>
           @if (isFieldInvalid('confirmPassword')) {
             <mat-error>

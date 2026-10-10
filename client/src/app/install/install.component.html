@@ -15,7 +15,8 @@
     <form [formGroup]="form">
       <p>Enter admin credentials</p>
       <mat-form-field class="full-width-input">
-        <input matInput placeholder="User" formControlName="userName" required>
+        <mat-label>User</mat-label>
+        <input matInput formControlName="userName" required>
         @if (isFieldInvalid('userName')) {
           <mat-error>
             Please inform your user name
@@ -23,7 +24,8 @@
         }
       </mat-form-field>
       <mat-form-field class="full-width-input">
-        <input matInput type="email" placeholder="Email" formControlName="email" required>
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" required>
         @if (isFieldInvalid('email')) {
           <mat-error>
             Please inform your email
@@ -31,7 +33,8 @@
         }
       </mat-form-field>
       <mat-form-field class="full-width-input">
-        <input matInput type="password" placeholder="Password" formControlName="password" required>
+        <mat-label>Password</mat-label>
+        <input matInput type="password" formControlName="password" required>
         @if (isFieldInvalid('userName')) {
           <mat-error>
             Please inform your password

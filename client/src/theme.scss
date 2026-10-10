@@ -156,6 +156,20 @@ html[data-motion='reduced'] *::after {
   scroll-behavior: auto !important;
 }
 
+// Compact form fields: 40px high outlined fields (the label floats on the outline)
+@include mat.form-field-density(mat.m2-define-dark-theme((
+  color: (primary: $my-app-primary, accent: $my-app-accent, warn: $my-app-warn),
+  density: -4,
+)));
+
+// Label-less inline fields (toolbar search, filters): 36px high
+.dense-field {
+  @include mat.form-field-density(mat.m2-define-dark-theme((
+    color: (primary: $my-app-primary, accent: $my-app-accent, warn: $my-app-warn),
+    density: -5,
+  )));
+}
+
 .alternate-theme {
   $alternate-primary: mat.m2-define-palette(mat.$m2-grey-palette, 900);
   $alternate-accent:  mat.m2-define-palette(mat.$m2-teal-palette, 300);
@@ -165,22 +179,9 @@ html[data-motion='reduced'] *::after {
   @include mat.all-component-themes($alternate-theme);
 }
 
-.mat-focused {
-  /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
-  .mat-form-field-label {
-    color: mat.m2-get-color-from-palette($my-app-accent) !important;
-  }
-}
-
-/* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version.*/
-.mat-form-field-ripple {
-  background-color: mat.m2-get-color-from-palette($my-app-accent) !important;
-}
-
 a {
   color: var(--ongaku-accent);
 }
-
 // The palettes built from CSS variables have no lighter hue for the track of
 // progress bars: derive it from the bar colour, or the progress is invisible
 html .mat-mdc-progress-bar.mat-mdc-progress-bar {

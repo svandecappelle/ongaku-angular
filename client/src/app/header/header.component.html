@@ -12,9 +12,9 @@
         </button>
       </nav>
       <span class="spacer"></span>
-      <mat-form-field class="search">
-        <input matInput (change)="search($event.target.value)">
-        <mat-icon matSuffix>search</mat-icon>
+      <mat-form-field class="search dense-field">
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput placeholder="Search" aria-label="Search" (change)="search($event.target.value)">
       </mat-form-field>
       <button mat-icon-button [matMenuTriggerFor]="themeMenu" aria-label="Theme">
         <mat-icon>palette</mat-icon>
