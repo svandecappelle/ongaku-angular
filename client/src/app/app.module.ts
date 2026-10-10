@@ -1,7 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
-import { NgModule } from '@angular/core';
+import { NgModule, inject, provideAppInitializer } from '@angular/core';
 
 import 'moment-duration-format';
 
@@ -14,6 +14,7 @@ import { DragulaModule } from 'ng2-dragula';
 import { MomentModule } from 'ngx-moment';
 
 import { AppComponent } from './app.component';
+import { ThemeService } from './services/theme.service';
 import { HeaderComponent } from './header/header.component';
 import { ContentComponent } from './content/content.component';
 import { AppRoutingModule } from './app-routing.module';
@@ -106,6 +107,8 @@ import { UserModule } from './user/user.module';
         UploadService,
         InstallService,
         ReloadService,
-        provideHttpClient(withXhr(), withInterceptorsFromDi())
+        provideHttpClient(withXhr(), withInterceptorsFromDi()),
+        // Apply the saved theme on startup, before any component renders (login page included)
+        provideAppInitializer(() => { inject(ThemeService); })
     ] })
 export class AppModule { }

@@ -19,6 +19,78 @@ $my-app-theme: mat.m2-define-dark-theme($my-app-primary, $my-app-accent, $my-app
 
 @include mat.all-component-themes($my-app-theme);
 
+// Other themes, selected by ThemeService through <html data-theme="…">.
+// "nuit" is the default theme above; these only override component colours.
+$aube-theme: mat.m2-define-light-theme(
+  mat.m2-define-palette(mat.$m2-grey-palette, 100),
+  mat.m2-define-palette(mat.$m2-teal-palette, 700, 500, 900),
+  $my-app-warn
+);
+$vinyle-theme: mat.m2-define-dark-theme(
+  mat.m2-define-palette(mat.$m2-brown-palette, 900),
+  mat.m2-define-palette(mat.$m2-orange-palette, 300, 200, 500),
+  $my-app-warn
+);
+$minuit-theme: mat.m2-define-dark-theme(
+  mat.m2-define-palette(mat.$m2-indigo-palette, 900),
+  mat.m2-define-palette(mat.$m2-deep-purple-palette, 200, 100, A100),
+  $my-app-warn
+);
+
+html[data-theme='aube'] {
+  @include mat.all-component-colors($aube-theme);
+}
+html[data-theme='vinyle'] {
+  @include mat.all-component-colors($vinyle-theme);
+}
+html[data-theme='minuit'] {
+  @include mat.all-component-colors($minuit-theme);
+}
+
+// Colours for the app's own styles. Keep in sync with THEMES in theme.service.ts.
+:root,
+html[data-theme='nuit'] {
+  --ongaku-bg: #0f1115;
+  --ongaku-surface: #171a21;
+  --ongaku-surface-2: #222731;
+  --ongaku-border: #2c323e;
+  --ongaku-text: #eceef2;
+  --ongaku-muted: #9aa3b2;
+  --ongaku-accent: #4fd1c5;
+  --ongaku-on-accent: #08201e;
+}
+html[data-theme='aube'] {
+  --ongaku-bg: #f6f5f2;
+  --ongaku-surface: #ffffff;
+  --ongaku-surface-2: #eceae4;
+  --ongaku-border: #ddd9d0;
+  --ongaku-text: #1a1b1e;
+  --ongaku-muted: #5b5e66;
+  --ongaku-accent: #0f766e;
+  --ongaku-on-accent: #ffffff;
+}
+html[data-theme='vinyle'] {
+  --ongaku-bg: #16110d;
+  --ongaku-surface: #201914;
+  --ongaku-surface-2: #2d241c;
+  --ongaku-border: #3b2f25;
+  --ongaku-text: #f3e9df;
+  --ongaku-muted: #b5a596;
+  --ongaku-accent: #f2a65a;
+  --ongaku-on-accent: #2a1606;
+}
+html[data-theme='minuit'] {
+  --ongaku-bg: #0e0c1a;
+  --ongaku-surface: #16132a;
+  --ongaku-surface-2: #221e3d;
+  --ongaku-border: #302a52;
+  --ongaku-text: #eeebff;
+  --ongaku-muted: #a6a2c8;
+  --ongaku-accent: #a78bfa;
+  --ongaku-on-accent: #1a1033;
+}
+
+
 .alternate-theme {
   $alternate-primary: mat.m2-define-palette(mat.$m2-grey-palette, 900);
   $alternate-accent:  mat.m2-define-palette(mat.$m2-teal-palette, 300);
@@ -41,5 +113,5 @@ $my-app-theme: mat.m2-define-dark-theme($my-app-primary, $my-app-accent, $my-app
 }
 
 a {
-  color: mat.m2-get-color-from-palette($my-app-accent);
+  color: var(--ongaku-accent);
 }

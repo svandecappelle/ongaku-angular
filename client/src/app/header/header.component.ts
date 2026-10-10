@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AuthenticationService } from './../services/authentication.service';
+import { ThemeService } from './../services/theme.service';
 
 import {
   SearchLibraryAction
@@ -22,7 +23,7 @@ import { Store, Action, select } from '@ngrx/store';
 export class HeaderComponent implements OnInit {
   isLoggedIn$: Observable<boolean>;
 
-  constructor(private authService: AuthenticationService, private store: Store<IAppState>) { }
+  constructor(private authService: AuthenticationService, private store: Store<IAppState>, public themeService: ThemeService) { }
 
   ngOnInit() {
     this.isLoggedIn$ = this.authService.isLoggedIn();

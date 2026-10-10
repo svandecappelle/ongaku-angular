@@ -6,3 +6,4 @@ export * from './artist.service';
 export * from './statistics.service';
 export * from './user.service';
 export * from './metadata.service';
+export * from './theme.service';

@@ -16,6 +16,32 @@
         <input matInput (change)="search($event.target.value)">
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
+      <button mat-icon-button [matMenuTriggerFor]="themeMenu" aria-label="Theme">
+        <mat-icon>palette</mat-icon>
+      </button>
+      <mat-menu #themeMenu="matMenu">
+        @for (theme of themeService.themes; track theme.id) {
+          <button mat-menu-item class="theme-item" (click)="themeService.setTheme(theme.id)"
+            [attr.aria-pressed]="theme.id === themeService.selected()">
+            <span class="theme-swatch" [style.background]="theme.swatch.background">
+              <span [style.background]="theme.swatch.accent"></span>
+            </span>
+            <span class="theme-label">
+              {{theme.label}}
+              <small>{{theme.description}}</small>
+            </span>
+            @if (theme.id === themeService.selected()) {
+              <mat-icon class="theme-check">check</mat-icon>
+            }
+          </button>
+        }
+        <mat-divider></mat-divider>
+        <button mat-menu-item role="menuitemcheckbox" [attr.aria-checked]="themeService.followSystem()"
+          (click)="$event.stopPropagation(); themeService.setFollowSystem(!themeService.followSystem())">
+          <mat-icon>{{ themeService.followSystem() ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
+          <span>Follow system light/dark mode</span>
+        </button>
+      </mat-menu>
       <button mat-icon-button [matMenuTriggerFor]="menu">
         <mat-icon>more_vert</mat-icon>
       </button>

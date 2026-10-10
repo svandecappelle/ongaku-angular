@@ -7,6 +7,16 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script>
+    // Apply the saved theme before Angular boots to avoid a flash of the default theme.
+    // ThemeService takes over afterwards (and handles "follow system").
+    try {
+      var pref = JSON.parse(localStorage.getItem('ongaku.theme') || 'null');
+      if (pref && pref.theme && !pref.followSystem) {
+        document.documentElement.dataset.theme = pref.theme;
+      }
+    } catch (e) {}
+  </script>
   <!--<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">-->
   <link href="/assets/fonts/iconfont/material-icons.css?family=Material+Icons" rel="stylesheet">
 
