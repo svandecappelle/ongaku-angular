@@ -27,8 +27,8 @@ export class AppearanceComponent {
   readonly scaleMax = CONTENT_SCALE_MAX;
 
   readonly layouts: { id: Layout; label: string; description: string }[] = [
-    { id: 'legacy', label: 'Classic', description: 'Top bar, icon menu and the current pages' },
-    { id: 'modern', label: 'New (preview)', description: 'Side navigation, new player and queue panel' },
+    { id: 'modern', label: 'New', description: 'Side navigation, new player and queue panel' },
+    { id: 'legacy', label: 'Classic', description: 'Top bar, icon menu and the former pages' },
   ];
 
   readonly accentModes: { id: AccentMode; label: string; description: string }[] = [

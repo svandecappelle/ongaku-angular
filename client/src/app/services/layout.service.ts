@@ -4,7 +4,7 @@ import { CanMatchFn, Router } from '@angular/router';
 import { Layout, ThemeService } from './theme.service';
 
 /**
- * Choice between the classic interface and the new one.
+ * Choice between the new interface (default) and the classic one.
  *
  * The classic components are left untouched: the new shell replaces the header,
  * menu and player (ContentComponent), and new pages are declared before the
@@ -24,7 +24,7 @@ export class LayoutService {
   constructor() {
     const ui = new URLSearchParams(inject(DOCUMENT).location.search).get('ui');
     if (ui === 'modern' || ui === 'legacy') {
-      this.theme.update({ layout: ui });
+      this.theme.update({ layout: ui, layoutChosen: true });
     }
   }
 
@@ -32,7 +32,7 @@ export class LayoutService {
     if (layout === this.layout()) {
       return;
     }
-    this.theme.update({ layout });
+    this.theme.update({ layout, layoutChosen: true });
     // Matches the routes again, to show the version of the current page for this interface
     this.router.navigateByUrl(this.router.url, { onSameUrlNavigation: 'reload' });
   }
