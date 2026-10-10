@@ -1,0 +1,26 @@
+@if (actions.selected(); as selected) {
+  @if (selected.length) {
+    <div class="bar" role="toolbar" aria-label="Actions on the selected tracks">
+      <span class="count" aria-live="polite">{{ selected.length }} selected</span>
+      <button type="button" class="primary" (click)="actions.playFrom(selected)">
+        <mat-icon>play_arrow</mat-icon>
+        Play
+      </button>
+      <button type="button" (click)="actions.playNext(selected)">
+        <mat-icon>queue_play_next</mat-icon>
+        Play next
+      </button>
+      <button type="button" (click)="actions.addToQueue(selected)">
+        <mat-icon>playlist_add</mat-icon>
+        Add to queue
+      </button>
+      <button type="button" class="icon" (click)="actions.details(selected)" aria-label="Details and tags" matTooltip="Details and tags">
+        <mat-icon>description</mat-icon>
+      </button>
+      <span class="divider" aria-hidden="true"></span>
+      <button type="button" class="icon" (click)="actions.clear()" aria-label="Clear the selection (Escape)" matTooltip="Clear (Esc)">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  }
+}

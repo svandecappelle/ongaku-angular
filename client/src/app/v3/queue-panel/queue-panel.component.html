@@ -35,7 +35,7 @@
         <li class="item" cdkDrag>
           <button type="button" class="handle" cdkDragHandle [attr.aria-label]="'Move ' + track.title + ' (drag, or use arrow keys)'"
             (keydown.arrowup)="$event.preventDefault(); moveBy($index, -1)" (keydown.arrowdown)="$event.preventDefault(); moveBy($index, 1)">
-            <mat-icon>drag_indicator</mat-icon>
+            <mat-icon>drag_handle</mat-icon>
           </button>
           <button type="button" class="play-item" (click)="playback.play(track)" [attr.aria-label]="'Play ' + track.title">
             <span class="cover">

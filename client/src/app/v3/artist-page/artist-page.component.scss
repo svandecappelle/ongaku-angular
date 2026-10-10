@@ -1,0 +1,197 @@
+@use '../page';
+
+:host {
+  display: block;
+  color: var(--ongaku-text);
+}
+
+@include page.layout;
+
+.small {
+  font-size: 13px;
+}
+
+.cover.round {
+  border-radius: 50%;
+}
+
+.tags {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  li {
+    padding: 4px 12px;
+    font-size: 13px;
+    border-radius: 999px;
+    color: var(--ongaku-muted);
+    background: var(--ongaku-surface-2);
+  }
+}
+
+.tabs {
+  --mat-tab-header-active-label-text-color: var(--ongaku-text);
+  --mat-tab-header-active-focus-label-text-color: var(--ongaku-text);
+  --mat-tab-header-active-hover-label-text-color: var(--ongaku-text);
+}
+
+.section {
+  padding-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  h2 {
+    margin: 0;
+    font-size: 22px;
+  }
+}
+
+.album-grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+}
+
+.album-card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  &:hover .album-play,
+  &:focus-within .album-play {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.cover-box {
+  position: relative;
+  margin-bottom: 4px;
+}
+
+.album-link {
+  font-weight: 600;
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  &:hover {
+    text-decoration: underline;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--ongaku-accent);
+    outline-offset: 2px;
+  }
+}
+
+.album-cover {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--ongaku-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ongaku-accent);
+  background: var(--ongaku-surface-2);
+  border: 1px solid var(--ongaku-border);
+  mat-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 48px;
+    opacity: .6;
+  }
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+// Play button over the cover, shown on hover or focus
+.album-play {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ongaku-on-accent);
+  background: var(--ongaku-accent);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .35);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .15s, transform .15s;
+  &:focus-visible {
+    outline: 2px solid var(--ongaku-text);
+    outline-offset: 2px;
+  }
+}
+
+@media (hover: none) {
+  .album-play {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.album-section {
+  padding-top: 32px;
+}
+
+.album-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  .small-cover {
+    width: 56px;
+    height: 56px;
+    flex: none;
+    border-radius: var(--ongaku-radius-md);
+    mat-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 28px;
+    }
+  }
+  .album-heading {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  h3 {
+    margin: 0;
+    font-size: 20px;
+    a {
+      color: inherit;
+      text-decoration: none;
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+.biography {
+  max-width: 760px;
+  padding-top: 24px;
+  line-height: 1.7;
+  color: var(--ongaku-text);
+  ::ng-deep a {
+    color: var(--ongaku-accent);
+  }
+}

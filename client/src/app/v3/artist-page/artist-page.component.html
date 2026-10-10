@@ -1,0 +1,119 @@
+<div class="page">
+  @switch (load().status) {
+    @case ('loading') {
+      <div class="state" role="status">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span class="muted">Loading the artist…</span>
+      </div>
+    }
+    @case ('error') {
+      <div class="state" role="alert">
+        <mat-icon class="state-icon">person</mat-icon>
+        <h1>Artist not found</h1>
+        <span class="muted">No track of this artist is in the library.</span>
+        <a mat-stroked-button routerLink="/my-library">Open my library</a>
+      </div>
+    }
+  }
+
+  @if (artist(); as artist) {
+    <header class="hero">
+      <span class="cover round">
+        <mat-icon aria-hidden="true">person</mat-icon>
+        @if (image(); as src) {
+          <img [src]="src" alt="" (error)="imageIndex.set(imageIndex() + 1)">
+        }
+      </span>
+      <div class="hero-text">
+        <span class="eyebrow">Artist</span>
+        <h1>{{ artist.name }}</h1>
+        <span class="muted">
+          {{ artist.albums.length }} {{ artist.albums.length > 1 ? 'albums' : 'album' }}
+          · {{ artist.tracks.length }} {{ artist.tracks.length > 1 ? 'tracks' : 'track' }}
+          @if (totalDuration()) { · {{ formatTime(totalDuration()) }}}
+        </span>
+        @if (artist.tags.length) {
+          <ul class="tags" aria-label="Tags">
+            @for (tag of artist.tags; track tag) {
+              <li>{{ tag }}</li>
+            }
+          </ul>
+        }
+        <div class="hero-actions">
+          <button mat-flat-button color="accent" type="button" class="play-all" (click)="actions.playFrom(artist.tracks)">
+            <mat-icon>play_arrow</mat-icon>
+            Play
+          </button>
+          <button mat-stroked-button type="button" (click)="actions.shuffle(artist.tracks)">
+            <mat-icon>shuffle</mat-icon>
+            Shuffle
+          </button>
+          <button mat-stroked-button type="button" (click)="actions.addToQueue(artist.tracks)">
+            <mat-icon>playlist_add</mat-icon>
+            Add to queue
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" class="tabs">
+      <mat-tab label="Discography">
+        <section class="section" aria-labelledby="albums-title">
+          <h2 id="albums-title">Albums</h2>
+          <ul class="album-grid">
+            @for (album of artist.albums; track album.title) {
+              <li class="album-card">
+                <div class="cover-box">
+                  <!-- Same link as the title, for the mouse only -->
+                  <a class="album-cover" [routerLink]="['/album', album.title]" tabindex="-1" aria-hidden="true">
+                    <mat-icon>album</mat-icon>
+                    @if (album.cover) {
+                      <img [src]="album.cover" alt="" loading="lazy" (error)="$any($event.target).hidden = true">
+                    }
+                  </a>
+                  <button type="button" class="album-play" (click)="actions.playFrom(album.tracks)" [attr.aria-label]="'Play ' + album.title">
+                    <mat-icon>play_arrow</mat-icon>
+                  </button>
+                </div>
+                <a class="album-link" [routerLink]="['/album', album.title]">{{ album.title }}</a>
+                <span class="muted small">{{ album.year ?? 'Unknown year' }} · {{ album.tracks.length }} {{ album.tracks.length > 1 ? 'tracks' : 'track' }}</span>
+              </li>
+            }
+          </ul>
+        </section>
+
+        @for (album of artist.albums; track album.title) {
+          <section class="section album-section" [attr.aria-labelledby]="albumId(album)">
+            <div class="album-header">
+              <span class="album-cover small-cover">
+                <mat-icon aria-hidden="true">album</mat-icon>
+                @if (album.cover) {
+                  <img [src]="album.cover" alt="" loading="lazy" (error)="$any($event.target).hidden = true">
+                }
+              </span>
+              <div class="album-heading">
+                <h3 [id]="albumId(album)"><a [routerLink]="['/album', album.title]">{{ album.title }}</a></h3>
+                <span class="muted small">{{ album.year ?? 'Unknown year' }}</span>
+              </div>
+              <button mat-icon-button type="button" (click)="actions.playFrom(album.tracks)" [attr.aria-label]="'Play ' + album.title" matTooltip="Play the album">
+                <mat-icon>play_circle_filled</mat-icon>
+              </button>
+              <button mat-icon-button type="button" (click)="actions.addToQueue(album.tracks)" [attr.aria-label]="'Add ' + album.title + ' to the queue'" matTooltip="Add to queue">
+                <mat-icon>playlist_add</mat-icon>
+              </button>
+            </div>
+            <app-track-list [tracks]="album.tracks" [artist]="artist.name" [label]="'Tracks of ' + album.title"></app-track-list>
+          </section>
+        }
+      </mat-tab>
+
+      @if (artist.biography) {
+        <mat-tab label="Biography">
+          <div class="biography" [innerHTML]="artist.biography"></div>
+        </mat-tab>
+      }
+    </mat-tab-group>
+
+    <app-selection-bar></app-selection-bar>
+  }
+</div>

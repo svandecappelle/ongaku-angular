@@ -1,0 +1,71 @@
+<div class="table-wrapper">
+  <table class="tracks" [attr.aria-label]="label()">
+    <thead>
+      <tr>
+        <th class="col-check" scope="col">
+          <mat-checkbox [checked]="selectedCount() === tracks().length" [indeterminate]="selectedCount() > 0 && selectedCount() < tracks().length"
+            (click)="actions.toggleAll(tracks())" [attr.aria-label]="'Select all: ' + label()"></mat-checkbox>
+        </th>
+        <th class="col-number" scope="col">#</th>
+        <th scope="col">Title</th>
+        <th class="col-actions" scope="col"><span class="visually-hidden">Actions</span></th>
+        <th class="col-duration" scope="col"><mat-icon aria-label="Duration">schedule</mat-icon></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (track of tracks(); track track.uid; let i = $index) {
+        <tr [class.selected]="actions.isSelected(track)" [class.current]="isCurrent(track)" (dblclick)="actions.playFrom(tracks(), i)">
+          <td class="col-check">
+            <mat-checkbox [checked]="actions.isSelected(track)" (click)="actions.toggle(track, $event.shiftKey)"
+              [attr.aria-label]="'Select ' + track.title"></mat-checkbox>
+          </td>
+          <td class="col-number">
+            <button type="button" class="number" (click)="actions.playFrom(tracks(), i)" [attr.aria-label]="'Play ' + track.title">
+              @if (isCurrent(track) && playback.playing()) {
+                <mat-icon class="equalizer" aria-hidden="true">equalizer</mat-icon>
+              } @else {
+                <span class="digits">{{ trackNumber(track, i) }}</span>
+                <mat-icon class="play-icon" aria-hidden="true">play_arrow</mat-icon>
+              }
+            </button>
+          </td>
+          <td class="col-title">
+            <span class="title">{{ track.title }}</span>
+            @if (track.artist !== artist()) {
+              <span class="sub">{{ track.artist }}</span>
+            }
+          </td>
+          <td class="col-actions">
+            <button mat-icon-button type="button" (click)="actions.addToQueue([track])" [attr.aria-label]="'Add ' + track.title + ' to the queue'"
+              matTooltip="Add to queue">
+              <mat-icon>playlist_add</mat-icon>
+            </button>
+            <button mat-icon-button type="button" [matMenuTriggerFor]="trackMenu" [attr.aria-label]="'More actions for ' + track.title">
+              <mat-icon>more_horiz</mat-icon>
+            </button>
+            <mat-menu #trackMenu="matMenu" xPosition="before">
+              <button mat-menu-item (click)="actions.playFrom(tracks(), i)">
+                <mat-icon>play_arrow</mat-icon>
+                <span>Play from here</span>
+              </button>
+              <button mat-menu-item (click)="actions.playNext([track])">
+                <mat-icon>queue_play_next</mat-icon>
+                <span>Play next</span>
+              </button>
+              <button mat-menu-item (click)="actions.addToQueue([track])">
+                <mat-icon>playlist_add</mat-icon>
+                <span>Add to queue</span>
+              </button>
+              <mat-divider></mat-divider>
+              <button mat-menu-item (click)="actions.details([track])">
+                <mat-icon>description</mat-icon>
+                <span>Details and tags…</span>
+              </button>
+            </mat-menu>
+          </td>
+          <td class="col-duration">{{ track['duration'] }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

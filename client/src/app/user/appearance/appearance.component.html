@@ -44,7 +44,7 @@
               <span>Paste from clipboard</span>
             </button>
             <button mat-menu-item (click)="fileInput.click()">
-              <mat-icon>upload_file</mat-icon>
+              <mat-icon>insert_drive_file</mat-icon>
               <span>From a file…</span>
             </button>
           </mat-menu>
@@ -89,7 +89,7 @@
                     <mat-icon>share</mat-icon>
                   </button>
                   <button mat-icon-button type="button" (click)="delete(t.id)" aria-label="Delete" matTooltip="Delete">
-                    <mat-icon>delete_outline</mat-icon>
+                    <mat-icon>delete</mat-icon>
                   </button>
                 </div>
               }
@@ -199,7 +199,7 @@
         @if (settings().schedule !== 'off') {
           <div class="schedule-grid">
             <div class="schedule-slot" [class.active]="theme.activeSlot() === 'day'">
-              <span class="slot-title"><mat-icon>light_mode</mat-icon>Day</span>
+              <span class="slot-title"><mat-icon>wb_sunny</mat-icon>Day</span>
               <mat-form-field>
                 <mat-label>Theme</mat-label>
                 <mat-select [value]="settings().dayTheme" (selectionChange)="setScheduleTheme('dayTheme', $event.value)">
@@ -216,7 +216,7 @@
               }
             </div>
             <div class="schedule-slot" [class.active]="theme.activeSlot() === 'night'">
-              <span class="slot-title"><mat-icon>dark_mode</mat-icon>Night</span>
+              <span class="slot-title"><mat-icon>brightness_2</mat-icon>Night</span>
               <mat-form-field>
                 <mat-label>Theme</mat-label>
                 <mat-select [value]="settings().nightTheme" (selectionChange)="setScheduleTheme('nightTheme', $event.value)">

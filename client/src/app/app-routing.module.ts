@@ -24,8 +24,10 @@ import { ThemeEditorComponent } from './theme/theme-editor/theme-editor.componen
 import { RegisterComponent } from './user/register/register.component';
 
 const routes: Routes = [
-  { path: 'artist/:artist', component: ArtistComponent, canActivate: [AuthGuard]},
   // New interface: declared before the classic page of the same path (see LayoutService)
+  { path: 'artist/:artist', canMatch: [modernLayout], canActivate: [AuthGuard],
+    loadComponent: () => import('./v3/artist-page/artist-page.component').then((m) => m.ArtistPageComponent) },
+  { path: 'artist/:artist', component: ArtistComponent, canActivate: [AuthGuard]},
   { path: 'album/:album', canMatch: [modernLayout], canActivate: [AuthGuard],
     loadComponent: () => import('./v3/album-page/album-page.component').then((m) => m.AlbumPageComponent) },
   { path: 'album/:album', component: AlbumComponent, canActivate: [AuthGuard]},
