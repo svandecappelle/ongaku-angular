@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { map } from 'rxjs/operators';
 
@@ -37,6 +37,7 @@ export class ShellComponent {
   readonly layout = inject(LayoutService);
   private readonly auth = inject(AuthenticationService);
   private readonly store = inject<Store<IAppState>>(Store);
+  private readonly router = inject(Router);
 
   private readonly searchInput = viewChild.required<ElementRef<HTMLInputElement>>('searchInput');
 
@@ -46,6 +47,7 @@ export class ShellComponent {
     { initialValue: false },
   );
   readonly queueOpen = signal(false);
+  readonly searchValue = toSignal(this.store.select((state) => String(state.search ?? '')), { initialValue: '' });
 
   readonly nav: NavItem[] = [
     { label: 'Discover', icon: 'home', link: '/', exact: true },
@@ -55,7 +57,11 @@ export class ShellComponent {
   ];
 
   search(criterion: string) {
-    this.store.dispatch(new SearchLibraryAction(criterion));
+    this.store.dispatch(new SearchLibraryAction(criterion.trim()));
+    // The results are on the Discover page
+    if (criterion.trim() && this.router.url.split('?')[0] !== '/') {
+      this.router.navigate(['/']);
+    }
   }
 
   logout() {

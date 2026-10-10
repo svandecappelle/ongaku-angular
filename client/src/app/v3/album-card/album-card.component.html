@@ -1,0 +1,16 @@
+<div class="cover-box">
+  <!-- Same link as the title, for the mouse only -->
+  <a class="album-cover" [routerLink]="['/album', name()]" tabindex="-1" aria-hidden="true">
+    <mat-icon>album</mat-icon>
+    @if (cover(); as src) {
+      <img [src]="src" alt="" loading="lazy" (error)="$any($event.target).hidden = true">
+    }
+  </a>
+  <button type="button" class="album-play" (click)="play.emit()" [attr.aria-label]="'Play ' + name()">
+    <mat-icon>play_arrow</mat-icon>
+  </button>
+</div>
+<a class="album-link" [routerLink]="['/album', name()]">{{ name() }}</a>
+@if (subtitle(); as text) {
+  <span class="muted small">{{ text }}</span>
+}

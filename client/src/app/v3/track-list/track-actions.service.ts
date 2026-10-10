@@ -27,10 +27,12 @@ export class TrackActions {
 
   readonly selected = computed(() => this.pageTracks().filter((track) => this.selectedUids().has(track.uid)));
 
+  /** Sets the tracks of the page; the selected tracks still on the page stay selected */
   setPage(tracks: Song[], details: unknown) {
     this.pageTracks.set(tracks);
     this.pageDetails = details;
-    this.clear();
+    const uids = new Set<unknown>(tracks.map((track) => track.uid));
+    this.selectedUids.update((selected) => new Set([...selected].filter((uid) => uids.has(uid))));
   }
 
   isSelected(track: Song) {

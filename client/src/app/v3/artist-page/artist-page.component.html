@@ -62,21 +62,10 @@
           <h2 id="albums-title">Albums</h2>
           <ul class="album-grid">
             @for (album of artist.albums; track album.title) {
-              <li class="album-card">
-                <div class="cover-box">
-                  <!-- Same link as the title, for the mouse only -->
-                  <a class="album-cover" [routerLink]="['/album', album.title]" tabindex="-1" aria-hidden="true">
-                    <mat-icon>album</mat-icon>
-                    @if (album.cover) {
-                      <img [src]="album.cover" alt="" loading="lazy" (error)="$any($event.target).hidden = true">
-                    }
-                  </a>
-                  <button type="button" class="album-play" (click)="actions.playFrom(album.tracks)" [attr.aria-label]="'Play ' + album.title">
-                    <mat-icon>play_arrow</mat-icon>
-                  </button>
-                </div>
-                <a class="album-link" [routerLink]="['/album', album.title]">{{ album.title }}</a>
-                <span class="muted small">{{ album.year ?? 'Unknown year' }} · {{ album.tracks.length }} {{ album.tracks.length > 1 ? 'tracks' : 'track' }}</span>
+              <li>
+                <app-album-card [name]="album.title" [cover]="album.cover"
+                  [subtitle]="(album.year ?? 'Unknown year') + ' · ' + album.tracks.length + (album.tracks.length > 1 ? ' tracks' : ' track')"
+                  (play)="actions.playFrom(album.tracks)"></app-album-card>
               </li>
             }
           </ul>
@@ -85,7 +74,7 @@
         @for (album of artist.albums; track album.title) {
           <section class="section album-section" [attr.aria-labelledby]="albumId(album)">
             <div class="album-header">
-              <span class="album-cover small-cover">
+              <span class="small-cover">
                 <mat-icon aria-hidden="true">album</mat-icon>
                 @if (album.cover) {
                   <img [src]="album.cover" alt="" loading="lazy" (error)="$any($event.target).hidden = true">

@@ -1,0 +1,9 @@
+<a class="artist" [routerLink]="['/artist', name()]">
+  <span class="picture">
+    <mat-icon aria-hidden="true">person</mat-icon>
+    @if (image(); as src) {
+      <img [src]="src" alt="" loading="lazy" (error)="imageIndex.set(imageIndex() + 1)">
+    }
+  </span>
+  <span class="name">{{ name() }}</span>
+</a>

@@ -42,6 +42,8 @@ const routes: Routes = [
   { path: 'profile/appearance/themes/new', component: ThemeEditorComponent, canActivate: [AuthGuard] },
   { path: 'profile/appearance/themes/:id', component: ThemeEditorComponent, canActivate: [AuthGuard] },
   { path: 'profile/:user', component: UserComponent, canActivate: [AuthGuard] },
+  { path: '', canMatch: [modernLayout], canActivate: [AuthGuard],
+    loadComponent: () => import('./v3/discover-page/discover-page.component').then((m) => m.DiscoverPageComponent) },
   { path: '', component: HomeComponent, canActivate: [AuthGuard] },
 
   { path: 'install', component: InstallComponent },

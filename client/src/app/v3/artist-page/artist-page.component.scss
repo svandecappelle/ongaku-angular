@@ -57,97 +57,6 @@
   gap: 20px;
 }
 
-.album-card {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  &:hover .album-play,
-  &:focus-within .album-play {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-.cover-box {
-  position: relative;
-  margin-bottom: 4px;
-}
-
-.album-link {
-  font-weight: 600;
-  text-decoration: none;
-  color: inherit;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  &:hover {
-    text-decoration: underline;
-  }
-  &:focus-visible {
-    outline: 2px solid var(--ongaku-accent);
-    outline-offset: 2px;
-  }
-}
-
-.album-cover {
-  position: relative;
-  aspect-ratio: 1;
-  overflow: hidden;
-  border-radius: var(--ongaku-radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--ongaku-accent);
-  background: var(--ongaku-surface-2);
-  border: 1px solid var(--ongaku-border);
-  mat-icon {
-    width: 48px;
-    height: 48px;
-    font-size: 48px;
-    opacity: .6;
-  }
-  img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-}
-
-// Play button over the cover, shown on hover or focus
-.album-play {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  width: 48px;
-  height: 48px;
-  border: 0;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--ongaku-on-accent);
-  background: var(--ongaku-accent);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, .35);
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity .15s, transform .15s;
-  &:focus-visible {
-    outline: 2px solid var(--ongaku-text);
-    outline-offset: 2px;
-  }
-}
-
-@media (hover: none) {
-  .album-play {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 .album-section {
   padding-top: 32px;
 }
@@ -157,10 +66,24 @@
   align-items: center;
   gap: 14px;
   .small-cover {
+    position: relative;
     width: 56px;
     height: 56px;
     flex: none;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: var(--ongaku-radius-md);
+    color: var(--ongaku-accent);
+    background: var(--ongaku-surface-2);
+    img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
     mat-icon {
       width: 28px;
       height: 28px;

@@ -27,7 +27,7 @@
   <label class="search">
     <mat-icon>search</mat-icon>
     <input #searchInput type="search" placeholder="Search artists, albums, tracks" aria-label="Search"
-      aria-keyshortcuts="/ Control+K" (change)="search(searchInput.value)">
+      aria-keyshortcuts="/ Control+K" [value]="searchValue()" (change)="search(searchInput.value)">
     <kbd aria-hidden="true">/</kbd>
   </label>
 

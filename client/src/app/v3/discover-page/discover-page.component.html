@@ -1,0 +1,117 @@
+<div class="page">
+  @if (search(); as query) {
+    <header class="page-header">
+      <span class="eyebrow">Search</span>
+      <h1>Results for “{{ query }}”</h1>
+      <button mat-stroked-button type="button" class="clear" (click)="clearSearch()">
+        <mat-icon>close</mat-icon>
+        Clear the search
+      </button>
+    </header>
+  } @else {
+    @if (playback.current(); as track) {
+      <section class="now" aria-labelledby="now-title">
+        <span class="now-cover">
+          <mat-icon aria-hidden="true">album</mat-icon>
+          <img [src]="cover(track)" alt="" (error)="$any($event.target).hidden = true">
+        </span>
+        <div class="now-text">
+          <span class="eyebrow" id="now-title">{{ playback.playing() ? 'Now playing' : 'Continue listening' }}</span>
+          <h1>{{ track.title }}</h1>
+          <span class="muted">
+            <a [routerLink]="['/artist', track.artist]">{{ track.artist }}</a>
+            @if (track.album) { · <a [routerLink]="['/album', track.album]">{{ track.album }}</a>}
+          </span>
+          <div class="now-actions">
+            <button mat-flat-button color="accent" type="button" (click)="playback.toggle()">
+              <mat-icon>{{ playback.playing() ? 'pause' : 'play_arrow' }}</mat-icon>
+              {{ playback.playing() ? 'Pause' : 'Resume' }}
+            </button>
+            @if (playback.upcoming().length) {
+              <span class="muted small">{{ playback.upcoming().length }} up next</span>
+            }
+          </div>
+        </div>
+      </section>
+    } @else {
+      <header class="page-header">
+        <span class="eyebrow">Discover</span>
+        <h1>What do you want to hear?</h1>
+        <span class="muted">Pick an artist or an album, or search your library with <kbd>/</kbd>.</span>
+      </header>
+    }
+  }
+
+  @if (failed()) {
+    <p class="notice" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      Part of the library could not be loaded.
+    </p>
+  }
+
+  @if (empty()) {
+    <div class="state">
+      <mat-icon class="state-icon" aria-hidden="true">search</mat-icon>
+      @if (search()) {
+        <h2>Nothing matches “{{ search() }}”</h2>
+        <span class="muted">Check the spelling, or search for an artist, an album or a title.</span>
+      } @else {
+        <h2>Your library is empty</h2>
+        <span class="muted">Add music from the <a routerLink="/upload">upload page</a> or the administration.</span>
+      }
+    </div>
+  }
+
+  @if (artists.items().length || (artists.loading() && !empty())) {
+    <section class="section" aria-labelledby="artists-title">
+      <h2 id="artists-title">Artists</h2>
+      <ul class="grid artists">
+        @for (artist of artists.items(); track artist.name) {
+          <li><app-artist-card [name]="artist.name" [images]="artist.images"></app-artist-card></li>
+        }
+      </ul>
+      <ng-container *ngTemplateOutlet="more; context: { $implicit: artists, label: 'artists' }"></ng-container>
+    </section>
+  }
+
+  @if (albums.items().length || (albums.loading() && !empty())) {
+    <section class="section" aria-labelledby="albums-title">
+      <h2 id="albums-title">Albums</h2>
+      <ul class="grid albums">
+        @for (album of albums.items(); track album.name) {
+          <li><app-album-card [name]="album.name" [cover]="album.cover" (play)="playAlbum(album.name)"></app-album-card></li>
+        }
+      </ul>
+      <ng-container *ngTemplateOutlet="more; context: { $implicit: albums, label: 'albums' }"></ng-container>
+    </section>
+  }
+
+  @if (tracks.items().length) {
+    <section class="section" aria-labelledby="tracks-title">
+      <div class="section-header">
+        <h2 id="tracks-title">{{ search() ? 'Tracks' : 'Most played' }}</h2>
+        <button mat-stroked-button type="button" (click)="actions.playFrom(tracks.items())">
+          <mat-icon>play_arrow</mat-icon>
+          Play all
+        </button>
+      </div>
+      <app-track-list [tracks]="tracks.items()" [label]="search() ? 'Tracks' : 'Most played tracks'"></app-track-list>
+      <ng-container *ngTemplateOutlet="more; context: { $implicit: tracks, label: 'tracks' }"></ng-container>
+    </section>
+  }
+
+  <app-selection-bar></app-selection-bar>
+</div>
+
+<ng-template #more let-list let-label="label">
+  @if (list.loading()) {
+    <div class="more" role="status"><mat-spinner diameter="28" [attr.aria-label]="'Loading ' + label"></mat-spinner></div>
+  } @else if (!list.done()) {
+    <div class="more">
+      <button mat-button type="button" (click)="list.more()">
+        <mat-icon>expand_more</mat-icon>
+        Show more {{ label }}
+      </button>
+    </div>
+  }
+</ng-template>

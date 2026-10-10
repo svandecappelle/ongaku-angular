@@ -4,33 +4,15 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { of } from 'rxjs';
 import { catchError, map, startWith, switchMap } from 'rxjs/operators';
 
-import { Song } from '../../app-state';
 import { MaterialModule } from '../../modules/material.module';
-import { ArtistService } from '../../services/artist.service';
+import { AlbumCardComponent } from '../album-card/album-card.component';
 import { formatTime } from '../format-time';
 import { SelectionBarComponent } from '../selection-bar/selection-bar.component';
 import { TrackActions } from '../track-list/track-actions.service';
 import { TrackListComponent } from '../track-list/track-list.component';
-import { parseDuration, trackYear } from '../track-list/tracks';
-
-interface AlbumSummary {
-  title: string;
-  cover: string | null;
-  year: string | null;
-  tracks: Song[];
-}
-
-interface ArtistView {
-  name: string;
-  /** Candidate images, tried in order */
-  images: string[];
-  tags: string[];
-  biography: string | null;
-  albums: AlbumSummary[];
-  tracks: Song[];
-  /** Raw answer of the API, given to the metadata dialog */
-  details: any;
-}
+import { parseDuration } from '../track-list/tracks';
+import { AlbumSummary, ArtistView } from '../library';
+import { LibraryService } from '../library.service';
 
 type Load = { status: 'loading' } | { status: 'error' } | { status: 'ready'; artist: ArtistView };
 
@@ -40,21 +22,18 @@ type Load = { status: 'loading' } | { status: 'error' } | { status: 'ready'; art
   templateUrl: './artist-page.component.html',
   styleUrls: ['./artist-page.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialModule, RouterLink, TrackListComponent, SelectionBarComponent],
+  imports: [MaterialModule, RouterLink, TrackListComponent, SelectionBarComponent, AlbumCardComponent],
   providers: [TrackActions],
 })
 export class ArtistPageComponent {
   readonly actions = inject(TrackActions);
-  private readonly artists = inject(ArtistService);
+  private readonly library = inject(LibraryService);
 
   readonly load = toSignal(
     inject(ActivatedRoute).paramMap.pipe(
       map((params) => params.get('artist') ?? ''),
-      switchMap((name) => this.artists.get(name).pipe(
-        map((details): Load => {
-          const artist = toArtistView(name, details);
-          return artist ? { status: 'ready', artist } : { status: 'error' };
-        }),
+      switchMap((name) => this.library.artist(name).pipe(
+        map((artist): Load => (artist ? { status: 'ready', artist } : { status: 'error' })),
         catchError(() => of<Load>({ status: 'error' })),
         startWith<Load>({ status: 'loading' }),
       )),
@@ -83,35 +62,4 @@ export class ArtistPageComponent {
   albumId(album: AlbumSummary) {
     return 'album-' + album.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   }
-}
-
-/** Reads the answer of /api/audio/artist/:name (see Library.getArtistDetails on the server) */
-function toArtistView(name: string, details: any): ArtistView | null {
-  const albums: AlbumSummary[] = (details?.albums ?? [])
-    .filter((group: any) => group?.tracks?.length)
-    .map((group: any) => {
-      const info = typeof group.album_info === 'object' && group.album_info ? group.album_info : {};
-      return {
-        title: group.album ?? info.title ?? 'Unknown album',
-        cover: info.image?.[0] ?? info.cover?.[0] ?? null,
-        year: trackYear(group.tracks[0]),
-        tracks: group.tracks,
-      };
-    })
-    // Most recent first, albums without a year last
-    .sort((a: AlbumSummary, b: AlbumSummary) => (b.year ?? '').localeCompare(a.year ?? ''));
-  if (!albums.length) {
-    return null;
-  }
-  const info = details.info ?? {};
-  const artistName = details.name ?? name;
-  return {
-    name: artistName,
-    images: [`/api/audio/static/covers/${encodeURIComponent(artistName)}/cover.jpg`, ...(info.image?.[0] ? [info.image[0]] : [])],
-    tags: (info.tags?.tag ?? []).map((tag: any) => tag?.name).filter(Boolean).slice(0, 6),
-    biography: info.wikipedia || info.bio?.content || info.bio?.summary || null,
-    albums,
-    tracks: albums.flatMap((album) => album.tracks),
-    details,
-  };
 }
