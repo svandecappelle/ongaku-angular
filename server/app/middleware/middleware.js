@@ -68,7 +68,7 @@ class Middleware {
           }
         }
         next(null, middlewareObject);
-      }, this.session, this.meta, this.translate);
+      }, this.session.bind(this), this.meta.bind(this), this.translate.bind(this));
 
     if (viewParams === undefined) {
       viewParams = {};

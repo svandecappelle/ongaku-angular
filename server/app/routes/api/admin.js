@@ -54,7 +54,9 @@ function redirectIfNotAdministrator(req, res, callback) {
             if (administrator) {
                 callback();
             } else {
-                middleware.render("api/middleware/403", req, res);
+                res.status(403).json({
+                    message: 'Administrator access required'
+                });
             }
         });
     } else {

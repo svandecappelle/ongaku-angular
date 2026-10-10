@@ -1027,26 +1027,24 @@ class Library {
     return new Promise((resolve, reject) => {
       if (Array.isArray(nconf.get("library"))) {
         var folders = nconf.get("library");
-        return new Promise((resolve, reject) => {
-          async.reduce(folders, 0, (currentSize, folder, next) => {
-            getSize(folder, (err, size) => {
-              if (err) {
-                throw err;
-              }
-              next(null, currentSize + size);
-            });
-          }, function(error, ret) {
-            if (error) {
-              return reject(error);
+        async.reduce(folders, 0, (currentSize, folder, next) => {
+          getSize(folder, (err, size) => {
+            if (err) {
+              return next(err);
             }
-            resolve(ret);
+            next(null, currentSize + size);
           });
+        }, function(error, ret) {
+          if (error) {
+            return reject(error);
+          }
+          resolve(ret);
         });
       } else {
         var folder = nconf.get("library");
         getSize(folder, (err, size) => {
           if (err) {
-            throw err;
+            return reject(err);
           }
           resolve(size);
         });
