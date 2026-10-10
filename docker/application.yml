@@ -1,0 +1,44 @@
+# Template of config/application.yml, the configuration of the container.
+# "make app" creates config/application.yml from it with a random secret and
+# the host name; docker-compose.yml mounts it in place of this file.
+product-name: application
+# possible levels:  error, warn, info, verbose, debug, silly
+log-level: info
+port: 3000
+hostname: music.hostname.com
+uploader: false
+# Folders of the container scanned for music: docker-compose.yml mounts the
+# music folder of the host on /music
+library: [/music]
+audio: [mp3, wav, wma, ogg, flac]
+video: [mp4, webm, flv, ogv, mpg]
+defaultLanguage: fr
+database: redis
+type: browser
+playingtype: streaming
+redis:
+    # Name of the Redis service in docker-compose.yml
+    host: redis
+    port: 6379
+    password:
+    database: 0
+# Signs the session cookies and encrypts some tokens: set a long random
+# value, for example the output of `openssl rand -hex 32`
+secret: change-me
+bcrypt_rounds: 12
+gravatar: true
+local: false
+# Not read from this file: "require login" is set in the administration
+requireLogin: false
+allowUpload: true
+allowRegisteration: 3
+# API keys used to fetch covers, pictures and biographies
+third-party:
+    spotify:
+        clientId:
+        secret:
+    lastfm:
+        api-key:
+        secret:
+theme:
+  base-color: rgb(230, 217, 45)

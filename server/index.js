@@ -72,11 +72,11 @@ class Server {
       // sess.cookie.secure = true // serve secure cookies
     }
 
-    // TODO change secret value  and maybe use passport
+    // The secret of application.yml signs the session cookies
     app.use(session({
       resave: false,
       saveUninitialized: true,
-      secret: 'keyboard cat',
+      secret: nconf.get('secret') || 'keyboard cat',
       cookie: {}
     }))
 

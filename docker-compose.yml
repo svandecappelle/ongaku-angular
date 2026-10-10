@@ -1,0 +1,40 @@
+# Ongaku and its Redis database, started by "make app" (see docs/docker.md),
+# which writes config/application.yml and the MUSIC_DIR / ONGAKU_PORT settings of .env.
+#
+# The application listens on 127.0.0.1 only: nginx faces the internet
+# ("sudo make nginx", templates in deploy/).
+
+services:
+  ongaku:
+    build: .
+    image: ongaku:latest
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${ONGAKU_PORT:-3000}:3000"
+    volumes:
+      - ./config/application.yml:/app/server/config/application.yml:ro
+      # The library is read only: uploads go to the users volume
+      - ${MUSIC_DIR:?Set MUSIC_DIR to the folder of your music}:/music:ro
+      - ongaku-users:/app/public/user
+      - ongaku-covers:/app/public/artists-covers
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Saves the database on disk (users, playlists, statistics)
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  ongaku-users:
+  ongaku-covers:
+  redis-data:

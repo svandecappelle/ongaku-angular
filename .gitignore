@@ -59,3 +59,6 @@ typings/
 
 public/user
 
+
+# Local configuration of docker-compose.yml (secret, API keys)
+/config/
