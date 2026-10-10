@@ -1,0 +1,137 @@
+<div class="appearance">
+  <header class="page-header">
+    <a mat-button routerLink="/profile" class="back">
+      <mat-icon>arrow_back</mat-icon>
+      Back to profile
+    </a>
+    <span class="eyebrow">Profile</span>
+    <h1>Appearance</h1>
+    <p class="muted">Choose a theme, an accent colour and the density of the interface. Settings are saved in this browser.</p>
+  </header>
+
+  <div class="layout">
+    <div class="settings">
+
+      <section class="panel" aria-labelledby="theme-title">
+        <div class="panel-header">
+          <h2 id="theme-title">Theme</h2>
+          <span class="muted">The colour scheme of the whole application.</span>
+        </div>
+        <div class="theme-grid">
+          @for (t of theme.themes; track t.id) {
+            <button type="button" class="theme-card" [class.selected]="t.id === theme.selected()"
+              [attr.aria-pressed]="t.id === theme.selected()" (click)="setTheme(t.id)">
+              <span class="theme-preview" [style.background]="t.swatch.background" aria-hidden="true">
+                <span class="tp-menu"></span>
+                <span class="tp-body">
+                  <span class="tp-title"></span>
+                  <span class="tp-tiles"><span></span><span></span><span></span></span>
+                  <span class="tp-player"><span [style.background]="t.swatch.accent"></span></span>
+                </span>
+              </span>
+              <span class="theme-meta">
+                <span class="theme-name">
+                  {{ t.label }}
+                  <small>{{ t.description }}</small>
+                </span>
+                @if (t.id === theme.selected()) {
+                  <mat-icon class="check">check_circle</mat-icon>
+                }
+              </span>
+            </button>
+          }
+        </div>
+        <mat-slide-toggle [checked]="theme.followSystem()" (change)="setFollowSystem($event.checked)">
+          Follow the system light/dark mode
+          <span class="hint">Switches to “Aube” when your device is in light mode.</span>
+        </mat-slide-toggle>
+      </section>
+
+      <section class="panel" aria-labelledby="accent-title">
+        <div class="panel-header">
+          <h2 id="accent-title">Accent colour</h2>
+          <span class="muted">Buttons, progress bars and links. A darker variant is used on light themes so text stays readable.</span>
+        </div>
+        <div class="swatches" role="radiogroup" aria-labelledby="accent-title">
+          @for (accent of accents(); track accent.id) {
+            <button type="button" class="swatch" role="radio" [class.selected]="accent.id === theme.accent()"
+              [attr.aria-checked]="accent.id === theme.accent()" [attr.aria-label]="accent.label"
+              [matTooltip]="accent.label" (click)="setAccent(accent.id)">
+              <span [style.background]="accent.color"></span>
+            </button>
+          }
+        </div>
+        <span class="muted small">Selected: {{ accentLabel() }}</span>
+      </section>
+
+      <section class="panel" aria-labelledby="density-title">
+        <div class="panel-header">
+          <h2 id="density-title">Density</h2>
+          <span class="muted">Spacing of lists, tables, tabs and toolbars.</span>
+        </div>
+        <mat-button-toggle-group [value]="theme.density()" (change)="setDensity($event.value)" aria-labelledby="density-title">
+          <mat-button-toggle value="comfortable">Comfortable</mat-button-toggle>
+          <mat-button-toggle value="compact">Compact</mat-button-toggle>
+        </mat-button-toggle-group>
+      </section>
+
+      <section class="panel" aria-labelledby="background-title">
+        <div class="panel-header">
+          <h2 id="background-title">Background image</h2>
+          <span class="muted">Your profile background, under a veil in the theme's colours. Change the image from your <a routerLink="/profile">profile</a>.</span>
+        </div>
+        <mat-slide-toggle [checked]="theme.showBackground()" (change)="setShowBackground($event.checked)">
+          Show my background image
+        </mat-slide-toggle>
+        <div class="veil">
+          <label for="veil-slider">Veil opacity</label>
+          <mat-slider min="0" max="100" step="5" discrete [disabled]="!theme.showBackground()" [displayWith]="percent">
+            <input id="veil-slider" matSliderThumb [value]="theme.backgroundVeil()" (valueChange)="setVeil($event)">
+          </mat-slider>
+          <span class="muted value">{{ theme.backgroundVeil() }} %</span>
+        </div>
+      </section>
+    </div>
+
+    <aside class="preview-column" aria-label="Preview">
+      <span class="eyebrow muted">Preview</span>
+      <div class="preview" [class.with-background]="theme.showBackground()">
+        @if (theme.showBackground()) {
+          <div class="preview-bg" [style.backgroundImage]="'url(/api/user/image/background)'" aria-hidden="true"></div>
+          <div class="preview-veil" aria-hidden="true"></div>
+        }
+        <div class="preview-content">
+          <div class="preview-album">
+            <div class="cover" aria-hidden="true">
+              <mat-icon>album</mat-icon>
+            </div>
+            <div>
+              <div class="album-title">Album</div>
+              <div class="muted small">Artist · 4 tracks</div>
+            </div>
+          </div>
+          <mat-list class="preview-tracks">
+            @for (track of previewTracks; track track.title; let i = $index) {
+              <mat-list-item [class.current]="i === 1">
+                <span matListItemTitle class="track-row">
+                  <span class="track-number">{{ i + 1 }}</span>
+                  <span class="track-title">{{ track.title }}</span>
+                  <span class="muted small">{{ track.duration }}</span>
+                </span>
+              </mat-list-item>
+            }
+          </mat-list>
+          <div class="preview-player">
+            <button mat-mini-fab color="accent" aria-label="Play" tabindex="-1">
+              <mat-icon>play_arrow</mat-icon>
+            </button>
+            <mat-progress-bar mode="determinate" value="35" color="accent"></mat-progress-bar>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button mat-stroked-button type="button" (click)="reset()">Reset to defaults</button>
+      </div>
+    </aside>
+  </div>
+</div>

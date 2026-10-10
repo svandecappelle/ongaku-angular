@@ -1,7 +1,5 @@
-@if (isLoggedIn$ | async) {
+@if ((isLoggedIn$ | async) && themeService.showBackground()) {
   <div class="background" [style.backgroundImage]="'url(/api/user/image/background)'"></div>
-}
-@if (isLoggedIn$ | async) {
   <div class="background-overlay"></div>
 }
 

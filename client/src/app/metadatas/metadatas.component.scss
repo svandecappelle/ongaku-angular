@@ -1,7 +1,7 @@
 input,
 textarea,
 [contenteditable] {
-    caret-color: white;
+    caret-color: var(--ongaku-text);
 }
 
 .mat-column-delete {

@@ -41,6 +41,10 @@
           <mat-icon>{{ themeService.followSystem() ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
           <span>Follow system light/dark mode</span>
         </button>
+        <a mat-menu-item routerLink="/profile/appearance">
+          <mat-icon>tune</mat-icon>
+          <span>Customize appearance…</span>
+        </a>
       </mat-menu>
       <button mat-icon-button [matMenuTriggerFor]="menu">
         <mat-icon>more_vert</mat-icon>
@@ -55,6 +59,10 @@
         <button mat-menu-item routerLink="/profile">
           <mat-icon>account_circle</mat-icon>
           <span>Edit profile</span>
+        </button>
+        <button mat-menu-item routerLink="/profile/appearance">
+          <mat-icon>palette</mat-icon>
+          <span>Appearance</span>
         </button>
       </mat-menu>
     </mat-toolbar>

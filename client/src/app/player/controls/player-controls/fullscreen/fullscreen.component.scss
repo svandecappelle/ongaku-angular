@@ -47,7 +47,8 @@
     left: 0;
     right: 0;
     padding-bottom: 1em;
-    background-color: rgba(0, 0, 0, 0.94);
+    background-color: color-mix(in srgb, var(--ongaku-bg) 94%, transparent);
+    color: var(--ongaku-text);
     transition: all linear 500ms;
 
     &.open {
@@ -125,7 +126,7 @@
     @keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
 
     .track-playing {
-        background-color: rgba(0, 0, 0, 0.85);
+        background-color: color-mix(in srgb, var(--ongaku-surface) 85%, transparent);
         position: relative;
         margin-left: 15%;
         margin-right: 15%;
@@ -140,12 +141,12 @@
         }
 
         .track-artist {
-            color: #BEBEBE;
+            color: var(--ongaku-muted);
         }
     }
 
     .track-details {
-        background-color: rgba(0, 0, 0, 0.85);
+        background-color: color-mix(in srgb, var(--ongaku-surface) 85%, transparent);
         position: relative;
         margin-left: 15%;
         margin-right: 15%;

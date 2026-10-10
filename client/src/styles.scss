@@ -43,7 +43,8 @@ mat-card.album, mat-card.artist {
       bottom: 0;
       left: 0;
       right: 0;
-      background-color: rgba(0,0,0,0.75);
+      background-color: color-mix(in srgb, var(--ongaku-bg) 80%, transparent);
+      color: var(--ongaku-text);
       transition: all linear 250ms;
       cursor: pointer;
       /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
@@ -161,5 +162,5 @@ mat-card.album, mat-card.artist {
 
 hr {
   border-top: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid var(--ongaku-border);
 }

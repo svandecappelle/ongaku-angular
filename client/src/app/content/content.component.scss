@@ -20,7 +20,7 @@
   background-attachment: fixed;
   background-size: cover;
   z-index: -1;
-  background-color: color-mix(in srgb, var(--ongaku-bg) 50%, transparent);
+  background-color: color-mix(in srgb, var(--ongaku-bg) var(--ongaku-veil, 50%), transparent);
 }
 
 .routing-content {

@@ -162,5 +162,5 @@ ul {
 
 /* TODO(mdc-migration): The following rule targets internal classes of tabs that may no longer apply for the MDC version. */
 .mat-tab-label.mat-tab-label-active {
-    background-color: rgba(0,150,136,.3);
+    background-color: color-mix(in srgb, var(--ongaku-accent) 30%, transparent);
 }

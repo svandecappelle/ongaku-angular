@@ -1,3 +1,4 @@
+@use 'sass:map';
 @use '@angular/material' as mat;
 // TODO(v15): As of v15 mat.legacy-core no longer includes default typography styles.
 //  The following line adds:
@@ -12,7 +13,15 @@
 @include mat.app-background();
 
 $my-app-primary: mat.m2-define-palette(mat.$m2-grey-palette, 900);
-$my-app-accent:  mat.m2-define-palette(mat.$m2-teal-palette, 300, 500, A100);
+// The accent is a CSS variable so ThemeService can change it at runtime (Appearance page):
+// every hue of the palette resolves to --ongaku-accent, and its contrast to --ongaku-on-accent.
+$accent-hues: (50, 100, 200, 300, 400, 500, 600, 700, 800, 900, A100, A200, A400, A700);
+$accent-base-palette: (contrast: ());
+@each $hue in $accent-hues {
+  $accent-base-palette: map.set($accent-base-palette, $hue, var(--ongaku-accent));
+  $accent-base-palette: map.set($accent-base-palette, contrast, $hue, var(--ongaku-on-accent));
+}
+$my-app-accent:  mat.m2-define-palette($accent-base-palette, 500, 300, 700);
 $my-app-warn:    mat.m2-define-palette(mat.$m2-deep-orange-palette);
 
 $my-app-theme: mat.m2-define-dark-theme($my-app-primary, $my-app-accent, $my-app-warn);
@@ -23,17 +32,17 @@ $my-app-theme: mat.m2-define-dark-theme($my-app-primary, $my-app-accent, $my-app
 // "nuit" is the default theme above; these only override component colours.
 $aube-theme: mat.m2-define-light-theme(
   mat.m2-define-palette(mat.$m2-grey-palette, 100),
-  mat.m2-define-palette(mat.$m2-teal-palette, 700, 500, 900),
+  $my-app-accent,
   $my-app-warn
 );
 $vinyle-theme: mat.m2-define-dark-theme(
   mat.m2-define-palette(mat.$m2-brown-palette, 900),
-  mat.m2-define-palette(mat.$m2-orange-palette, 300, 200, 500),
+  $my-app-accent,
   $my-app-warn
 );
 $minuit-theme: mat.m2-define-dark-theme(
   mat.m2-define-palette(mat.$m2-indigo-palette, 900),
-  mat.m2-define-palette(mat.$m2-deep-purple-palette, 200, 100, A100),
+  $my-app-accent,
   $my-app-warn
 );
 
@@ -45,6 +54,18 @@ html[data-theme='vinyle'] {
 }
 html[data-theme='minuit'] {
   @include mat.all-component-colors($minuit-theme);
+}
+
+// Compact density, selected on the Appearance page (ThemeService sets <html data-density="…">).
+// Form fields keep their own density set above.
+html[data-density='compact'] {
+  @include mat.list-density(-2);
+  @include mat.table-density(-3);
+  @include mat.button-density(-2);
+  @include mat.icon-button-density(-2);
+  @include mat.toolbar-density(-2);
+  @include mat.tabs-density(-2);
+  @include mat.chips-density(-2);
 }
 
 // Colours for the app's own styles. Keep in sync with THEMES in theme.service.ts.

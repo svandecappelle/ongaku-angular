@@ -107,6 +107,8 @@ export class AdminComponent implements OnInit {
   constructor (private service: StatisticsService, private fb: UntypedFormBuilder, private configureService: AdminService, private reloadService: ReloadService) { }
 
   ngOnInit() {
+    // Legend and axis labels follow the current theme (--ongaku-muted, see theme.scss)
+    Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--ongaku-muted').trim();
     setTimeout(() => {
       this.userAccess();
       this.userActivity();

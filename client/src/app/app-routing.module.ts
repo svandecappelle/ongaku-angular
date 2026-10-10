@@ -18,6 +18,7 @@ import { LibraryComponent } from './library/library.component';
 import { UploadComponent } from './upload/upload.component';
 import { ReloadComponent } from './library/reload/reload.component';
 import { UserComponent } from './user/user.component';
+import { AppearanceComponent } from './user/appearance/appearance.component';
 import { RegisterComponent } from './user/register/register.component';
 
 const routes: Routes = [
@@ -30,6 +31,7 @@ const routes: Routes = [
   { path: 'upload', component: UploadComponent, canActivate: [AuthGuard]},
   { path: 'reload', component: ReloadComponent, canActivate: [AuthGuard] },
   { path: 'profile', component: UserComponent, canActivate: [AuthGuard] },
+  { path: 'profile/appearance', component: AppearanceComponent, canActivate: [AuthGuard] },
   { path: 'profile/:user', component: UserComponent, canActivate: [AuthGuard] },
   { path: '', component: HomeComponent, canActivate: [AuthGuard] },
 
