@@ -80,6 +80,10 @@
       <mat-icon>palette</mat-icon>
       <span>Appearance</span>
     </a>
+    <a mat-menu-item routerLink="/admin">
+      <mat-icon>settings</mat-icon>
+      <span>Administration</span>
+    </a>
     <button mat-menu-item (click)="layout.setLayout('legacy')">
       <mat-icon>history</mat-icon>
       <span>Back to the classic interface</span>
@@ -91,6 +95,17 @@
     </button>
   </mat-menu>
 </header>
+
+<!-- Phones: the side navigation becomes a bottom bar -->
+<nav class="bottom-nav" aria-label="Main navigation">
+  @for (item of nav; track item.link) {
+    <a class="bottom-item" [routerLink]="item.link" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.exact }"
+      ariaCurrentWhenActive="page">
+      <span class="pill"><mat-icon>{{ item.icon }}</mat-icon></span>
+      <span class="bottom-label">{{ item.label }}</span>
+    </a>
+  }
+</nav>
 
 @if (queueOpen()) {
   <app-queue-panel (closed)="queueOpen.set(false)"></app-queue-panel>

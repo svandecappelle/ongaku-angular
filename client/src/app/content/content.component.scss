@@ -33,5 +33,5 @@
 .routing-content.modern-layout {
   margin-left: var(--ongaku-sidebar-width);
   // Room for the player bar
-  padding-bottom: calc(var(--ongaku-player-height) + 16px);
+  padding-bottom: calc(var(--ongaku-bottom-height) + 16px);
 }

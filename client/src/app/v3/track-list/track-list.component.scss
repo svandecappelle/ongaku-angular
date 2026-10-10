@@ -155,3 +155,33 @@
   font-variant-numeric: tabular-nums;
   color: var(--ongaku-muted);
 }
+
+// Phones: no horizontal scroll; the duration and "add to queue" (also in the menu) are hidden
+@media (max-width: 599px) {
+  .tracks {
+    min-width: 0;
+    table-layout: fixed;
+    th,
+    td {
+      padding: 0 2px;
+    }
+  }
+  // Widths include the 2px side paddings: 40px checkbox, 40px play button, 48px menu button
+  .col-check,
+  .col-number {
+    width: 44px;
+  }
+  .col-actions {
+    width: 52px;
+  }
+  .col-duration,
+  .queue-button {
+    display: none;
+  }
+  .col-title {
+    .title,
+    .sub {
+      max-width: none;
+    }
+  }
+}

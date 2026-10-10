@@ -36,7 +36,7 @@
             }
           </td>
           <td class="col-actions">
-            <button mat-icon-button type="button" (click)="actions.addToQueue([track])" [attr.aria-label]="'Add ' + track.title + ' to the queue'"
+            <button mat-icon-button type="button" class="queue-button" (click)="actions.addToQueue([track])" [attr.aria-label]="'Add ' + track.title + ' to the queue'"
               matTooltip="Add to queue">
               <mat-icon>playlist_add</mat-icon>
             </button>

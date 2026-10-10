@@ -1,7 +1,7 @@
 .bar {
   position: fixed;
   // Above the player bar, centred on the content area
-  bottom: calc(var(--ongaku-player-height) + 16px);
+  bottom: calc(var(--ongaku-bottom-height) + 16px);
   left: calc(50% + var(--ongaku-sidebar-width) / 2);
   transform: translateX(-50%);
   z-index: 93;
@@ -67,5 +67,28 @@
   from {
     opacity: 0;
     transform: translate(-50%, 12px);
+  }
+}
+
+// Phones: icons only, except "Play"; the labels stay for screen readers
+@media (max-width: 599px) {
+  .bar {
+    padding-left: 14px;
+    flex-wrap: nowrap;
+  }
+  .count {
+    white-space: nowrap;
+  }
+  .bar .labelled {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+    .label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
   }
 }

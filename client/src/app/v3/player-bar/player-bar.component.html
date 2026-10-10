@@ -1,6 +1,9 @@
 <footer class="bar" aria-label="Player">
+  <!-- Phones: thin progress line along the mini player -->
+  <span class="mini-progress" aria-hidden="true"><span [style.width.%]="playback.progress()"></span></span>
+
   @if (playback.current(); as track) {
-    <div class="now-playing">
+    <button type="button" class="now-playing" (click)="expanded.set(true)" aria-label="Open the player" aria-haspopup="dialog">
       <span class="cover">
         <mat-icon aria-hidden="true">album</mat-icon>
         <img [src]="cover(track.uid)" alt="" (error)="$any($event.target).hidden = true" (load)="$any($event.target).hidden = false">
@@ -9,12 +12,12 @@
         <span class="title">{{ track.title }}</span>
         <span class="sub">{{ track.artist }}@if (track.album) { · {{ track.album }}}</span>
       </span>
-    </div>
+    </button>
   }
 
   <div class="transport">
     <div class="buttons">
-      <button mat-icon-button type="button" (click)="playback.previous()" [disabled]="playback.position() <= 0" aria-label="Previous track">
+      <button mat-icon-button type="button" class="skip" (click)="playback.previous()" [disabled]="playback.position() <= 0" aria-label="Previous track">
         <mat-icon>skip_previous</mat-icon>
       </button>
       <button type="button" class="play" (click)="playback.toggle()" [attr.aria-label]="playback.playing() ? 'Pause' : 'Play'">
@@ -24,7 +27,7 @@
           <mat-icon>{{ playback.playing() ? 'pause' : 'play_arrow' }}</mat-icon>
         }
       </button>
-      <button mat-icon-button type="button" (click)="playback.next()" [disabled]="!playback.upcoming().length" aria-label="Next track">
+      <button mat-icon-button type="button" class="skip" (click)="playback.next()" [disabled]="!playback.upcoming().length" aria-label="Next track">
         <mat-icon>skip_next</mat-icon>
       </button>
     </div>
@@ -54,3 +57,60 @@
     </span>
   </div>
 </footer>
+
+<!-- Full-screen player, opened from the cover -->
+@if (expanded() && playback.current(); as track) {
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title"
+    cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (keydown.escape)="expanded.set(false)">
+    <div class="sheet-content">
+      <header class="sheet-header">
+        <button mat-icon-button type="button" (click)="expanded.set(false)" aria-label="Hide the player" cdkFocusInitial>
+          <mat-icon>keyboard_arrow_down</mat-icon>
+        </button>
+        <span class="eyebrow">{{ track.album ? 'Playing from ' + track.album : 'Now playing' }}</span>
+        <span class="header-spacer"></span>
+      </header>
+
+      <span class="sheet-cover">
+        <mat-icon aria-hidden="true">album</mat-icon>
+        <img [src]="cover(track.uid)" alt="" (error)="$any($event.target).hidden = true">
+      </span>
+
+      <div class="sheet-meta">
+        <h2 id="sheet-title">{{ track.title }}</h2>
+        <span class="links">
+          <a [routerLink]="['/artist', track.artist]" (click)="expanded.set(false)">{{ track.artist }}</a>
+          @if (track.album) {
+            · <a [routerLink]="['/album', track.album]" (click)="expanded.set(false)">{{ track.album }}</a>
+          }
+        </span>
+      </div>
+
+      <div class="sheet-seek">
+        <mat-slider [min]="0" [max]="playback.duration() || 1" [step]="1" [disabled]="!playback.duration()">
+          <input matSliderThumb [value]="position()" aria-label="Position in the track"
+            [attr.aria-valuetext]="formatTime(position()) + ' of ' + formatTime(playback.duration())"
+            (input)="dragSeek($event)" (change)="commitSeek($event)">
+        </mat-slider>
+        <span class="times"><span>{{ formatTime(position()) }}</span><span>{{ formatTime(playback.duration()) }}</span></span>
+      </div>
+
+      <div class="sheet-transport">
+        <button mat-icon-button type="button" class="big-skip" (click)="playback.previous()" [disabled]="playback.position() <= 0" aria-label="Previous track">
+          <mat-icon>skip_previous</mat-icon>
+        </button>
+        <button type="button" class="big-play" (click)="playback.toggle()" [attr.aria-label]="playback.playing() ? 'Pause' : 'Play'">
+          <mat-icon>{{ playback.playing() ? 'pause' : 'play_arrow' }}</mat-icon>
+        </button>
+        <button mat-icon-button type="button" class="big-skip" (click)="playback.next()" [disabled]="!playback.upcoming().length" aria-label="Next track">
+          <mat-icon>skip_next</mat-icon>
+        </button>
+      </div>
+
+      <button mat-stroked-button type="button" class="sheet-queue" (click)="openQueue()">
+        <mat-icon>queue_music</mat-icon>
+        Queue · {{ playback.upcoming().length }} up next
+      </button>
+    </div>
+  </div>
+}

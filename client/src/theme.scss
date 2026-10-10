@@ -195,17 +195,26 @@ html {
 }
 
 // Geometry of the new interface: width of the side navigation, height of the player bar
+// and, on phones, of the bottom navigation; --ongaku-bottom-height is what both cover
 html {
   --ongaku-sidebar-width: 240px;
   --ongaku-player-height: 112px;
+  --ongaku-bottom-nav-height: 0px;
   @media (max-width: 959px) {
     --ongaku-sidebar-width: 72px;
     // Controls on a second row
     --ongaku-player-height: 176px;
   }
+  // Phones: bottom navigation instead of the side one, mini player above it
+  @media (max-width: 599px) {
+    --ongaku-sidebar-width: 0px;
+    --ongaku-player-height: 64px;
+    --ongaku-bottom-nav-height: 64px;
+  }
+  --ongaku-bottom-height: calc(var(--ongaku-player-height) + var(--ongaku-bottom-nav-height));
 }
 
 // New interface: snack bars above the player bar
 html[data-layout='modern'] .mat-mdc-snack-bar-container {
-  margin-bottom: calc(var(--ongaku-player-height) + 8px);
+  margin-bottom: calc(var(--ongaku-bottom-height) + 8px);
 }

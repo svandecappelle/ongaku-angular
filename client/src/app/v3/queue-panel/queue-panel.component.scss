@@ -2,7 +2,7 @@
   position: fixed;
   top: 64px;
   right: 0;
-  bottom: var(--ongaku-player-height);
+  bottom: var(--ongaku-bottom-height);
   z-index: 91;
   width: min(380px, 100%);
   color: var(--ongaku-text);
@@ -181,4 +181,11 @@
 .cdk-drag-animating,
 .list.cdk-drop-list-dragging .item:not(.cdk-drag-placeholder) {
   transition: transform .2s ease;
+}
+
+// Phones: the whole width
+@media (max-width: 599px) {
+  :host {
+    width: 100%;
+  }
 }

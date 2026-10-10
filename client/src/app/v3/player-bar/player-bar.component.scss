@@ -1,15 +1,21 @@
 :host {
   position: fixed;
   right: 0;
-  bottom: 0;
+  // Above the bottom navigation on phones
+  bottom: var(--ongaku-bottom-nav-height);
   left: 0;
   z-index: 92;
   color: var(--ongaku-text);
-  transform: translateY(100%);
+  // Hidden below the screen, the bottom navigation included, until a track is loaded
+  transform: translateY(calc(100% + var(--ongaku-bottom-nav-height)));
   transition: transform .3s ease;
 
   &.visible {
     transform: none;
+  }
+  // The full-screen player covers everything, the selection bar included
+  &.expanded {
+    z-index: 96;
   }
 }
 
@@ -28,9 +34,28 @@
 .now-playing {
   grid-column: 1;
   min-width: 0;
+  padding: 4px;
+  margin: -4px;
   display: flex;
   align-items: center;
   gap: 12px;
+  border: 0;
+  border-radius: var(--ongaku-radius-md);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  &:hover {
+    background: var(--ongaku-surface-2);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--ongaku-accent);
+  }
+}
+
+.mini-progress {
+  display: none;
 }
 
 .cover {
@@ -161,4 +186,209 @@
   .volume mat-slider {
     display: none;
   }
+}
+
+// Phones: mini player (cover, title, play, queue) with a progress line; the rest is in the full-screen player
+@media (max-width: 599px) {
+  .bar {
+    position: relative;
+    height: var(--ongaku-player-height);
+    min-height: 0;
+    padding: 0 8px;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 4px;
+  }
+  .now-playing {
+    margin: 0;
+    .cover {
+      width: 44px;
+      height: 44px;
+    }
+  }
+  .transport {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .skip,
+  .seek,
+  .volume {
+    display: none;
+  }
+  .play {
+    width: 44px;
+    height: 44px;
+  }
+  .extras {
+    grid-column: 3;
+  }
+  .mini-progress {
+    position: absolute;
+    top: -1px;
+    right: 0;
+    left: 0;
+    display: block;
+    height: 3px;
+    background: var(--ongaku-border);
+    span {
+      display: block;
+      height: 100%;
+      background: var(--ongaku-accent);
+    }
+  }
+}
+
+// ---------- Full-screen player ----------
+
+.sheet {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  background: var(--ongaku-bg);
+  animation: sheet-in .25s ease-out;
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+.sheet-content {
+  width: 100%;
+  max-width: 460px;
+  box-sizing: border-box;
+  padding: 16px 24px max(28px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.sheet-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  .eyebrow {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ongaku-muted);
+  }
+  .header-spacer {
+    width: 48px;
+    flex: none;
+  }
+}
+
+.sheet-cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--ongaku-radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ongaku-accent);
+  background: var(--ongaku-surface-2);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .4);
+  mat-icon {
+    width: 120px;
+    height: 120px;
+    font-size: 120px;
+    opacity: .6;
+  }
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.sheet-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  h2 {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+  .links {
+    color: var(--ongaku-muted);
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.sheet-seek {
+  display: flex;
+  flex-direction: column;
+  mat-slider {
+    width: 100%;
+    margin: 0;
+  }
+  .times {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ongaku-muted);
+  }
+}
+
+.sheet-transport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  .big-skip mat-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 32px;
+  }
+}
+
+.big-play {
+  width: 72px;
+  height: 72px;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ongaku-on-accent);
+  background: var(--ongaku-accent);
+  mat-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 36px;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--ongaku-text);
+    outline-offset: 3px;
+  }
+}
+
+.sheet-queue {
+  align-self: center;
+  border-radius: 22px;
 }

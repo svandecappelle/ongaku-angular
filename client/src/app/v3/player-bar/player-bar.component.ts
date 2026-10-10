@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { A11yModule } from '@angular/cdk/a11y';
+import { RouterLink } from '@angular/router';
 
 import { MaterialModule } from '../../modules/material.module';
 import { PlaybackService } from '../../services/playback.service';
@@ -9,9 +11,10 @@ import { formatTime } from '../format-time';
   templateUrl: './player-bar.component.html',
   styleUrls: ['./player-bar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialModule],
+  imports: [MaterialModule, A11yModule, RouterLink],
   host: {
     '[class.visible]': 'playback.started()',
+    '[class.expanded]': 'expanded()',
   },
 })
 export class PlayerBarComponent {
@@ -22,6 +25,8 @@ export class PlayerBarComponent {
 
   /** Position shown while the seek slider is dragged */
   private readonly seeking = signal<number | null>(null);
+  /** Full-screen player, opened from the cover */
+  readonly expanded = signal(false);
   /** Gain restored by unmuting */
   private readonly unmutedGain = signal(0.75);
 
@@ -29,6 +34,13 @@ export class PlayerBarComponent {
   readonly volume = computed(() => Math.min(1, this.playback.gain()));
   readonly muted = computed(() => this.playback.gain() === 0);
   readonly formatTime = formatTime;
+
+  openQueue() {
+    this.expanded.set(false);
+    if (!this.queueOpen()) {
+      this.toggleQueue.emit();
+    }
+  }
 
   cover(uid: unknown) {
     return `/api/audio/song-image/${uid}`;

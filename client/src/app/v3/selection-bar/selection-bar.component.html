@@ -6,13 +6,13 @@
         <mat-icon>play_arrow</mat-icon>
         Play
       </button>
-      <button type="button" (click)="actions.playNext(selected)">
-        <mat-icon>queue_play_next</mat-icon>
-        Play next
+      <button type="button" class="labelled" (click)="actions.playNext(selected)">
+        <mat-icon aria-hidden="true">queue_play_next</mat-icon>
+        <span class="label">Play next</span>
       </button>
-      <button type="button" (click)="actions.addToQueue(selected)">
-        <mat-icon>playlist_add</mat-icon>
-        Add to queue
+      <button type="button" class="labelled" (click)="actions.addToQueue(selected)">
+        <mat-icon aria-hidden="true">playlist_add</mat-icon>
+        <span class="label">Add to queue</span>
       </button>
       <button type="button" class="icon" (click)="actions.details(selected)" aria-label="Details and tags" matTooltip="Details and tags">
         <mat-icon>description</mat-icon>
