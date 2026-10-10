@@ -6,73 +6,218 @@
     </a>
     <span class="eyebrow">Profile</span>
     <h1>Appearance</h1>
-    <p class="muted">Choose a theme, an accent colour and the density of the interface. Settings are saved in this browser.</p>
+    <p class="muted">Settings are saved in this browser.</p>
   </header>
 
   <div class="layout">
     <div class="settings">
 
-      <section class="panel" aria-labelledby="theme-title">
-        <div class="panel-header">
-          <h2 id="theme-title">Theme</h2>
-          <span class="muted">The colour scheme of the whole application.</span>
-        </div>
-        <div class="theme-grid">
-          @for (t of theme.themes; track t.id) {
-            <button type="button" class="theme-card" [class.selected]="t.id === theme.selected()"
-              [attr.aria-pressed]="t.id === theme.selected()" (click)="setTheme(t.id)">
-              <span class="theme-preview" [style.background]="t.swatch.background" aria-hidden="true">
-                <span class="tp-menu"></span>
-                <span class="tp-body">
-                  <span class="tp-title"></span>
-                  <span class="tp-tiles"><span></span><span></span><span></span></span>
-                  <span class="tp-player"><span [style.background]="t.swatch.accent"></span></span>
-                </span>
-              </span>
-              <span class="theme-meta">
-                <span class="theme-name">
-                  {{ t.label }}
-                  <small>{{ t.description }}</small>
-                </span>
-                @if (t.id === theme.selected()) {
-                  <mat-icon class="check">check_circle</mat-icon>
-                }
-              </span>
+      <section class="panel" aria-labelledby="themes-title">
+        <div class="panel-row">
+          <div class="panel-header">
+            <h2 id="themes-title">My themes</h2>
+            <span class="muted">Built-in themes and the ones you created.</span>
+          </div>
+          <button mat-stroked-button type="button" [matMenuTriggerFor]="importMenu">
+            <mat-icon>file_download</mat-icon>
+            Import a theme
+          </button>
+          <mat-menu #importMenu="matMenu">
+            <button mat-menu-item (click)="importFromClipboard()">
+              <mat-icon>content_paste</mat-icon>
+              <span>Paste from clipboard</span>
             </button>
-          }
+            <button mat-menu-item (click)="fileInput.click()">
+              <mat-icon>upload_file</mat-icon>
+              <span>From a file…</span>
+            </button>
+          </mat-menu>
+          <input #fileInput type="file" accept=".json,application/json" hidden (change)="importFile($event)">
         </div>
-        <mat-slide-toggle [checked]="theme.followSystem()" (change)="setFollowSystem($event.checked)">
-          Follow the system light/dark mode
-          <span class="hint">Switches to “Aube” when your device is in light mode.</span>
-        </mat-slide-toggle>
+
+        <div class="theme-grid">
+          @for (t of theme.themes(); track t.id) {
+            <div class="theme-card" [class.selected]="t.id === theme.selected()">
+              <button type="button" class="theme-select" [attr.aria-pressed]="t.id === theme.selected()" (click)="setTheme(t.id)">
+                <span class="theme-thumb" [style.background]="t.colors.bg" aria-hidden="true">
+                  <span class="tp-menu" [style.background]="t.colors.surface"></span>
+                  <span class="tp-body">
+                    <span class="tp-title" [style.background]="t.colors.surface2"></span>
+                    <span class="tp-tiles">
+                      <span [style.background]="t.colors.surface2"></span>
+                      <span [style.background]="t.colors.surface2"></span>
+                      <span [style.background]="t.colors.surface2"></span>
+                    </span>
+                    <span class="tp-player" [style.background]="t.colors.surface"><span [style.background]="t.colors.accent"></span></span>
+                  </span>
+                </span>
+                <span class="theme-meta">
+                  <span class="theme-name">
+                    {{ t.label }}
+                    <small>{{ t.description }}</small>
+                  </span>
+                  @if (t.id === theme.selected()) {
+                    <mat-icon class="check">check_circle</mat-icon>
+                  }
+                </span>
+              </button>
+              @if (t.custom) {
+                <div class="theme-actions">
+                  <a mat-icon-button [routerLink]="['/profile/appearance/themes', t.id]" aria-label="Edit" matTooltip="Edit">
+                    <mat-icon>edit</mat-icon>
+                  </a>
+                  <button mat-icon-button type="button" (click)="duplicate(t.id)" aria-label="Duplicate" matTooltip="Duplicate">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                  <button mat-icon-button type="button" (click)="share(t.id)" aria-label="Copy the theme code" matTooltip="Copy the theme code">
+                    <mat-icon>share</mat-icon>
+                  </button>
+                  <button mat-icon-button type="button" (click)="delete(t.id)" aria-label="Delete" matTooltip="Delete">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+          <a class="create-card" routerLink="/profile/appearance/themes/new">
+            <span class="plus"><mat-icon>add</mat-icon></span>
+            Create a theme
+          </a>
+        </div>
       </section>
 
       <section class="panel" aria-labelledby="accent-title">
         <div class="panel-header">
           <h2 id="accent-title">Accent colour</h2>
-          <span class="muted">Buttons, progress bars and links. A darker variant is used on light themes so text stays readable.</span>
+          <span class="muted">Buttons, progress bars and links.</span>
         </div>
-        <div class="swatches" role="radiogroup" aria-labelledby="accent-title">
-          @for (accent of accents(); track accent.id) {
-            <button type="button" class="swatch" role="radio" [class.selected]="accent.id === theme.accent()"
-              [attr.aria-checked]="accent.id === theme.accent()" [attr.aria-label]="accent.label"
-              [matTooltip]="accent.label" (click)="setAccent(accent.id)">
-              <span [style.background]="accent.color"></span>
+        <div class="option-grid" role="radiogroup" aria-labelledby="accent-title">
+          @for (mode of accentModes; track mode.id) {
+            <button type="button" class="option-card" role="radio" [class.selected]="mode.id === accentMode()"
+              [attr.aria-checked]="mode.id === accentMode()" (click)="setAccentMode(mode.id)">
+              <span class="option-label">{{ mode.label }}</span>
+              <span class="muted small">{{ mode.description }}</span>
             </button>
           }
         </div>
-        <span class="muted small">Selected: {{ accentLabel() }}</span>
+        @if (accentMode() === 'fixed') {
+          <div class="swatches" role="radiogroup" aria-label="Fixed colour">
+            @for (accent of swatches(); track accent.id) {
+              <button type="button" class="swatch" role="radio" [class.selected]="accent.id === settings().accent"
+                [attr.aria-checked]="accent.id === settings().accent" [attr.aria-label]="accent.label"
+                [matTooltip]="accent.label" (click)="setAccent(accent.id)">
+                <span [style.background]="accent.color"></span>
+              </button>
+            }
+          </div>
+        }
+        @if (accentMode() === 'dynamic') {
+          <p class="note muted">
+            The accent takes the dominant colour of the cover being played, adjusted to stay readable.
+            Without a cover, the theme's accent is used.
+          </p>
+        }
       </section>
 
-      <section class="panel" aria-labelledby="density-title">
+      <section class="panel" aria-labelledby="interface-title">
         <div class="panel-header">
-          <h2 id="density-title">Density</h2>
-          <span class="muted">Spacing of lists, tables, tabs and toolbars.</span>
+          <h2 id="interface-title">Interface</h2>
+          <span class="muted">Applies whatever the theme.</span>
         </div>
-        <mat-button-toggle-group [value]="theme.density()" (change)="setDensity($event.value)" aria-labelledby="density-title">
-          <mat-button-toggle value="comfortable">Comfortable</mat-button-toggle>
-          <mat-button-toggle value="compact">Compact</mat-button-toggle>
+
+        <div class="field">
+          <span class="field-label" id="font-label">Font</span>
+          <div class="option-grid" role="radiogroup" aria-labelledby="font-label">
+            @for (font of theme.fonts; track font.id) {
+              <button type="button" class="option-card font-card" role="radio" [class.selected]="font.id === settings().font"
+                [attr.aria-checked]="font.id === settings().font" (click)="setFont(font.id)">
+                <span class="font-sample" [style.fontFamily]="font.family">Aa</span>
+                <span class="small"><strong>{{ font.label }}</strong> · {{ font.description }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="field slider-field">
+          <label class="field-label" for="scale-slider">Content size</label>
+          <mat-slider [min]="scaleMin" [max]="scaleMax" step="5" discrete [displayWith]="percent">
+            <input id="scale-slider" matSliderThumb [value]="settings().contentScale" (valueChange)="setContentScale($event)">
+          </mat-slider>
+          <span class="muted value">{{ settings().contentScale }} %</span>
+        </div>
+
+        <div class="inline-fields">
+          <div class="field">
+            <span class="field-label" id="radius-label">Corners</span>
+            <mat-button-toggle-group [value]="settings().radius" (change)="setRadius($event.value)" aria-labelledby="radius-label">
+              @for (radius of theme.radii; track radius.id) {
+                <mat-button-toggle [value]="radius.id">{{ radius.label }}</mat-button-toggle>
+              }
+            </mat-button-toggle-group>
+          </div>
+          <div class="field">
+            <span class="field-label" id="density-label">Density</span>
+            <mat-button-toggle-group [value]="settings().density" (change)="setDensity($event.value)" aria-labelledby="density-label">
+              <mat-button-toggle value="comfortable">Comfortable</mat-button-toggle>
+              <mat-button-toggle value="compact">Compact</mat-button-toggle>
+            </mat-button-toggle-group>
+          </div>
+        </div>
+
+        <mat-slide-toggle [checked]="settings().reduceMotion" (change)="setReduceMotion($event.checked)">
+          Reduce animations
+          <span class="hint">Spinning cover, transitions and loading animations are stopped.</span>
+        </mat-slide-toggle>
+      </section>
+
+      <section class="panel" aria-labelledby="schedule-title">
+        <div class="panel-header">
+          <h2 id="schedule-title">Automatic switch</h2>
+          <span class="muted">Switch between a day theme and a night theme.</span>
+        </div>
+        <mat-button-toggle-group [value]="settings().schedule" (change)="setSchedule($event.value)" aria-labelledby="schedule-title">
+          @for (schedule of schedules; track schedule.id) {
+            <mat-button-toggle [value]="schedule.id">{{ schedule.label }}</mat-button-toggle>
+          }
         </mat-button-toggle-group>
+        @if (settings().schedule !== 'off') {
+          <div class="schedule-grid">
+            <div class="schedule-slot" [class.active]="theme.activeSlot() === 'day'">
+              <span class="slot-title"><mat-icon>light_mode</mat-icon>Day</span>
+              <mat-form-field>
+                <mat-label>Theme</mat-label>
+                <mat-select [value]="settings().dayTheme" (selectionChange)="setScheduleTheme('dayTheme', $event.value)">
+                  @for (t of theme.themes(); track t.id) {
+                    <mat-option [value]="t.id">{{ t.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              @if (settings().schedule === 'timed') {
+                <mat-form-field>
+                  <mat-label>From</mat-label>
+                  <input matInput type="time" [value]="settings().dayStart" (change)="setScheduleTime('dayStart', $any($event.target).value)">
+                </mat-form-field>
+              }
+            </div>
+            <div class="schedule-slot" [class.active]="theme.activeSlot() === 'night'">
+              <span class="slot-title"><mat-icon>dark_mode</mat-icon>Night</span>
+              <mat-form-field>
+                <mat-label>Theme</mat-label>
+                <mat-select [value]="settings().nightTheme" (selectionChange)="setScheduleTheme('nightTheme', $event.value)">
+                  @for (t of theme.themes(); track t.id) {
+                    <mat-option [value]="t.id">{{ t.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              @if (settings().schedule === 'timed') {
+                <mat-form-field>
+                  <mat-label>From</mat-label>
+                  <input matInput type="time" [value]="settings().nightStart" (change)="setScheduleTime('nightStart', $any($event.target).value)">
+                </mat-form-field>
+              }
+            </div>
+          </div>
+        }
       </section>
 
       <section class="panel" aria-labelledby="background-title">
@@ -80,58 +225,26 @@
           <h2 id="background-title">Background image</h2>
           <span class="muted">Your profile background, under a veil in the theme's colours. Change the image from your <a routerLink="/profile">profile</a>.</span>
         </div>
-        <mat-slide-toggle [checked]="theme.showBackground()" (change)="setShowBackground($event.checked)">
+        <mat-slide-toggle [checked]="settings().showBackground" (change)="setShowBackground($event.checked)">
           Show my background image
         </mat-slide-toggle>
-        <div class="veil">
-          <label for="veil-slider">Veil opacity</label>
-          <mat-slider min="0" max="100" step="5" discrete [disabled]="!theme.showBackground()" [displayWith]="percent">
-            <input id="veil-slider" matSliderThumb [value]="theme.backgroundVeil()" (valueChange)="setVeil($event)">
+        <div class="field slider-field">
+          <label class="field-label" for="veil-slider">Veil opacity</label>
+          <mat-slider min="0" max="100" step="5" discrete [disabled]="!settings().showBackground" [displayWith]="percent">
+            <input id="veil-slider" matSliderThumb [value]="settings().backgroundVeil" (valueChange)="setVeil($event)">
           </mat-slider>
-          <span class="muted value">{{ theme.backgroundVeil() }} %</span>
+          <span class="muted value">{{ settings().backgroundVeil }} %</span>
         </div>
       </section>
     </div>
 
     <aside class="preview-column" aria-label="Preview">
       <span class="eyebrow muted">Preview</span>
-      <div class="preview" [class.with-background]="theme.showBackground()">
-        @if (theme.showBackground()) {
-          <div class="preview-bg" [style.backgroundImage]="'url(/api/user/image/background)'" aria-hidden="true"></div>
-          <div class="preview-veil" aria-hidden="true"></div>
-        }
-        <div class="preview-content">
-          <div class="preview-album">
-            <div class="cover" aria-hidden="true">
-              <mat-icon>album</mat-icon>
-            </div>
-            <div>
-              <div class="album-title">Album</div>
-              <div class="muted small">Artist · 4 tracks</div>
-            </div>
-          </div>
-          <mat-list class="preview-tracks">
-            @for (track of previewTracks; track track.title; let i = $index) {
-              <mat-list-item [class.current]="i === 1">
-                <span matListItemTitle class="track-row">
-                  <span class="track-number">{{ i + 1 }}</span>
-                  <span class="track-title">{{ track.title }}</span>
-                  <span class="muted small">{{ track.duration }}</span>
-                </span>
-              </mat-list-item>
-            }
-          </mat-list>
-          <div class="preview-player">
-            <button mat-mini-fab color="accent" aria-label="Play" tabindex="-1">
-              <mat-icon>play_arrow</mat-icon>
-            </button>
-            <mat-progress-bar mode="determinate" value="35" color="accent"></mat-progress-bar>
-          </div>
-        </div>
-      </div>
+      <app-theme-preview [colors]="theme.active().colors" [full]="false"></app-theme-preview>
       <div class="actions">
-        <button mat-stroked-button type="button" (click)="reset()">Reset to defaults</button>
+        <button mat-stroked-button type="button" (click)="reset()">Reset settings</button>
       </div>
+      <span class="muted small">Resetting keeps your custom themes.</span>
     </aside>
   </div>
 </div>

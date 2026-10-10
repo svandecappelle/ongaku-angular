@@ -1,63 +1,99 @@
 @use 'sass:map';
 @use '@angular/material' as mat;
-// TODO(v15): As of v15 mat.legacy-core no longer includes default typography styles.
-//  The following line adds:
-//    1. Default typography styles for all components
-//    2. Styles for typography hierarchy classes (e.g. .mat-headline-1)
-//  If you specify typography styles for the components you use elsewhere, you should delete this line.
-//  If you don't need the default component typographies but still want the hierarchy styles,
-//  you can delete this line and instead use:
-//    `@include mat.legacy-typography-hierarchy(mat.define-typography-config());`
-@include mat.all-component-typographies();
+
+// Theme engine. Colours, font, corner radius, density and motion are driven at runtime by
+// ThemeService (services/theme.service.ts), through CSS variables (--ongaku-*) and attributes
+// on <html>: data-mode (dark|light), data-density, data-radius, data-motion.
+
+// Text follows the font chosen on the Appearance page
+@include mat.all-component-typographies(mat.m2-define-typography-config($font-family: var(--ongaku-font)));
 @include mat.elevation-classes();
 @include mat.app-background();
 
-$my-app-primary: mat.m2-define-palette(mat.$m2-grey-palette, 900);
-// The accent is a CSS variable so ThemeService can change it at runtime (Appearance page):
-// every hue of the palette resolves to --ongaku-accent, and its contrast to --ongaku-on-accent.
-$accent-hues: (50, 100, 200, 300, 400, 500, 600, 700, 800, 900, A100, A200, A400, A700);
-$accent-base-palette: (contrast: ());
-@each $hue in $accent-hues {
-  $accent-base-palette: map.set($accent-base-palette, $hue, var(--ongaku-accent));
-  $accent-base-palette: map.set($accent-base-palette, contrast, $hue, var(--ongaku-on-accent));
+// A palette whose every hue resolves to a CSS variable, so Material components follow the
+// colours set by ThemeService without recompiling.
+@function var-palette($color, $contrast) {
+  $palette: (contrast: ());
+  @each $hue in (50, 100, 200, 300, 400, 500, 600, 700, 800, 900, A100, A200, A400, A700) {
+    $palette: map.set($palette, $hue, $color);
+    $palette: map.set($palette, contrast, $hue, $contrast);
+  }
+  @return mat.m2-define-palette($palette, 500, 300, 700);
 }
-$my-app-accent:  mat.m2-define-palette($accent-base-palette, 500, 300, 700);
+
+// "Primary" is drawn in the text colour (neutral buttons, tab indicators, progress bars)
+$my-app-primary: var-palette(var(--ongaku-text), var(--ongaku-bg));
+$my-app-accent:  var-palette(var(--ongaku-accent), var(--ongaku-on-accent));
 $my-app-warn:    mat.m2-define-palette(mat.$m2-deep-orange-palette);
 
 $my-app-theme: mat.m2-define-dark-theme($my-app-primary, $my-app-accent, $my-app-warn);
-
 @include mat.all-component-themes($my-app-theme);
 
-// Other themes, selected by ThemeService through <html data-theme="…">.
-// "nuit" is the default theme above; these only override component colours.
-$aube-theme: mat.m2-define-light-theme(
-  mat.m2-define-palette(mat.$m2-grey-palette, 100),
-  $my-app-accent,
-  $my-app-warn
-);
-$vinyle-theme: mat.m2-define-dark-theme(
-  mat.m2-define-palette(mat.$m2-brown-palette, 900),
-  $my-app-accent,
-  $my-app-warn
-);
-$minuit-theme: mat.m2-define-dark-theme(
-  mat.m2-define-palette(mat.$m2-indigo-palette, 900),
-  $my-app-accent,
-  $my-app-warn
-);
-
-html[data-theme='aube'] {
-  @include mat.all-component-colors($aube-theme);
-}
-html[data-theme='vinyle'] {
-  @include mat.all-component-colors($vinyle-theme);
-}
-html[data-theme='minuit'] {
-  @include mat.all-component-colors($minuit-theme);
+// Light themes only change the foreground colours Material computes (text, icons, dividers…)
+html[data-mode='light'] {
+  @include mat.all-component-colors(mat.m2-define-light-theme($my-app-primary, $my-app-accent, $my-app-warn));
 }
 
-// Compact density, selected on the Appearance page (ThemeService sets <html data-density="…">).
-// Form fields keep their own density set above.
+// Component surfaces and shapes follow the theme. `html[data-mode]` wins over the rules above.
+html,
+html[data-mode] {
+  --mat-app-background-color: var(--ongaku-bg);
+  --mat-card-elevated-container-color: var(--ongaku-surface);
+  --mat-card-outlined-container-color: var(--ongaku-surface);
+  --mat-card-outlined-outline-color: var(--ongaku-border);
+  --mat-card-filled-container-color: var(--ongaku-surface-2);
+  --mat-menu-container-color: var(--ongaku-surface);
+  --mat-select-panel-background-color: var(--ongaku-surface);
+  --mat-autocomplete-background-color: var(--ongaku-surface);
+  --mat-dialog-container-color: var(--ongaku-surface);
+  --mat-bottom-sheet-container-background-color: var(--ongaku-surface);
+  --mat-expansion-container-background-color: var(--ongaku-surface);
+  --mat-sidenav-container-background-color: var(--ongaku-surface);
+  --mat-sidenav-content-background-color: var(--ongaku-surface);
+  --mat-table-background-color: var(--ongaku-surface);
+  --mat-paginator-container-background-color: var(--ongaku-surface);
+  --mat-datepicker-calendar-container-background-color: var(--ongaku-surface);
+  --mat-timepicker-container-background-color: var(--ongaku-surface);
+  --mat-tree-container-background-color: var(--ongaku-surface);
+  --mat-button-toggle-background-color: var(--ongaku-surface);
+  --mat-button-toggle-selected-state-background-color: var(--ongaku-surface-2);
+  --mat-chip-elevated-container-color: var(--ongaku-surface-2);
+  --mat-divider-color: var(--ongaku-border);
+  --mat-toolbar-container-background-color: var(--ongaku-surface);
+  --mat-toolbar-container-text-color: var(--ongaku-text);
+
+  --mat-button-filled-container-shape: var(--ongaku-radius-button);
+  --mat-button-outlined-container-shape: var(--ongaku-radius-button);
+  --mat-button-protected-container-shape: var(--ongaku-radius-button);
+  --mat-button-text-container-shape: var(--ongaku-radius-button);
+  --mat-button-tonal-container-shape: var(--ongaku-radius-button);
+  --mat-chip-container-shape: var(--ongaku-radius-button);
+  --mat-button-toggle-shape: var(--ongaku-radius-md);
+  --mat-card-elevated-container-shape: var(--ongaku-radius-lg);
+  --mat-card-outlined-container-shape: var(--ongaku-radius-lg);
+  --mat-card-filled-container-shape: var(--ongaku-radius-lg);
+  --mat-dialog-container-shape: var(--ongaku-radius-xl);
+  --mat-bottom-sheet-container-shape: var(--ongaku-radius-xl);
+  --mat-menu-container-shape: var(--ongaku-radius-md);
+  --mat-autocomplete-container-shape: var(--ongaku-radius-md);
+  --mat-expansion-container-shape: var(--ongaku-radius-lg);
+  --mat-datepicker-calendar-container-shape: var(--ongaku-radius-lg);
+  --mat-timepicker-container-shape: var(--ongaku-radius-md);
+  --mat-form-field-outlined-container-shape: var(--ongaku-radius-sm);
+  --mat-form-field-filled-container-shape: var(--ongaku-radius-sm);
+  --mat-snack-bar-container-shape: var(--ongaku-radius-sm);
+  --mat-tooltip-container-shape: var(--ongaku-radius-sm);
+}
+
+// Toolbars declared with color="primary" (header, side menu) use the surface colour too
+html .mat-toolbar.mat-primary,
+html .mat-toolbar {
+  --mat-toolbar-container-background-color: var(--ongaku-surface);
+  --mat-toolbar-container-text-color: var(--ongaku-text);
+}
+
+// Compact density, selected on the Appearance page.
+// Form fields keep their own density set below.
 html[data-density='compact'] {
   @include mat.list-density(-2);
   @include mat.table-density(-3);
@@ -68,9 +104,32 @@ html[data-density='compact'] {
   @include mat.chips-density(-2);
 }
 
-// Colours for the app's own styles. Keep in sync with THEMES in theme.service.ts.
-:root,
-html[data-theme='nuit'] {
+// Corner radius scale ("Rounded" by default)
+:root {
+  --ongaku-radius-sm: 8px;
+  --ongaku-radius-md: 12px;
+  --ongaku-radius-lg: 16px;
+  --ongaku-radius-xl: 24px;
+  --ongaku-radius-button: 10px;
+}
+html[data-radius='sharp'] {
+  --ongaku-radius-sm: 2px;
+  --ongaku-radius-md: 4px;
+  --ongaku-radius-lg: 6px;
+  --ongaku-radius-xl: 8px;
+  --ongaku-radius-button: 4px;
+}
+html[data-radius='pill'] {
+  --ongaku-radius-sm: 12px;
+  --ongaku-radius-md: 18px;
+  --ongaku-radius-lg: 24px;
+  --ongaku-radius-xl: 32px;
+  --ongaku-radius-button: 999px;
+}
+
+// Defaults until ThemeService applies the user's settings (the "Nuit" theme).
+// The theme colours themselves live in theme/themes.ts.
+:root {
   --ongaku-bg: #0f1115;
   --ongaku-surface: #171a21;
   --ongaku-surface-2: #222731;
@@ -78,39 +137,24 @@ html[data-theme='nuit'] {
   --ongaku-text: #eceef2;
   --ongaku-muted: #9aa3b2;
   --ongaku-accent: #4fd1c5;
-  --ongaku-on-accent: #08201e;
-}
-html[data-theme='aube'] {
-  --ongaku-bg: #f6f5f2;
-  --ongaku-surface: #ffffff;
-  --ongaku-surface-2: #eceae4;
-  --ongaku-border: #ddd9d0;
-  --ongaku-text: #1a1b1e;
-  --ongaku-muted: #5b5e66;
-  --ongaku-accent: #0f766e;
-  --ongaku-on-accent: #ffffff;
-}
-html[data-theme='vinyle'] {
-  --ongaku-bg: #16110d;
-  --ongaku-surface: #201914;
-  --ongaku-surface-2: #2d241c;
-  --ongaku-border: #3b2f25;
-  --ongaku-text: #f3e9df;
-  --ongaku-muted: #b5a596;
-  --ongaku-accent: #f2a65a;
-  --ongaku-on-accent: #2a1606;
-}
-html[data-theme='minuit'] {
-  --ongaku-bg: #0e0c1a;
-  --ongaku-surface: #16132a;
-  --ongaku-surface-2: #221e3d;
-  --ongaku-border: #302a52;
-  --ongaku-text: #eeebff;
-  --ongaku-muted: #a6a2c8;
-  --ongaku-accent: #a78bfa;
-  --ongaku-on-accent: #1a1033;
+  --ongaku-on-accent: #0b0b12;
+  --ongaku-font: 'DM Sans Variable', system-ui, sans-serif;
+  --ongaku-content-scale: 1;
 }
 
+body {
+  font-family: var(--ongaku-font);
+}
+
+// "Reduce animations": stop transitions, spinning covers and other loops
+html[data-motion='reduced'] *,
+html[data-motion='reduced'] *::before,
+html[data-motion='reduced'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
 
 .alternate-theme {
   $alternate-primary: mat.m2-define-palette(mat.$m2-grey-palette, 900);

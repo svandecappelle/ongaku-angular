@@ -26,4 +26,6 @@
 .routing-content {
   margin-left: 72px;
   position: relative;
+  // "Content size" setting of the Appearance page
+  zoom: var(--ongaku-content-scale, 1);
 }

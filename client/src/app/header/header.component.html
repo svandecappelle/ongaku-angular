@@ -20,11 +20,11 @@
         <mat-icon>palette</mat-icon>
       </button>
       <mat-menu #themeMenu="matMenu">
-        @for (theme of themeService.themes; track theme.id) {
+        @for (theme of themeService.themes(); track theme.id) {
           <button mat-menu-item class="theme-item" (click)="themeService.setTheme(theme.id)"
             [attr.aria-pressed]="theme.id === themeService.selected()">
-            <span class="theme-swatch" [style.background]="theme.swatch.background">
-              <span [style.background]="theme.swatch.accent"></span>
+            <span class="theme-swatch" [style.background]="theme.colors.bg">
+              <span [style.background]="theme.colors.accent"></span>
             </span>
             <span class="theme-label">
               {{theme.label}}

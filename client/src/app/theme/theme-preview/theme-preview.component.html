@@ -1,0 +1,57 @@
+<div class="app">
+  <div class="main">
+    @if (full()) {
+      <div class="sidebar">
+        <div class="brand"><span class="logo"></span>Ongaku</div>
+        <span class="nav active">Discover</span>
+        <span class="nav">Users</span>
+        <span class="nav">Radios</span>
+        <span class="nav">My library</span>
+      </div>
+    }
+    <div class="content">
+      <div class="search">Artists, albums, tracks…</div>
+      <div class="hero">
+        <div class="hero-text">
+          <span class="eyebrow">Continue listening</span>
+          <span class="title">Album</span>
+          <span class="muted">Artist · 12 tracks</span>
+        </div>
+        <div class="hero-actions">
+          <span class="button primary">Play</span>
+          <span class="button">Shuffle</span>
+        </div>
+      </div>
+      <div class="tiles">
+        @for (opacity of tiles; track $index) {
+          <div class="tile">
+            <span class="cover">
+              <svg viewBox="0 0 100 100" [style.opacity]="opacity"><circle cx="50" cy="50" r="42"></circle><circle cx="50" cy="50" r="13"></circle></svg>
+            </span>
+            <span class="tile-title">Album {{ $index + 1 }}</span>
+          </div>
+        }
+      </div>
+      <div class="tracks">
+        <div class="track current"><span class="n">1</span><span class="name">Track 1</span><span class="muted">3:41</span></div>
+        <div class="track"><span class="n">2</span><span class="name">Track 2</span><span class="muted">4:05</span></div>
+      </div>
+    </div>
+  </div>
+  @if (full()) {
+    <div class="player">
+      <span class="art"></span>
+      <span class="now"><span class="name">Track 1</span><span class="muted">Artist</span></span>
+      <span class="play"></span>
+      <span class="progress"><span></span></span>
+    </div>
+  }
+</div>
+<div class="components">
+  <span class="button primary">Primary</span>
+  <span class="button">Secondary</span>
+  <span class="toggle"><span></span></span>
+  <span class="chip">Rock</span>
+  <span class="link">Link</span>
+  <span class="muted">Secondary text</span>
+</div>

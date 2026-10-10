@@ -1,0 +1,116 @@
+<div class="editor">
+  <header class="page-header">
+    <div class="title-block">
+      <a mat-button routerLink="/profile/appearance" class="back">
+        <mat-icon>arrow_back</mat-icon>
+        Appearance
+      </a>
+      <span class="eyebrow">{{ isNew ? 'New theme' : 'Edit theme' }}</span>
+      <label class="name">
+        <span class="visually-hidden">Theme name</span>
+        <input type="text" maxlength="40" [value]="definition().label" (input)="setLabel($any($event.target).value)">
+      </label>
+    </div>
+    <div class="actions">
+      <button mat-stroked-button type="button" (click)="export()">
+        <mat-icon>download</mat-icon>
+        Export
+      </button>
+      <a mat-stroked-button routerLink="/profile/appearance">Cancel</a>
+      <button mat-flat-button color="accent" type="button" (click)="save()">Save theme</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="controls">
+
+      <section class="panel" aria-labelledby="start-title">
+        <h2 id="start-title">Start from</h2>
+        <div class="chips">
+          @for (preset of presets; track preset.id) {
+            <button type="button" class="start-chip" (click)="startFrom(preset)">
+              <span class="dot" [style.background]="preset.colors.bg"><span [style.background]="preset.colors.accent"></span></span>
+              {{ preset.label }}
+            </button>
+          }
+          <button type="button" class="start-chip" (click)="startFromBackgroundImage()" [disabled]="extracting()">
+            <mat-icon>image</mat-icon>
+            My background image
+          </button>
+        </div>
+        <span class="muted small">“My background image” builds a palette from the dominant colours of your profile background.</span>
+      </section>
+
+      <section class="panel" aria-labelledby="colors-title">
+        <div class="panel-row">
+          <h2 id="colors-title">Colours</h2>
+          <mat-button-toggle-group [value]="definition().dark" (change)="setDark($event.value)" aria-label="Mode">
+            <mat-button-toggle [value]="true">Dark</mat-button-toggle>
+            <mat-button-toggle [value]="false">Light</mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+
+        @for (row of baseRows; track row.key) {
+          <div class="color-row">
+            <input type="color" class="color-input" [value]="definition().colors[row.key]"
+              (input)="setColor(row.key, $any($event.target).value)" [attr.aria-label]="row.label">
+            <div class="color-label">
+              <span class="label">{{ row.label }}</span>
+              <span class="muted small">{{ row.description }}</span>
+            </div>
+            <input type="text" class="hex" maxlength="7" spellcheck="false" [value]="definition().colors[row.key]"
+              (change)="setColor(row.key, $any($event.target).value)" [attr.aria-label]="row.label + ' (hex)'">
+          </div>
+        }
+
+        <button mat-button type="button" class="advanced-toggle" (click)="advanced.set(!advanced())" [attr.aria-expanded]="advanced()">
+          <mat-icon>{{ advanced() ? 'expand_less' : 'expand_more' }}</mat-icon>
+          {{ advanced() ? 'Hide calculated colours' : 'Adjust calculated colours…' }}
+        </button>
+        @if (advanced()) {
+          <div class="derived">
+            @for (row of derivedRows; track row.key) {
+              <div class="color-row">
+                <input type="color" class="color-input small-input" [value]="colors()[row.key]"
+                  (input)="setDerived(row.key, $any($event.target).value)" [attr.aria-label]="row.label">
+                <div class="color-label">
+                  <span class="label">{{ row.label }}</span>
+                  <span class="muted small">{{ row.description }}</span>
+                </div>
+                @if (isOverridden(row.key)) {
+                  <button mat-button type="button" (click)="resetDerived(row.key)">Auto</button>
+                } @else {
+                  <span class="muted small">auto</span>
+                }
+                <span class="hex-label">{{ colors()[row.key] }}</span>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <section class="panel" aria-labelledby="contrast-title">
+        <div>
+          <h2 id="contrast-title">Readability</h2>
+          <span class="muted small">Contrast checked against WCAG AA thresholds.</span>
+        </div>
+        @for (check of checks(); track check.label) {
+          <div class="check">
+            <span class="sample" [style.background]="check.background" [style.color]="check.foreground">Aa</span>
+            <span class="check-label">{{ check.label }}</span>
+            <span class="muted small ratio">{{ check.ratio.toFixed(1) }}:1</span>
+            <span class="badge" [class.fail]="!check.ok">{{ check.ok ? 'OK' : 'Too low' }}</span>
+          </div>
+        }
+        @if (!allChecksPass()) {
+          <span class="muted small">You can still save the theme, but some text will be hard to read.</span>
+        }
+      </section>
+    </div>
+
+    <section class="preview-column" aria-label="Live preview">
+      <span class="eyebrow muted">Live preview</span>
+      <app-theme-preview [colors]="colors()"></app-theme-preview>
+    </section>
+  </div>
+</div>

@@ -8,12 +8,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <script>
-    // Apply the saved theme before Angular boots to avoid a flash of the default theme.
-    // ThemeService takes over afterwards (and handles "follow system").
+    // Re-apply the last theme settings (saved by ThemeService) before Angular boots,
+    // to avoid a flash of the default theme. ThemeService takes over afterwards.
     try {
-      var pref = JSON.parse(localStorage.getItem('ongaku.theme') || 'null');
-      if (pref && pref.theme && !pref.followSystem) {
-        document.documentElement.dataset.theme = pref.theme;
+      var applied = JSON.parse(localStorage.getItem('ongaku.theme.applied') || 'null');
+      if (applied) {
+        var root = document.documentElement;
+        Object.keys(applied.attributes || {}).forEach(function (name) {
+          root.dataset[name] = applied.attributes[name];
+        });
+        Object.keys(applied.variables || {}).forEach(function (name) {
+          root.style.setProperty(name, applied.variables[name]);
+        });
+        root.style.colorScheme = applied.dark ? 'dark' : 'light';
       }
     } catch (e) {}
   </script>

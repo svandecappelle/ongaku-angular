@@ -19,6 +19,7 @@ import { UploadComponent } from './upload/upload.component';
 import { ReloadComponent } from './library/reload/reload.component';
 import { UserComponent } from './user/user.component';
 import { AppearanceComponent } from './user/appearance/appearance.component';
+import { ThemeEditorComponent } from './theme/theme-editor/theme-editor.component';
 import { RegisterComponent } from './user/register/register.component';
 
 const routes: Routes = [
@@ -32,6 +33,8 @@ const routes: Routes = [
   { path: 'reload', component: ReloadComponent, canActivate: [AuthGuard] },
   { path: 'profile', component: UserComponent, canActivate: [AuthGuard] },
   { path: 'profile/appearance', component: AppearanceComponent, canActivate: [AuthGuard] },
+  { path: 'profile/appearance/themes/new', component: ThemeEditorComponent, canActivate: [AuthGuard] },
+  { path: 'profile/appearance/themes/:id', component: ThemeEditorComponent, canActivate: [AuthGuard] },
   { path: 'profile/:user', component: UserComponent, canActivate: [AuthGuard] },
   { path: '', component: HomeComponent, canActivate: [AuthGuard] },
 

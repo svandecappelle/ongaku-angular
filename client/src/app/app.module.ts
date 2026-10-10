@@ -15,6 +15,7 @@ import { MomentModule } from 'ngx-moment';
 
 import { AppComponent } from './app.component';
 import { ThemeService } from './services/theme.service';
+import { CoverAccentService } from './services/cover-accent.service';
 import { HeaderComponent } from './header/header.component';
 import { ContentComponent } from './content/content.component';
 import { AppRoutingModule } from './app-routing.module';
@@ -109,6 +110,6 @@ import { UserModule } from './user/user.module';
         ReloadService,
         provideHttpClient(withXhr(), withInterceptorsFromDi()),
         // Apply the saved theme on startup, before any component renders (login page included)
-        provideAppInitializer(() => { inject(ThemeService); })
+        provideAppInitializer(() => { inject(ThemeService); inject(CoverAccentService); })
     ] })
 export class AppModule { }

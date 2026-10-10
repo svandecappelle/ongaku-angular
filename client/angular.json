@@ -25,6 +25,9 @@
               "src/favicon.ico"
             ],
             "styles": [
+              "node_modules/@fontsource-variable/dm-sans/index.css",
+              "node_modules/@fontsource-variable/space-grotesk/index.css",
+              "node_modules/@fontsource-variable/literata/index.css",
               "src/styles.scss",
               "src/theme.scss"
             ],
@@ -86,6 +89,9 @@
             "tsConfig": "src/tsconfig.spec.json",
             "scripts": [],
             "styles": [
+              "node_modules/@fontsource-variable/dm-sans/index.css",
+              "node_modules/@fontsource-variable/space-grotesk/index.css",
+              "node_modules/@fontsource-variable/literata/index.css",
               "src/styles.scss",
               "src/theme.scss"
             ],
