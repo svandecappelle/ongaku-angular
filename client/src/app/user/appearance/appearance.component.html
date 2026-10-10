@@ -12,6 +12,22 @@
   <div class="layout">
     <div class="settings">
 
+      <section class="panel" aria-labelledby="layout-title">
+        <div class="panel-header">
+          <h2 id="layout-title">Interface</h2>
+          <span class="muted">The new interface is being built: pages that are not ready yet keep their classic look.</span>
+        </div>
+        <div class="option-grid" role="radiogroup" aria-labelledby="layout-title">
+          @for (option of layouts; track option.id) {
+            <button type="button" class="option-card" role="radio" [class.selected]="option.id === layout.layout()"
+              [attr.aria-checked]="option.id === layout.layout()" (click)="layout.setLayout(option.id)">
+              <span class="option-label">{{ option.label }}</span>
+              <span class="muted small">{{ option.description }}</span>
+            </button>
+          }
+        </div>
+      </section>
+
       <section class="panel" aria-labelledby="themes-title">
         <div class="panel-row">
           <div class="panel-header">

@@ -1,0 +1,260 @@
+// Same footprint as the classic header (64px) so that the classic pages
+// keep their spacing when they are shown in the new interface
+$topbar-height: 64px;
+
+:host {
+  display: contents;
+  color: var(--ongaku-text);
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 91;
+  width: var(--ongaku-sidebar-width);
+  box-sizing: border-box;
+  // Keeps the last link above the player bar
+  padding: 16px 12px calc(var(--ongaku-player-height) + 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+  background: var(--ongaku-surface);
+  border-right: 1px solid var(--ongaku-border);
+
+  &.compact {
+    padding-inline: 8px;
+    .label {
+      display: none;
+    }
+    .brand,
+    .nav-item {
+      justify-content: center;
+      padding: 0;
+    }
+  }
+}
+
+.brand {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px;
+  text-decoration: none;
+  color: inherit;
+  .logo {
+    width: 36px;
+    height: 36px;
+    flex: none;
+    border-radius: var(--ongaku-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ongaku-accent);
+    color: var(--ongaku-on-accent);
+  }
+  .label {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-item {
+  position: relative;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 12px;
+  border-radius: var(--ongaku-radius-md);
+  text-decoration: none;
+  font-weight: 500;
+  color: var(--ongaku-muted);
+  transition: background-color .15s, color .15s;
+
+  &:hover {
+    color: var(--ongaku-text);
+    background: color-mix(in srgb, var(--ongaku-surface-2) 60%, transparent);
+  }
+  &.active {
+    color: var(--ongaku-text);
+    background: var(--ongaku-surface-2);
+    &::before {
+      content: '';
+      position: absolute;
+      left: -12px;
+      top: 10px;
+      bottom: 10px;
+      width: 4px;
+      border-radius: 0 2px 2px 0;
+      background: var(--ongaku-accent);
+    }
+  }
+  &:focus-visible {
+    outline: 2px solid var(--ongaku-accent);
+    outline-offset: 2px;
+  }
+}
+
+.sidebar.compact .nav-item.active::before {
+  left: -8px;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.topbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: var(--ongaku-sidebar-width);
+  z-index: 90;
+  height: $topbar-height;
+  box-sizing: border-box;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: color-mix(in srgb, var(--ongaku-bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--ongaku-border);
+}
+
+.search {
+  flex: 1 1 280px;
+  max-width: 520px;
+  min-width: 0;
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--ongaku-radius-md);
+  color: var(--ongaku-muted);
+  background: var(--ongaku-surface);
+  border: 1px solid var(--ongaku-border);
+  &:focus-within {
+    border-color: var(--ongaku-accent);
+  }
+  input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    color: var(--ongaku-text);
+  }
+  kbd {
+    font: inherit;
+    font-size: 12px;
+    padding: 1px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--ongaku-border);
+  }
+}
+
+%topbar-button {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  background: var(--ongaku-surface);
+  border: 1px solid var(--ongaku-border);
+  &:focus-visible {
+    outline: 2px solid var(--ongaku-accent);
+    outline-offset: 2px;
+  }
+}
+
+.theme-button {
+  @extend %topbar-button;
+  padding: 0 14px;
+  border-radius: var(--ongaku-radius-md);
+  font-weight: 500;
+  .dots {
+    display: flex;
+    gap: 3px;
+    span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1px solid var(--ongaku-border);
+    }
+  }
+}
+
+.avatar {
+  @extend %topbar-button;
+  width: 44px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+@media (max-width: 599px) {
+  .topbar {
+    padding: 0 12px;
+  }
+  .theme-button .label,
+  .search kbd {
+    display: none;
+  }
+}
+
+// Theme menu, as in the classic header
+.theme-item {
+  min-width: 260px;
+  ::ng-deep .mat-mdc-menu-item-text {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+.theme-swatch {
+  width: 32px;
+  height: 24px;
+  flex: none;
+  box-sizing: border-box;
+  padding: 3px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  border-radius: 6px;
+  border: 1px solid var(--ongaku-border);
+  span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+}
+
+.theme-label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  small {
+    font-size: 12px;
+    color: var(--ongaku-muted);
+  }
+}
+
+.theme-check {
+  color: var(--ongaku-accent);
+}

@@ -1,0 +1,99 @@
+<aside class="sidebar" [class.compact]="compact()">
+  <a class="brand" routerLink="/" aria-label="Ongaku, home">
+    <span class="logo"><mat-icon>music_note</mat-icon></span>
+    <span class="label">Ongaku</span>
+  </a>
+
+  <nav class="nav" aria-label="Main navigation">
+    @for (item of nav; track item.link) {
+      <a class="nav-item" [routerLink]="item.link" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.exact }"
+        ariaCurrentWhenActive="page" [matTooltip]="item.label" matTooltipPosition="right" [matTooltipDisabled]="!compact()">
+        <mat-icon>{{ item.icon }}</mat-icon>
+        <span class="label">{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+
+  <span class="spacer"></span>
+
+  <a class="nav-item" routerLink="/admin" routerLinkActive="active" ariaCurrentWhenActive="page"
+    matTooltip="Administration" matTooltipPosition="right" [matTooltipDisabled]="!compact()">
+    <mat-icon>settings</mat-icon>
+    <span class="label">Administration</span>
+  </a>
+</aside>
+
+<header class="topbar">
+  <label class="search">
+    <mat-icon>search</mat-icon>
+    <input #searchInput type="search" placeholder="Search artists, albums, tracks" aria-label="Search"
+      aria-keyshortcuts="/ Control+K" (change)="search(searchInput.value)">
+    <kbd aria-hidden="true">/</kbd>
+  </label>
+
+  <span class="spacer"></span>
+
+  <button type="button" class="theme-button" [matMenuTriggerFor]="themeMenu">
+    <mat-icon>palette</mat-icon>
+    <span class="label">Theme</span>
+    <span class="dots" aria-hidden="true">
+      <span [style.background]="theme.active().colors.bg"></span>
+      <span [style.background]="theme.active().colors.accent"></span>
+    </span>
+  </button>
+  <mat-menu #themeMenu="matMenu">
+    @for (t of theme.themes(); track t.id) {
+      <button mat-menu-item class="theme-item" (click)="theme.setTheme(t.id)" [attr.aria-pressed]="t.id === theme.selected()">
+        <span class="theme-swatch" [style.background]="t.colors.bg">
+          <span [style.background]="t.colors.accent"></span>
+        </span>
+        <span class="theme-label">
+          {{ t.label }}
+          <small>{{ t.description }}</small>
+        </span>
+        @if (t.id === theme.selected()) {
+          <mat-icon class="theme-check">check</mat-icon>
+        }
+      </button>
+    }
+    <mat-divider></mat-divider>
+    <button mat-menu-item role="menuitemcheckbox" [attr.aria-checked]="theme.followSystem()"
+      (click)="$event.stopPropagation(); theme.setFollowSystem(!theme.followSystem())">
+      <mat-icon>{{ theme.followSystem() ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
+      <span>Follow system light/dark mode</span>
+    </button>
+    <a mat-menu-item routerLink="/profile/appearance">
+      <mat-icon>tune</mat-icon>
+      <span>Customize appearance…</span>
+    </a>
+  </mat-menu>
+
+  <button type="button" class="avatar" [matMenuTriggerFor]="profileMenu" aria-label="Profile">
+    <mat-icon>account_circle</mat-icon>
+  </button>
+  <mat-menu #profileMenu="matMenu" xPosition="before">
+    <a mat-menu-item routerLink="/profile">
+      <mat-icon>account_circle</mat-icon>
+      <span>Edit profile</span>
+    </a>
+    <a mat-menu-item routerLink="/profile/appearance">
+      <mat-icon>palette</mat-icon>
+      <span>Appearance</span>
+    </a>
+    <button mat-menu-item (click)="layout.setLayout('legacy')">
+      <mat-icon>history</mat-icon>
+      <span>Back to the classic interface</span>
+    </button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="logout()">
+      <mat-icon>exit_to_app</mat-icon>
+      <span>Logout</span>
+    </button>
+  </mat-menu>
+</header>
+
+@if (queueOpen()) {
+  <app-queue-panel (closed)="queueOpen.set(false)"></app-queue-panel>
+}
+
+<app-player-bar [queueOpen]="queueOpen()" (toggleQueue)="queueOpen.set(!queueOpen())"></app-player-bar>

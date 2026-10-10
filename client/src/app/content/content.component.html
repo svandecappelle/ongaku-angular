@@ -1,19 +1,23 @@
-@if ((isLoggedIn$ | async) && themeService.showBackground()) {
+@let loggedIn = isLoggedIn$ | async;
+
+@if (loggedIn && themeService.showBackground()) {
   <div class="background" [style.backgroundImage]="'url(/api/user/image/background)'"></div>
   <div class="background-overlay"></div>
 }
 
-@if (isLoggedIn$ | async) {
-  <app-header></app-header>
-}
-@if (isLoggedIn$ | async) {
-  <app-menu></app-menu>
+@if (loggedIn) {
+  @if (layout.modern()) {
+    <app-shell></app-shell>
+  } @else {
+    <app-header></app-header>
+    <app-menu></app-menu>
+  }
 }
 <app-notifications></app-notifications>
-@if (isLoggedIn$ | async) {
+@if (loggedIn && !layout.modern()) {
   <app-player></app-player>
 }
 
-<div class="routing-content" >
+<div class="routing-content" [class.modern-layout]="loggedIn && layout.modern()">
   <router-outlet></router-outlet>
 </div>

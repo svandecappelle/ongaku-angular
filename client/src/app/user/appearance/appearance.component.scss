@@ -6,8 +6,8 @@
 .appearance {
   max-width: 1240px;
   margin: 0 auto;
-  // Clear the fixed header (64px) and the player bar
-  padding: 88px 24px 120px;
+  // The fixed header is cleared by the notifications container (64px margin)
+  padding: 24px 24px 120px;
   display: flex;
   flex-direction: column;
   gap: 32px;

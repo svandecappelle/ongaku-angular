@@ -61,6 +61,7 @@ import { ReloadComponent } from './library/reload/reload.component';
 import { ReloadService } from './library/reload.service';
 import { CommunicationModule } from './communication/communication.module';
 import { UserModule } from './user/user.module';
+import { ShellComponent } from './v3/shell/shell.component';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -93,7 +94,8 @@ import { UserModule } from './user/user.module';
         PlayerModule,
         UploadModule,
         CommunicationModule,
-        UserModule], providers: [
+        UserModule,
+        ShellComponent], providers: [
         AuthGuard,
         AlertService,
         AuthenticationService,

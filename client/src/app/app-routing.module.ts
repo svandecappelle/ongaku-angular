@@ -5,6 +5,7 @@ import { RouterModule, Routes, ExtraOptions } from '@angular/router';
 import { HomeComponent } from './home/home.component';
 import { LoginComponent } from './login/index';
 import { AuthGuard } from './guards/index';
+import { modernLayout } from './services/layout.service';
 
 import { InstallComponent } from './install/install.component';
 import { UpgradeComponent } from './upgrade/upgrade.component';
@@ -24,6 +25,9 @@ import { RegisterComponent } from './user/register/register.component';
 
 const routes: Routes = [
   { path: 'artist/:artist', component: ArtistComponent, canActivate: [AuthGuard]},
+  // New interface: declared before the classic page of the same path (see LayoutService)
+  { path: 'album/:album', canMatch: [modernLayout], canActivate: [AuthGuard],
+    loadComponent: () => import('./v3/album-page/album-page.component').then((m) => m.AlbumPageComponent) },
   { path: 'album/:album', component: AlbumComponent, canActivate: [AuthGuard]},
   { path: 'users', component: UsersComponent, canActivate: [AuthGuard]},
   { path: 'radios', component: RadiosComponent, canActivate: [AuthGuard]},

@@ -1,0 +1,57 @@
+<aside class="panel" aria-labelledby="queue-title" (keydown.escape)="closed.emit()">
+  <header class="panel-header">
+    <div class="heading">
+      <h2 id="queue-title">Queue</h2>
+      <span class="muted">{{ playback.upcoming().length }} up next</span>
+    </div>
+    <button mat-stroked-button type="button" (click)="playback.clearUpcoming()" [disabled]="!playback.upcoming().length">Clear</button>
+    <button mat-icon-button type="button" (click)="closed.emit()" aria-label="Close the queue">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  @if (playback.current(); as track) {
+    <section class="section" aria-labelledby="now-title">
+      <h3 id="now-title" class="eyebrow">Now playing</h3>
+      <div class="item now">
+        <span class="cover">
+          <mat-icon aria-hidden="true">{{ playback.playing() ? 'equalizer' : 'album' }}</mat-icon>
+        </span>
+        <span class="meta">
+          <span class="title">{{ track.title }}</span>
+          <span class="sub">{{ track.artist }}</span>
+        </span>
+      </div>
+    </section>
+  }
+
+  <section class="section list-section" aria-labelledby="next-title">
+    <h3 id="next-title" class="eyebrow">Up next</h3>
+    @if (!playback.upcoming().length) {
+      <p class="empty">Nothing up next. Tracks you add to the queue appear here.</p>
+    }
+    <ol class="list" cdkDropList cdkDropListLockAxis="y" (cdkDropListDropped)="drop($event)">
+      @for (track of playback.upcoming(); track track.uid) {
+        <li class="item" cdkDrag>
+          <button type="button" class="handle" cdkDragHandle [attr.aria-label]="'Move ' + track.title + ' (drag, or use arrow keys)'"
+            (keydown.arrowup)="$event.preventDefault(); moveBy($index, -1)" (keydown.arrowdown)="$event.preventDefault(); moveBy($index, 1)">
+            <mat-icon>drag_indicator</mat-icon>
+          </button>
+          <button type="button" class="play-item" (click)="playback.play(track)" [attr.aria-label]="'Play ' + track.title">
+            <span class="cover">
+              <mat-icon aria-hidden="true">album</mat-icon>
+              <img [src]="cover(track.uid)" alt="" loading="lazy" (error)="$any($event.target).hidden = true">
+            </span>
+            <span class="meta">
+              <span class="title">{{ track.title }}</span>
+              <span class="sub">{{ track.artist }}</span>
+            </span>
+          </button>
+          <button mat-icon-button type="button" (click)="remove($index)" [attr.aria-label]="'Remove ' + track.title + ' from the queue'">
+            <mat-icon>close</mat-icon>
+          </button>
+        </li>
+      }
+    </ol>
+  </section>
+</aside>

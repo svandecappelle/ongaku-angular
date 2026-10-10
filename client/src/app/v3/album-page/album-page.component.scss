@@ -1,0 +1,363 @@
+:host {
+  display: block;
+  color: var(--ongaku-text);
+}
+
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  // The top bar is cleared by the notifications container (64px margin);
+  // the room for the player bar is in ContentComponent
+  padding: 24px 24px 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.muted {
+  color: var(--ongaku-muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.state {
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  h1 {
+    margin: 0;
+    font-size: 24px;
+  }
+  .state-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 48px;
+    color: var(--ongaku-muted);
+  }
+}
+
+.hero {
+  padding: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 28px;
+  border-radius: var(--ongaku-radius-xl);
+  background: color-mix(in srgb, var(--ongaku-accent) 12%, var(--ongaku-surface));
+  border: 1px solid var(--ongaku-border);
+}
+
+.cover {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--ongaku-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ongaku-accent);
+  background: var(--ongaku-surface-2);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
+  mat-icon {
+    width: 96px;
+    height: 96px;
+    font-size: 96px;
+    opacity: .6;
+  }
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.hero-text {
+  flex: 1 1 320px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  h1 {
+    margin: 0;
+    font-size: clamp(32px, 5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    overflow-wrap: anywhere;
+  }
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ongaku-accent);
+}
+
+.artist-link {
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--ongaku-text);
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.hero-actions {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  button {
+    height: 48px;
+    border-radius: 24px;
+  }
+  .play-all {
+    padding: 0 26px;
+    font-size: 16px;
+  }
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.tracks {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: separate;
+  border-spacing: 0 2px;
+
+  th {
+    height: 44px;
+    padding: 0 8px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ongaku-muted);
+    border-bottom: 1px solid var(--ongaku-border);
+    mat-icon {
+      width: 18px;
+      height: 18px;
+      font-size: 18px;
+      vertical-align: middle;
+    }
+  }
+
+  td {
+    height: 56px;
+    padding: 0 8px;
+    &:first-child {
+      border-radius: var(--ongaku-radius-md) 0 0 var(--ongaku-radius-md);
+    }
+    &:last-child {
+      border-radius: 0 var(--ongaku-radius-md) var(--ongaku-radius-md) 0;
+    }
+  }
+
+  tbody tr {
+    transition: background-color .12s;
+    &:hover {
+      background: color-mix(in srgb, var(--ongaku-surface-2) 60%, transparent);
+      .digits {
+        display: none;
+      }
+      .play-icon {
+        display: inline-block;
+      }
+      .col-actions button {
+        opacity: 1;
+      }
+    }
+    &:focus-within .col-actions button {
+      opacity: 1;
+    }
+    &.selected {
+      background: var(--ongaku-surface-2);
+    }
+    &.current .title,
+    &.current .number {
+      color: var(--ongaku-accent);
+    }
+  }
+}
+
+.col-check {
+  width: 48px;
+}
+
+.col-number {
+  width: 48px;
+  text-align: center;
+}
+
+.number {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  color: var(--ongaku-muted);
+  background: transparent;
+  .play-icon {
+    display: none;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--ongaku-accent);
+    .digits {
+      display: none;
+    }
+    .play-icon {
+      display: inline-block;
+    }
+  }
+}
+
+.col-title {
+  .title,
+  .sub {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 60vw;
+  }
+  .title {
+    font-weight: 600;
+  }
+  .sub {
+    font-size: 13px;
+    color: var(--ongaku-muted);
+  }
+}
+
+.col-actions {
+  width: 96px;
+  text-align: right;
+  white-space: nowrap;
+  color: var(--ongaku-muted);
+  button {
+    opacity: 0;
+    transition: opacity .12s;
+  }
+}
+
+// Touch screens have no hover: keep the actions visible
+@media (hover: none) {
+  .col-actions button {
+    opacity: 1;
+  }
+}
+
+.col-duration {
+  width: 64px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ongaku-muted);
+}
+
+.selection-bar {
+  position: fixed;
+  // Above the player bar, centred on the content area
+  bottom: calc(var(--ongaku-player-height) + 16px);
+  left: calc(50% + var(--ongaku-sidebar-width) / 2);
+  transform: translateX(-50%);
+  z-index: 93;
+  width: max-content;
+  max-width: calc(100vw - var(--ongaku-sidebar-width) - 32px);
+  box-sizing: border-box;
+  padding: 8px 8px 8px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  border-radius: 28px;
+  // Inverted colours, so the bar stands out of the page
+  color: var(--ongaku-bg);
+  background: var(--ongaku-text);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .4);
+  animation: rise .2s ease-out;
+
+  .count {
+    padding-right: 8px;
+    font-weight: 600;
+  }
+  button {
+    height: 40px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font: inherit;
+    font-weight: 500;
+    color: inherit;
+    background: transparent;
+    &:hover {
+      background: color-mix(in srgb, var(--ongaku-bg) 12%, transparent);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--ongaku-accent);
+      outline-offset: 2px;
+    }
+    &.primary {
+      font-weight: 600;
+      color: var(--ongaku-on-accent);
+      background: var(--ongaku-accent);
+    }
+    &.icon {
+      width: 40px;
+      padding: 0;
+      justify-content: center;
+    }
+  }
+  .divider {
+    width: 1px;
+    height: 24px;
+    margin: 0 4px;
+    background: color-mix(in srgb, var(--ongaku-bg) 30%, transparent);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+}
+
+@media (max-width: 599px) {
+  .page {
+    padding-inline: 12px;
+  }
+  .hero {
+    padding: 20px;
+  }
+  .cover {
+    width: 160px;
+    height: 160px;
+  }
+}

@@ -29,3 +29,9 @@
   // "Content size" setting of the Appearance page
   zoom: var(--ongaku-content-scale, 1);
 }
+
+.routing-content.modern-layout {
+  margin-left: var(--ongaku-sidebar-width);
+  // Room for the player bar
+  padding-bottom: calc(var(--ongaku-player-height) + 16px);
+}

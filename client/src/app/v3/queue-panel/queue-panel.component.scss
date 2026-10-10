@@ -1,0 +1,184 @@
+:host {
+  position: fixed;
+  top: 64px;
+  right: 0;
+  bottom: var(--ongaku-player-height);
+  z-index: 91;
+  width: min(380px, 100%);
+  color: var(--ongaku-text);
+}
+
+.panel {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+  background: var(--ongaku-surface);
+  border-left: 1px solid var(--ongaku-border);
+  box-shadow: -12px 0 40px rgba(0, 0, 0, .25);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  .heading {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  h2 {
+    margin: 0;
+    font-size: 20px;
+  }
+}
+
+.muted {
+  font-size: 13px;
+  color: var(--ongaku-muted);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ongaku-muted);
+}
+
+.empty {
+  margin: 0;
+  padding: 14px;
+  font-size: 14px;
+  border-radius: var(--ongaku-radius-md);
+  color: var(--ongaku-muted);
+  border: 1px dashed var(--ongaku-border);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.item {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--ongaku-radius-md);
+  background: var(--ongaku-surface);
+  &.now {
+    gap: 12px;
+    padding: 8px;
+    background: color-mix(in srgb, var(--ongaku-accent) 12%, transparent);
+    .title {
+      color: var(--ongaku-accent);
+    }
+  }
+}
+
+.handle,
+.play-item {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  &:focus-visible {
+    outline: 2px solid var(--ongaku-accent);
+    outline-offset: -2px;
+  }
+}
+
+.handle {
+  width: 32px;
+  height: 44px;
+  padding: 0;
+  flex: none;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ongaku-radius-sm, 6px);
+  color: var(--ongaku-muted);
+}
+
+.play-item {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  border-radius: var(--ongaku-radius-md);
+  &:hover {
+    background: var(--ongaku-surface-2);
+  }
+}
+
+.cover {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--ongaku-radius-sm, 6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ongaku-accent);
+  background: var(--ongaku-surface-2);
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .title {
+    font-weight: 500;
+  }
+  .sub {
+    font-size: 13px;
+    color: var(--ongaku-muted);
+  }
+}
+
+// Drag and drop
+.cdk-drag-preview {
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .35);
+}
+.cdk-drag-placeholder {
+  opacity: .3;
+}
+.cdk-drag-animating,
+.list.cdk-drop-list-dragging .item:not(.cdk-drag-placeholder) {
+  transition: transform .2s ease;
+}

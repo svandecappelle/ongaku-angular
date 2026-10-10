@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { VuMetterFactory, VuMetter } from './level-vumetter';
 
 @Component({
@@ -8,7 +8,7 @@ import { VuMetterFactory, VuMetter } from './level-vumetter';
     changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
-export class LevelMeterComponent implements OnInit {
+export class LevelMeterComponent implements OnInit, OnDestroy {
 
   private processor: ScriptProcessorNode;
   private canvasContext;
@@ -36,6 +36,7 @@ export class LevelMeterComponent implements OnInit {
   private audioContext;
 
   private vue: Array<VuMetter> = [];
+  private destroyed = false;
 
   constructor() { }
 
@@ -94,6 +95,15 @@ export class LevelMeterComponent implements OnInit {
     }
   }
 
+  ngOnDestroy() {
+    // The audio source outlives this component (PlaybackService)
+    this.destroyed = true;
+    if (this.processor) {
+      this.audio.disconnect(this.processor);
+      this.processor.disconnect();
+    }
+  }
+
   checkClipping() {
     if (!this.clipping)
       return false;
@@ -110,9 +120,11 @@ export class LevelMeterComponent implements OnInit {
     this.canvasContext = this.getMetter(channel);
     //console.log(this.volume[channel] * 100);
     this.canvasContext.setValue(this.volume[channel] * 100 * this.gain);
-    window.requestAnimationFrame(() => {
-      this.drawLoop(channel);
-    });
+    if (!this.destroyed) {
+      window.requestAnimationFrame(() => {
+        this.drawLoop(channel);
+      });
+    }
   }
 
 }

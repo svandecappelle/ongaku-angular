@@ -1,11 +1,6 @@
-import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef, OnDestroy, Renderer2, ChangeDetectionStrategy } from '@angular/core';
-import { Store, select } from '@ngrx/store';
-import { BehaviorSubject, Subscription } from 'rxjs';
+import { Component, ViewChild, ChangeDetectionStrategy, effect, inject } from '@angular/core';
 
-import { PlayerStateRecord, IPlayerState } from '../../index';
-
-import { Song, IAppState } from '../../../app-state';
-import { PlayerAction, PlayerActions } from '../../player-actions';
+import { PlaybackService } from '../../../services/playback.service';
 
 import { FullscreenComponent } from './fullscreen/fullscreen.component';
 
@@ -16,216 +11,68 @@ import { FullscreenComponent } from './fullscreen/fullscreen.component';
     changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
-export class PlayerControlsComponent implements OnInit, OnDestroy {
+export class PlayerControlsComponent {
 
-  private subscriptions: Subscription = new Subscription();
+  // Playback lives in PlaybackService, so that it survives a switch to the new interface
+  private readonly playback = inject(PlaybackService);
 
-  private duration;
-  private currentTime;
-  private value;
-
-  private state = 'stopped';
-  private current;
-
-  private play_index = 0;
-  private tracks: Object[] = [];
-
-  private context: AudioContext = new AudioContext();
-  private sound;
-  private gainNode;
-
-  isInit: Boolean;
-  gain = 0.75;
-  src;
   color = 'accent';
-  metadataLoaded: Boolean = true;
-
-  @ViewChild('audio', { read: ElementRef, static: true }) player: ElementRef;
-  @ViewChild('progress', { read: ElementRef, static: false }) progressBar: ElementRef;
-  @ViewChild('volume', { read: ElementRef, static: true }) volumeSlider: ElementRef;
+  buffer = 'determinate' as const;
 
   @ViewChild('fullscreener', { read: FullscreenComponent, static: false }) fullscreener: FullscreenComponent;
 
-  constructor(public renderer: Renderer2, private store: Store<IAppState>, private actions: PlayerActions) {
-    this.isInit = false;
-  }
+  get state() { return this.playback.state(); }
+  get current() { return this.playback.current(); }
+  get currentTime() { return this.playback.currentTime(); }
+  get duration() { return this.playback.duration(); }
+  get value() { return this.playback.progress(); }
+  get gain() { return this.playback.gain(); }
+  get metadataLoaded() { return this.state !== 'loading'; }
+  get isInit() { return this.playback.started(); }
+  get sound() { return this.playback.source; }
+  get context() { return this.playback.context; }
 
-  ngOnInit() {
-    this.player.nativeElement.addEventListener('loadedmetadata', (el) => {
-      this.metadataLoaded = true;
-      this.duration = el.target.duration;
-      this.value = 0;
-    });
-
-    this.player.nativeElement.addEventListener('timeupdate', (el) => {
-      this.currentTime = el.target.currentTime;
-      this.value = this.currentTime / this.duration * 100;
-
-      this.fullscreener.time(this.value, this.duration);
-    });
-
-    this.player.nativeElement.addEventListener('ended', (el) => {
-      this.next();
-    });
-    
-    this.context = new AudioContext();
-    //
-    // control gain / volume
-    this.gainNode = this.context.createGain();
-    this.gainNode.gain.value = this.gain;
-    this.sound = this.context.createMediaElementSource(this.player.nativeElement);
-    this.gainNode.connect(this.context.destination);
-    this.sound.connect(this.gainNode);
-
-    this.player.nativeElement.addEventListener('canplay', (el) => {
-      // connect the gain node to an output destination  
-      if (this.state !== 'playing') {
-        this.play();
+  constructor() {
+    effect(() => {
+      const current = this.playback.current();
+      if (current && this.fullscreener) {
+        this.fullscreener.setCurrent(current);
       }
     });
-
-    this.subscriptions.add(this.store.select(state => state.player).subscribe((playerState) => {
-      let track = playerState.track;
-      if (track) {
-        this.play_index = track.index;
-        this.current = track;
-        if (this.fullscreener) {
-          this.fullscreener.setCurrent(this.current);
-        }
-        this.stop();
-        this.change(this.current.uid);
-      }
-    }));
-
-    this.subscriptions.add(this.store.select(state => state.trackList).subscribe((val) => {
-      this.tracks = val;
-      if (this.play_index === 0) {
-        this.current = val[0];
-
-        if (this.fullscreener) {
-          this.fullscreener.setCurrent(this.current);
-        }
-        this.ensurePlay();
-      }
-    }));
+    effect(() => this.fullscreener?.setState(this.playback.state()));
+    effect(() => this.fullscreener?.time(this.playback.progress(), this.playback.duration()));
   }
 
   volumeChanged(event) {
-    this.gain = event.value;
-    this.gainNode.gain.value = this.gain;
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.unsubscribe();
-  }
-
-  ensurePlay() {
-    if (!this.src && this.tracks.length > 0) {
-      this.src = this.link(this.tracks[this.play_index]['uid']);
-    }
+    this.playback.setGain(event.value);
   }
 
   isPlaying() {
-    return !this.player.nativeElement.paused;
+    return this.playback.playing();
   }
 
   play() {
-    if (this.state !== 'playing') {
-      if (this.tracks[this.play_index] === 'stopped') {
-        this.state = 'playing';
-
-        this.current = this.tracks[this.play_index];
-
-        if (this.fullscreener) {
-          this.fullscreener.setCurrent(this.current);
-        }
-        this.store.dispatch(this.actions.playSelectedTrack(this.current));
-
-        if (!this.isPlaying()) {
-          this.player.nativeElement.play();
-        }
-      } else {
-        this.state = 'playing';
-        if (!this.isPlaying()) {
-          this.player.nativeElement.play();
-        }
-      }
-    } else {
-      this.state = 'paused';
-      this.player.nativeElement.pause();
-    }
-
-    this.fullscreener.setState(this.state);
-  }
-
-  stop() {
-    this.state = 'stopped';
-    this.player.nativeElement.pause();
-  }
-
-  switching() {
-    this.state = 'loading';
-    this.player.nativeElement.pause();
+    this.playback.toggle();
   }
 
   previous() {
-    this.switching();
-    if (this.play_index > 0) {
-      this.play_index -= 1;
-      this.current = this.tracks[this.play_index];
-      if (this.fullscreener) {
-        this.fullscreener.setCurrent(this.current);
-      }
-      this.store.dispatch(this.actions.playSelectedTrack(this.current));
-    }
+    this.playback.previous();
   }
 
   next() {
-    this.switching();
-    const newIndex = this.current ? this.current.index + 1 : this.play_index + 1;
-    if (this.tracks.length > newIndex) {
-      this.play_index = newIndex;
-      this.current = this.tracks[newIndex];
-      if (this.fullscreener) {
-        this.fullscreener.setCurrent(this.current);
-      }
-      this.store.dispatch(this.actions.playSelectedTrack(this.current));
-    } else {
-      this.currentTime = 0;
-      this.player.nativeElement.currentTime = this.currentTime;
-      this.state = 'paused';
-    }
-  }
-
-  change(uid) {
-    this.metadataLoaded = false;
-    this.switching();
-    this.src = this.link(uid);
-  }
-
-  link(uid) {
-    this.isInit = true;
-    return `/api/audio/stream/${uid}`;
-  }
-
-  isInitialized() {
-    return this.isInit;
+    this.playback.next();
   }
 
   onStepperClick($event) {
-    this.currentTime = this.duration * $event.clientX / $event.target.offsetWidth;
-    this.player.nativeElement.currentTime = this.currentTime;
+    this.goTo(this.duration * $event.clientX / $event.target.offsetWidth);
   }
 
   goTo(time) {
-    this.currentTime = time;
-    this.player.nativeElement.currentTime = this.currentTime;
+    this.playback.seek(time);
   }
 
   fullscreen() {
-    if (this.fullscreener) {
-      this.fullscreener.setCurrent(this.current);
-    }
+    this.fullscreener.setCurrent(this.current);
     this.fullscreener.open(this);
   }
 }

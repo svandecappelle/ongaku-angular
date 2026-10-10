@@ -7,10 +7,13 @@ import {
 } from '../theme/themes';
 
 export type Density = 'comfortable' | 'compact';
+/** Classic interface, or the new one being built (see LayoutService) */
+export type Layout = 'legacy' | 'modern';
 /** Automatic switch between a day theme and a night theme */
 export type Schedule = 'off' | 'system' | 'timed';
 
 export interface ThemePreference {
+  layout: Layout;
   /** Theme used when there is no schedule */
   theme: string;
   schedule: Schedule;
@@ -33,6 +36,7 @@ export interface ThemePreference {
 }
 
 export const DEFAULT_PREFERENCE: ThemePreference = {
+  layout: 'legacy',
   theme: DEFAULT_THEME,
   schedule: 'off',
   dayTheme: DEFAULT_LIGHT_THEME,
@@ -146,9 +150,9 @@ export class ThemeService {
     this.preference.update((pref) => this.sanitize({ ...pref, ...changes }));
   }
 
-  /** Back to the default settings; custom themes are kept */
+  /** Back to the default settings; custom themes and the interface choice are kept */
   reset() {
-    this.preference.update((pref) => ({ ...DEFAULT_PREFERENCE, customThemes: pref.customThemes }));
+    this.preference.update((pref) => ({ ...DEFAULT_PREFERENCE, customThemes: pref.customThemes, layout: pref.layout }));
   }
 
   setCoverColor(color: string | null) {
@@ -244,6 +248,7 @@ export class ThemeService {
     const font = FONTS.find((f) => f.id === pref.font) ?? FONTS[0];
 
     const attributes: Record<string, string> = {
+      layout: pref.layout,
       theme: theme.id,
       mode: theme.dark ? 'dark' : 'light',
       density: pref.density,
@@ -304,6 +309,7 @@ export class ThemeService {
       return Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n))) : fallback;
     };
     return {
+      layout: pref.layout === 'modern' ? 'modern' : 'legacy',
       theme: themeId(pref.theme, d.theme),
       schedule: (['off', 'system', 'timed'] as const).find((s) => s === pref.schedule) ?? d.schedule,
       dayTheme: themeId(pref.dayTheme, d.dayTheme),
