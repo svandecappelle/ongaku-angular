@@ -11,16 +11,14 @@ import { RegisterModule } from './register/register.module';
   imports: [
     CommonModule,
     MaterialModule,
-    RegisterModule
+    RegisterModule,
+    UserComponent
   ],
   exports: [
     UserComponent
   ],
   providers: [
     UserService
-  ],
-  declarations: [
-    UserComponent
   ]
 })
 export class UserModule { }

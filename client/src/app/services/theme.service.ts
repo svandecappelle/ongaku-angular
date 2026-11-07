@@ -91,6 +91,10 @@ export class ThemeService {
   readonly density = computed(() => this.preference().density);
   readonly showBackground = computed(() => this.preference().showBackground);
   readonly backgroundVeil = computed(() => this.preference().backgroundVeil);
+  /** URL of the profile background image: the version changes when the user replaces it, the
+   *  server revalidates it otherwise (sendFile answers with max-age=0 and an ETag) */
+  private readonly backgroundVersion = signal(0);
+  readonly backgroundUrl = computed(() => `/api/user/image/background?v=${this.backgroundVersion()}`);
 
   /** Which setting the active theme comes from */
   readonly activeSlot = computed<'theme' | 'day' | 'night'>(() => {
@@ -158,6 +162,11 @@ export class ThemeService {
     this.preference.update((pref) => ({
       ...DEFAULT_PREFERENCE, customThemes: pref.customThemes, layout: pref.layout, layoutChosen: pref.layoutChosen,
     }));
+  }
+
+  /** Reloads the background image after the user replaced or reset it */
+  refreshBackground() {
+    this.backgroundVersion.set(Date.now());
   }
 
   setCoverColor(color: string | null) {

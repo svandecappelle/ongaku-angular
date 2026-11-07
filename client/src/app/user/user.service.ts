@@ -1,40 +1,51 @@
-
-import {throwError as observableThrowError,  Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
 
-import { HttpClient, HttpParams, HttpRequest, HttpEvent } from '@angular/common/http';
+import { HttpClient, HttpEvent, HttpRequest } from '@angular/common/http';
+
+export type ProfileImage = 'avatar' | 'cover' | 'background';
+
+/** Artist of a profile library, the largest first */
+export interface ProfileArtist {
+  name: string;
+  albums: number;
+  tracks: number;
+}
+
+export interface Profile {
+  username: string;
+  /** Only on the profile of the connected user */
+  email?: string;
+  self: boolean;
+  administrator: boolean;
+  /** Tracks and artists in the user's library */
+  tracks: number;
+  artistsCount: number;
+  playlists: number;
+  uploads: { files: number; size: number };
+  artists: ProfileArtist[];
+}
 
 @Injectable()
 export class UserService {
 
   constructor(private http: HttpClient) { }
 
-  getMyInfos (): Observable<any> {
-    return this.http.get(`/api/user/me`);
+  getMyInfos(): Observable<Profile> {
+    return this.http.get<Profile>(`/api/user/me`);
   }
 
-  getUserInfos (username): Observable<any> {
-    return this.http.get(`/api/user/${username}`);
+  getUserInfos(username: string): Observable<Profile> {
+    return this.http.get<Profile>(`/api/user/${encodeURIComponent(username)}`);
   }
 
-  resetImage(type: string): Observable<any> {
+  resetImage(type: ProfileImage): Observable<unknown> {
     return this.http.delete(`/api/user/image/${type}`);
   }
 
-  // file from event.target.files[0]
-  uploadFile(url: string, file: File): Observable<HttpEvent<any>> {
-
-    let formData = new FormData();
+  uploadImage(type: ProfileImage, file: File): Observable<HttpEvent<unknown>> {
+    const formData = new FormData();
     formData.append('upload', file);
-
-    let params = new HttpParams();
-
-    const options = {
-      params: params,
-      reportProgress: true,
-    };
-
-    const req = new HttpRequest('POST', url, formData, options);
-    return this.http.request(req);
+    return this.http.request(new HttpRequest('POST', `/api/user/image/${type}`, formData, { reportProgress: true }));
   }
 }

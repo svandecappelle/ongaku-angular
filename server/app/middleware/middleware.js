@@ -343,11 +343,27 @@ class Middleware {
   */
   resetImageFile(username, type, callback) {
     var imageFile = USERS_IMAGE_DIRECTORY + username + "/" + type;
-    fs.rm(imageFile, { force: true }, function (err) {
-      if (err || !identicon) {
+    fs.rm(imageFile, { force: true }, (err) => {
+      if (err) {
         return callback(err);
       }
-      identicon.generate({ id: type === "avatar" ? username : username + "-" + type, size: type === "avatar" ? 150 : 600 }, function (err, buffer) {
+      this.ensureImageFile(username, type, callback);
+    });
+  };
+
+  /**
+  * Generate the default image of a user when there is none, then call back.
+  */
+  ensureImageFile(username, type, callback) {
+    var imageFile = USERS_IMAGE_DIRECTORY + username + "/" + type;
+    if (fs.existsSync(imageFile) || !identicon) {
+      return callback();
+    }
+    identicon.generate({ id: type === "avatar" ? username : username + "-" + type, size: type === "avatar" ? 150 : 600 }, function (err, buffer) {
+      if (err) {
+        return callback(err);
+      }
+      fs.mkdir(path.dirname(imageFile), { recursive: true }, (err) => {
         if (err) {
           return callback(err);
         }

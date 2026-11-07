@@ -1,96 +1,157 @@
-@if (infos) {
-  <div class="content">
-    <div class="account">
-      <div class="cover initialised" component="account/cover" [style]="coverBackground">
-        @if (user === undefined) {
-          <mat-list class="files-updates">
-            <mat-list-item>
-              <input #avatarFiler type="file" name="avatar" (change)="onSelectFile('avatar', $event)" placeholder="Upload file" accept=".jpg,.gif,.jpeg" style="display: none">
-              <button mat-button mat-raised-button color="primary" (click)="selectFile('avatar')">Change avatar</button>
-            </mat-list-item>
-            <mat-list-item>
-              <input #coverFiler type="file" name="avatar" (change)="onSelectFile('cover', $event)" placeholder="Upload file" accept=".jpg,.gif,.jpeg" style="display: none">
-              <button mat-button mat-raised-button color="primary" (click)="selectFile('cover')">Change cover</button>
-            </mat-list-item>
-            <mat-list-item>
-              <input #backgroundFiler type="file" name="background" (change)="onSelectFile('background', $event)" placeholder="Upload file" accept=".jpg,.gif,.jpeg" style="display: none">
-              <button mat-button mat-raised-button color="primary" (click)="selectFile('background')">Change background</button>
-            </mat-list-item>
-            <mat-list-item>
-              <button mat-button mat-stroked-button (click)="resetImage('background')">Reset background</button>
-            </mat-list-item>
-          </mat-list>
-        }
-        <div class="avatar-wrapper" data-uid="819">
-          <img #avatar src="{{avatarSrc}}" class="avatar avatar-xl avatar-rounded" data-original-title="" title="">
-          <i component="user/status" class="fa fa-circle status online" title="En ligne"></i>
+<div class="profile-page">
+  @switch (state()) {
+    @case ('loading') {
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    }
+    @case ('missing') {
+      <div class="state">
+        <mat-icon class="state-icon">person_outline</mat-icon>
+        <h1>This user does not exist</h1>
+        <a mat-stroked-button routerLink="/users">See the users</a>
+      </div>
+    }
+    @case ('failed') {
+      <div class="state">
+        <mat-icon class="state-icon">cloud_off</mat-icon>
+        <h1>The profile could not be loaded</h1>
+        <button mat-stroked-button type="button" (click)="load()">Retry</button>
+      </div>
+    }
+    @case ('ready') {
+      @let p = profile()!;
+
+      <section class="hero" aria-labelledby="profile-name">
+        <div class="banner" aria-hidden="true">
+          @if (image('cover'); as url) {
+            @if (!broken().has(url)) {
+              <img [src]="url" alt="" (error)="imageFailed(url)">
+            }
+          }
         </div>
-        <div class="container">
-          <button class="menu" mat-fab [matMenuTriggerFor]="menu">
-            <mat-icon>more_vert</mat-icon>
-          </button>
-          <mat-menu #menu="matMenu">
-            <button mat-menu-item>
-              <mat-icon>account_circle</mat-icon>
-              <span>Profile</span>
-            </button>
-            <button mat-menu-item>
-              <mat-icon>edit</mat-icon>
-              <span>Edit</span>
-            </button>
-            <button mat-menu-item>
-              <mat-icon>settings</mat-icon>
-              <span>Parameters</span>
-            </button>
-          </mat-menu>
+        <div class="identity">
+          <span class="avatar" aria-hidden="true">
+            {{ p.username.charAt(0).toUpperCase() }}
+            @if (image('avatar'); as url) {
+              @if (!broken().has(url)) {
+                <img [src]="url" alt="" (error)="imageFailed(url)">
+              }
+            }
+          </span>
+          <div class="names">
+            <span class="eyebrow">{{ p.self ? 'Your profile' : 'Profile' }}</span>
+            <h1 id="profile-name">{{ p.username }}</h1>
+            <div class="meta">
+              @if (p.administrator) {
+                <span class="badge">Administrator</span>
+              }
+              @if (p.email) {
+                <span class="muted small">{{ p.email }}</span>
+              }
+            </div>
+          </div>
+          @if (p.self) {
+            <a mat-stroked-button routerLink="/profile/appearance" class="appearance">
+              <mat-icon>palette</mat-icon>
+              Appearance
+            </a>
+          }
+        </div>
+      </section>
+
+      <div class="tiles">
+        <div class="tile">
+          <mat-icon>music_note</mat-icon>
+          <span class="tile-value">{{ p.tracks }}</span>
+          <span class="muted">Track{{ p.tracks === 1 ? '' : 's' }} in the library</span>
+        </div>
+        <div class="tile">
+          <mat-icon>person</mat-icon>
+          <span class="tile-value">{{ p.artistsCount }}</span>
+          <span class="muted">Artist{{ p.artistsCount === 1 ? '' : 's' }}</span>
+        </div>
+        <div class="tile">
+          <mat-icon>queue_music</mat-icon>
+          <span class="tile-value">{{ p.playlists }}</span>
+          <span class="muted">Playlist{{ p.playlists === 1 ? '' : 's' }}</span>
+        </div>
+        <div class="tile">
+          <mat-icon>cloud_upload</mat-icon>
+          <span class="tile-value">{{ p.uploads.files }}</span>
+          <span class="muted">
+            Uploaded file{{ p.uploads.files === 1 ? '' : 's' }}
+            @if (p.uploads.size) {
+              · {{ formatSize(p.uploads.size) }}
+            }
+          </span>
         </div>
       </div>
-      <div class="profile text-center">
-        <h1 class="fullname">{{infos.username}}</h1>
-        <h2 class="username">&#64;{{infos.username}}</h2>
-        <div class="text-center">
-          <mat-chip-listbox>
-            @for (group of infos.groups; track group) {
-              <mat-chip-option>{{group}}</mat-chip-option>
+
+      @if (p.self) {
+        <section class="panel" aria-labelledby="images-title">
+          <div class="panel-header">
+            <h2 id="images-title">Images</h2>
+            <span class="muted">JPEG, PNG, GIF or WebP. Reset puts the generated default image back.</span>
+          </div>
+          <ul class="images">
+            @for (slot of slots; track slot.type) {
+              <li class="image-row">
+                <span class="thumb" [class.round]="slot.type === 'avatar'" aria-hidden="true">
+                  @if (image(slot.type); as url) {
+                    @if (!broken().has(url)) {
+                      <img [src]="url" alt="" (error)="imageFailed(url)">
+                    }
+                  }
+                </span>
+                <span class="image-text">
+                  <strong>{{ slot.label }}</strong>
+                  <span class="muted small">{{ slot.description }}</span>
+                  @if (busy()?.type === slot.type) {
+                    <mat-progress-bar [mode]="busy()!.progress === null || busy()!.progress === 100 ? 'indeterminate' : 'determinate'"
+                      [value]="busy()!.progress ?? 0"></mat-progress-bar>
+                  }
+                </span>
+                <span class="image-actions">
+                  <input #file type="file" accept="image/*" class="visually-hidden" [attr.aria-label]="'Choose a new ' + slot.label.toLowerCase()"
+                    (change)="upload(slot.type, file)">
+                  <button mat-stroked-button type="button" (click)="file.click()" [disabled]="busy() !== null">Change</button>
+                  <button mat-button type="button" (click)="reset(slot.type)" [disabled]="busy() !== null">Reset</button>
+                </span>
+              </li>
             }
-          </mat-chip-listbox>
-        </div>
-        <br>
-          <div class="account-stats">
-            <div class="stat">
-              <div class="human-readable-number" title="{{infos.files.count}}">{{infos.files.count}}</div>
-              <span class="stat-label">Number of files</span>
-            </div>
-            <div class="stat">
-              <div class="human-readable-number" title="567">567</div>
-              <span class="stat-label">Plays count this months</span>
-            </div>
-            <div class="stat">
-              <div class="human-readable-number" title="247">247</div>
-              <span class="stat-label">Likes</span>
-            </div>
-          </div>
-          <div class="storage-graph">
-            <h4>Quotas:</h4>
-            <canvas #storage width="100px"></canvas>
-          </div>
-          <!--
-          <div class="text-center profile-meta">
-            <span>Inscrit</span>
-            <strong class="timeago" title="19 févr. 2014 à 12:01" datetime="2014-02-19T11:01:53.080Z">19 févr. 2014 à 12:01</strong>
-            <span>Dernière connexion</span>
-            <strong class="timeago" title="21 août 2018 à 10:43" datetime="2018-08-21T08:43:39.821Z">il y a environ 4 minutes</strong>
-            <br>
-              <span>Email</span>
-              <strong>
-                <i class="fa fa-eye-slash " title="Email masqué"></i> me@mizore.fr</strong>
-                <span>Situation géographique</span>
-                <strong>France (Nord)</strong>
-                <span>Âge</span>
-                <strong>30</strong>
-              </div>
-              -->
-            </div>
-          </div>
-        </div>
+          </ul>
+        </section>
       }
+
+      <section class="panel" aria-labelledby="library-title">
+        <div class="panel-row">
+          <div class="panel-header">
+            <h2 id="library-title">{{ p.self ? 'In your library' : 'In ' + p.username + '’s library' }}</h2>
+            @if (p.artistsCount > artists().length) {
+              <span class="muted">The {{ artists().length }} artists with the most tracks, out of {{ p.artistsCount }}.</span>
+            }
+          </div>
+          @if (p.self) {
+            <a mat-stroked-button routerLink="/my-library">
+              <mat-icon>library_music</mat-icon>
+              Open my library
+            </a>
+          }
+        </div>
+        @if (artists().length) {
+          <ul class="artists">
+            @for (artist of artists(); track artist.name) {
+              <li>
+                <app-artist-card [name]="artist.name" [images]="artist.images"></app-artist-card>
+                <span class="muted small artist-count">{{ artist.tracks }} track{{ artist.tracks === 1 ? '' : 's' }}</span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="muted empty">
+            {{ p.self ? 'Your library is empty: add tracks from the albums and artists you like.' : 'This library is empty.' }}
+          </p>
+        }
+      </section>
+    }
+  }
+</div>

@@ -1,150 +1,133 @@
-import { Component, OnInit, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
-import { ActivatedRoute, Params } from '@angular/router';
-import { HttpEventType, HttpResponse } from '@angular/common/http';
+import { MaterialModule } from '../modules/material.module';
+import { ThemeService } from '../services/theme.service';
+import { ArtistCardComponent } from '../v3/artist-card/artist-card.component';
+import { artistImages } from '../v3/library';
+import { Profile, ProfileImage, UserService } from './user.service';
 
-import { DomSanitizer } from '@angular/platform-browser';
-import { UserService } from './user.service';
+interface ImageSlot {
+  type: ProfileImage;
+  label: string;
+  description: string;
+}
 
-import { Chart } from 'chart.js';
-
+/** Profile of a user (/profile/:user), or of the connected user (/profile) who can change its images */
 @Component({
-    selector: 'app-user',
-    templateUrl: './user.component.html',
-    styleUrls: ['./user.component.scss'],
-    changeDetection: ChangeDetectionStrategy.Eager,
-    standalone: false
+  selector: 'app-user',
+  templateUrl: './user.component.html',
+  styleUrls: ['./user.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [MaterialModule, RouterLink, ArtistCardComponent],
 })
-export class UserComponent implements OnInit {
+export class UserComponent {
+  private readonly service = inject(UserService);
+  private readonly theme = inject(ThemeService);
+  private readonly snackBar = inject(MatSnackBar);
 
-  private user: string;
-  private avatarSrc: string;
-  private coverBackground: any;
-  private avatarFiler: ElementRef;
-  private coverFiler: ElementRef;
-  private backgroundFiler: ElementRef;
-  private canvasStorage: ElementRef;
+  readonly profile = signal<Profile | null>(null);
+  readonly state = signal<'loading' | 'ready' | 'missing' | 'failed'>('loading');
+  /** Image being uploaded or reset, with the upload progress */
+  readonly busy = signal<{ type: ProfileImage; progress: number | null } | null>(null);
+  /** Changed after an upload or a reset to reload the images */
+  private readonly version = signal(Date.now());
+  /** Images that failed to load: the placeholder shows instead (the URL changes with the version) */
+  readonly broken = signal<ReadonlySet<string>>(new Set());
+  private username: string | undefined;
 
-  infos: any;
+  readonly slots: ImageSlot[] = [
+    { type: 'avatar', label: 'Avatar', description: 'Shown next to your name.' },
+    { type: 'cover', label: 'Cover', description: 'The banner of your profile.' },
+    { type: 'background', label: 'Background', description: 'Behind the pages, under a veil in the theme colours.' },
+  ];
 
-  constructor(private service: UserService,
-    private _sanitizer: DomSanitizer,
-    private activatedRoute: ActivatedRoute) { }
+  readonly artists = computed(() => (this.profile()?.artists ?? []).map((artist) => ({ ...artist, images: artistImages(artist.name, null) })));
 
-  @ViewChild('storage', { static: false }) set contentStorage(elRef: ElementRef) {
-    this.canvasStorage = elRef;
-  }
-
-  @ViewChild('avatarFiler', { static: false }) set contentAvatar(elRef: ElementRef) {
-    this.avatarFiler = elRef;
-  }
-
-  @ViewChild('coverFiler', { static: false }) set contentCover(elRef: ElementRef) {
-    this.coverFiler = elRef;
-  }
-
-  @ViewChild('backgroundFiler', { static: false }) set contentBackground(elRef: ElementRef) {
-    this.backgroundFiler = elRef;
-  }
-
-  ngOnInit() {
-    this.activatedRoute.params.subscribe((params: Params) => {
-      this.user = params['user'];
-      if (this.user) {
-        this.service.getUserInfos(this.user).subscribe((data) => {
-          this.build(data);
-        });
-      } else {
-        this.service.getMyInfos().subscribe((data) => {
-          this.build(data);
-        });
-      }
+  constructor() {
+    inject(ActivatedRoute).paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      this.username = params.get('user') ?? undefined;
+      this.load();
     });
   }
 
-  build(data) {
-    this.infos = data;
-    this.avatarSrc = `/static/user/${this.infos.username}/avatar?${new Date().getTime()}`;
-    this.coverBackground = this.getImage('cover');
-
-    setTimeout(() => {
-      const chart = new Chart(this.canvasStorage.nativeElement, {
-        type: 'doughnut',
-        data: {
-          datasets: [{
-            data: [Math.round(data.usage / 1024 / 1024), 1000],
-            backgroundColor: [
-              '#3cba9f',
-              '#A9A9A9'
-            ],
-            borderColor: [
-              '#3cffff',
-              '#989898'
-            ],
-          }],
-          labels: [
-            'User storage',
-            'Max Quota'
-          ]
-        }
-      });
+  load() {
+    this.state.set('loading');
+    const request = this.username ? this.service.getUserInfos(this.username) : this.service.getMyInfos();
+    request.subscribe({
+      next: (profile) => {
+        this.profile.set(profile);
+        this.state.set('ready');
+      },
+      error: (err: HttpErrorResponse) => this.state.set(err.status === 404 ? 'missing' : 'failed'),
     });
   }
 
-  getImage(type) {
-    const image = `/static/user/${this.infos.username}/${type}?${new Date().getTime()}`;
-    return this._sanitizer.bypassSecurityTrustStyle(`background-image: url(${image}); background-position: 50% 50%;`);
-  }
-
-  onSelectFile(type, event) {
-    if (event.target.files && event.target.files.length > 0) {
-      this.uploadFile(type, event.target.files);
+  /** The connected user's images are served (and generated when missing) by the API, the others' are static files */
+  image(type: ProfileImage): string {
+    const profile = this.profile();
+    if (!profile) {
+      return '';
     }
+    const base = profile.self ? `/api/user/image/${type}` : `/static/user/${encodeURIComponent(profile.username)}/${type}`;
+    return `${base}?v=${this.version()}`;
   }
 
-  selectFile(type): void {
-    if (type === 'avatar') {
-      this.avatarFiler.nativeElement.click();
-    } else if (type === 'cover') {
-      this.coverFiler.nativeElement.click();
-    } else if (type === 'background') {
-      this.backgroundFiler.nativeElement.click();
-    }
-
+  imageFailed(url: string) {
+    this.broken.update((broken) => new Set(broken).add(url));
   }
 
-  resetImage(type: string) {
-    this.service.resetImage(type).subscribe(
-      () => console.log('Image reset'),
-      (err) => console.log('Reset Error:', err)
-    );
-  }
-
-  uploadFile(type: String, files: FileList) {
-    if (files.length === 0) {
-      console.log('No file selected!');
+  upload(type: ProfileImage, input: HTMLInputElement) {
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) {
       return;
-
     }
-    const file: File = files[0];
-
-    this.service.uploadFile(`/api/user/image/${type}`, file)
-      .subscribe(
-        event => {
-          if (event.type === HttpEventType.UploadProgress) {
-            const percentDone = Math.round(100 * event.loaded / event.total);
-            console.log(`File is ${percentDone}% loaded.`);
-          } else if (event instanceof HttpResponse) {
-            console.log('File is completely loaded!');
-          }
-        },
-        (err) => {
-          console.log('Upload Error:', err);
-        }, () => {
-          console.log('Upload done');
-          this.avatarSrc = `/static/user/${this.infos.username}/avatar?${new Date().getTime()}`;
-          this.coverBackground = this.getImage('cover');
+    this.busy.set({ type, progress: 0 });
+    this.service.uploadImage(type, file).subscribe({
+      next: (event) => {
+        if (event.type === HttpEventType.UploadProgress && event.total) {
+          this.busy.set({ type, progress: Math.round(100 * event.loaded / event.total) });
+        } else if (event.type === HttpEventType.Response) {
+          this.done(type, 'changed');
         }
-      );
+      },
+      error: (err: HttpErrorResponse) => this.failed(err),
+    });
+  }
+
+  reset(type: ProfileImage) {
+    this.busy.set({ type, progress: null });
+    this.service.resetImage(type).subscribe({
+      next: () => this.done(type, 'reset'),
+      error: (err: HttpErrorResponse) => this.failed(err),
+    });
+  }
+
+  readonly formatSize = (bytes: number) => {
+    if (!bytes) {
+      return '0 B';
+    }
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    return `${(bytes / Math.pow(1024, exponent)).toFixed(exponent ? 1 : 0)} ${units[exponent]}`;
+  };
+
+  private done(type: ProfileImage, action: 'changed' | 'reset') {
+    this.busy.set(null);
+    this.version.set(Date.now());
+    if (type === 'background') {
+      this.theme.refreshBackground();
+    }
+    const label = this.slots.find((slot) => slot.type === type)?.label ?? type;
+    this.snackBar.open(`${label} ${action}`, undefined, { duration: 3000 });
+  }
+
+  private failed(err: HttpErrorResponse) {
+    this.busy.set(null);
+    this.snackBar.open(err.error?.message || 'The image could not be saved', undefined, { duration: 5000 });
   }
 }

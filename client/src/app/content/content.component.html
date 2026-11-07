@@ -1,7 +1,7 @@
 @let loggedIn = isLoggedIn$ | async;
 
 @if (loggedIn && themeService.showBackground()) {
-  <div class="background" [style.backgroundImage]="'url(/api/user/image/background)'"></div>
+  <div class="background" [style.backgroundImage]="'url(' + themeService.backgroundUrl() + ')'"></div>
   <div class="background-overlay"></div>
 }
 
