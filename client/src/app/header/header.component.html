@@ -7,9 +7,11 @@
         <button mat-icon-button routerLink="/">
           <mat-icon aria-label="Home">home</mat-icon>
         </button>
-        <button mat-icon-button routerLink="/admin">
-          <mat-icon aria-label="Admin panel">settings</mat-icon>
-        </button>
+        @if (isAdministrator$ | async) {
+          <button mat-icon-button routerLink="/admin">
+            <mat-icon aria-label="Admin panel">settings</mat-icon>
+          </button>
+        }
       </nav>
       <span class="spacer"></span>
       <mat-form-field class="search dense-field">

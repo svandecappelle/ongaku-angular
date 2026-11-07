@@ -16,11 +16,13 @@
 
   <span class="spacer"></span>
 
-  <a class="nav-item" routerLink="/admin" routerLinkActive="active" ariaCurrentWhenActive="page"
-    matTooltip="Administration" matTooltipPosition="right" [matTooltipDisabled]="!compact()">
-    <mat-icon>settings</mat-icon>
-    <span class="label">Administration</span>
-  </a>
+  @if (administrator()) {
+    <a class="nav-item" routerLink="/admin" routerLinkActive="active" ariaCurrentWhenActive="page"
+      matTooltip="Administration" matTooltipPosition="right" [matTooltipDisabled]="!compact()">
+      <mat-icon>settings</mat-icon>
+      <span class="label">Administration</span>
+    </a>
+  }
 </aside>
 
 <header class="topbar">
@@ -80,10 +82,12 @@
       <mat-icon>palette</mat-icon>
       <span>Appearance</span>
     </a>
-    <a mat-menu-item routerLink="/admin">
-      <mat-icon>settings</mat-icon>
-      <span>Administration</span>
-    </a>
+    @if (administrator()) {
+      <a mat-menu-item routerLink="/admin">
+        <mat-icon>settings</mat-icon>
+        <span>Administration</span>
+      </a>
+    }
     <button mat-menu-item (click)="layout.setLayout('legacy')">
       <mat-icon>history</mat-icon>
       <span>Back to the classic interface</span>

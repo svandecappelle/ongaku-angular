@@ -22,11 +22,13 @@ import { Store, Action, select } from '@ngrx/store';
 })
 export class HeaderComponent implements OnInit {
   isLoggedIn$: Observable<boolean>;
+  isAdministrator$: Observable<boolean>;
 
   constructor(private authService: AuthenticationService, private store: Store<IAppState>, public themeService: ThemeService) { }
 
   ngOnInit() {
     this.isLoggedIn$ = this.authService.isLoggedIn();
+    this.isAdministrator$ = this.authService.isAdministrator();
   }
 
   onLogout() {

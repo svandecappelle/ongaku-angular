@@ -48,8 +48,14 @@ class Authenticator {
 
   load () {
     this.app.get('/api/auth/', (req, res) => {
-      res.send({
-        connected: middleware.isAuthenticated(req)
+      const connected = middleware.isAuthenticated(req);
+      // Read from the groups, not the session: the role may have changed since the login
+      // (desktop mode grants the administration to everyone, see routes/api/admin.js)
+      if (!connected) {
+        return res.send({ connected: false, administrator: nconf.get('type') === 'desktop' });
+      }
+      user.isAdministrator(req.session.passport.user.uid, (err, administrator) => {
+        res.send({ connected: true, administrator: !err && !!administrator });
       });
     });
     this.app.get('/api/auth/logout', authority.logout);

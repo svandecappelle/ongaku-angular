@@ -10,15 +10,26 @@ import { User } from 'app/models/index';
 export class AuthenticationService {
 
     private loggedIn = new BehaviorSubject<boolean>(true); // {1}
+    // Hides the administration links; the server checks the rights on every admin request
+    private administrator = new BehaviorSubject<boolean>(false);
 
     constructor(private http: HttpClient, private router: Router) {
-        this.http.get<any>('/api/auth').subscribe((data) => {
-            this.loggedIn.next(data.connected);
-        });
+        this.refresh();
     }
 
     isLoggedIn(): Observable<boolean> {
         return this.loggedIn; // {2}
+    }
+
+    isAdministrator(): Observable<boolean> {
+        return this.administrator;
+    }
+
+    private refresh() {
+        this.http.get<any>('/api/auth').subscribe((data) => {
+            this.loggedIn.next(data.connected);
+            this.administrator.next(!!data.administrator);
+        });
     }
 
     login(username: string, password: string, rememberme: boolean) {
@@ -33,6 +44,7 @@ export class AuthenticationService {
                 userConnected.username = username;
                 localStorage.setItem('currentUser', JSON.stringify(userConnected));
                 this.loggedIn.next(true);
+                this.administrator.next(!!data.user.administrator);
                 this.router.navigate(['/']);
             }
         }, error => { console.error(error); });
@@ -43,6 +55,7 @@ export class AuthenticationService {
         this.http.post('/api/auth/logout', {}).subscribe((disconnected) => {
             localStorage.removeItem('currentUser');
             this.loggedIn.next(false);
+            this.administrator.next(false);
             this.router.navigate(['/login']);
         });
     }
