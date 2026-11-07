@@ -3,8 +3,7 @@ import { RouterLink } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { MaterialModule } from '../../modules/material.module';
-import { CONTENT_SCALE_MAX, CONTENT_SCALE_MIN, Density, Layout, Schedule, ThemeService } from '../../services/theme.service';
-import { LayoutService } from '../../services/layout.service';
+import { CONTENT_SCALE_MAX, CONTENT_SCALE_MIN, Density, Schedule, ThemeService } from '../../services/theme.service';
 import { ThemePreviewComponent } from '../../theme/theme-preview/theme-preview.component';
 import { AccentId, FontId, RadiusId } from '../../theme/themes';
 
@@ -19,17 +18,11 @@ type AccentMode = 'theme' | 'fixed' | 'dynamic';
 })
 export class AppearanceComponent {
   readonly theme = inject(ThemeService);
-  readonly layout = inject(LayoutService);
   private readonly snackBar = inject(MatSnackBar);
 
   readonly settings = this.theme.settings;
   readonly scaleMin = CONTENT_SCALE_MIN;
   readonly scaleMax = CONTENT_SCALE_MAX;
-
-  readonly layouts: { id: Layout; label: string; description: string }[] = [
-    { id: 'modern', label: 'New', description: 'Side navigation, new player and queue panel' },
-    { id: 'legacy', label: 'Classic', description: 'Top bar, icon menu and the former pages' },
-  ];
 
   readonly accentModes: { id: AccentMode; label: string; description: string }[] = [
     { id: 'theme', label: 'Theme accent', description: 'The colour chosen by the theme' },

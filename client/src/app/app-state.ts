@@ -1,22 +1,11 @@
 import { ModuleWithProviders } from '@angular/core';
 import { StoreModule, StoreRootModule } from '@ngrx/store';
 
-import {
-  IPlayerState,
-  playerReducer
-} from './player/';
-
-import {
-  searchReducer
-} from './header/search-reducer';
-
-import {
-  backgroundUserReducer
-} from './content/content-state';
-
-import {
-  PlaylistReducer
-} from './player/controls/playlist/playlist-state';
+import { IPlayerState } from './state/player-state';
+import { playerReducer } from './state/player-reducer';
+import { searchReducer } from './state/search-reducer';
+import { backgroundUserReducer } from './state/content-state';
+import { PlaylistReducer } from './state/playlist-state';
 
 
 export interface IAppState {

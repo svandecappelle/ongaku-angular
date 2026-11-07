@@ -2,7 +2,7 @@ import { Action } from '@ngrx/store';
 
 import {
   SearchLibraryAction
-} from './header-state';
+} from './search-state';
 
 export function searchReducer(state: String, action: SearchLibraryAction): String {
 

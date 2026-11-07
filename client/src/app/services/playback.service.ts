@@ -4,16 +4,16 @@ import { Store } from '@ngrx/store';
 import { distinctUntilChanged } from 'rxjs/operators';
 
 import { IAppState, Song } from '../app-state';
-import { PlayerActions } from '../player/player-actions';
-import { AppendPlaylist, SetPlaylist } from '../player/controls/playlist/playlist-state';
+import { PlayerActions } from '../state/player-actions';
+import { AppendPlaylist, SetPlaylist } from '../state/playlist-state';
 
 export type PlaybackState = 'stopped' | 'loading' | 'playing' | 'paused';
 
 /** The chosen volume is kept in the browser, to be restored on the next visit */
 const VOLUME_KEY = 'ongaku.volume';
 const DEFAULT_GAIN = 0.75;
-/** Upper bound of the classic player slider (the new one stops at 1) */
-const MAX_GAIN = 3;
+/** Upper bound of the volume slider */
+const MAX_GAIN = 1;
 
 function loadGain(): number {
   try {
@@ -38,7 +38,7 @@ export interface QueueSnapshot {
 
 /**
  * Owns the audio element and the play queue logic, so that the player keeps
- * playing whatever component displays it (classic or new interface).
+ * playing whatever page is displayed.
  *
  * The queue itself stays in the store (`trackList`), and the track to play is
  * still requested with the `PLAY_SELECTED_TRACK` action: pages that dispatch

@@ -1,6 +1,6 @@
 import { Map, Record } from 'immutable';
 
-import { Song } from '../../app-state';
+import { Song } from '../app-state';
 
 export interface IPlayerState {
   isPlaying: boolean;

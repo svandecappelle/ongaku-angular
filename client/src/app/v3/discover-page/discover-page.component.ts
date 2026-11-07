@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 
 import { IAppState, Song } from '../../app-state';
-import { SearchLibraryAction } from '../../header/header-state';
+import { SearchLibraryAction } from '../../state/search-state';
 import { MaterialModule } from '../../modules/material.module';
 import { PlaybackService } from '../../services/playback.service';
 import { AlbumCardComponent } from '../album-card/album-card.component';

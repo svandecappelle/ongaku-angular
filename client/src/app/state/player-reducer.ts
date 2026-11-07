@@ -1,5 +1,5 @@
 import { Action } from '@ngrx/store';
-import { PlayerActions, PlayerAction } from '../player-actions';
+import { PlayerActions, PlayerAction } from './player-actions';
 import { IPlayerState, PlayerStateRecord } from './player-state';
 
 

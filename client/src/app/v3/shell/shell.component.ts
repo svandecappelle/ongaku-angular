@@ -6,10 +6,9 @@ import { Store } from '@ngrx/store';
 import { map } from 'rxjs/operators';
 
 import { IAppState } from '../../app-state';
-import { SearchLibraryAction } from '../../header/header-state';
+import { SearchLibraryAction } from '../../state/search-state';
 import { MaterialModule } from '../../modules/material.module';
 import { AuthenticationService } from '../../services/authentication.service';
-import { LayoutService } from '../../services/layout.service';
 import { ThemeService } from '../../services/theme.service';
 import { PlayerBarComponent } from '../player-bar/player-bar.component';
 import { QueuePanelComponent } from '../queue-panel/queue-panel.component';
@@ -34,7 +33,6 @@ interface NavItem {
 })
 export class ShellComponent {
   readonly theme = inject(ThemeService);
-  readonly layout = inject(LayoutService);
   private readonly auth = inject(AuthenticationService);
   private readonly store = inject<Store<IAppState>>(Store);
   private readonly router = inject(Router);

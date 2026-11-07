@@ -215,7 +215,7 @@ html {
   --ongaku-bottom-height: calc(var(--ongaku-player-height) + var(--ongaku-bottom-nav-height));
 }
 
-// New interface: snack bars above the player bar
-html[data-layout='modern'] .mat-mdc-snack-bar-container {
+// Snack bars above the player bar
+.mat-mdc-snack-bar-container {
   margin-bottom: calc(var(--ongaku-bottom-height) + 8px);
 }

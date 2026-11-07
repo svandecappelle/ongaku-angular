@@ -11,24 +11,18 @@ import { MaterialModule } from './modules/material.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { provideHttpClient, withInterceptorsFromDi, withXhr } from '@angular/common/http';  // replaces previous Http service
 
-import { DragulaModule } from 'ng2-dragula';
 import { MomentModule } from 'ngx-moment';
 
 import { AppComponent } from './app.component';
 import { ThemeService } from './services/theme.service';
 import { CoverAccentService } from './services/cover-accent.service';
-import { HeaderComponent } from './header/header.component';
 import { ContentComponent } from './content/content.component';
 import { AppRoutingModule } from './app-routing.module';
-import { HomeComponent } from './home/home.component';
 import { InstallComponent } from './install/install.component';
 import { UpgradeComponent } from './upgrade/upgrade.component';
 
 import { InstallService } from './install/install.service';
-import { MenuComponent } from './menu/menu.component';
 
-import { AudioService } from './audio.service';
-import { PlayerModule } from './player/player.module';   // our custom service, see below
 
 import { AppStateModule } from './app-state';
 import { LoginComponent } from './login/login.component';
@@ -47,14 +41,9 @@ import { AuthGuard } from './guards/index';
 
 // import { EditMetadataComponent } from './metadatas/edit-metadata/edit-metadata.component';
 import { MetadatasComponent } from './metadatas/metadatas.component';
-import { SearchComponent } from './search/search.component';
-import { ArtistComponent } from './artist';
-import { AlbumComponent } from './artist/album/';
 import { RadiosComponent } from './radios/radios.component';
 
 import { UsersService } from './users';
-import { UploadService } from './upload';
-import { UploadModule } from './upload/upload.module';
 import { ReloadComponent } from './library/reload/reload.component';
 import { ReloadService } from './library/reload.service';
 import { CommunicationModule } from './communication/communication.module';
@@ -63,31 +52,22 @@ import { ShellComponent } from './v3/shell/shell.component';
 
 @NgModule({ declarations: [
         AppComponent,
-        HeaderComponent,
         ContentComponent,
-        HomeComponent,
         InstallComponent,
         UpgradeComponent,
-        MenuComponent,
         LoginComponent,
         MetadatasComponent,
-        SearchComponent,
-        ArtistComponent,
-        AlbumComponent,
         RadiosComponent,
         ReloadComponent
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         BrowserAnimationsModule,
-        DragulaModule.forRoot(),
         MomentModule,
         FormsModule,
         ReactiveFormsModule,
         MaterialModule,
         AppRoutingModule,
         AppStateModule,
-        PlayerModule,
-        UploadModule,
         CommunicationModule,
         UserModule,
         ShellComponent], providers: [
@@ -96,14 +76,12 @@ import { ShellComponent } from './v3/shell/shell.component';
         AlertService,
         AuthenticationService,
         UserService,
-        AudioService,
         ArtistService,
         AlbumService,
         StatisticsService,
         AdminService,
         UsersService,
         MetadataService,
-        UploadService,
         InstallService,
         ReloadService,
         provideHttpClient(withXhr(), withInterceptorsFromDi()),

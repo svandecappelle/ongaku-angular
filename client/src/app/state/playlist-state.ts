@@ -1,6 +1,6 @@
 import { Action } from '@ngrx/store';
 
-import { Song } from '../../../app-state';
+import { Song } from '../app-state';
 
 export enum TrackActionTypes {
     APPEND = '[Tracklist] Append',

@@ -6,18 +6,10 @@
 }
 
 @if (loggedIn) {
-  @if (layout.modern()) {
-    <app-shell></app-shell>
-  } @else {
-    <app-header></app-header>
-    <app-menu></app-menu>
-  }
+  <app-shell></app-shell>
 }
 <app-notifications></app-notifications>
-@if (loggedIn && !layout.modern()) {
-  <app-player></app-player>
-}
 
-<div class="routing-content" [class.modern-layout]="loggedIn && layout.modern()">
+<div class="routing-content" [class.modern-layout]="loggedIn">
   <router-outlet></router-outlet>
 </div>
