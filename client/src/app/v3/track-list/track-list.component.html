@@ -2,6 +2,9 @@
   <table class="tracks" [attr.aria-label]="label()">
     <thead>
       <tr>
+        @if (reorderable()) {
+          <th class="col-handle" scope="col"><span class="visually-hidden">Move</span></th>
+        }
         <th class="col-check" scope="col">
           <mat-checkbox [checked]="selectedCount() === tracks().length" [indeterminate]="selectedCount() > 0 && selectedCount() < tracks().length"
             (click)="actions.toggleAll(tracks())" [attr.aria-label]="'Select all: ' + label()"></mat-checkbox>
@@ -12,9 +15,17 @@
         <th class="col-duration" scope="col"><mat-icon aria-label="Duration">schedule</mat-icon></th>
       </tr>
     </thead>
-    <tbody>
+    <tbody cdkDropList cdkDropListLockAxis="y" [cdkDropListDisabled]="!reorderable()" (cdkDropListDropped)="drop($event)">
       @for (track of tracks(); track track.uid; let i = $index) {
-        <tr [class.selected]="actions.isSelected(track)" [class.current]="isCurrent(track)" (dblclick)="actions.playFrom(tracks(), i)">
+        <tr cdkDrag [class.selected]="actions.isSelected(track)" [class.current]="isCurrent(track)" (dblclick)="actions.playFrom(tracks(), i)">
+          @if (reorderable()) {
+            <td class="col-handle">
+              <button type="button" class="handle" cdkDragHandle [attr.aria-label]="'Move ' + track.title + ' (drag, or use arrow keys)'"
+                (keydown.arrowup)="$event.preventDefault(); moveBy(i, -1)" (keydown.arrowdown)="$event.preventDefault(); moveBy(i, 1)">
+                <mat-icon>drag_handle</mat-icon>
+              </button>
+            </td>
+          }
           <td class="col-check">
             <mat-checkbox [checked]="actions.isSelected(track)" (click)="actions.toggle(track, $event.shiftKey)"
               [attr.aria-label]="'Select ' + track.title"></mat-checkbox>
@@ -24,7 +35,7 @@
               @if (isCurrent(track) && playback.playing()) {
                 <mat-icon class="equalizer" aria-hidden="true">equalizer</mat-icon>
               } @else {
-                <span class="digits">{{ trackNumber(track, i) }}</span>
+                <span class="digits">{{ reorderable() ? i + 1 : trackNumber(track, i) }}</span>
                 <mat-icon class="play-icon" aria-hidden="true">play_arrow</mat-icon>
               }
             </button>
@@ -65,12 +76,23 @@
                   <span>Add to my library</span>
                 }
               </button>
+              <button mat-menu-item [matMenuTriggerFor]="playlistMenu.menu()">
+                <mat-icon>queue_music</mat-icon>
+                <span>Add to playlist</span>
+              </button>
+              @if (actions.remover(); as remover) {
+                <button mat-menu-item (click)="actions.removeFromPage([track])">
+                  <mat-icon>remove_circle_outline</mat-icon>
+                  <span>{{ remover.label }}</span>
+                </button>
+              }
               <mat-divider></mat-divider>
               <button mat-menu-item (click)="actions.details([track])">
                 <mat-icon>description</mat-icon>
                 <span>Details and tags…</span>
               </button>
             </mat-menu>
+            <app-add-to-playlist-menu #playlistMenu [tracks]="[track]"></app-add-to-playlist-menu>
           </td>
           <td class="col-duration">{{ track['duration'] }}</td>
         </tr>

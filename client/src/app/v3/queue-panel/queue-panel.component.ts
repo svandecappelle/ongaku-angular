@@ -3,6 +3,7 @@ import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList } from '@angular/cdk/d
 
 import { MaterialModule } from '../../modules/material.module';
 import { PlaybackService } from '../../services/playback.service';
+import { PlaylistUi } from '../playlists/playlist-ui.service';
 
 @Component({
   selector: 'app-queue-panel',
@@ -13,6 +14,7 @@ import { PlaybackService } from '../../services/playback.service';
 })
 export class QueuePanelComponent {
   readonly playback = inject(PlaybackService);
+  private readonly playlistUi = inject(PlaylistUi);
 
   readonly closed = output<void>();
 
@@ -35,6 +37,10 @@ export class QueuePanelComponent {
     if (to >= 0 && to < this.playback.upcoming().length) {
       this.playback.move(this.offset() + index, this.offset() + to);
     }
+  }
+
+  saveAsPlaylist() {
+    this.playlistUi.create(this.playback.tracks()).subscribe();
   }
 
   remove(index: number) {

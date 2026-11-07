@@ -4,6 +4,10 @@
       <h2 id="queue-title">Queue</h2>
       <span class="muted">{{ playback.upcoming().length }} up next</span>
     </div>
+    <button mat-icon-button type="button" (click)="saveAsPlaylist()" [disabled]="!playback.tracks().length"
+      aria-label="Save the queue as a playlist" matTooltip="Save as a playlist">
+      <mat-icon>save</mat-icon>
+    </button>
     <button mat-stroked-button type="button" (click)="playback.clearUpcoming()" [disabled]="!playback.upcoming().length">Clear</button>
     <button mat-icon-button type="button" (click)="closed.emit()" aria-label="Close the queue">
       <mat-icon>close</mat-icon>

@@ -86,6 +86,53 @@
   text-align: center;
 }
 
+.col-handle {
+  width: 40px;
+}
+
+.handle {
+  width: 32px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ongaku-radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ongaku-muted);
+  background: transparent;
+  cursor: grab;
+  &:focus-visible {
+    outline: 2px solid var(--ongaku-accent);
+  }
+}
+
+// Row being dragged, rendered out of the table
+tr.cdk-drag-preview {
+  display: table;
+  table-layout: fixed;
+  border-radius: var(--ongaku-radius-md);
+  color: var(--ongaku-text);
+  background: var(--ongaku-surface-2);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .35);
+  td {
+    height: 56px;
+    padding: 0 8px;
+  }
+  .col-actions,
+  .col-duration {
+    display: none;
+  }
+}
+
+tr.cdk-drag-placeholder {
+  opacity: .3;
+}
+
+.cdk-drop-list-dragging tr:not(.cdk-drag-placeholder) {
+  transition: transform .2s cubic-bezier(0, 0, .2, 1);
+}
+
 .number {
   width: 40px;
   height: 40px;
@@ -170,6 +217,9 @@
   .col-check,
   .col-number {
     width: 44px;
+  }
+  .col-handle {
+    width: 36px;
   }
   .col-actions {
     width: 52px;

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 
 import { MaterialModule } from '../../modules/material.module';
+import { AddToPlaylistMenuComponent } from '../playlists/add-to-playlist-menu.component';
 import { TrackActions } from '../track-list/track-actions.service';
 
 /** Floating bar with the actions on the selected tracks of the page */
@@ -9,7 +10,7 @@ import { TrackActions } from '../track-list/track-actions.service';
   templateUrl: './selection-bar.component.html',
   styleUrls: ['./selection-bar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialModule],
+  imports: [MaterialModule, AddToPlaylistMenuComponent],
   host: {
     '(document:keydown.escape)': 'actions.clear()',
   },

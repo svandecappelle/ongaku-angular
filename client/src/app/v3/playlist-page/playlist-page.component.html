@@ -1,0 +1,82 @@
+<div class="page">
+  @switch (load().status) {
+    @case ('loading') {
+      <div class="state" role="status">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span class="muted">Loading the playlist…</span>
+      </div>
+    }
+    @case ('error') {
+      <div class="state" role="alert">
+        <mat-icon class="state-icon">queue_music</mat-icon>
+        @if ($any(load()).notFound) {
+          <h1>Playlist not found</h1>
+          <span class="muted">It may have been renamed or deleted.</span>
+        } @else {
+          <h1>The playlist could not be loaded</h1>
+        }
+        <a mat-stroked-button routerLink="/playlists">See my playlists</a>
+      </div>
+    }
+  }
+
+  @if (load().status === 'ready' && playlist(); as playlist) {
+    <header class="hero">
+      <app-playlist-cover class="cover" [covers]="playlist.covers"></app-playlist-cover>
+      <div class="hero-text">
+        <span class="eyebrow">Playlist</span>
+        <h1>{{ playlist.name }}</h1>
+        <span class="muted">
+          {{ tracks().length }} {{ tracks().length === 1 ? 'track' : 'tracks' }}
+          @if (totalDuration()) { · {{ formatTime(totalDuration()) }}}
+          @if (saving()) { · Saving… }
+        </span>
+        @if (playlist.missing) {
+          <span class="notice">
+            <mat-icon aria-hidden="true">info</mat-icon>
+            {{ playlist.missing }} {{ playlist.missing === 1 ? 'track is' : 'tracks are' }} no longer in the library.
+          </span>
+        }
+        <div class="hero-actions">
+          <button mat-flat-button color="accent" type="button" class="play-all" (click)="actions.playFrom(tracks())" [disabled]="!tracks().length">
+            <mat-icon>play_arrow</mat-icon>
+            Play
+          </button>
+          <button mat-stroked-button type="button" (click)="actions.shuffle(tracks())" [disabled]="!tracks().length">
+            <mat-icon>shuffle</mat-icon>
+            Shuffle
+          </button>
+          <button mat-stroked-button type="button" (click)="actions.addToQueue(tracks())" [disabled]="!tracks().length">
+            <mat-icon>playlist_add</mat-icon>
+            Add to queue
+          </button>
+          <button mat-icon-button type="button" class="more" [matMenuTriggerFor]="playlistMenu" aria-label="More actions for the playlist">
+            <mat-icon>more_horiz</mat-icon>
+          </button>
+          <mat-menu #playlistMenu="matMenu">
+            <button mat-menu-item (click)="rename()">
+              <mat-icon>edit</mat-icon>
+              <span>Rename…</span>
+            </button>
+            <button mat-menu-item (click)="remove()">
+              <mat-icon>delete</mat-icon>
+              <span>Delete the playlist</span>
+            </button>
+          </mat-menu>
+        </div>
+      </div>
+    </header>
+
+    @if (tracks().length) {
+      <app-track-list [tracks]="tracks()" [label]="'Tracks of ' + playlist.name" [reorderable]="true" (moved)="move($event)"></app-track-list>
+      <app-selection-bar></app-selection-bar>
+    } @else {
+      <div class="state empty">
+        <mat-icon class="state-icon">library_music</mat-icon>
+        <h2>This playlist is empty</h2>
+        <span class="muted">Pick “Add to playlist” in the menu of a track, or select several tracks of an album.</span>
+        <a mat-stroked-button routerLink="/">Discover music</a>
+      </div>
+    }
+  }
+</div>

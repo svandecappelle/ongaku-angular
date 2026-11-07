@@ -1,4 +1,3 @@
-import { Action } from '@ngrx/store';
 import { PlayerActions, PlayerAction } from './player-actions';
 import { IPlayerState, PlayerStateRecord } from './player-state';
 
@@ -6,30 +5,19 @@ import { IPlayerState, PlayerStateRecord } from './player-state';
 export const initialState: IPlayerState = new PlayerStateRecord() as IPlayerState;
 
 
-export function playerReducer(state: IPlayerState, { payload, type }: PlayerAction): IPlayerState {
-  if (!state) {
-    state = initialState;
-  }
+export function playerReducer(state: IPlayerState = initialState, { payload, type }: PlayerAction): IPlayerState {
+  // The store freezes its state: changes make a new object
   switch (type) {
     case PlayerActions.AUDIO_ENDED:
     case PlayerActions.AUDIO_PAUSED:
-      state.isPlaying = false;
-      break;
+      return { ...state, isPlaying: false };
     case PlayerActions.AUDIO_PLAYING:
-      state.isPlaying = true;
-      break;
+      return { ...state, isPlaying: true };
     case PlayerActions.AUDIO_VOLUME_CHANGED:
-      state.volume = payload.volume;
-      break;
+      return { ...state, volume: payload.volume };
     case PlayerActions.PLAY_SELECTED_TRACK:
-      state.track = payload.track;
-      break;
+      return { ...state, track: payload.track };
     default:
       return state;
   }
-  return {
-    isPlaying: state.isPlaying,
-    track: state.track,
-    volume: state.volume
-  };
 }

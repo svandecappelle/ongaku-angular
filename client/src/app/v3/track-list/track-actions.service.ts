@@ -28,6 +28,8 @@ export class TrackActions {
   private pageDetails: unknown = null;
 
   readonly selected = computed(() => this.pageTracks().filter((track) => this.selectedUids().has(track.uid)));
+  /** Set by a playlist page: removes tracks from the playlist (menu and selection bar entry) */
+  readonly remover = signal<{ label: string; remove: (tracks: Song[]) => void } | null>(null);
 
   /** Sets the tracks of the page; the selected tracks still on the page stay selected */
   setPage(tracks: Song[], details: unknown) {
@@ -115,6 +117,11 @@ export class TrackActions {
         .onAction().subscribe(() => (remove ? this.library.add(tracks) : this.library.remove(tracks)).subscribe()),
       error: () => this.notify('Your library could not be updated'),
     });
+    this.clear();
+  }
+
+  removeFromPage(tracks: Song[]) {
+    this.remover()?.remove(tracks);
     this.clear();
   }
 

@@ -1,0 +1,37 @@
+@use '../page';
+
+:host {
+  display: block;
+  color: var(--ongaku-text);
+}
+
+@include page.layout;
+
+.notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--ongaku-muted);
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
+}
+
+.hero-actions .more {
+  width: 48px;
+  padding: 12px;
+}
+
+.empty {
+  min-height: 240px;
+  border-radius: var(--ongaku-radius-xl);
+  background: var(--ongaku-surface);
+  border: 1px solid var(--ongaku-border);
+  h2 {
+    margin: 0;
+    font-size: 22px;
+  }
+}

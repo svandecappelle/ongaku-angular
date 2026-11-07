@@ -1,224 +1,257 @@
 const express = require('express');
-const _ = require("underscore");
-const nconf = require("nconf");
-const passport = require("passport");
-const unzip = require("node-unzip-2");
-const path = require("path");
-const Busboy = require('busboy');
-const ffmetadata = require("ffmetadata");
 const library = require("./../../middleware/library");
 const middleware = require("./../../middleware/middleware");
-const exporter = require("./../../middleware/exporter");
-const meta = require("./../../meta");
-const communication = require("./../../communication");
-const user = require("./../../model/user");
-const userlib = require("./../../model/library");
 const playlist = require("./../../model/playlist");
+
+const MAX_NAME_LENGTH = 100;
+const MAX_TRACKS = 5000;
+/** Covers shown on a playlist tile */
+const MAX_COVERS = 4;
 
 var router = express.Router();
 
-router.get('/current', (req, res) => {
-    console.debug("get current playlist");
-    res.send({ all: _.compact(req.session.playlist), name: req.session.playlistname });
+router.use((req, res, next) => {
+    if (!middleware.isAuthenticated(req)) {
+        return res.status(401).json({ message: 'You need to be logged' });
+    }
+    req.username = req.session.passport.user.username;
+    next();
 });
 
-router.post('/current/add/:uid', (req, res) => {
-    // TODO save playlist
-    var uidFile = req.params.uid,
-        track = library.getByUid(uidFile);
-    console.debug("Add file to playlist", uidFile);
-    if (req.session.playlist === undefined) {
-        req.session.playlist = [];
+/** Trimmed name, or null when it cannot be used */
+function playlistName(value) {
+    if (typeof value !== 'string') {
+        return null;
     }
+    const name = value.trim();
+    return name && name.length <= MAX_NAME_LENGTH && !/[\u0000-\u001f\u007f]/.test(name) ? name : null;
+}
 
-    if (track !== undefined) {
-        req.session.playlist.push(track);
-        req.session.save(function () {
-            res.setHeader('Access-Control-Allow-Credentials', 'true');
-            res.send({ all: req.session.playlist, lastAdded: track });
-        });
-    } else {
-        console.warn("A playlist add request returns unknown track for: " + uidFile);
-        res.send({ all: req.session.playlist, lastAdded: track });
-    }
-});
+function isUidList(value) {
+    return Array.isArray(value) && value.every((uid) => typeof uid === 'string');
+}
 
-
-router.post('/current/addgroup', (req, res) => {
-    var firstTrack;
-    console.debug("Add group of file to playlist", req.body.elements);
-    if (req.session.playlist === undefined) {
-        req.session.playlist = [];
-    }
-
-    _.each(req.body.elements, (uid) => {
-        var track = library.getByUid(uid);
-        if (firstTrack === undefined) {
-            firstTrack = track;
-        }
-        if (track !== undefined) {
-            req.session.playlist.push(track);
+/**
+ * Tracks of the library for these uids, in the same order. Unknown tracks and the
+ * private uploads of the other users are left out.
+ */
+function resolveTracks(uids, username) {
+    const wanted = new Set(uids);
+    const found = new Map();
+    library.flatten.forEach((track) => {
+        if (wanted.has(track.uid) && (!track.private || track.user === username)) {
+            found.set(track.uid, track);
         }
     });
+    return uids.filter((uid) => found.has(uid)).map((uid) => found.get(uid));
+}
 
-    req.session.save(function () {
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
-        res.send({ all: req.session.playlist, lastAdded: firstTrack });
+/** Uids of the tracks that can be saved in a playlist: known, visible to the user, once each */
+function playableUids(uids, username) {
+    return Array.from(new Set(resolveTracks(uids, username).map((track) => track.uid)));
+}
+
+/** "m:ss" or "h:mm:ss" in seconds */
+function durationOf(track) {
+    return String(track.duration || '').split(':').reduce((total, part) => total * 60 + (parseInt(part, 10) || 0), 0);
+}
+
+function coverUrl(track) {
+    return '/api/audio/static/covers/' + encodeURIComponent(track.artist || '') + '/' + encodeURIComponent(track.album || '') + '/cover.jpg';
+}
+
+function summary(name, tracks, updated) {
+    const covers = [];
+    tracks.forEach((track) => {
+        const cover = coverUrl(track);
+        if (covers.length < MAX_COVERS && track.album && !covers.includes(cover)) {
+            covers.push(cover);
+        }
     });
-});
+    return {
+        name: name,
+        count: tracks.length,
+        duration: tracks.reduce((total, track) => total + durationOf(track), 0),
+        covers: covers,
+        updated: parseInt(updated, 10) || null
+    };
+}
 
-router.post('/current/remove/:id', (req, res) => {
-    var id = req.params.id;
-    console.debug("Remove file index to playlist: ", id);
-    // TODO remove on saved playlist
-    if (req.session.playlist !== undefined) {
-        req.session.playlist.slice(id, 1);
-    }
-
-    req.session.save(function () {
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
-        res.send({ all: req.session.playlist });
-    });
-});
-
-router.post('/current/clear', (req, res) => {
-    var id = req.params.id;
-    // TODO remove on saved playlist
-    console.debug("Remove file index to playlist: ", id);
-    req.session.playlist = [];
-    req.session.save(function () {
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
-        res.send({ all: req.session.playlist });
-    });
-});
-router.post('/new', (req, res) => {
-    helpers.callIfAuthenticated(req, res, () => {
-        req.session.playlistname = null;
-        req.session.playlist = [];
-
-        req.session.save(function () {
-            res.setHeader('Access-Control-Allow-Credentials', 'true');
-            res.send(new SuccessCall().json());
+/** Load the playlist named in the URL, or answer 404 */
+function withPlaylist(req, res, callback) {
+    const name = req.params.name;
+    playlist.exists(req.username, name, (err, exists) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+        if (!exists) {
+            return res.status(404).json({ message: 'No such playlist' });
+        }
+        playlist.getPlaylistContent(req.username, name, (err, uids) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+            callback(name, uids);
         });
     });
-});
+}
 
-router.post('/save', (req, res) => {
-    helpers.callIfAuthenticated(req, res, () => {
-        var username = req.session.passport.user.username;
-        var newplaylistname = req.body.playlistname;
+function sendPlaylist(req, res, name, status, extra) {
+    playlist.getPlaylistContent(req.username, name, (err, uids) => {
+        playlist.getUpdated(req.username, (err2, updated) => {
+            if (err || err2) {
+                console.error(err || err2);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+            const tracks = resolveTracks(uids, req.username);
+            res.status(status || 200).json(Object.assign(summary(name, tracks, updated[name]), {
+                tracks: tracks,
+                // Tracks no longer in the library
+                missing: uids.length - tracks.length
+            }, extra));
+        });
+    });
+}
 
-        var appendToPlaylist = function () {
-            console.debug("Add all playlist tracks");
-            playlist.push(username, newplaylistname, req.session.playlist, () => {
-                req.session.playlistname = newplaylistname;
+function failed(res) {
+    return (err) => {
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error' });
+    };
+}
 
-                playlist.exists(username, newplaylistname, (err, exists) => {
-                    if (!err && !exists) {
-                        playlist.create(username, newplaylistname, () => {
-                            req.session.save(function () {
-                                res.setHeader('Access-Control-Allow-Credentials', 'true');
-                                res.send(new SuccessCall().json());
-                            });
-                        });
-                    } else {
-                        req.session.save(function () {
-                            res.setHeader('Access-Control-Allow-Credentials', 'true');
-                            res.send(new SuccessCall().json());
-                        });
+router.get('/', (req, res) => {
+    playlist.getPlaylists(req.username, (err, names) => {
+        if (err) {
+            return failed(res)(err);
+        }
+        playlist.getUpdated(req.username, (err, updated) => {
+            if (err) {
+                return failed(res)(err);
+            }
+            const result = [];
+            let pending = (names || []).length;
+            if (!pending) {
+                return res.json([]);
+            }
+            names.forEach((name) => {
+                playlist.getPlaylistContent(req.username, name, (err, uids) => {
+                    result.push(summary(name, resolveTracks(err ? [] : uids, req.username), updated[name]));
+                    if (--pending === 0) {
+                        // Most recently changed first
+                        result.sort((a, b) => (b.updated || 0) - (a.updated || 0) || a.name.localeCompare(b.name));
+                        res.json(result);
                     }
                 });
             });
-        };
-
-        if (req.session.playlistname) {
-            if (newplaylistname) {
-                console.debug("rename playlist: ", newplaylistname);
-            }
-
-            console.debug("clearing playlist: ", username, req.session.playlistname);
-            playlist.remove(username, req.session.playlistname, () => {
-                appendToPlaylist();
-            });
-        } else {
-            appendToPlaylist();
-        }
-    });
-});
-
-
-
-router.get("/all/:username", (req, res) => {
-    var username = req.params.username;
-    playlist.getPlaylists(username, (err, playlists) => {
-        res.json(playlists);
-    });
-});
-
-router.get("/all", (req, res) => {
-    if (middleware.isAuthenticated(req)) {
-        var username = req.session.passport.user.username;
-        playlist.getPlaylists(username, (err, playlists) => {
-            res.json(playlists);
         });
-    } else {
-        return res.json();
+    });
+});
+
+router.post('/', (req, res) => {
+    const name = playlistName(req.body && req.body.name);
+    const uids = req.body && req.body.uids !== undefined ? req.body.uids : [];
+    if (!name) {
+        return res.status(400).json({ message: 'The name must have 1 to ' + MAX_NAME_LENGTH + ' characters' });
     }
+    if (!isUidList(uids) || uids.length > MAX_TRACKS) {
+        return res.status(400).json({ message: 'uids must be a list of track uids' });
+    }
+    playlist.exists(req.username, name, (err, exists) => {
+        if (err) {
+            return failed(res)(err);
+        }
+        if (exists) {
+            return res.status(409).json({ message: 'A playlist with this name already exists' });
+        }
+        const tracks = playableUids(uids, req.username);
+        playlist.create(req.username, name, tracks, (err) => {
+            if (err) {
+                return failed(res)(err);
+            }
+            sendPlaylist(req, res, name, 201);
+        });
+    });
 });
 
-router.post("/load/:playlist", (req, res) => {
-    helpers.callIfAuthenticated(req, res, () => {
-        var playlistname = req.params.playlist;
-        var username = req.session.passport.user.username;
-        req.session.playlistname = playlistname;
+router.get('/:name', (req, res) => {
+    withPlaylist(req, res, (name) => sendPlaylist(req, res, name));
+});
 
-        playlist.getPlaylistContent(username, playlistname, (err, playlistElements) => {
-            var playlistObject = [];
-            _.each(playlistElements, function (uidFile) {
-                var track = library.getByUid(uidFile);
-                playlistObject.push(track);
+/** Rename the playlist (`name`) and/or replace its tracks (`uids`) */
+router.put('/:name', (req, res) => {
+    const body = req.body || {};
+    const newName = body.name === undefined ? null : playlistName(body.name);
+    if (body.name !== undefined && !newName) {
+        return res.status(400).json({ message: 'The name must have 1 to ' + MAX_NAME_LENGTH + ' characters' });
+    }
+    if (body.uids !== undefined && (!isUidList(body.uids) || body.uids.length > MAX_TRACKS)) {
+        return res.status(400).json({ message: 'uids must be a list of track uids' });
+    }
+    withPlaylist(req, res, (name) => {
+        const replaceTracks = (target) => {
+            if (body.uids === undefined) {
+                return sendPlaylist(req, res, target);
+            }
+            const tracks = playableUids(body.uids, req.username);
+            playlist.setTracks(req.username, target, tracks, (err) => {
+                if (err) {
+                    return failed(res)(err);
+                }
+                sendPlaylist(req, res, target);
             });
-
-            req.session.playlist = playlistObject;
-
-            req.session.save(function () {
-                res.setHeader('Access-Control-Allow-Credentials', 'true');
-                res.send(new SuccessCall().json());
+        };
+        if (!newName || newName === name) {
+            return replaceTracks(name);
+        }
+        playlist.exists(req.username, newName, (err, exists) => {
+            if (err) {
+                return failed(res)(err);
+            }
+            if (exists) {
+                return res.status(409).json({ message: 'A playlist with this name already exists' });
+            }
+            playlist.rename(req.username, name, newName, (err) => {
+                if (err) {
+                    return failed(res)(err);
+                }
+                replaceTracks(newName);
             });
         });
     });
 });
 
-router.post("/delete/:playlist", (req, res) => {
-    helpers.callIfAuthenticated(req, res, () => {
-        var playlistname = req.params.playlist;
-        var username = req.session.passport.user.username;
-
-        req.session.playlistname = null;
-        req.session.playlist = [];
-
-        playlist.remove(username, playlistname, () => {
-            req.session.save(function () {
-                res.setHeader('Access-Control-Allow-Credentials', 'true');
-                res.send(new SuccessCall().json());
-            });
+router.post('/:name/tracks', (req, res) => {
+    const uids = req.body && req.body.uids;
+    if (!isUidList(uids) || !uids.length) {
+        return res.status(400).json({ message: 'uids must be a list of track uids' });
+    }
+    withPlaylist(req, res, (name, current) => {
+        // A track is in a playlist once
+        const tracks = playableUids(uids, req.username).filter((uid) => !current.includes(uid));
+        if (current.length + tracks.length > MAX_TRACKS) {
+            return res.status(400).json({ message: 'A playlist holds at most ' + MAX_TRACKS + ' tracks' });
+        }
+        playlist.append(req.username, name, tracks, (err) => {
+            if (err) {
+                return failed(res)(err);
+            }
+            sendPlaylist(req, res, name, 200, { added: tracks.length });
         });
     });
 });
 
-router.get("/details/:playlist", (req, res) => {
-    helpers.callIfAuthenticated(req, res, () => {
-        var username = req.session.passport.user.username;
-        playlist.getPlaylistContent(username, req.params.playlist, (err, playlistElements) => {
-            var playlistObject = [];
-            _.each(playlistElements, function (uidFile) {
-                var track = library.getByUid(uidFile);
-                playlistObject.push(track);
-            });
-            res.json({ all: playlistObject });
+router.delete('/:name', (req, res) => {
+    withPlaylist(req, res, (name) => {
+        playlist.remove(req.username, name, (err) => {
+            if (err) {
+                return failed(res)(err);
+            }
+            res.json({ message: 'ok' });
         });
     });
 });
-
 
 module.exports = router;

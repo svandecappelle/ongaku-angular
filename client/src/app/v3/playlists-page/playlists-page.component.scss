@@ -1,0 +1,161 @@
+@use '../page';
+
+:host {
+  display: block;
+  color: var(--ongaku-text);
+}
+
+@include page.layout;
+
+.small {
+  font-size: 13px;
+}
+
+// Opaque: the profile background image may be busy
+.page-header {
+  padding: 24px 28px;
+  border-radius: var(--ongaku-radius-xl);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  background: color-mix(in srgb, var(--ongaku-accent) 12%, var(--ongaku-surface));
+  border: 1px solid var(--ongaku-border);
+  h1 {
+    margin: 0;
+    font-size: 40px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.create {
+  height: 48px;
+  border-radius: 24px;
+}
+
+.state {
+  border-radius: var(--ongaku-radius-xl);
+  background: var(--ongaku-surface);
+  border: 1px solid var(--ongaku-border);
+  h2 {
+    margin: 0;
+    font-size: 22px;
+  }
+  p {
+    max-width: 480px;
+    margin: 0;
+  }
+}
+
+.search {
+  width: min(100%, 320px);
+}
+
+.grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 24px 20px;
+}
+
+.no-match {
+  grid-column: 1 / -1;
+}
+
+.tile {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  &:hover .tile-play,
+  &:focus-within .tile-play {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.cover-box {
+  position: relative;
+  margin-bottom: 4px;
+}
+
+.cover-link {
+  display: block;
+}
+
+.tile-cover {
+  aspect-ratio: 1;
+  border-radius: var(--ongaku-radius-lg);
+  border: 1px solid var(--ongaku-border);
+}
+
+.tile-link {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  text-decoration: none;
+  color: inherit;
+  &:hover {
+    text-decoration: underline;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--ongaku-accent);
+    outline-offset: 2px;
+  }
+}
+
+// Play button over the cover, shown on hover or focus
+.tile-play {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ongaku-on-accent);
+  background: var(--ongaku-accent);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .35);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .15s, transform .15s;
+  &:focus-visible {
+    outline: 2px solid var(--ongaku-text);
+    outline-offset: 2px;
+  }
+}
+
+@media (hover: none) {
+  .tile-play {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 599px) {
+  .page-header {
+    padding: 20px;
+    h1 {
+      font-size: 32px;
+    }
+  }
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 20px 14px;
+  }
+}

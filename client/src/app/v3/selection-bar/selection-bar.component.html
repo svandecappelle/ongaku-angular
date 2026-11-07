@@ -20,6 +20,15 @@
         [matTooltip]="allInLibrary ? 'Remove from my library' : 'Add to my library'">
         <mat-icon>{{ allInLibrary ? 'remove_circle_outline' : 'library_add' }}</mat-icon>
       </button>
+      <button type="button" class="icon" [matMenuTriggerFor]="playlistMenu.menu()" aria-label="Add to playlist" matTooltip="Add to playlist">
+        <mat-icon>queue_music</mat-icon>
+      </button>
+      <app-add-to-playlist-menu #playlistMenu [tracks]="selected" (done)="actions.clear()"></app-add-to-playlist-menu>
+      @if (actions.remover(); as remover) {
+        <button type="button" class="icon" (click)="actions.removeFromPage(selected)" [attr.aria-label]="remover.label" [matTooltip]="remover.label">
+          <mat-icon>remove_circle_outline</mat-icon>
+        </button>
+      }
       <button type="button" class="icon" (click)="actions.details(selected)" aria-label="Details and tags" matTooltip="Details and tags">
         <mat-icon>description</mat-icon>
       </button>
