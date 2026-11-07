@@ -339,6 +339,24 @@ class Middleware {
   };
 
   /**
+  * Remove an uploaded image and put the generated default back.
+  */
+  resetImageFile(username, type, callback) {
+    var imageFile = USERS_IMAGE_DIRECTORY + username + "/" + type;
+    fs.rm(imageFile, { force: true }, function (err) {
+      if (err || !identicon) {
+        return callback(err);
+      }
+      identicon.generate({ id: type === "avatar" ? username : username + "-" + type, size: type === "avatar" ? 150 : 600 }, function (err, buffer) {
+        if (err) {
+          return callback(err);
+        }
+        fs.writeFile(imageFile, buffer, callback);
+      });
+    });
+  };
+
+  /**
   * Get the cover file of a user.
   */
   getCover(username) {

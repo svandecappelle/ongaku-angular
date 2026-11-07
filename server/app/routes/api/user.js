@@ -162,6 +162,26 @@ router.post(['/image/:type'], (req, res) => {
 });
 
 
+router.delete('/image/:type', (req, res) => {
+    var username = req.session.passport.user.username;
+    var type = req.params.type;
+    if (type !== 'avatar' && type !== 'cover' && type !== 'background') {
+        return res.status(403).json({
+            message: 'Forbidden'
+        });
+    }
+
+    middleware.resetImageFile(username, type, (err) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({
+                message: 'Internal server error'
+            });
+        }
+        res.json({ message: 'ok' });
+    });
+});
+
 router.get('/image/:type', (req, res) => {
     if (!req.session.passport || !req.session.passport.user) {
         return res.status(403).json({

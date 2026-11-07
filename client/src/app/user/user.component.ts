@@ -113,6 +113,13 @@ export class UserComponent implements OnInit {
 
   }
 
+  resetImage(type: string) {
+    this.service.resetImage(type).subscribe(
+      () => console.log('Image reset'),
+      (err) => console.log('Reset Error:', err)
+    );
+  }
+
   uploadFile(type: String, files: FileList) {
     if (files.length === 0) {
       console.log('No file selected!');

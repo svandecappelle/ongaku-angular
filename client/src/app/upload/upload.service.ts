@@ -1,5 +1,5 @@
 
-import { Subject, Observable, throwError as observableThrowError, } from 'rxjs';
+import { Subject, ReplaySubject, Observable, throwError as observableThrowError, } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpRequest, HttpEventType, HttpResponse, HttpHeaders } from '@angular/common/http';
@@ -32,6 +32,8 @@ export class UploadService {
 
       // create a new progress-subject for every file
       const progress = new Subject<number>();
+      // import result returned by the server: imported audio files or the error
+      const result = new ReplaySubject<{ imported?: string[]; error?: string }>(1);
 
       // send the http-request and subscribe for progress-updates
       this.http.request(req).subscribe(event => {
@@ -47,12 +49,20 @@ export class UploadService {
           // Close the progress-stream if we get an answer form the API
           // The upload is complete
           progress.complete();
+          const body = event.body as { files?: { imported?: string[]; error?: string }[] };
+          result.next(body?.files?.[0] ?? { imported: [] });
+          result.complete();
         }
+      }, (err) => {
+        result.next({ error: err.error?.message || 'Upload failed' });
+        result.complete();
+        progress.complete();
       });
 
       // Save every progress-observable in a map of all observables
       status[file.name] = {
-        progress: progress.asObservable()
+        progress: progress.asObservable(),
+        result: result.asObservable()
       };
     });
 

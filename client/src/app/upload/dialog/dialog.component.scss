@@ -16,3 +16,13 @@
 .container {
     height: 100%;
 }
+.hint,
+.result {
+    font-size: 12px;
+    opacity: .75;
+}
+
+.result.error {
+    color: var(--mat-sys-error, #d32f2f);
+    opacity: 1;
+}

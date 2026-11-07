@@ -1,10 +1,12 @@
-<input type="file" #file style="display: none" (change)="onFilesAdded()" multiple />
+<input type="file" #file style="display: none" (change)="onFilesAdded()" multiple
+  accept=".zip,.tar,.tar.gz,.tgz,.mp3,.ogg,.flac,.wav,.wma,application/zip,application/gzip,application/x-tar,audio/*" />
 <div class="container" fxLayout="column" fxLayoutAlign="space-evenly stretch">
   <h1 mat-dialog-title>Upload Files</h1>
   <div>
     <button [disabled]="uploading || uploadSuccessful" mat-raised-button color="primary" class="add-files-btn" (click)="addFiles()">
       Add Files
     </button>
+    <p class="hint">Audio files (mp3, ogg, flac, wav, wma) or archives (zip, tar, tar.gz) whose audio files are imported with their folders.</p>
   </div>
 
   <!-- This is the content of the dialog, containing a list of the files to upload -->
@@ -15,6 +17,11 @@
           <h4 mat-line>{{file.name}}</h4>
           @if (progress) {
             <mat-progress-bar mode="determinate" [value]="progress[file.name].progress | async"></mat-progress-bar>
+            @if (progress[file.name].result | async; as result) {
+              <span mat-line class="result" [class.error]="result.error">
+                {{ result.error ? result.error : result.imported.length + ' audio file(s) imported' }}
+              </span>
+            }
           }
         </mat-list-item>
       }

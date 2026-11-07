@@ -16,6 +16,9 @@
               <input #backgroundFiler type="file" name="background" (change)="onSelectFile('background', $event)" placeholder="Upload file" accept=".jpg,.gif,.jpeg" style="display: none">
               <button mat-button mat-raised-button color="primary" (click)="selectFile('background')">Change background</button>
             </mat-list-item>
+            <mat-list-item>
+              <button mat-button mat-stroked-button (click)="resetImage('background')">Reset background</button>
+            </mat-list-item>
           </mat-list>
         }
         <div class="avatar-wrapper" data-uid="819">

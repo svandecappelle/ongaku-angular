@@ -17,6 +17,10 @@ export class UserService {
     return this.http.get(`/api/user/${username}`);
   }
 
+  resetImage(type: string): Observable<any> {
+    return this.http.delete(`/api/user/image/${type}`);
+  }
+
   // file from event.target.files[0]
   uploadFile(url: string, file: File): Observable<HttpEvent<any>> {
 
