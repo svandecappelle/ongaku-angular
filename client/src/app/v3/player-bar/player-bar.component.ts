@@ -27,8 +27,8 @@ export class PlayerBarComponent {
   private readonly seeking = signal<number | null>(null);
   /** Full-screen player, opened from the cover */
   readonly expanded = signal(false);
-  /** Gain restored by unmuting */
-  private readonly unmutedGain = signal(0.75);
+  /** Gain restored by unmuting (the saved volume may be muted: then the default) */
+  private readonly unmutedGain = signal(this.playback.gain() || 0.75);
 
   readonly position = computed(() => this.seeking() ?? this.playback.currentTime());
   readonly volume = computed(() => Math.min(1, this.playback.gain()));

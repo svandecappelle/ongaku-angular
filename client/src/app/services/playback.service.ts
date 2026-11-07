@@ -9,6 +9,26 @@ import { AppendPlaylist, SetPlaylist } from '../player/controls/playlist/playlis
 
 export type PlaybackState = 'stopped' | 'loading' | 'playing' | 'paused';
 
+/** The chosen volume is kept in the browser, to be restored on the next visit */
+const VOLUME_KEY = 'ongaku.volume';
+const DEFAULT_GAIN = 0.75;
+/** Upper bound of the classic player slider (the new one stops at 1) */
+const MAX_GAIN = 3;
+
+function loadGain(): number {
+  try {
+    const raw = localStorage.getItem(VOLUME_KEY);
+    // Number(null) is 0: nothing saved must not mean muted
+    const stored = raw === null ? NaN : Number(JSON.parse(raw));
+    if (Number.isFinite(stored) && stored >= 0) {
+      return Math.min(stored, MAX_GAIN);
+    }
+  } catch {
+    // Storage unavailable or corrupted: keep the default
+  }
+  return DEFAULT_GAIN;
+}
+
 /** Queue and position before a change, to undo it */
 export interface QueueSnapshot {
   tracks: Song[];
@@ -43,7 +63,7 @@ export class PlaybackService {
   readonly currentTime = signal(0);
   readonly duration = signal(0);
   /** Gain applied to the audio, 1 = original volume */
-  readonly gain = signal(0.75);
+  readonly gain = signal(loadGain());
   /** A track has been loaded at least once */
   readonly started = signal(false);
 
@@ -155,8 +175,14 @@ export class PlaybackService {
   }
 
   setGain(gain: number) {
+    gain = Math.min(Math.max(Number(gain) || 0, 0), MAX_GAIN);
     this.gain.set(gain);
     this.gainNode.gain.value = gain;
+    try {
+      localStorage.setItem(VOLUME_KEY, JSON.stringify(gain));
+    } catch {
+      // Storage unavailable (private mode…): the volume only lasts for this session
+    }
   }
 
   /** Adds tracks at the end of the queue */
