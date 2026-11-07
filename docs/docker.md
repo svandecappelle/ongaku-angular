@@ -32,6 +32,7 @@ sudo make install DOMAIN=music.example.com MUSIC_DIR=/srv/musique HTTPS=1 EMAIL=
 | `sudo make nginx DOMAIN=…` | Installe ou met à jour le site nginx seulement. |
 | `sudo make https DOMAIN=… [EMAIL=…]` | Obtient le certificat et passe le site en HTTPS. |
 | `make update` | `git pull`, reconstruit et redémarre les conteneurs. |
+| `make upgrade [BACKUP=0]` | Met à jour une instance installée : sauvegarde Redis dans `backups/`, `git pull`, reconstruit avec des images de base à jour, redémarre, met à jour le site nginx si ses modèles ont changé et signale les nouveaux réglages. |
 | `make status` / `make logs` | État des conteneurs / journaux de l'application. |
 | `sudo make uninstall` | Arrête les conteneurs et supprime le site nginx (uniquement le sien). |
 
@@ -40,6 +41,12 @@ Options : `PORT=` (port local, 3000 par défaut), `FORCE=1` (voir plus bas).
 Les réglages de la première installation sont gardés : `MUSIC_DIR` et `PORT`
 dans `.env`, le nom d'hôte dans `config/application.yml`. Les commandes
 suivantes (`make update`, `sudo make https`…) n'en ont plus besoin.
+
+`make upgrade` refuse de démarrer si le dépôt a des modifications locales. En
+cas d'échec, il affiche la commande pour revenir à la version précédente
+(`git checkout <commit> && make app`). Pour restaurer une sauvegarde :
+`docker compose stop redis`, recopier le dossier sauvegardé dans le volume
+(`docker compose cp backups/redis-…/. redis:/data`), puis `docker compose start redis`.
 
 Au premier accès, créez le compte administrateur. La bibliothèque est
 consultable sans connexion par défaut : activez **Administration › connexion

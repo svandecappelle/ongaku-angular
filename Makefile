@@ -30,6 +30,9 @@ HTTPS ?= 0
 EMAIL ?=
 # FORCE=1: install even if another nginx site already uses DOMAIN.
 FORCE ?= 0
+# Where "make upgrade" saves the Redis database before upgrading; BACKUP=0 skips it.
+BACKUP_DIR ?= backups
+BACKUP ?= 1
 
 SITE := ongaku.host.conf
 TEMPLATE := deploy/$(SITE)
@@ -58,7 +61,7 @@ else
 fi
 endef
 
-.PHONY: help install app nginx https update uninstall status logs deps dev build clean gen-certificate
+.PHONY: help install app nginx https update upgrade uninstall status logs deps dev build clean gen-certificate
 
 help:
 	@cat <<'EOF'
@@ -70,6 +73,7 @@ help:
 	  sudo make nginx DOMAIN=…                    Install or update the nginx site only.
 	  sudo make https DOMAIN=… [EMAIL=…]          Get the HTTPS certificate (certbot, webroot) and switch the site to HTTPS.
 	  make update                                 git pull, rebuild and restart the containers.
+	  make upgrade [BACKUP=0]                     Upgrade a running instance: back up Redis to $(BACKUP_DIR)/, update, rebuild, restart.
 	  make status / make logs                     Containers state / follow the application logs.
 	  sudo make uninstall                         Stop the containers and remove the nginx site (only $(SITE)).
 
@@ -139,6 +143,46 @@ app:
 update:
 	@git pull --ff-only
 	$(MAKE) --no-print-directory app
+
+# Upgrade of an installed instance. On failure, prints how to go back to the previous version.
+upgrade:
+	@[ -f "$(ENV_FILE)" ] && [ -f "$(CONFIG)" ] || { echo "No existing instance here ($(ENV_FILE) or $(CONFIG) missing): use make install." >&2; exit 1; }
+	if [ -n "$$(git status --porcelain --untracked-files=no)" ]; then
+	  echo "Local changes in the repository: commit or stash them before upgrading." >&2; git status --short --untracked-files=no >&2; exit 1
+	fi
+	previous="$$(git rev-parse HEAD)"
+	trap 'echo >&2; echo "The upgrade failed. To go back to the previous version: git checkout $${previous:0:12} && make app" >&2' ERR
+	# 1. Save the Redis database (users, playlists, statistics) while the current version still runs.
+	if [ "$(BACKUP)" = 1 ]; then
+	  if [ -n "$$($(COMPOSE) ps --status running -q redis 2>/dev/null)" ]; then
+	    backup="$(BACKUP_DIR)/redis-$$(date +%Y%m%d%H%M%S)"
+	    mkdir -p "$(BACKUP_DIR)"; chmod 700 "$(BACKUP_DIR)"
+	    $(COMPOSE) exec -T redis redis-cli SAVE >/dev/null
+	    $(COMPOSE) cp redis:/data "$$backup"
+	    echo "Redis database saved in $$backup"
+	  else
+	    echo "Redis is not running: no backup made." >&2
+	  fi
+	fi
+	# 2. Fetch the new version.
+	git pull --ff-only
+	if [ "$$(git rev-parse HEAD)" = "$$previous" ]; then echo "Already on the latest version: rebuilding anyway."; else git log --oneline "$$previous..HEAD"; fi
+	# 3. Rebuild with up to date base images (Node, Redis), then restart and wait for the application.
+	$(COMPOSE) pull redis
+	$(COMPOSE) build --pull ongaku
+	$(MAKE) --no-print-directory app
+	# 4. nginx site: re-rendered only when it is installed and its templates changed.
+	$(nginx_paths)
+	if [ -f "$$avail" ] && ! git diff --quiet "$$previous" HEAD -- deploy/; then
+	  echo "The nginx templates changed: updating the site."
+	  $(MAKE) --no-print-directory nginx
+	fi
+	# 5. Top level keys of the template missing from the configuration (new settings, defaults apply).
+	missing="$$(comm -23 <(sed -n 's/^\([A-Za-z][A-Za-z0-9_-]*\):.*/\1/p' "$(CONFIG_TEMPLATE)" | sort -u) <(sed -n 's/^\([A-Za-z][A-Za-z0-9_-]*\):.*/\1/p' "$(CONFIG)" | sort -u))"
+	if [ -n "$$missing" ]; then
+	  echo "New settings in $(CONFIG_TEMPLATE), not in $(CONFIG): $$(echo $$missing)"
+	fi
+	echo "Ongaku is upgraded to $$(git rev-parse --short HEAD)."
 
 status:
 	@$(COMPOSE) ps
