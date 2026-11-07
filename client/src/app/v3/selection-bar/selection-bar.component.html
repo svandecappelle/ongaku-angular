@@ -20,6 +20,11 @@
         [matTooltip]="allInLibrary ? 'Remove from my library' : 'Add to my library'">
         <mat-icon>{{ allInLibrary ? 'remove_circle_outline' : 'library_add' }}</mat-icon>
       </button>
+      @let allLiked = actions.allLiked(selected);
+      <button type="button" class="icon" (click)="actions.toggleLike(selected)"
+        [attr.aria-label]="allLiked ? 'Unlike' : 'Like'" [matTooltip]="allLiked ? 'Unlike' : 'Like'">
+        <mat-icon>{{ allLiked ? 'favorite' : 'favorite_border' }}</mat-icon>
+      </button>
       <button type="button" class="icon" [matMenuTriggerFor]="playlistMenu.menu()" aria-label="Add to playlist" matTooltip="Add to playlist">
         <mat-icon>queue_music</mat-icon>
       </button>

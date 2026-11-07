@@ -6,6 +6,7 @@ import { Song } from '../../app-state';
 import { MetadatasComponent } from '../../metadatas/metadatas.component';
 import { PlaybackService } from '../../services/playback.service';
 import { MyLibraryService } from '../../services/my-library.service';
+import { LikesService } from '../../services/likes.service';
 
 /**
  * Selection and actions on the tracks of a page. Provided by each page
@@ -18,6 +19,7 @@ export class TrackActions {
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly library = inject(MyLibraryService);
+  private readonly likes = inject(LikesService);
 
   /** Every track of the page, in display order */
   private readonly pageTracks = signal<Song[]>([]);
@@ -123,6 +125,26 @@ export class TrackActions {
   removeFromPage(tracks: Song[]) {
     this.remover()?.remove(tracks);
     this.clear();
+  }
+
+  isLiked(track: Song) {
+    return this.likes.has(track);
+  }
+
+  allLiked(tracks: Song[]) {
+    return tracks.length > 0 && tracks.every((track) => this.likes.has(track));
+  }
+
+  /** Likes the tracks, or unlikes them when they all are liked */
+  toggleLike(tracks: Song[]) {
+    const unlike = this.allLiked(tracks);
+    (unlike ? this.likes.unlike(tracks) : this.likes.like(tracks)).subscribe({
+      error: () => this.notify(unlike ? 'The tracks could not be unliked' : 'The tracks could not be liked'),
+    });
+    if (tracks.length > 1) {
+      this.notify(`${tracks.length} tracks ${unlike ? 'removed from' : 'added to'} your liked tracks`);
+      this.clear();
+    }
   }
 
   /** Metadata dialog, for one track or the common tags of several */

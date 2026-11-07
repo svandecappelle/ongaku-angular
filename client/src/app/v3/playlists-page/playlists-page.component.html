@@ -35,7 +35,7 @@
       </div>
     }
     @case ('ready') {
-      @if (!list().length) {
+      @if (!list().length && !liked().length) {
         <div class="state">
           <mat-icon class="state-icon">queue_music</mat-icon>
           <h2>No playlist yet</h2>
@@ -54,6 +54,20 @@
           </mat-form-field>
         }
         <ul class="grid">
+          @if (liked().length && !search()) {
+            <li class="tile">
+              <div class="cover-box">
+                <a class="cover-link" routerLink="/my-library" [queryParams]="{ tab: 'liked' }" tabindex="-1" aria-hidden="true">
+                  <span class="tile-cover liked-cover"><mat-icon>favorite</mat-icon></span>
+                </a>
+                <button type="button" class="tile-play" (click)="playLiked()" aria-label="Play the liked tracks">
+                  <mat-icon>play_arrow</mat-icon>
+                </button>
+              </div>
+              <a class="tile-link" routerLink="/my-library" [queryParams]="{ tab: 'liked' }">Liked tracks</a>
+              <span class="muted small">{{ liked().length }} {{ liked().length === 1 ? 'track' : 'tracks' }}@if (likedDuration()) { · {{ formatTime(likedDuration()) }}} · automatic</span>
+            </li>
+          }
           @for (playlist of filtered(); track playlist.name) {
             <li class="tile">
               <div class="cover-box">

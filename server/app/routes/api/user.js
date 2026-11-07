@@ -13,6 +13,7 @@ const middleware = require("./../../middleware/middleware");
 const scanner = require("./../../middleware/scanner");
 
 const userlib = require("./../../model/library");
+const likes = require("./../../model/likes");
 const user = require("./../../model/user");
 const db = require("./../../model/database");
 
@@ -69,6 +70,7 @@ function profile(uid, username, self, callback) {
         email: (next) => self ? user.getUserField(uid, 'email', next) : next(null, undefined),
         uids: (next) => userlib.get(username, next),
         playlists: (next) => db.setCount(username + ':playlists', next),
+        likes: (next) => likes.count(username, next),
         usage: (next) => userStorage(username).then((size) => next(null, size), () => next(null, 0)),
         files: (next) => scanner.files(path.resolve(USERS_DIRECTORY, username, 'imported'))
             .then((files) => next(null, files.length), () => next(null, 0))
@@ -92,6 +94,7 @@ function profile(uid, username, self, callback) {
             tracks: artists.reduce((count, artist) => count + artist.tracks, 0),
             artistsCount: artists.length,
             playlists: parseInt(data.playlists, 10) || 0,
+            likes: parseInt(data.likes, 10) || 0,
             uploads: { files: data.files, size: data.usage },
             artists: _.first(_.sortBy(artists, (artist) => -artist.tracks), PROFILE_ARTISTS)
         });
@@ -227,7 +230,8 @@ router.get('/library/uids', (req, res) => {
             console.error(err);
             return res.status(500).json({ message: 'Internal server error' });
         }
-        res.json(uids || []);
+        // With the copies shown for the hidden duplicates the user saved
+        res.json(withCanonicalUids(uids));
     });
 });
 
@@ -251,7 +255,7 @@ router.get('/library/content', (req, res) => {
                 tracks: album.tracks
             }));
         });
-        res.json({ albums: albums, uids: uids || [] });
+        res.json({ albums: albums, uids: withCanonicalUids(uids) });
     });
 });
 
@@ -330,7 +334,12 @@ router.get('/image/:type', (req, res) => {
     });
 });
 
-function changeLibrary(req, res, change) {
+/** Saved uids, plus the uid of the copy shown for each hidden duplicate */
+function withCanonicalUids(uids) {
+    return Array.from(new Set((uids || []).concat((uids || []).map((uid) => library.canonicalUid(uid)))));
+}
+
+function changeLibrary(req, res, change, extra) {
     if (!middleware.isAuthenticated(req)) {
         return res.status(403).json({ message: 'You need to be logged' });
     }
@@ -339,7 +348,7 @@ function changeLibrary(req, res, change) {
     if (!Array.isArray(uids) || !uids.every((uid) => typeof uid === 'string')) {
         return res.status(400).json({ message: 'elements must be a list of track uids' });
     }
-    async.each(uids, (uid, next) => change(username, uid, () => next()), () => {
+    async.each(uids.concat(extra || []), (uid, next) => change(username, uid, () => next()), () => {
         res.send({ message: "ok" });
     });
 }
@@ -349,7 +358,15 @@ router.post('/library/add', (req, res) => {
 });
 
 router.post('/library/remove', (req, res) => {
-    changeLibrary(req, res, (username, uid, next) => userlib.remove(username, uid, next));
+    if (!middleware.isAuthenticated(req)) {
+        return res.status(403).json({ message: 'You need to be logged' });
+    }
+    // A shown track may stand for hidden duplicates saved earlier: they go too
+    userlib.get(req.session.passport.user.username, (err, saved) => {
+        const shown = Array.isArray(req.body.elements) ? new Set(req.body.elements) : new Set();
+        const hidden = (saved || []).filter((uid) => !shown.has(uid) && shown.has(library.canonicalUid(uid)));
+        changeLibrary(req, res, (username, uid, next) => userlib.remove(username, uid, next), hidden);
+    });
 });
 
 

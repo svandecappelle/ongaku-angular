@@ -1,10 +1,11 @@
 const async = require("async");
+const nconf = require("nconf");
 
 const library = require("./middleware/library");
 const downloader = require("./middleware/downloader");
 
 
-//const meta = require('./meta');
+const meta = require('./meta');
 
 
 let instance = null;
@@ -19,6 +20,13 @@ class Application {
 
 	async start() {
 
+		// Saved by the administration; enabled by default
+		await new Promise((resolve) => meta.settings.getOne('global', 'deduplicate', (err, value) => {
+			if (!err && value !== null && value !== undefined) {
+				nconf.set('deduplicate', value);
+			}
+			resolve();
+		}));
 		await library.setupConnectors();
 		downloader.watch();
 

@@ -398,3 +398,51 @@ mat-slide-toggle .hint {
     width: 100%;
   }
 }
+
+// Duplicates report
+.duplicates {
+  display: block;
+  .mat-expansion-panel {
+    background: var(--ongaku-surface-2);
+  }
+  mat-panel-title,
+  mat-panel-description {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+.copies {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+  }
+  code {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ongaku-on-accent);
+  background: var(--ongaku-accent);
+  &.hidden-badge {
+    color: var(--ongaku-muted);
+    background: transparent;
+    border: 1px solid var(--ongaku-border);
+  }
+}

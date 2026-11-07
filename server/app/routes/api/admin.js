@@ -9,6 +9,7 @@ const getFolderSize = require('get-folder-size').default;
 const getSize = (folder, callback) => getFolderSize.strict(folder).then((size) => callback(null, size), callback);
 
 const library = require("./../../middleware/library");
+const { formatOf } = require("./../../middleware/deduplicate");
 const middleware = require("./../../middleware/middleware");
 const importer = require("./../../middleware/importer");
 const images = require("./../../middleware/images");
@@ -219,6 +220,9 @@ router.post('/configure', (req, res) => {
                 callback();
             });
         }, () => {
+            if (preferences && preferences.deduplicate !== undefined) {
+                library.refreshDeduplication();
+            }
             res.json({
                 message: 'done'
             });
@@ -346,6 +350,31 @@ router.delete('/users/:username', (req, res) => {
 });
 
 // ---------- Public library import ----------
+
+/** Music available several times: the copy shown and the hidden ones (see middleware/deduplicate.js) */
+router.get('/library/duplicates', (req, res) => {
+    const describe = (track) => ({
+        uid: track.uid,
+        title: track.title,
+        artist: track.artist,
+        album: track.album,
+        duration: track.duration,
+        format: formatOf(track),
+        file: track.file,
+        user: track.private ? track.user : null
+    });
+    const deduplication = library.getDeduplication();
+    const groups = deduplication.groups
+        .map((group) => ({ kept: describe(group.kept), copies: group.copies.map(describe) }))
+        .sort((a, b) => String(a.kept.artist).localeCompare(String(b.kept.artist)) || String(a.kept.album).localeCompare(String(b.kept.album))
+            || String(a.kept.title).localeCompare(String(b.kept.title)));
+    res.json({
+        enabled: String(nconf.get('deduplicate')) !== 'false',
+        hidden: deduplication.canonical.size,
+        groups: groups.slice(0, 500),
+        total: groups.length
+    });
+});
 
 router.get('/library/import', (req, res) => {
     const folder = importFolder();

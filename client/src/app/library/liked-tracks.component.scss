@@ -1,0 +1,66 @@
+@use './library.component';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.liked-header {
+  padding: 20px;
+  border-radius: var(--ongaku-radius-xl);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  background: var(--ongaku-surface);
+  border: 1px solid var(--ongaku-border);
+}
+
+.liked-cover {
+  width: 96px;
+  height: 96px;
+  flex: none;
+  border-radius: var(--ongaku-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ongaku-on-accent);
+  background: linear-gradient(135deg, var(--ongaku-accent), color-mix(in srgb, var(--ongaku-accent) 40%, #6a1b9a));
+  mat-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 44px;
+  }
+}
+
+.liked-text {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  h2 {
+    margin: 0;
+    font-size: 26px;
+  }
+}
+
+.liked-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.sort {
+  width: 200px;
+}
+
+@media (max-width: 800px) {
+  .liked-cover {
+    width: 72px;
+    height: 72px;
+  }
+  .sort {
+    width: 100%;
+  }
+}

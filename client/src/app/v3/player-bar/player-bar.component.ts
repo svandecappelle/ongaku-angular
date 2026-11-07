@@ -4,6 +4,8 @@ import { RouterLink } from '@angular/router';
 
 import { MaterialModule } from '../../modules/material.module';
 import { PlaybackService } from '../../services/playback.service';
+import { LikesService } from '../../services/likes.service';
+import { Song } from '../../app-state';
 import { formatTime } from '../format-time';
 
 @Component({
@@ -19,6 +21,7 @@ import { formatTime } from '../format-time';
 })
 export class PlayerBarComponent {
   readonly playback = inject(PlaybackService);
+  readonly likes = inject(LikesService);
 
   readonly queueOpen = input(false);
   readonly toggleQueue = output<void>();
@@ -34,6 +37,10 @@ export class PlayerBarComponent {
   readonly volume = computed(() => Math.min(1, this.playback.gain()));
   readonly muted = computed(() => this.playback.gain() === 0);
   readonly formatTime = formatTime;
+
+  toggleLike(track: Song) {
+    (this.likes.has(track) ? this.likes.unlike([track]) : this.likes.like([track])).subscribe();
+  }
 
   openQueue() {
     this.expanded.set(false);

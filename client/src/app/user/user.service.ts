@@ -22,6 +22,7 @@ export interface Profile {
   tracks: number;
   artistsCount: number;
   playlists: number;
+  likes: number;
   uploads: { files: number; size: number };
   artists: ProfileArtist[];
 }

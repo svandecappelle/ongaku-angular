@@ -10,9 +10,10 @@ import { LibraryAlbum, MyLibraryService } from '../services/my-library.service';
 import { SelectionBarComponent } from '../v3/selection-bar/selection-bar.component';
 import { TrackActions } from '../v3/track-list/track-actions.service';
 import { TrackListComponent } from '../v3/track-list/track-list.component';
+import { LikedTracksComponent } from './liked-tracks.component';
 import { UploadsBrowserComponent } from './uploads-browser.component';
 
-type Tab = 'music' | 'uploads';
+type Tab = 'music' | 'liked' | 'uploads';
 
 /** Albums shown at first, then by this many more */
 const ALBUMS_STEP = 20;
@@ -25,7 +26,7 @@ const NO_COVER = '/static/img/album.png';
   templateUrl: './library.component.html',
   styleUrls: ['./library.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialModule, FormsModule, RouterLink, TrackListComponent, SelectionBarComponent, UploadsBrowserComponent],
+  imports: [MaterialModule, FormsModule, RouterLink, TrackListComponent, SelectionBarComponent, UploadsBrowserComponent, LikedTracksComponent],
   providers: [TrackActions],
 })
 export class LibraryComponent {
@@ -36,7 +37,13 @@ export class LibraryComponent {
 
   // The tab and the uploads folder are in the URL (?tab=uploads&path=…), to survive a reload
   private readonly query = toSignal(this.route.queryParamMap, { requireSync: true });
-  readonly tab = computed<Tab>(() => (this.query().get('tab') === 'uploads' || this.route.snapshot.paramMap.has('folder') ? 'uploads' : 'music'));
+  readonly tab = computed<Tab>(() => {
+    const tab = this.query().get('tab');
+    if (tab === 'uploads' || this.route.snapshot.paramMap.has('folder')) {
+      return 'uploads';
+    }
+    return tab === 'liked' ? 'liked' : 'music';
+  });
   readonly uploadsPath = computed(() => this.query().get('path') ?? '');
 
   readonly albums = signal<LibraryAlbum[] | null>(null);
@@ -84,6 +91,12 @@ export class LibraryComponent {
       untracked(() => this.load());
     });
     effect(() => this.actions.setPage(this.visible().flatMap((album) => album.tracks), null));
+    // The Liked tab has its own selection
+    effect(() => {
+      if (this.tab() !== 'music') {
+        untracked(() => this.actions.clear());
+      }
+    });
     effect(() => {
       this.filter();
       untracked(() => this.shown.set(ALBUMS_STEP));
@@ -99,7 +112,7 @@ export class LibraryComponent {
   }
 
   selectTab(tab: Tab) {
-    this.router.navigate(['/my-library'], { queryParams: tab === 'uploads' ? { tab } : {} });
+    this.router.navigate(['/my-library'], { queryParams: tab === 'music' ? {} : { tab } });
   }
 
   openFolder(path: string) {

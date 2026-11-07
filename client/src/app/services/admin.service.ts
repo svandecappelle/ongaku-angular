@@ -45,6 +45,29 @@ export interface ImportResponse {
   rescan: 'none' | 'started' | 'busy';
 }
 
+/** A copy of a track, in the duplicates report */
+export interface TrackCopy {
+  uid: string;
+  title: string;
+  artist: string;
+  album: string;
+  duration: string;
+  /** File format (extension) */
+  format: string;
+  file: string;
+  /** Owner of a private upload */
+  user: string | null;
+}
+
+/** Music available several times: the copy shown and the hidden ones */
+export interface Duplicates {
+  enabled: boolean;
+  hidden: number;
+  /** First 500 groups, by artist, album and title */
+  groups: { kept: TrackCopy; copies: TrackCopy[] }[];
+  total: number;
+}
+
 export interface ImportFolder {
   folder: string;
   writable: boolean;
@@ -105,6 +128,10 @@ export class AdminService {
 
   private imageParams(artist: string, album?: string) {
     return new HttpParams({ fromObject: album === undefined ? { artist } : { artist, album } });
+  }
+
+  duplicates(): Observable<Duplicates> {
+    return this.http.get<Duplicates>('/api/admin/library/duplicates');
   }
 
   importFolder(): Observable<ImportFolder> {

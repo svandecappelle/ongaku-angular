@@ -8,7 +8,7 @@ import { Chart, registerables } from 'chart.js';
 import moment from 'moment';
 
 import { MaterialModule } from '../modules/material.module';
-import { AdminService, AdminUser, ImportFolder, ImportResult, UserChanges } from '../services/admin.service';
+import { AdminService, AdminUser, Duplicates, ImportFolder, ImportResult, UserChanges } from '../services/admin.service';
 import { StatisticsService } from '../services/statistics.service';
 import { ReloadService } from '../library/reload.service';
 import { DeleteUserDialogComponent } from './delete-user-dialog.component';
@@ -33,6 +33,7 @@ interface Settings {
   requireLogin: boolean;
   allowUpload: boolean;
   allowDownload: boolean;
+  deduplicate: boolean;
 }
 
 /** A file queued for the public library import */
@@ -80,6 +81,7 @@ export class AdminComponent {
   readonly administratorsCount = computed(() => (this.users() ?? []).filter((u) => u.administrator).length);
   readonly userColumns = ['user', 'role', 'status', 'storage', 'lastonline', 'actions'];
 
+  readonly duplicates = signal<Duplicates | null>(null);
   readonly importFolder = signal<ImportFolder | null>(null);
   readonly importSubFolder = signal('');
   readonly importItems = signal<ImportItem[]>([]);
@@ -99,7 +101,10 @@ export class AdminComponent {
       requireLogin: flag(properties?.requireLogin),
       allowUpload: flag(properties?.allowUpload),
       allowDownload: flag(properties?.allowDownload),
+      // Enabled unless turned off
+      deduplicate: properties?.deduplicate === undefined || properties?.deduplicate === null || flag(properties.deduplicate),
     }));
+    this.loadDuplicates();
     this.admin.importFolder().subscribe((folder) => this.importFolder.set(folder));
 
     // The charts are drawn when their tab is shown (the canvases only exist then) and the data is loaded
@@ -124,12 +129,20 @@ export class AdminComponent {
       next: () => {
         this.reloading.set(false);
         this.statisticsService.getStatistics().subscribe((statistics) => this.statistics.set(statistics));
+        this.loadDuplicates();
         this.snackBar.open('Library reloaded', undefined, { duration: 3000 });
       },
       error: (err) => {
         this.reloading.set(false);
         this.error(err, 'Could not reload the library');
       },
+    });
+  }
+
+  loadDuplicates() {
+    this.admin.duplicates().subscribe({
+      next: (duplicates) => this.duplicates.set(duplicates),
+      error: (err) => this.error(err, 'Could not load the duplicates'),
     });
   }
 
@@ -393,6 +406,7 @@ export class AdminComponent {
       next: () => {
         this.savingSettings.set(false);
         this.snackBar.open('Settings saved', undefined, { duration: 3000 });
+        this.loadDuplicates();
       },
       error: (err) => {
         this.savingSettings.set(false);

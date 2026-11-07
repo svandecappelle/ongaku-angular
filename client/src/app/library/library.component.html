@@ -18,6 +18,10 @@
       <mat-icon>library_music</mat-icon>
       Music
     </button>
+    <button type="button" role="tab" class="tab" [class.active]="tab() === 'liked'" [attr.aria-selected]="tab() === 'liked'" (click)="selectTab('liked')">
+      <mat-icon>favorite</mat-icon>
+      Liked
+    </button>
     <button type="button" role="tab" class="tab" [class.active]="tab() === 'uploads'" [attr.aria-selected]="tab() === 'uploads'" (click)="selectTab('uploads')">
       <mat-icon>cloud_upload</mat-icon>
       Uploads
@@ -26,6 +30,8 @@
 
   @if (tab() === 'uploads') {
     <app-uploads-browser [path]="uploadsPath()" (navigate)="openFolder($event)" (changed)="load()"></app-uploads-browser>
+  } @else if (tab() === 'liked') {
+    <app-liked-tracks></app-liked-tracks>
   } @else if (failed()) {
     <div class="state">
       <mat-icon class="state-icon">cloud_off</mat-icon>

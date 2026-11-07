@@ -99,6 +99,19 @@
   border: 1px solid var(--ongaku-border);
 }
 
+.liked-cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ongaku-on-accent);
+  background: linear-gradient(135deg, var(--ongaku-accent), color-mix(in srgb, var(--ongaku-accent) 40%, #6a1b9a));
+  mat-icon {
+    width: 64px;
+    height: 64px;
+    font-size: 64px;
+  }
+}
+
 .tile-link {
   overflow: hidden;
   white-space: nowrap;

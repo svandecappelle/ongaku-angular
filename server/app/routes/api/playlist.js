@@ -36,6 +36,8 @@ function isUidList(value) {
  * private uploads of the other users are left out.
  */
 function resolveTracks(uids, username) {
+    // A hidden duplicate is shown as its kept copy
+    uids = uids.map((uid) => library.canonicalUid(uid));
     const wanted = new Set(uids);
     const found = new Map();
     library.flatten.forEach((track) => {
@@ -43,7 +45,8 @@ function resolveTracks(uids, username) {
             found.set(track.uid, track);
         }
     });
-    return uids.filter((uid) => found.has(uid)).map((uid) => found.get(uid));
+    // Two saved copies of the same music are shown once
+    return Array.from(new Set(uids.filter((uid) => found.has(uid)))).map((uid) => found.get(uid));
 }
 
 /** Uids of the tracks that can be saved in a playlist: known, visible to the user, once each */
@@ -109,7 +112,7 @@ function sendPlaylist(req, res, name, status, extra) {
             res.status(status || 200).json(Object.assign(summary(name, tracks, updated[name]), {
                 tracks: tracks,
                 // Tracks no longer in the library
-                missing: uids.length - tracks.length
+                missing: uids.filter((uid) => !library.getByUid(uid)).length
             }, extra));
         });
     });
@@ -230,7 +233,8 @@ router.post('/:name/tracks', (req, res) => {
     }
     withPlaylist(req, res, (name, current) => {
         // A track is in a playlist once
-        const tracks = playableUids(uids, req.username).filter((uid) => !current.includes(uid));
+        const saved = new Set(current.map((uid) => library.canonicalUid(uid)));
+        const tracks = playableUids(uids, req.username).filter((uid) => !saved.has(uid));
         if (current.length + tracks.length > MAX_TRACKS) {
             return res.status(400).json({ message: 'A playlist holds at most ' + MAX_TRACKS + ' tracks' });
         }

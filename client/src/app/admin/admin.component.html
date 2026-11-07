@@ -83,6 +83,55 @@
           }
         </section>
 
+        <section class="panel" aria-labelledby="duplicates-title">
+          <div class="panel-header">
+            <h2 id="duplicates-title">Duplicates</h2>
+            <span class="muted">Tracks found several times (same artist, album, title, number and duration). The public copy with the best encoding is listed, the others are hidden; libraries and playlists that saved a hidden copy play the listed one.</span>
+          </div>
+          @if (duplicates(); as d) {
+            @if (!d.enabled) {
+              <p class="notice">
+                <mat-icon aria-hidden="true">info</mat-icon>
+                <span>Showing each track once is turned off in Settings: every copy is listed.</span>
+              </p>
+            }
+            @if (!d.total) {
+              <p class="muted">No duplicate found.</p>
+            } @else {
+              <p>
+                <strong>{{ d.hidden }}</strong> hidden {{ d.hidden === 1 ? 'copy' : 'copies' }} of
+                <strong>{{ d.total }}</strong> {{ d.total === 1 ? 'track' : 'tracks' }}@if (d.total > d.groups.length) { (first {{ d.groups.length }} shown)}.
+              </p>
+              <mat-accordion class="duplicates" displayMode="flat">
+                @for (group of d.groups; track group.kept.uid) {
+                  <mat-expansion-panel>
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>{{ group.kept.title }}</mat-panel-title>
+                      <mat-panel-description>{{ group.kept.artist }} · {{ group.kept.album }} · {{ group.copies.length + 1 }} copies</mat-panel-description>
+                    </mat-expansion-panel-header>
+                    <ul class="copies">
+                      <li class="kept">
+                        <span class="badge">Listed</span>
+                        <code>{{ group.kept.file }}</code>
+                        <span class="muted">{{ group.kept.format }} · {{ group.kept.duration }}@if (group.kept.user) { · upload of {{ group.kept.user }}}</span>
+                      </li>
+                      @for (copy of group.copies; track copy.uid) {
+                        <li>
+                          <span class="badge hidden-badge">Hidden</span>
+                          <code>{{ copy.file }}</code>
+                          <span class="muted">{{ copy.format }} · {{ copy.duration }}@if (copy.user) { · upload of {{ copy.user }}}</span>
+                        </li>
+                      }
+                    </ul>
+                  </mat-expansion-panel>
+                }
+              </mat-accordion>
+            }
+          } @else {
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+          }
+        </section>
+
         <section class="panel" aria-labelledby="import-title">
           <div class="panel-header">
             <h2 id="import-title">Import into the public library</h2>
@@ -302,6 +351,10 @@
             </mat-slide-toggle>
             <mat-slide-toggle [checked]="s.allowDownload" (change)="patchSettings({ allowDownload: $event.checked })">
               Allow users to download
+            </mat-slide-toggle>
+            <mat-slide-toggle [checked]="s.deduplicate" (change)="patchSettings({ deduplicate: $event.checked })">
+              Show each track once
+              <span class="hint">When the same track is in several folders, only the best copy is listed (see Library).</span>
             </mat-slide-toggle>
             <div class="actions">
               <button mat-flat-button type="button" (click)="saveSettings()" [disabled]="savingSettings()">Save</button>

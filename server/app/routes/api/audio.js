@@ -107,17 +107,25 @@ var getStatistics = function (name, callback) {
             }
             var entries = _.pairs(values);
 
-            entries = _.map(entries, function (element) {
-                if (statistic.type === 'track') {
-                    var track = library.getByUid(element[0]);
+            if (statistic.type === 'track') {
+                // The plays of the hidden duplicates count for the copy shown
+                var plays = {};
+                _.each(entries, function (element) {
+                    var uid = library.canonicalUid(element[0]);
+                    plays[uid] = (plays[uid] || 0) + (parseInt(element[1]) || 0);
+                });
+                entries = _.map(plays, function (count, uid) {
+                    var track = library.getByUid(uid);
                     if (track) {
-                        track.plays = parseInt(element[1]);
+                        track.plays = count;
                     }
                     return track;
-                } else {
+                });
+            } else {
+                entries = _.map(entries, function (element) {
                     return { title: element[0], 'plays-genre': parseInt(element[1]) };
-                }
-            });
+                });
+            }
 
             entries = _.sortBy(entries, (entry) => {
                 return entry ? parseInt(entry[statistic.name]) : -1;

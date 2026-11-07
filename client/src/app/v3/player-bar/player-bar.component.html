@@ -43,6 +43,13 @@
   </div>
 
   <div class="extras">
+    @if (playback.current(); as track) {
+      @let liked = likes.has(track);
+      <button mat-icon-button type="button" class="like" [class.liked]="liked" (click)="toggleLike(track)"
+        [attr.aria-label]="(liked ? 'Unlike ' : 'Like ') + track.title" [attr.aria-pressed]="liked" [matTooltip]="liked ? 'Unlike' : 'Like'">
+        <mat-icon>{{ liked ? 'favorite' : 'favorite_border' }}</mat-icon>
+      </button>
+    }
     <button mat-icon-button type="button" (click)="toggleQueue.emit()" [class.active]="queueOpen()"
       [attr.aria-pressed]="queueOpen()" aria-label="Queue" matTooltip="Queue">
       <mat-icon>queue_music</mat-icon>
@@ -77,13 +84,20 @@
       </span>
 
       <div class="sheet-meta">
-        <h2 id="sheet-title">{{ track.title }}</h2>
-        <span class="links">
-          <a [routerLink]="['/artist', track.artist]" (click)="expanded.set(false)">{{ track.artist }}</a>
-          @if (track.album) {
-            · <a [routerLink]="['/album', track.album]" (click)="expanded.set(false)">{{ track.album }}</a>
-          }
-        </span>
+        <div class="sheet-titles">
+          <h2 id="sheet-title">{{ track.title }}</h2>
+          <span class="links">
+            <a [routerLink]="['/artist', track.artist]" (click)="expanded.set(false)">{{ track.artist }}</a>
+            @if (track.album) {
+              · <a [routerLink]="['/album', track.album]" (click)="expanded.set(false)">{{ track.album }}</a>
+            }
+          </span>
+        </div>
+        @let sheetLiked = likes.has(track);
+        <button mat-icon-button type="button" class="like" [class.liked]="sheetLiked" (click)="toggleLike(track)"
+          [attr.aria-label]="(sheetLiked ? 'Unlike ' : 'Like ') + track.title" [attr.aria-pressed]="sheetLiked">
+          <mat-icon>{{ sheetLiked ? 'favorite' : 'favorite_border' }}</mat-icon>
+        </button>
       </div>
 
       <div class="sheet-seek">

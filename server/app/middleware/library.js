@@ -12,6 +12,7 @@ const crypto = require("crypto");
 const CUSTOM_COVERS_DIRECTORY = path.resolve(__dirname, '../../../public/artists-covers/custom');
 const getSize = (folder, callback) => getFolderSize.strict(folder).then((size) => callback(null, size), callback);
 const connector = require("./connectors");
+const { deduplicate } = require("./deduplicate");
 
 var library;
 try {
@@ -46,7 +47,9 @@ class Library {
       audio: [],
       video: []
     };
-    this.flatten = [];
+    // Every scanned track; `flatten` is the deduplicated view used by the listings
+    this.tracks = [];
+    this.deduplication = null;
 
     this.audioScanned = false;
     this.videoScanned = false;
@@ -77,7 +80,7 @@ class Library {
 
         var tracks = [libraryElement];
         let location = path.dirname(song.file);
-        this.flatten = _.union(this.flatten, tracks);
+        this.setTracks(_.union(this.tracks, tracks));
 
         this.getArtistCover({
           artist: song.artist
@@ -185,13 +188,13 @@ class Library {
    */
   removeFolder(folder) {
     scan.removeToScan(folder.path);
-    this.flatten = _.filter(this.flatten, (track) => {
+    this.setTracks(_.filter(this.tracks, (track) => {
       if (track.username && track.username === folder.username && folder.path ===
         track.userfolder) {
         return false;
       }
       return true;
-    });
+    }));
   }
 
   /**
@@ -216,7 +219,7 @@ class Library {
       lib = folderScanResult[type];
     }
 
-    this.flatten = _.union(this.flatten, _.map(_.groupBy(lib, 'uid'), (track,
+    this.setTracks(_.union(this.tracks, _.map(_.groupBy(lib, 'uid'), (track,
       uuid) => {
 
       var libraryElement = _.extend(track[0], {
@@ -240,7 +243,7 @@ class Library {
       }
 
       return libraryElement;
-    }));
+    })));
 
     if (type !== "audio") {
       this.data[type] = _.union(this.data[type], lib);
@@ -439,7 +442,7 @@ class Library {
     this.loadingCoverArtists = [];
 
     // Rescan full library.
-    this.flatten = null;
+    this.setTracks([]);
     return new Promise((resolve) => {
       this.beginScan().then(() => {
         if (this.videoScanned && this.audioScanned) {
@@ -672,6 +675,44 @@ class Library {
     return _.first(_.rest(this.data.video, page * lenght), lenght);
   };
 
+  /** Tracks of the library, each available music once (see deduplicate.js) */
+  get flatten() {
+    return this.getDeduplication().visible;
+  }
+
+  setTracks(tracks) {
+    this.tracks = tracks || [];
+    this.deduplication = null;
+  }
+
+  /** Duplicates of the library, computed again after every change */
+  getDeduplication() {
+    if (!this.deduplication) {
+      const enabled = String(nconf.get('deduplicate')) !== 'false';
+      this.deduplication = enabled ? deduplicate(this.tracks) : { visible: this.tracks, canonical: new Map(), groups: [] };
+    }
+    return this.deduplication;
+  }
+
+  /** After the "deduplicate" setting changed */
+  refreshDeduplication() {
+    this.deduplication = null;
+  }
+
+  /** Uid of the copy shown for a track uid (itself when it is not a hidden duplicate) */
+  canonicalUid(uid) {
+    return this.getDeduplication().canonical.get(uid) || uid;
+  }
+
+  canonicalUids(uids) {
+    return new Set((uids || []).map((uid) => this.canonicalUid(uid)));
+  }
+
+  /** Track shown for a uid: the kept copy of a hidden duplicate */
+  getVisibleByUid(uid) {
+    return this.getByUid(this.canonicalUid(String(uid)));
+  }
+
   /**
    * Get audio file properties using unique identifier.
    *
@@ -682,7 +723,8 @@ class Library {
     uuid = uuid.replace(".ogg", "");
     uuid = uuid.replace(".wav", "");
 
-    return _.find(this.flatten, {
+    // Hidden duplicates included: their uids may be saved in libraries and playlists
+    return _.find(this.tracks, {
       uid: uuid
     });
   };
@@ -696,12 +738,13 @@ class Library {
     uuid = uuid.replace(".mp3", "");
     uuid = uuid.replace(".ogg", "");
     uuid = uuid.replace(".wav", "");
-    console.info("Update: ", _.findIndex(this.flatten, {
+    const index = _.findIndex(this.tracks, {
       uid: uuid
-    }));
-    return this.flatten[_.findIndex(this.flatten, {
-      uid: uuid
-    })] = libElement;
+    });
+    console.info("Update: ", index);
+    // The tags may have changed: the duplicates are searched again
+    this.deduplication = null;
+    return this.tracks[index] = libElement;
   };
 
   /**
@@ -944,8 +987,9 @@ class Library {
    * @param {Object} filter
    */
   getUserLibrary(ids, page, length, username, filter) {
+    const wanted = this.canonicalUids(ids);
     var searchResultList = _.filter(this.flatten, (obj) => {
-      return _.contains(ids, obj.uid) || (obj.private && obj.user ===
+      return wanted.has(obj.uid) || (obj.private && obj.user ===
         username);
     });
 
@@ -995,8 +1039,9 @@ class Library {
    * @param {Object} filter
    */
   getAudioById(ids, page, length, username, filter) {
+    const wanted = this.canonicalUids(ids);
     var searchResultList = _.filter(this.flatten, (obj) => {
-      return _.contains(ids, obj.uid);
+      return wanted.has(obj.uid);
     });
 
     searchResultList = _.groupByMulti(searchResultList, ['artist', 'album']);
@@ -1092,8 +1137,9 @@ class Library {
    * @param {Array} ids unique file identifier
    */
   getAudioFlattenById(ids) {
+    const wanted = this.canonicalUids(ids);
     var searchResultList = _.filter(this.flatten, (obj) => {
-      return _.contains(ids, obj.uid);
+      return wanted.has(obj.uid);
     });
     return searchResultList;
   };
