@@ -11,6 +11,7 @@ const getSize = (folder, callback) => getFolderSize.strict(folder).then((size) =
 const library = require("./../../middleware/library");
 const middleware = require("./../../middleware/middleware");
 const importer = require("./../../middleware/importer");
+const images = require("./../../middleware/images");
 const statistics = require("./../../model/statistics");
 const application = require("./../../index");
 const user = require("./../../model/user");
@@ -384,6 +385,53 @@ router.post('/library/import', (req, res) => {
             }
         }
         res.json({ message: 'ok', files: results, rescan: rescan });
+    });
+});
+
+// ---------- Artist and album images ----------
+
+// Names come in the query: they may hold slashes
+function imageTarget(req, res, callback) {
+    const artist = typeof req.query.artist === 'string' ? req.query.artist : '';
+    const album = typeof req.query.album === 'string' ? req.query.album : undefined;
+    if (!artist) {
+        return res.status(400).json({ message: 'artist is required' });
+    }
+    if (album === undefined ? !library.hasArtist(artist) : !library.hasAlbum(artist, album)) {
+        return res.status(404).json({ message: album === undefined ? 'Unknown artist' : 'Unknown album' });
+    }
+    callback(artist, album, library.customImagePath(artist, album));
+}
+
+router.post('/images', (req, res) => {
+    imageTarget(req, res, (artist, album, target) => {
+        images.receiveImage(req, target).then((saved) => {
+            if (!saved) {
+                return res.status(400).json({ message: 'The file is not an image' });
+            }
+            if (album !== undefined) {
+                library.applyCustomAlbumImage(artist, album);
+            }
+            res.json({ message: 'ok' });
+        }, (err) => {
+            console.error(err);
+            res.status(500).json({ message: 'Internal server error' });
+        });
+    });
+});
+
+router.delete('/images', (req, res) => {
+    imageTarget(req, res, (artist, album, target) => {
+        fs.rm(target, { force: true }, (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+            if (album !== undefined) {
+                library.resetAlbumImage(artist, album);
+            }
+            res.json({ message: 'reset' });
+        });
     });
 });
 

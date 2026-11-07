@@ -18,11 +18,14 @@
 
   @if (album(); as album) {
     <header class="hero">
-      <span class="cover">
-        <mat-icon aria-hidden="true">album</mat-icon>
-        @if (album.cover) {
-          <img [src]="album.cover" alt="" (error)="$any($event.target).hidden = true">
-        }
+      <span class="cover-frame">
+        <span class="cover">
+          <mat-icon aria-hidden="true">album</mat-icon>
+          @if (coverOverride() ?? album.cover; as cover) {
+            <img [src]="cover" alt="" (error)="$any($event.target).hidden = true">
+          }
+        </span>
+        <app-cover-edit [artist]="album.artist" [album]="album.title" (changed)="coverChanged(album.artist, album.title)"></app-cover-edit>
       </span>
       <div class="hero-text">
         <span class="eyebrow">Album@if (album.year) { · {{ album.year }}}</span>

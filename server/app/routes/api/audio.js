@@ -477,20 +477,30 @@ router.get("/song-image/:songid", (req, res) => {
     }
 });
 
+// Image chosen by an administrator, then the cover of the album folder, then Last.fm
 router.get("/static/covers/:artist/:album/cover.jpg", (req, res) => {
-    var albumart = library.getAlbumCoverByName(req.params.artist, req.params.album);
+    var custom = library.customImagePath(req.params.artist, req.params.album);
+    var albumart = fs.existsSync(custom) ? custom : library.getAlbumCoverByName(req.params.artist, req.params.album);
     if (albumart) {
         res.sendFile(albumart);
     } else {
-        res.redirect(library.getCoverImage(req.params.artist, req.params.album));
+        var image = library.getCoverImage(req.params.artist, req.params.album);
+        res.redirect(image && !image.startsWith('/api/audio/static/covers/') ? image : "/static/img/album.png");
     }
 });
 
+// Image chosen by an administrator, then the downloaded cover, then Last.fm
 router.get("/static/covers/:artist/cover.jpg", (req, res) => {
-    if (fs.existsSync(path.resolve(__dirname, `../../../../public/artists-covers/${req.params.artist}`))) {
-        res.sendFile(path.resolve(__dirname, `../../../../public/artists-covers/${req.params.artist}`));
+    var custom = library.customImagePath(req.params.artist);
+    var downloaded = path.resolve(__dirname, '../../../../public/artists-covers', path.basename(req.params.artist));
+    if (fs.existsSync(custom)) {
+        res.sendFile(custom);
+    } else if (req.params.artist === path.basename(req.params.artist) && fs.existsSync(downloaded) && fs.statSync(downloaded).isFile()) {
+        res.sendFile(downloaded);
     } else {
-        res.redirect(library.getArtistImage(req.params.artist));
+        var image = library.getArtistImage(req.params.artist);
+        // No image: the client shows its placeholder
+        image ? res.redirect(image) : res.status(404).end();
     }
 });
 

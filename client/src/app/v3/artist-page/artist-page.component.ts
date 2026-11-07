@@ -6,6 +6,7 @@ import { catchError, map, startWith, switchMap } from 'rxjs/operators';
 
 import { MaterialModule } from '../../modules/material.module';
 import { AlbumCardComponent } from '../album-card/album-card.component';
+import { CoverEditComponent } from '../cover-edit/cover-edit.component';
 import { formatTime } from '../format-time';
 import { SelectionBarComponent } from '../selection-bar/selection-bar.component';
 import { TrackActions } from '../track-list/track-actions.service';
@@ -22,7 +23,7 @@ type Load = { status: 'loading' } | { status: 'error' } | { status: 'ready'; art
   templateUrl: './artist-page.component.html',
   styleUrls: ['./artist-page.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialModule, RouterLink, TrackListComponent, SelectionBarComponent, AlbumCardComponent],
+  imports: [MaterialModule, RouterLink, TrackListComponent, SelectionBarComponent, AlbumCardComponent, CoverEditComponent],
   providers: [TrackActions],
 })
 export class ArtistPageComponent {
@@ -46,7 +47,14 @@ export class ArtistPageComponent {
   });
   /** Index of the artist image being tried, see ArtistView.images */
   readonly imageIndex = signal(0);
-  readonly image = computed(() => this.artist()?.images[this.imageIndex()] ?? null);
+  /** Set when an administrator changed the picture: the server image, past the browser cache */
+  private readonly imageVersion = signal<number | null>(null);
+  readonly image = computed(() => {
+    const images = this.artist()?.images ?? [];
+    const version = this.imageVersion();
+    const candidates = version === null ? images : [`${images[0]}?v=${version}`, ...images.slice(1)];
+    return candidates[this.imageIndex()] ?? null;
+  });
   readonly totalDuration = computed(() => (this.artist()?.tracks ?? []).reduce((sum, track) => sum + parseDuration(track), 0));
 
   readonly formatTime = formatTime;
@@ -57,6 +65,11 @@ export class ArtistPageComponent {
       this.imageIndex.set(0);
       this.actions.setPage(artist?.tracks ?? [], artist?.details);
     });
+  }
+
+  imageChanged() {
+    this.imageVersion.set(Date.now());
+    this.imageIndex.set(0);
   }
 
   albumId(album: AlbumSummary) {

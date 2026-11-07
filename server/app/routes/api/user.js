@@ -1,5 +1,4 @@
 const express = require('express');
-const Busboy = require('busboy');
 const fs = require('fs');
 const path = require('path');
 const async = require("async");
@@ -9,6 +8,7 @@ const getSize = (folder, callback) => getFolderSize.strict(folder).then((size) =
 
 const library = require("./../../middleware/library");
 const importer = require("./../../middleware/importer");
+const images = require("./../../middleware/images");
 const middleware = require("./../../middleware/middleware");
 const scanner = require("./../../middleware/scanner");
 
@@ -275,36 +275,15 @@ router.post(['/image/:type'], (req, res) => {
         });
     }
 
-    var busboy = Busboy({ headers: req.headers });
-    var saving = Promise.resolve();
-    var rejected = false;
-    busboy.on('file', function (fieldname, file, { mimeType }) {
-        if (!/^image\//.test(mimeType)) {
-            rejected = true;
-            return file.resume();
+    images.receiveImage(req, path.resolve(USERS_DIRECTORY, username, type)).then((saved) => {
+        if (!saved) {
+            return res.status(400).json({ message: 'The file is not an image' });
         }
-        var userdir = path.resolve(USERS_DIRECTORY, username);
-        fs.mkdirSync(userdir, { recursive: true });
-        // The image is written next to the previous one, which is replaced once complete
-        var saveTo = path.resolve(userdir, type);
-        var partial = saveTo + '.upload';
-        saving = new Promise((resolve, reject) => {
-            file.pipe(fs.createWriteStream(partial)).on('finish', resolve).on('error', reject);
-        }).then(() => fs.promises.rename(partial, saveTo));
+        res.json({ message: 'ok' });
+    }, (err) => {
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error' });
     });
-    busboy.on('close', function () {
-        saving.then(() => {
-            if (rejected) {
-                return res.status(400).json({ message: 'The file is not an image' });
-            }
-            res.json({ message: 'ok' });
-        }, (err) => {
-            console.error(err);
-            res.status(500).json({ message: 'Internal server error' });
-        });
-    });
-
-    req.pipe(busboy);
 });
 
 

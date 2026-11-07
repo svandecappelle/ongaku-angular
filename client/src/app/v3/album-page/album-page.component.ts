@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { of } from 'rxjs';
@@ -9,6 +9,7 @@ import { formatTime } from '../format-time';
 import { SelectionBarComponent } from '../selection-bar/selection-bar.component';
 import { TrackActions } from '../track-list/track-actions.service';
 import { TrackListComponent } from '../track-list/track-list.component';
+import { CoverEditComponent } from '../cover-edit/cover-edit.component';
 import { parseDuration } from '../track-list/tracks';
 import { AlbumView } from '../library';
 import { LibraryService } from '../library.service';
@@ -21,7 +22,7 @@ type Load = { status: 'loading' } | { status: 'error' } | { status: 'ready'; alb
   templateUrl: './album-page.component.html',
   styleUrls: ['./album-page.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialModule, RouterLink, TrackListComponent, SelectionBarComponent],
+  imports: [MaterialModule, RouterLink, TrackListComponent, SelectionBarComponent, CoverEditComponent],
   providers: [TrackActions],
 })
 export class AlbumPageComponent {
@@ -44,13 +45,20 @@ export class AlbumPageComponent {
     return load.status === 'ready' ? load.album : null;
   });
   readonly totalDuration = computed(() => (this.album()?.tracks ?? []).reduce((sum, track) => sum + parseDuration(track), 0));
+  /** Set when an administrator changed the cover: the covers route serves the new one (or the default) */
+  readonly coverOverride = signal<string | null>(null);
 
   readonly formatTime = formatTime;
 
   constructor() {
     effect(() => {
       const album = this.album();
+      this.coverOverride.set(null);
       this.actions.setPage(album?.tracks ?? [], album?.details[0]);
     });
+  }
+
+  coverChanged(artist: string, title: string) {
+    this.coverOverride.set(`/api/audio/static/covers/${encodeURIComponent(artist)}/${encodeURIComponent(title)}/cover.jpg?v=${Date.now()}`);
   }
 }

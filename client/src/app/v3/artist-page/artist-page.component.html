@@ -18,11 +18,14 @@
 
   @if (artist(); as artist) {
     <header class="hero">
-      <span class="cover round">
-        <mat-icon aria-hidden="true">person</mat-icon>
-        @if (image(); as src) {
-          <img [src]="src" alt="" (error)="imageIndex.set(imageIndex() + 1)">
-        }
+      <span class="cover-frame">
+        <span class="cover round">
+          <mat-icon aria-hidden="true">person</mat-icon>
+          @if (image(); as src) {
+            <img [src]="src" alt="" (error)="imageIndex.set(imageIndex() + 1)">
+          }
+        </span>
+        <app-cover-edit [artist]="artist.name" (changed)="imageChanged()"></app-cover-edit>
       </span>
       <div class="hero-text">
         <span class="eyebrow">Artist</span>

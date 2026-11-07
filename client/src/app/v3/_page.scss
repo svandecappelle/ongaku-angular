@@ -55,6 +55,13 @@
     border: 1px solid var(--ongaku-border);
   }
 
+  // Holds the cover and the edit button of the administrators, which the rounded cover would clip
+  .cover-frame {
+    position: relative;
+    flex: none;
+    display: inline-flex;
+  }
+
   .cover {
     position: relative;
     width: 220px;

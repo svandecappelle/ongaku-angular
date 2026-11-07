@@ -92,6 +92,21 @@ export class AdminService {
     return this.http.delete(`/api/admin/users/${encodeURIComponent(username)}`, { params: { files: String(deleteFiles) } });
   }
 
+  /** Image of an artist, or of one of his albums when album is given */
+  setImage(file: File, artist: string, album?: string): Observable<unknown> {
+    const formData = new FormData();
+    formData.append('image', file, file.name);
+    return this.http.post('/api/admin/images', formData, { params: this.imageParams(artist, album) });
+  }
+
+  resetImage(artist: string, album?: string): Observable<unknown> {
+    return this.http.delete('/api/admin/images', { params: this.imageParams(artist, album) });
+  }
+
+  private imageParams(artist: string, album?: string) {
+    return new HttpParams({ fromObject: album === undefined ? { artist } : { artist, album } });
+  }
+
   importFolder(): Observable<ImportFolder> {
     return this.http.get<ImportFolder>('/api/admin/library/import');
   }

@@ -6,6 +6,10 @@ const path = require("path");
 const fs = require("fs");
 const async = require("async");
 const getFolderSize = require('get-folder-size').default;
+const crypto = require("crypto");
+
+// Images chosen by the administrators, kept with the downloaded artist covers (a Docker volume)
+const CUSTOM_COVERS_DIRECTORY = path.resolve(__dirname, '../../../public/artists-covers/custom');
 const getSize = (folder, callback) => getFolderSize.strict(folder).then((size) => callback(null, size), callback);
 const connector = require("./connectors");
 
@@ -284,6 +288,11 @@ class Library {
     var alreadyScanned = this.loadingCoverAlbums[artist.artist][album.title] !==
       undefined;
 
+    if (!alreadyScanned && fs.existsSync(this.customImagePath(artist.artist, album.title))) {
+      this.applyCustomAlbumImage(artist.artist, album.title, album);
+      return;
+    }
+
     if (!alreadyScanned) {
       this.loadingCoverAlbums[artist.artist][album.title] =
         "/static/img/album.png";
@@ -318,11 +327,85 @@ class Library {
   };
 
   getArtistImage(artist) {
-    return this.loadingCoverArtists[artist].image ? this.loadingCoverArtists[artist].image[0] : null;
+    const info = this.loadingCoverArtists[artist];
+    return info && info.image ? info.image[0] : null;
   }
 
   getCoverImage(artist, album) {
-    return this.loadingCoverAlbums[artist][album].image[0];
+    const info = this.loadingCoverAlbums[artist] && this.loadingCoverAlbums[artist][album];
+    return info && info.image ? info.image[0] : null;
+  }
+
+  /**
+   * File of the image an administrator chose for an artist (no album) or an album.
+   * Named after a hash: artist and album names may hold any character.
+   */
+  customImagePath(artist, album) {
+    const key = album === undefined ? `artist\u0000${artist}` : `album\u0000${artist}\u0000${album}`;
+    return path.join(CUSTOM_COVERS_DIRECTORY, crypto.createHash('sha1').update(key).digest('hex'));
+  }
+
+  albumCoverUrl(artist, album) {
+    return `/api/audio/static/covers/${encodeURIComponent(artist)}/${encodeURIComponent(album)}/cover.jpg`;
+  }
+
+  /**
+   * Point the album info at the custom image (served by the covers route). The version in the
+   * URL changes with each new image, past the browser caches. The previous images are kept
+   * to be restored by resetAlbumImage.
+   */
+  applyCustomAlbumImage(artist, album, info) {
+    if (!this.loadingCoverAlbums[artist]) {
+      this.loadingCoverAlbums[artist] = {};
+    }
+    const current = this.loadingCoverAlbums[artist][album];
+    info = info || (current && typeof current === 'object' ? current : {});
+    // Last.fm needs the title to look the album up again after a reset
+    info.title = info.title || album;
+    if (info.originalImages === undefined) {
+      // Not enumerable: kept out of the API answers
+      Object.defineProperty(info, 'originalImages', { value: { image: info.image, cover: info.cover }, writable: true, configurable: true });
+    }
+    const url = `${this.albumCoverUrl(artist, album)}?v=${Date.now()}`;
+    info.image = [url];
+    info.cover = [url];
+    this.loadingCoverAlbums[artist][album] = info;
+    this.loadingCoversAlbumsFlatten[album] = info;
+  }
+
+  /**
+   * Back to the cover of the album folder, else the one of Last.fm.
+   */
+  resetAlbumImage(artist, album) {
+    const info = this.loadingCoverAlbums[artist] && this.loadingCoverAlbums[artist][album];
+    if (!info || typeof info !== 'object') {
+      return;
+    }
+    const original = info.originalImages;
+    delete info.originalImages;
+    if (original && original.image && original.image[0] !== "/static/img/album.png") {
+      info.image = original.image;
+      info.cover = original.cover;
+    } else if (this.getAlbumCoverByName(artist, album)) {
+      info.image = [this.albumCoverUrl(artist, album)];
+      info.cover = info.image;
+    } else {
+      // The custom image was there since the start: ask Last.fm now
+      info.image = ["/static/img/album.png"];
+      info.cover = info.image;
+      connector.getAlbumInfo({ artist: artist }, info).catch((error) => {
+        console.warn("GetAlbumInfo triggerred unexpected error on external apis: " + error);
+      });
+    }
+  }
+
+  /** The album exists in the scanned library */
+  hasAlbum(artist, album) {
+    return _.some(this.flatten, (track) => track.artist === artist && track.album === album);
+  }
+
+  hasArtist(artist) {
+    return _.some(this.flatten, (track) => track.artist === artist);
   }
 
   getAlbumCoverByName(artist, album) {
