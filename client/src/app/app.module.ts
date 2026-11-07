@@ -47,7 +47,6 @@ import { AuthGuard } from './guards/index';
 
 // import { EditMetadataComponent } from './metadatas/edit-metadata/edit-metadata.component';
 import { MetadatasComponent } from './metadatas/metadatas.component';
-import { AdminComponent } from './admin/';
 import { SearchComponent } from './search/search.component';
 import { ArtistComponent } from './artist';
 import { AlbumComponent } from './artist/album/';
@@ -74,7 +73,6 @@ import { ShellComponent } from './v3/shell/shell.component';
         MenuComponent,
         LoginComponent,
         MetadatasComponent,
-        AdminComponent,
         SearchComponent,
         ArtistComponent,
         AlbumComponent,

@@ -1,137 +1,336 @@
-<div class="content">
-  <mat-grid-list cols="2" rowHeight="3:1">
-    <mat-grid-tile rowspan="1">
-      <mat-card appearance="outlined">
-        <mat-card-title>
-          <h2 class="example-h2">Summary</h2>
-        </mat-card-title>
-        <mat-card-content>
-          @if (details) {
-            <div>
-              <div>Version: {{details.version}}</div>
-              <div>sha: {{details.sha}}</div>
-            </div>
-          }
-          <div class="actions">
-            <button mat-raised-button color="primary" type="button" (click)="update()">Update application</button>
-            <button mat-raised-button color="primary" type="button" (click)="restart()">Restart application</button>
-            <button mat-raised-button color="primary" type="button" (click)="reload()">Reload library</button>
-          </div>
-          @if (details === undefined || reloading) {
-            <mat-spinner diameter="48"></mat-spinner>
-          }
-        </mat-card-content>
-      </mat-card>
-    </mat-grid-tile>
+<div class="admin">
+  <header class="page-header">
+    <span class="eyebrow">Server</span>
+    <h1>Administration</h1>
+    <p class="muted">
+      @if (details(); as d) {
+        Version {{ d.version ?? 'unknown' }}
+        @if (d.sha) {
+          · <code>{{ d.sha.slice(0, 12) }}</code>
+        }
+      } @else {
+        Loading…
+      }
+    </p>
+  </header>
 
-    <mat-grid-tile rowspan="1">
-      <mat-card appearance="outlined">
-        <form [formGroup]="form" (ngSubmit)="onConfigurationSubmit()">
-          <mat-card-title>
-            <h2 class="example-h2">Configuration</h2>
-          </mat-card-title>
-          <mat-card-content>
-            @if (properties === undefined) {
-              <mat-spinner diameter="48"></mat-spinner>
-            }
-            @if (properties) {
-              <div>
-                <section class="inline-section">
-                  <label class="example-margin">Allow user register</label>
-                  <mat-form-field>
-                    <mat-label>User count</mat-label>
-                    <input matInput formControlName="allowRegisteration" type="number" value="{{properties.allowRegisteration}}"
-                      required/>
-                  </mat-form-field>
-                </section>
-                <section class="inline-section">
-                  <mat-slide-toggle formControlName="requireLogin" class="example-margin" [color]="warn" [checked]="properties.requireLogin">
-                    Require authentication to stream
-                  </mat-slide-toggle>
-                </section>
-                <section class="inline-section">
-                  <mat-slide-toggle formControlName="allowUpload" class="example-margin" [color]="warn" [checked]="properties.allowUpload">
-                    Allow user upload
-                  </mat-slide-toggle>
-                </section>
-                <section class="inline-section">
-                  <mat-slide-toggle formControlName="allowDownload" class="example-margin" [color]="warn" [checked]="properties.allowDownload">
-                    Allow user download
-                  </mat-slide-toggle>
-                </section>
-                <div class="actions">
-                  <button mat-raised-button color="primary" type="submit">Save</button>
-                </div>
+  <mat-tab-group mat-stretch-tabs="false" animationDuration="0ms" class="tabs">
+
+    <!-- ========== Overview ========== -->
+    <mat-tab label="Overview">
+      <div class="tab">
+        <div class="tiles">
+          <div class="tile">
+            <mat-icon>group</mat-icon>
+            <span class="tile-value">{{ statistics()?.usersCount ?? '—' }}</span>
+            <span class="muted">Users</span>
+          </div>
+          <div class="tile">
+            <mat-icon>album</mat-icon>
+            <span class="tile-value">{{ (statistics()?.albumsCount | number) ?? '—' }}</span>
+            <span class="muted">Albums</span>
+          </div>
+          <div class="tile">
+            <mat-icon>music_note</mat-icon>
+            <span class="tile-value">{{ (statistics()?.tracksCount | number) ?? '—' }}</span>
+            <span class="muted">Tracks</span>
+          </div>
+          <div class="tile">
+            <mat-icon>storage</mat-icon>
+            <span class="tile-value">{{ statistics()?.storage?.total?.label ?? '—' }}</span>
+            <span class="muted">Storage used</span>
+          </div>
+        </div>
+
+        <div class="charts">
+          <section class="panel chart-panel storage" aria-labelledby="storage-title">
+            <h2 id="storage-title">Storage</h2>
+            <div class="chart">
+              <canvas #storageChart aria-label="Storage used by the common library and the user uploads" role="img"></canvas>
+              @if (statistics() && !(+statistics()!.storage.total.value)) {
+                <span class="chart-empty muted">Nothing stored yet</span>
+              }
+            </div>
+          </section>
+          <section class="panel chart-panel wide" aria-labelledby="logins-title">
+            <h2 id="logins-title">Connections <span class="muted small">last 90 days</span></h2>
+            <div class="chart"><canvas #loginsChart aria-label="Connections per day" role="img"></canvas></div>
+          </section>
+          <section class="panel chart-panel full" aria-labelledby="plays-title">
+            <h2 id="plays-title">Plays <span class="muted small">last 90 days</span></h2>
+            <div class="chart"><canvas #playsChart aria-label="Plays per day" role="img"></canvas></div>
+          </section>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- ========== Library ========== -->
+    <mat-tab label="Library">
+      <div class="tab">
+        <section class="panel" aria-labelledby="scan-title">
+          <div class="panel-row">
+            <div class="panel-header">
+              <h2 id="scan-title">Library scan</h2>
+              <span class="muted">Rescan the music folders after adding or removing files outside Ongaku.</span>
+            </div>
+            <button mat-flat-button type="button" (click)="reload()" [disabled]="reloading()">
+              <mat-icon>refresh</mat-icon>
+              Reload library
+            </button>
+          </div>
+          @if (reloading()) {
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+          }
+        </section>
+
+        <section class="panel" aria-labelledby="import-title">
+          <div class="panel-header">
+            <h2 id="import-title">Import into the public library</h2>
+            <span class="muted">
+              Audio files (mp3, ogg, flac, wav, wma) or archives (zip, tar, tar.gz) whose audio files are imported with their folders.
+              Every user sees the imported music.
+            </span>
+          </div>
+
+          @if (importFolder(); as folder) {
+            @if (!folder.writable) {
+              <div class="notice error" role="alert">
+                <mat-icon>error</mat-icon>
+                <span>The import folder <code>{{ folder.folder }}</code> is not writable by the server. On a Docker install, run <code>make app</code> to create it.</span>
               </div>
+            } @else {
+              <span class="muted small">Destination: <code>{{ folder.folder }}{{ importSubFolder() ? '/' + importSubFolder() : '' }}</code></span>
             }
-          </mat-card-content>
-        </form>
-      </mat-card>
-    </mat-grid-tile>
-    <mat-grid-tile class="statistics" rowspan="2">
-      <mat-card appearance="outlined">
-        <mat-card-title>
-          <h2 class="example-h2">Statistics</h2>
-        </mat-card-title>
-        <mat-card-content>
-          @if (statistics) {
-            <div class="counters">
-              <h4>Counters</h4>
-              <mat-list>
-                <mat-list-item>
-                  Users count: {{ statistics.usersCount }}
-                </mat-list-item>
-                <mat-list-item>
-                  Library album count: {{ statistics.albumsCount }}
-                </mat-list-item>
-                <mat-list-item>
-                  Library tracks count: {{ statistics.tracksCount }}
-                </mat-list-item>
-              </mat-list>
+          }
+
+          <label class="dropzone" [class.dragging]="dragging()"
+            (dragover)="$event.preventDefault(); dragging.set(true)" (dragleave)="dragging.set(false)" (drop)="onDrop($event)">
+            <mat-icon>cloud_upload</mat-icon>
+            <span><strong>Drop files here</strong> or click to choose</span>
+            <input type="file" multiple class="visually-hidden"
+              accept=".zip,.tar,.tar.gz,.tgz,.mp3,.ogg,.flac,.wav,.wma,application/zip,application/gzip,application/x-tar,audio/*"
+              (change)="addImportFiles($any($event.target).files); $any($event.target).value = ''">
+          </label>
+
+          <mat-form-field class="subfolder" subscriptSizing="dynamic">
+            <mat-label>Sub folder (optional)</mat-label>
+            <input matInput placeholder="Artist/Album" [ngModel]="importSubFolder()" (ngModelChange)="importSubFolder.set($event)" [disabled]="importing()">
+            <mat-hint>Useful for single files: archives already carry their folders.</mat-hint>
+          </mat-form-field>
+
+          @if (importItems().length) {
+            <ul class="import-list">
+              @for (item of importItems(); track item) {
+                <li class="import-item" [class.error]="item.state === 'error'">
+                  <mat-icon class="state-icon">
+                    @switch (item.state) {
+                      @case ('done') { check_circle }
+                      @case ('error') { error }
+                      @case ('uploading') { cloud_upload }
+                      @default { schedule }
+                    }
+                  </mat-icon>
+                  <div class="import-body">
+                    <span class="import-name">{{ item.file.name }} <span class="muted small">{{ formatSize(item.file.size) }}</span></span>
+                    @if (item.state === 'uploading') {
+                      <mat-progress-bar [mode]="item.progress < 100 ? 'determinate' : 'indeterminate'" [value]="item.progress"></mat-progress-bar>
+                    }
+                    @if (item.result; as result) {
+                      <span class="small" [class.muted]="!result.error">
+                        {{ result.error ? result.error : (result.imported?.length ?? 0) + ' audio file(s) imported' }}
+                      </span>
+                    }
+                  </div>
+                  @if (item.state === 'waiting') {
+                    <button mat-icon-button type="button" (click)="removeImportItem(item)" aria-label="Remove from the list" matTooltip="Remove">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  }
+                </li>
+              }
+            </ul>
+            <div class="actions">
+              <button mat-button type="button" (click)="clearImport()" [disabled]="importing()">Clear</button>
+              <button mat-flat-button type="button" (click)="startImport()" [disabled]="importing() || !importFolder()?.writable">
+                <mat-icon>file_upload</mat-icon>
+                Import
+              </button>
             </div>
           }
-          <div class="storage-graph">
-            <h4>Storage</h4>
-            <div class="storage-chart">
-              <canvas #storage></canvas>
+        </section>
+      </div>
+    </mat-tab>
+
+    <!-- ========== Users ========== -->
+    <mat-tab label="Users">
+      <div class="tab">
+        <section class="panel" aria-labelledby="users-title">
+          <div class="panel-row">
+            <div class="panel-header">
+              <h2 id="users-title">Users</h2>
+              <span class="muted">
+                {{ users()?.length ?? 0 }} account(s), {{ administratorsCount() }} administrator(s).
+                A disabled account can no longer sign in.
+              </span>
+            </div>
+            <div class="toolbar">
+              <mat-form-field class="search" subscriptSizing="dynamic">
+                <mat-icon matPrefix>search</mat-icon>
+                <mat-label>Search</mat-label>
+                <input matInput [ngModel]="usersFilter()" (ngModelChange)="usersFilter.set($event)">
+              </mat-form-field>
+              <button mat-flat-button type="button" (click)="createUser()">
+                <mat-icon>person_add</mat-icon>
+                Add a user
+              </button>
             </div>
           </div>
-          @if (statistics === undefined) {
-            <mat-spinner diameter="48"></mat-spinner>
+
+          @if (users() === null) {
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+          } @else {
+            <div class="table-wrapper">
+              <table mat-table [dataSource]="filteredUsers()" class="users-table">
+                <ng-container matColumnDef="user">
+                  <th mat-header-cell *matHeaderCellDef>User</th>
+                  <td mat-cell *matCellDef="let user">
+                    <div class="user-cell">
+                      <span class="avatar" aria-hidden="true">
+                        {{ user.username.charAt(0).toUpperCase() }}
+                        <img [src]="'/static/user/' + user.username + '/avatar'" alt="" loading="lazy" (error)="$any($event.target).remove()">
+                      </span>
+                      <div>
+                        <div class="username">{{ user.username }} @if (user.self) { <span class="muted small">(you)</span> }</div>
+                        <div class="muted small">{{ user.email }}</div>
+                      </div>
+                    </div>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="role">
+                  <th mat-header-cell *matHeaderCellDef>Role</th>
+                  <td mat-cell *matCellDef="let user">
+                    <span class="badge" [class.accent]="user.administrator">{{ user.administrator ? 'Administrator' : 'User' }}</span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Status</th>
+                  <td mat-cell *matCellDef="let user">
+                    <span class="badge" [class.danger]="user.banned">{{ user.banned ? 'Disabled' : 'Active' }}</span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="storage">
+                  <th mat-header-cell *matHeaderCellDef>Uploads</th>
+                  <td mat-cell *matCellDef="let user">{{ formatSize(user.storage) }}</td>
+                </ng-container>
+                <ng-container matColumnDef="lastonline">
+                  <th mat-header-cell *matHeaderCellDef>Last seen</th>
+                  <td mat-cell *matCellDef="let user">{{ user.lastonline ? (user.lastonline | date: 'short') : '—' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef><span class="visually-hidden">Actions</span></th>
+                  <td mat-cell *matCellDef="let user" class="actions-cell">
+                    <button mat-icon-button type="button" [matMenuTriggerFor]="userMenu" [attr.aria-label]="'Actions for ' + user.username">
+                      <mat-icon>more_vert</mat-icon>
+                    </button>
+                    <mat-menu #userMenu="matMenu" xPosition="before">
+                      <button mat-menu-item (click)="resetPassword(user)">
+                        <mat-icon>vpn_key</mat-icon>
+                        <span>Change the password</span>
+                      </button>
+                      @if (user.administrator) {
+                        <button mat-menu-item (click)="setAdministrator(user, false)" [disabled]="user.self">
+                          <mat-icon>remove_circle_outline</mat-icon>
+                          <span>Remove administrator rights</span>
+                        </button>
+                      } @else {
+                        <button mat-menu-item (click)="setAdministrator(user, true)">
+                          <mat-icon>verified_user</mat-icon>
+                          <span>Make administrator</span>
+                        </button>
+                      }
+                      @if (user.banned) {
+                        <button mat-menu-item (click)="setBanned(user, false)">
+                          <mat-icon>lock_open</mat-icon>
+                          <span>Enable the account</span>
+                        </button>
+                      } @else {
+                        <button mat-menu-item (click)="setBanned(user, true)" [disabled]="user.self">
+                          <mat-icon>block</mat-icon>
+                          <span>Disable the account</span>
+                        </button>
+                      }
+                      <button mat-menu-item class="danger" (click)="deleteUser(user)" [disabled]="user.self">
+                        <mat-icon>delete</mat-icon>
+                        <span>Delete</span>
+                      </button>
+                    </mat-menu>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="userColumns"></tr>
+                <tr mat-row *matRowDef="let user; columns: userColumns" [class.banned]="user.banned"></tr>
+                <tr class="mat-row" *matNoDataRow>
+                  <td class="mat-cell empty muted" [attr.colspan]="userColumns.length">No user matches “{{ usersFilter() }}”.</td>
+                </tr>
+              </table>
+            </div>
           }
-        </mat-card-content>
-      </mat-card>
-    </mat-grid-tile>
+        </section>
+      </div>
+    </mat-tab>
 
-    <mat-grid-tile class="plays" rowspan="2">
-      <mat-card appearance="outlined">
-        <mat-card-content>
-          <span>Graph of user activity</span>
-          <canvas #access></canvas>
-        </mat-card-content>
-      </mat-card>
-    </mat-grid-tile>
+    <!-- ========== Settings ========== -->
+    <mat-tab label="Settings">
+      <div class="tab">
+        <section class="panel" aria-labelledby="settings-title">
+          <div class="panel-header">
+            <h2 id="settings-title">Access</h2>
+            <span class="muted">Who can sign up, listen, upload and download.</span>
+          </div>
+          @if (settings(); as s) {
+            <mat-form-field class="registrations" subscriptSizing="dynamic">
+              <mat-label>Maximum number of accounts</mat-label>
+              <input matInput type="number" min="0" [ngModel]="s.allowRegisteration" (ngModelChange)="patchSettings({ allowRegisteration: $event })">
+              <mat-hint>Sign up is closed once this number of accounts is reached.</mat-hint>
+            </mat-form-field>
+            <mat-slide-toggle [checked]="s.requireLogin" (change)="patchSettings({ requireLogin: $event.checked })">
+              Require authentication to stream
+              <span class="hint">Recommended when the server is reachable from the internet.</span>
+            </mat-slide-toggle>
+            <mat-slide-toggle [checked]="s.allowUpload" (change)="patchSettings({ allowUpload: $event.checked })">
+              Allow users to upload
+              <span class="hint">Uploads go to the private library of each user.</span>
+            </mat-slide-toggle>
+            <mat-slide-toggle [checked]="s.allowDownload" (change)="patchSettings({ allowDownload: $event.checked })">
+              Allow users to download
+            </mat-slide-toggle>
+            <div class="actions">
+              <button mat-flat-button type="button" (click)="saveSettings()" [disabled]="savingSettings()">Save</button>
+            </div>
+          } @else {
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+          }
+        </section>
 
-    <mat-grid-tile rowspan="2" colspan="2">
-      <mat-card appearance="outlined">
-        <mat-card-content>
-          <span>Graph of plays activity</span>
-          <canvas #activity></canvas>
-        </mat-card-content>
-      </mat-card>
-    </mat-grid-tile>
-
-    <!--<mat-grid-tile [colspan]=2 [rowspan]=2>
-    <mat-card>
-      <mat-card-title>
-        <h2 class="example-h2">Other statistics</h2>
-      </mat-card-title>
-      <mat-card-content>
-        <span>Graph of other</span>
-
-        <canvas #others>{{ chart }}</canvas>
-      </mat-card-content>
-    </mat-card>
-  </mat-grid-tile>-->
-</mat-grid-list>
+        <section class="panel" aria-labelledby="maintenance-title">
+          <div class="panel-header">
+            <h2 id="maintenance-title">Maintenance</h2>
+            <span class="muted">On a Docker install, prefer <code>make upgrade</code> on the server to update.</span>
+          </div>
+          <div class="actions start">
+            <button mat-stroked-button type="button" (click)="update()" [disabled]="busy()">
+              <mat-icon>system_update_alt</mat-icon>
+              Update the application
+            </button>
+            <button mat-stroked-button type="button" (click)="restart()" [disabled]="busy()">
+              <mat-icon>replay</mat-icon>
+              Restart the application
+            </button>
+          </div>
+          @if (busy()) {
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+          }
+        </section>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
 </div>

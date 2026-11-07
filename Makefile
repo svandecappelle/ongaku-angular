@@ -107,6 +107,13 @@ app:
 	if [ "$$(stat -c %u "$$music")" != $(CONTAINER_UID) ] && [ $$(( $$(stat -c %a "$$music") % 10 & 5 )) -ne 5 ]; then
 	  echo "Warning: the container can't read $$music (uid $(CONTAINER_UID)): chmod -R o+rX \"$$music\"" >&2
 	fi
+	# Its Imported folder is mounted writable: the administrators import music there.
+	imported="$$music/Imported"
+	mkdir -p "$$imported" 2>/dev/null || { echo "Cannot create $$imported: sudo mkdir -p \"$$imported\" && sudo chown $(CONTAINER_UID) \"$$imported\"" >&2; exit 1; }
+	if [ "$$(stat -c %u "$$imported")" != $(CONTAINER_UID) ]; then
+	  if [ "$$(id -u)" = 0 ]; then chown $(CONTAINER_UID) "$$imported"
+	  else echo "Warning: the container can't write in $$imported (uid $(CONTAINER_UID)): sudo chown $(CONTAINER_UID) \"$$imported\"" >&2; fi
+	fi
 	# Configuration: created once from the template, with a random secret; then only the host name is updated.
 	if [ ! -f "$(CONFIG)" ]; then
 	  mkdir -p "$$(dirname "$(CONFIG)")"

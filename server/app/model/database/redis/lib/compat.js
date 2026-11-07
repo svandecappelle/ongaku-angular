@@ -42,6 +42,10 @@ function transformReply(command, reply) {
 
 function parseCommand(name, args) {
 	args = Array.prototype.slice.call(args);
+	// An omitted optional callback arrives as a trailing undefined: it must not be sent as an argument
+	while (args.length && args[args.length - 1] === undefined) {
+		args.pop();
+	}
 	var callback = typeof args[args.length - 1] === 'function' ? args.pop() : null;
 	var command = name.toUpperCase();
 	return {

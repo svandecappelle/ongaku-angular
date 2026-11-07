@@ -8,6 +8,7 @@ toute l'installation.
 navigateur ──https──▶ nginx (443) ──http──▶ 127.0.0.1:3000 ──▶ conteneur ongaku ──▶ conteneur redis
                                                                    │
                                                                    └── /music (votre musique, lecture seule)
+                                                                         └── /music/Imported (imports des administrateurs, écriture)
 ```
 
 ## Prérequis
@@ -68,7 +69,13 @@ obligatoire** si le serveur est accessible depuis Internet.
 Le conteneur lit la musique et la configuration avec l'uid 1000 : le dossier
 de musique doit être lisible par tous (`chmod -R o+rX /srv/musique`), sinon
 `make app` le signale. La musique est montée en lecture seule ; les fichiers
-envoyés depuis l'application vont dans un volume Docker.
+envoyés par les utilisateurs vont dans un volume Docker (bibliothèque privée).
+
+Seul le sous-dossier `Imported` de la musique est monté en écriture : les
+administrateurs y importent des fichiers ou des archives (zip, tar, tar.gz)
+depuis **Administration › Library**, pour tous les utilisateurs. `make app` le
+crée et le donne à l'uid 1000 (lancé en root), ou indique la commande `chown`
+à exécuter.
 
 ### Ce que fait l'installeur à nginx
 

@@ -18,6 +18,8 @@ services:
       - ./config/application.yml:/app/server/config/application.yml:ro
       # The library is read only: uploads go to the users volume
       - ${MUSIC_DIR:?Set MUSIC_DIR to the folder of your music}:/music:ro
+      # … except its Imported folder, where the administrators import music (created by "make app")
+      - ${MUSIC_DIR}/Imported:/music/Imported
       - ongaku-users:/app/public/user
       - ongaku-covers:/app/public/artists-covers
 

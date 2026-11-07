@@ -10,6 +10,8 @@ uploader: false
 # Folders of the container scanned for music: docker-compose.yml mounts the
 # music folder of the host on /music
 library: [/music]
+# Folder of the library where the administrators import music (mounted writable)
+importFolder: /music/Imported
 audio: [mp3, wav, wma, ogg, flac]
 video: [mp4, webm, flv, ogv, mpg]
 defaultLanguage: fr

@@ -27,41 +27,49 @@ class UserRedisModel extends security {
                 logger.error("User: " + userData.username + " already exists");
                 return callback("already exists username");
             }
-
-            db.setObject('user:' + uid, userData, (err) => {
-
-                if (err) {
-                    return callback(err);
+            // The e-mail is the uid: another account with it would be overwritten
+            db.exists('user:' + uid, (err, emailUsed) => {
+                if (err || emailUsed) {
+                    logger.error("E-mail: " + uid + " already used");
+                    return callback(err || "already exists email");
                 }
-                db.setObjectField('username:uid', userData.username, uid);
 
-                if (userData.email !== undefined) {
-                    db.setObjectField('email:uid', userData.email, uid);
-                    if (parseInt(uid, 10) !== 1) {
-                        this.email.verify(uid, userData.email);
+                db.setObject('user:' + uid, userData, (err) => {
+
+                    if (err) {
+                        return callback(err);
                     }
-                }
-                db.incrObjectField('global', 'userCount');
-                groups.join('registered-users', uid);
+                    db.setObjectField('username:uid', userData.username, uid);
 
-                if (password) {
-                    this.hashPassword(password, (err, hash) => {
-                        if (err) {
-                            return callback(err);
+                    if (userData.email !== undefined) {
+                        db.setObjectField('email:uid', userData.email, uid);
+                        if (parseInt(uid, 10) !== 1) {
+                            this.email.verify(uid, userData.email);
                         }
+                    }
+                    db.incrObjectField('global', 'userCount');
+                    groups.join('registered-users', uid);
 
-                        this.setUserField(uid, 'password', hash);
+                    if (password) {
+                        this.hashPassword(password, (err, hash) => {
+                            if (err) {
+                                return callback(err);
+                            }
+
+                            this.setUserField(uid, 'password', hash);
+                            callback(null, uid);
+                        });
+                    } else {
                         callback(null, uid);
-                    });
-                } else {
-                    callback(null, uid);
-                }
+                    }
+                });
             });
         });
     };
 
     count (callback) {
-        db.getObjectField('global', 'userCount', callback);
+        // Counted from the accounts: the global userCount counter may be out of date
+        db.getObjectKeys('username:uid', (err, usernames) => callback(err, usernames ? usernames.length : 0));
     };
 
     getUserField (uid, field, callback) {
@@ -262,6 +270,71 @@ class UserRedisModel extends security {
                     timing = (diff[0] * 1e3 + diff[1] / 1e6).toFixed(1);
                 callback(null, {timing: timing, users: userdata});
             });
+        });
+    };
+
+    /**
+     * Every account (search() is capped to 10 results), for the administration.
+     */
+    listAll (callback) {
+        db.getObject('username:uid', (err, usernamesHash) => {
+            if (err) {
+                return callback(err);
+            }
+            var uids = Object.values(usernamesHash || {});
+            this.getMultipleUserFields(uids, ['username', 'email', 'banned', 'lastonline'], (err, usersData) => {
+                if (err) {
+                    return callback(err);
+                }
+                async.map(uids, (uid, next) => {
+                    var userData = usersData[uids.indexOf(uid)] || {};
+                    this.isAdministrator(uid, (err, isAdmin) => {
+                        next(err, {
+                            uid: uid,
+                            username: userData.username,
+                            email: userData.email,
+                            administrator: !!isAdmin,
+                            banned: parseInt(userData.banned, 10) === 1,
+                            lastonline: userData.lastonline ? parseInt(userData.lastonline, 10) : null
+                        });
+                    });
+                }, callback);
+            });
+        });
+    };
+
+    setPassword (uid, password, callback) {
+        this.hashPassword(password, (err, hash) => {
+            if (err) {
+                return callback(err);
+            }
+            this.setUserField(uid, 'password', hash, callback);
+        });
+    };
+
+    /**
+     * Delete an account and its data stored in the database (settings, library, playlists).
+     */
+    remove (uid, callback) {
+        db.getObjectFields('user:' + uid, ['username', 'email'], (err, userData) => {
+            if (err || !userData || !userData.username) {
+                return callback(err || new Error('No such user'));
+            }
+            var username = userData.username;
+            async.series([
+                (next) => db.getSetMembers(username + ':playlists', (err, playlists) => {
+                    if (err) {
+                        return next(err);
+                    }
+                    async.each(playlists || [], (name, done) => db.delete(username + ':playlist:' + name, done), next);
+                }),
+                (next) => db.deleteAll([username + ':playlists', username + ':library', 'settings:' + uid, 'user:' + uid], next),
+                (next) => db.deleteObjectField('username:uid', username, next),
+                (next) => userData.email ? db.deleteObjectField('email:uid', userData.email, next) : next(),
+                (next) => groups.leave('administrators', uid, () => next()),
+                (next) => groups.leave('registered-users', uid, () => next()),
+                (next) => db.decrObjectField('global', 'userCount', next)
+            ], (err) => callback(err, username));
         });
     };
 

@@ -1,10 +1,55 @@
-
 import { throwError as observableThrowError, Observable } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
 
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpEvent, HttpParams, HttpRequest } from '@angular/common/http';
+
+/** An account, as listed by the administration */
+export interface AdminUser {
+  uid: string;
+  username: string;
+  email: string;
+  administrator: boolean;
+  banned: boolean;
+  lastonline: number | null;
+  /** Bytes of the files the user uploaded */
+  storage: number;
+  /** The connected administrator */
+  self: boolean;
+}
+
+export interface NewUser {
+  username: string;
+  email: string;
+  password: string;
+  administrator: boolean;
+}
+
+export interface UserChanges {
+  password?: string;
+  administrator?: boolean;
+  banned?: boolean;
+}
+
+/** Result of an import, per uploaded file: the imported audio files or the error */
+export interface ImportResult {
+  file: string;
+  imported?: string[];
+  error?: string;
+}
+
+export interface ImportResponse {
+  files: ImportResult[];
+  /** started: the library is rescanned; busy: a scan was already running */
+  rescan: 'none' | 'started' | 'busy';
+}
+
+export interface ImportFolder {
+  folder: string;
+  writable: boolean;
+  scanning: boolean;
+}
 
 @Injectable()
 export class AdminService {
@@ -25,9 +70,37 @@ export class AdminService {
     return this.http.post('/api/upgrade/git/check', {}).pipe(map((data) => data))
       .pipe(catchError((error: any) => observableThrowError(error || 'Server error')));
   }
-  
+
   restart(): Observable<any> {
     return this.http.post('/api/admin/restart', {}).pipe(map((data) => data))
       .pipe(catchError((error: any) => observableThrowError(error || 'Server error')));
+  }
+
+  users(): Observable<AdminUser[]> {
+    return this.http.get<AdminUser[]>('/api/admin/users');
+  }
+
+  createUser(user: NewUser): Observable<unknown> {
+    return this.http.post('/api/admin/users', user);
+  }
+
+  updateUser(username: string, changes: UserChanges): Observable<unknown> {
+    return this.http.put(`/api/admin/users/${encodeURIComponent(username)}`, changes);
+  }
+
+  deleteUser(username: string, deleteFiles: boolean): Observable<unknown> {
+    return this.http.delete(`/api/admin/users/${encodeURIComponent(username)}`, { params: { files: String(deleteFiles) } });
+  }
+
+  importFolder(): Observable<ImportFolder> {
+    return this.http.get<ImportFolder>('/api/admin/library/import');
+  }
+
+  /** Upload one file (audio or archive) to the public library, in an optional sub folder */
+  importFile(file: File, folder: string): Observable<HttpEvent<ImportResponse>> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    const params = new HttpParams({ fromObject: folder ? { folder } : {} });
+    return this.http.request<ImportResponse>(new HttpRequest('POST', '/api/admin/library/import', formData, { params, reportProgress: true }));
   }
 }
