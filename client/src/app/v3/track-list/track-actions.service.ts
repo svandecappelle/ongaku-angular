@@ -5,6 +5,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Song } from '../../app-state';
 import { MetadatasComponent } from '../../metadatas/metadatas.component';
 import { PlaybackService } from '../../services/playback.service';
+import { MyLibraryService } from '../../services/my-library.service';
 
 /**
  * Selection and actions on the tracks of a page. Provided by each page
@@ -16,6 +17,7 @@ export class TrackActions {
   private readonly playback = inject(PlaybackService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly library = inject(MyLibraryService);
 
   /** Every track of the page, in display order */
   private readonly pageTracks = signal<Song[]>([]);
@@ -93,6 +95,26 @@ export class TrackActions {
   addToQueue(tracks: Song[]) {
     this.playback.append(this.withDetails(tracks));
     this.notify(tracks.length === 1 ? `“${tracks[0].title}” added to the queue` : `${tracks.length} tracks added to the queue`);
+    this.clear();
+  }
+
+  inLibrary(track: Song) {
+    return this.library.has(track);
+  }
+
+  allInLibrary(tracks: Song[]) {
+    return tracks.length > 0 && tracks.every((track) => this.library.has(track));
+  }
+
+  /** Adds the tracks to "My library", or removes them when they all are in it */
+  toggleLibrary(tracks: Song[]) {
+    const remove = this.allInLibrary(tracks);
+    const count = tracks.length === 1 ? `“${tracks[0].title}”` : `${tracks.length} tracks`;
+    (remove ? this.library.remove(tracks) : this.library.add(tracks)).subscribe({
+      next: () => this.snackBar.open(`${count} ${remove ? 'removed from' : 'added to'} your library`, 'Undo', { duration: 5000 })
+        .onAction().subscribe(() => (remove ? this.library.add(tracks) : this.library.remove(tracks)).subscribe()),
+      error: () => this.notify('Your library could not be updated'),
+    });
     this.clear();
   }
 

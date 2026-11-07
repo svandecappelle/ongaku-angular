@@ -1,10 +1,8 @@
 const express = require('express');
 const _ = require("underscore");
 const fs = require('fs');
-const os = require('os');
 const path = require("path");
 const async = require("async");
-const Busboy = require('busboy');
 const moment = require('moment');
 const nconf = require('nconf');
 const getFolderSize = require('get-folder-size').default;
@@ -375,30 +373,7 @@ router.post('/library/import', (req, res) => {
         return res.status(500).json({ message: `The import folder ${importFolder()} is not writable` });
     }
 
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ongaku-import-'));
-    const uploads = [];
-    const busboy = Busboy({ headers: req.headers });
-    busboy.on('file', (fieldname, file, { filename }) => {
-        if (!importer.isSupported(filename)) {
-            file.resume();
-            uploads.push(Promise.resolve({ file: filename, error: 'Unsupported file type' }));
-            return;
-        }
-        const tmpFile = path.join(tmpDir, `${uploads.length}`);
-        uploads.push(new Promise((resolve, reject) => {
-            file.pipe(fs.createWriteStream(tmpFile))
-                .on('finish', resolve)
-                .on('error', reject);
-        }).then(() => importer.import(tmpFile, filename, destination))
-            .then((imported) => ({ file: filename, imported: imported }))
-            .catch((err) => {
-                console.error(`Cannot import ${filename}`, err);
-                return { file: filename, error: err.message };
-            }));
-    });
-    busboy.on('close', async () => {
-        const results = await Promise.all(uploads);
-        fs.rmSync(tmpDir, { recursive: true, force: true });
+    importer.receive(req, destination).then((results) => {
         // The full rescan can be long: it runs in the background. A scan already running
         // may have passed the folder: the administrator reloads the library afterwards.
         let rescan = 'none';
@@ -410,7 +385,6 @@ router.post('/library/import', (req, res) => {
         }
         res.json({ message: 'ok', files: results, rescan: rescan });
     });
-    req.pipe(busboy);
 });
 
 module.exports = router;

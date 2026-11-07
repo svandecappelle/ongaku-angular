@@ -56,6 +56,15 @@
                 <mat-icon>playlist_add</mat-icon>
                 <span>Add to queue</span>
               </button>
+              <button mat-menu-item (click)="actions.toggleLibrary([track])">
+                @if (actions.inLibrary(track)) {
+                  <mat-icon>remove_circle_outline</mat-icon>
+                  <span>Remove from my library</span>
+                } @else {
+                  <mat-icon>library_add</mat-icon>
+                  <span>Add to my library</span>
+                }
+              </button>
               <mat-divider></mat-divider>
               <button mat-menu-item (click)="actions.details([track])">
                 <mat-icon>description</mat-icon>

@@ -8,6 +8,7 @@ const getFolderSize = require('get-folder-size').default;
 const getSize = (folder, callback) => getFolderSize.strict(folder).then((size) => callback(null, size), callback);
 
 const library = require("./../../middleware/library");
+const importer = require("./../../middleware/importer");
 const middleware = require("./../../middleware/middleware");
 const scanner = require("./../../middleware/scanner");
 
@@ -23,12 +24,14 @@ var router = express.Router();
 class Helpers {
 
     renderLibraryPage(username, req, res) {
+        // Private uploads are matched by the username: only for the user himself
+        const owner = middleware.isAuthenticated(req) && req.session.passport.user.username === username ? username : null;
         userlib.get(username, function (err, uids) {
             var libraryDatas = null;
             if (req.params.page === "all") {
-                libraryDatas = library.getUserLibrary(uids, null, null, username, req.params.search);
+                libraryDatas = library.getUserLibrary(uids, null, null, owner, req.params.search);
             } else {
-                libraryDatas = library.getUserLibrary(uids, req.params.page, 3, username, req.params.search);
+                libraryDatas = library.getUserLibrary(uids, req.params.page, 3, owner, req.params.search);
             }
 
             middleware.json(req, res, libraryDatas);
@@ -112,6 +115,145 @@ function sendProfile(req, res, username) {
         });
     });
 }
+
+// ---------- Uploaded files of the connected user ----------
+
+function uploadsRoot(username) {
+    const root = path.resolve(USERS_DIRECTORY, username, 'imported');
+    fs.mkdirSync(root, { recursive: true });
+    return root;
+}
+
+// Absolute path of a path relative to the uploads folder, null when it leaves it
+function insideUploads(username, relative) {
+    const root = uploadsRoot(username);
+    const target = path.resolve(root, String(relative || '.'));
+    return target === root || target.startsWith(root + path.sep) ? target : null;
+}
+
+// Rescan of the private library of a user; resolves when done (or after 30s: the scan
+// calls back only when the folder holds media)
+function rescanUser(username) {
+    return new Promise((resolve) => {
+        const timer = setTimeout(resolve, 30000);
+        library.addFolder({ path: path.resolve(USERS_DIRECTORY, username), username: username, private: true }, () => {
+            clearTimeout(timer);
+            resolve();
+        });
+    });
+}
+
+function withUploadsPath(req, res, callback) {
+    if (!middleware.isAuthenticated(req)) {
+        return res.status(403).json({ message: 'You need to be logged' });
+    }
+    const username = req.session.passport.user.username;
+    const target = insideUploads(username, req.query.path);
+    if (!target) {
+        return res.status(400).json({ message: 'Invalid path' });
+    }
+    callback(username, target, path.relative(uploadsRoot(username), target).split(path.sep).join('/'));
+}
+
+router.get('/files', (req, res) => {
+    withUploadsPath(req, res, (username, target, relative) => {
+        fs.readdir(target, { withFileTypes: true }, (err, entries) => {
+            if (err) {
+                return res.status(err.code === 'ENOENT' ? 404 : 500).json({ message: err.code === 'ENOENT' ? 'No such folder' : 'Internal server error' });
+            }
+            const files = entries.filter((entry) => !entry.name.startsWith('.')).map((entry) => {
+                const stat = fs.statSync(path.join(target, entry.name));
+                return {
+                    name: entry.name,
+                    type: entry.isDirectory() ? 'directory' : 'file',
+                    size: entry.isDirectory() ? null : stat.size,
+                    modified: stat.mtimeMs,
+                    audio: !entry.isDirectory() && importer.isAudio(entry.name)
+                };
+            });
+            res.json({ path: relative, files: _.sortBy(files, (file) => (file.type === 'directory' ? '0' : '1') + file.name.toLowerCase()) });
+        });
+    });
+});
+
+router.post('/files/folder', (req, res) => {
+    withUploadsPath(req, res, (username, target) => {
+        const name = String(req.body.name || '').trim();
+        if (!name || name.includes('/') || name.includes('\\') || name === '.' || name === '..' || name.startsWith('.')) {
+            return res.status(400).json({ message: 'Invalid folder name' });
+        }
+        fs.mkdir(path.join(target, name), (err) => {
+            if (err) {
+                return res.status(err.code === 'EEXIST' ? 409 : 500).json({ message: err.code === 'EEXIST' ? 'This folder already exists' : 'Internal server error' });
+            }
+            res.json({ message: 'created' });
+        });
+    });
+});
+
+router.delete('/files', (req, res) => {
+    withUploadsPath(req, res, (username, target, relative) => {
+        if (!relative) {
+            return res.status(400).json({ message: 'The uploads folder itself cannot be deleted' });
+        }
+        fs.rm(target, { recursive: true, force: true }, (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+            rescanUser(username).then(() => res.json({ message: 'deleted' }));
+        });
+    });
+});
+
+router.post('/files/upload', (req, res) => {
+    withUploadsPath(req, res, (username, target) => {
+        if (!fs.existsSync(target)) {
+            return res.status(404).json({ message: 'No such folder' });
+        }
+        importer.receive(req, target).then((results) => {
+            rescanUser(username).then(() => res.json({ message: 'ok', files: results }));
+        });
+    });
+});
+
+// Uids of the tracks the connected user added to his library
+router.get('/library/uids', (req, res) => {
+    if (!middleware.isAuthenticated(req)) {
+        return res.status(403).json({ message: 'You need to be logged' });
+    }
+    userlib.get(req.session.passport.user.username, (err, uids) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+        res.json(uids || []);
+    });
+});
+
+// Library of the connected user (added tracks and private uploads), by album
+router.get('/library/content', (req, res) => {
+    if (!middleware.isAuthenticated(req)) {
+        return res.status(403).json({ message: 'You need to be logged' });
+    }
+    const username = req.session.passport.user.username;
+    userlib.get(username, (err, uids) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+        const albums = [];
+        library.getUserLibrary(uids || [], null, null, username).forEach((artist) => {
+            artist.albums.forEach((album) => albums.push({
+                artist: artist.artist,
+                title: album.title,
+                cover: album.cover,
+                tracks: album.tracks
+            }));
+        });
+        res.json({ albums: albums, uids: uids || [] });
+    });
+});
 
 router.get('/me', (req, res) => {
     sendProfile(req, res, middleware.isAuthenticated(req) ? req.session.passport.user.username : null);
@@ -209,36 +351,26 @@ router.get('/image/:type', (req, res) => {
     });
 });
 
-router.post('/library/add', (req, res) => {
-    var username = req.session.passport.user.username,
-        uids = req.body.elements;
-    console.debug("append to user lib: ".concat(username).concat(" -> ").concat(uids));
-
-    async.each(uids, (uid, next) => {
-        userlib.append(username, uid, () => {
-            console.debug("Appended to list: " + uid);
-            next();
-        });
-    }, () => {
-        console.debug("All elements added");
+function changeLibrary(req, res, change) {
+    if (!middleware.isAuthenticated(req)) {
+        return res.status(403).json({ message: 'You need to be logged' });
+    }
+    const username = req.session.passport.user.username;
+    const uids = req.body.elements;
+    if (!Array.isArray(uids) || !uids.every((uid) => typeof uid === 'string')) {
+        return res.status(400).json({ message: 'elements must be a list of track uids' });
+    }
+    async.each(uids, (uid, next) => change(username, uid, () => next()), () => {
+        res.send({ message: "ok" });
     });
-    res.send({ message: "ok" });
+}
+
+router.post('/library/add', (req, res) => {
+    changeLibrary(req, res, (username, uid, next) => userlib.append(username, uid, next));
 });
 
 router.post('/library/remove', (req, res) => {
-    var username = req.session.passport.user.username,
-        uids = req.body.elements;
-    console.debug("remove to user lib: ".concat(username).concat(" -> ").concat(uids));
-
-    async.each(uids, (uid, next) => {
-        userlib.remove(username, uid, () => {
-            console.debug("Remove from list: " + uid);
-            next();
-        });
-    }, () => {
-        console.debug("All elements removed");
-    });
-    res.send({ message: "ok" });
+    changeLibrary(req, res, (username, uid, next) => userlib.remove(username, uid, next));
 });
 
 

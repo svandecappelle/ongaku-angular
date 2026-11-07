@@ -16,7 +16,6 @@ import { AlbumComponent } from './artist/album/album.component';
 import { UsersComponent } from './users/users.component';
 import { RadiosComponent } from './radios/radios.component';
 import { LibraryComponent } from './library/library.component';
-import { UploadComponent } from './upload/upload.component';
 import { ReloadComponent } from './library/reload/reload.component';
 import { UserComponent } from './user/user.component';
 import { AppearanceComponent } from './user/appearance/appearance.component';
@@ -35,7 +34,8 @@ const routes: Routes = [
   { path: 'radios', component: RadiosComponent, canActivate: [AuthGuard]},
   { path: 'my-library/:folder', component: LibraryComponent, canActivate: [AuthGuard]},
   { path: 'my-library', component: LibraryComponent, canActivate: [AuthGuard]},
-  { path: 'upload', component: UploadComponent, canActivate: [AuthGuard]},
+  // The uploads are a tab of My library
+  { path: 'upload', redirectTo: '/my-library?tab=uploads' },
   { path: 'reload', component: ReloadComponent, canActivate: [AuthGuard] },
   { path: 'profile', component: UserComponent, canActivate: [AuthGuard] },
   { path: 'profile/appearance', component: AppearanceComponent, canActivate: [AuthGuard] },

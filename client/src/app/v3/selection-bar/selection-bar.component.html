@@ -14,6 +14,12 @@
         <mat-icon aria-hidden="true">playlist_add</mat-icon>
         <span class="label">Add to queue</span>
       </button>
+      @let allInLibrary = actions.allInLibrary(selected);
+      <button type="button" class="icon" (click)="actions.toggleLibrary(selected)"
+        [attr.aria-label]="allInLibrary ? 'Remove from my library' : 'Add to my library'"
+        [matTooltip]="allInLibrary ? 'Remove from my library' : 'Add to my library'">
+        <mat-icon>{{ allInLibrary ? 'remove_circle_outline' : 'library_add' }}</mat-icon>
+      </button>
       <button type="button" class="icon" (click)="actions.details(selected)" aria-label="Details and tags" matTooltip="Details and tags">
         <mat-icon>description</mat-icon>
       </button>

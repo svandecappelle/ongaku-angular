@@ -57,7 +57,7 @@
         <span class="muted">Check the spelling, or search for an artist, an album or a title.</span>
       } @else {
         <h2>Your library is empty</h2>
-        <span class="muted">Add music from the <a routerLink="/upload">upload page</a> or the administration.</span>
+        <span class="muted">Add music from the <a routerLink="/my-library" [queryParams]="{ tab: 'uploads' }">upload page</a> or the administration.</span>
       }
     </div>
   }

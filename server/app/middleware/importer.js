@@ -1,5 +1,7 @@
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
+const Busboy = require('busboy');
 const tar = require('tar');
 const yauzl = require('yauzl');
 const nconf = require('nconf');
@@ -49,6 +51,41 @@ class Importer {
         await fs.promises.copyFile(source, path.join(destination, name));
         return [name];
     }
+  }
+
+  /**
+   * Receive the files of a multipart request and import each of them into `destination`.
+   * Resolves with one result per file: { file, imported } or { file, error }.
+   */
+  receive(req, destination) {
+    return new Promise((resolve) => {
+      // Each file is buffered in a temporary folder, then unpacked (archives) or copied (audio files)
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ongaku-upload-'));
+      const uploads = [];
+      const busboy = Busboy({ headers: req.headers });
+      busboy.on('file', (fieldname, file, { filename }) => {
+        if (!this.isSupported(filename)) {
+          file.resume();
+          uploads.push(Promise.resolve({ file: filename, error: 'Unsupported file type' }));
+          return;
+        }
+        const tmpFile = path.join(tmpDir, `${uploads.length}`);
+        uploads.push(new Promise((done, fail) => {
+          file.pipe(fs.createWriteStream(tmpFile)).on('finish', done).on('error', fail);
+        }).then(() => this.import(tmpFile, filename, destination))
+          .then((imported) => ({ file: filename, imported: imported }))
+          .catch((err) => {
+            logger.error(`Cannot import ${filename}`, err);
+            return { file: filename, error: err.message };
+          }));
+      });
+      busboy.on('close', async () => {
+        const results = await Promise.all(uploads);
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+        resolve(results);
+      });
+      req.pipe(busboy);
+    });
   }
 
   async extractTar(source, destination) {

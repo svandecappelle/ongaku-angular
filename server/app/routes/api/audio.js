@@ -5,11 +5,9 @@ const logger = require('log4js').getLogger("UsersRoutes");
 const nconf = require("nconf");
 const _ = require("underscore");
 const path = require("path");
-const Busboy = require('busboy');
 const ffmetadata = require("ffmetadata");
 const https = require('https');
 const fs = require('fs');
-const os = require('os');
 const async = require("async");
 const crypto = require('crypto');
 
@@ -661,32 +659,7 @@ router.post(['/upload', '/upload/:folder'], (req, res) => {
             folderReading = path.join(folderReading, folder);
         }
 
-        // Each file is buffered in a temporary folder, then unpacked (archives) or copied (audio files)
-        const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ongaku-upload-'));
-        const uploads = [];
-        var busboy = Busboy({ headers: req.headers });
-        busboy.on('file', (fieldname, file, { filename }) => {
-            if (!importer.isSupported(filename)) {
-                file.resume();
-                uploads.push(Promise.resolve({ file: filename, error: 'Unsupported file type' }));
-                return;
-            }
-            const tmpFile = path.join(tmpDir, `${uploads.length}`);
-            uploads.push(new Promise((resolve, reject) => {
-                file.pipe(fs.createWriteStream(tmpFile))
-                    .on('finish', resolve)
-                    .on('error', reject);
-            }).then(() => importer.import(tmpFile, filename, folderReading))
-                .then((imported) => ({ file: filename, imported: imported }))
-                .catch((err) => {
-                    logger.error(`Cannot import ${filename}`, err);
-                    return { file: filename, error: err.message };
-                }));
-        });
-        busboy.on('close', async () => {
-            const results = await Promise.all(uploads);
-            fs.rmSync(tmpDir, { recursive: true, force: true });
-
+        importer.receive(req, folderReading).then((results) => {
             library.addFolder({
                 path: path.join(DEFAULT_USERS__DIRECTORY, username),
                 username: username,
@@ -698,10 +671,7 @@ router.post(['/upload', '/upload/:folder'], (req, res) => {
                     files: results
                 });
             });
-
         });
-
-        req.pipe(busboy);
     }
     /*} else {
         res.status(403).json({ message: 'Not allowed.' });

@@ -1,0 +1,107 @@
+<section class="panel" aria-labelledby="uploads-title">
+  <div class="panel-row">
+    <div class="panel-header">
+      <h2 id="uploads-title">Uploaded files</h2>
+      <span class="muted">Only you can play the music you upload. Audio files (mp3, ogg, flac, wav, wma) or archives (zip, tar, tar.gz).</span>
+    </div>
+    <button mat-stroked-button type="button" (click)="newFolder.set('')" [disabled]="newFolder() !== null">
+      <mat-icon>create_new_folder</mat-icon>
+      New folder
+    </button>
+  </div>
+
+  <nav class="crumbs" aria-label="Folder">
+    <button type="button" class="crumb" (click)="navigate.emit('')" [attr.aria-current]="!path() ? 'page' : null">
+      <mat-icon>home</mat-icon>
+      <span>Uploads</span>
+    </button>
+    @for (crumb of crumbs(); track crumb.path; let last = $last) {
+      <mat-icon class="separator" aria-hidden="true">chevron_right</mat-icon>
+      <button type="button" class="crumb" (click)="navigate.emit(crumb.path)" [attr.aria-current]="last ? 'page' : null">{{ crumb.name }}</button>
+    }
+  </nav>
+
+  @if (newFolder() !== null) {
+    <form class="new-folder" (ngSubmit)="createFolder()">
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-label>Folder name</mat-label>
+        <input matInput name="folder" [ngModel]="newFolder()" (ngModelChange)="newFolder.set($event)" cdkFocusInitial autocomplete="off"
+          (keydown.escape)="newFolder.set(null)">
+      </mat-form-field>
+      <button mat-flat-button type="submit">Create</button>
+      <button mat-button type="button" (click)="newFolder.set(null)">Cancel</button>
+    </form>
+  }
+
+  @if (failed()) {
+    <div class="empty">
+      <mat-icon>error_outline</mat-icon>
+      <span>This folder could not be opened.</span>
+      <button mat-button type="button" (click)="navigate.emit('')">Back to the uploads</button>
+    </div>
+  } @else if (files() === null) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  } @else if (files()!.length) {
+    <ul class="files">
+      @for (file of files(); track file.name) {
+        <li class="file" [class.directory]="file.type === 'directory'">
+          <button type="button" class="file-main" (click)="open(file)" [disabled]="file.type !== 'directory'"
+            [attr.aria-label]="file.type === 'directory' ? 'Open the folder ' + file.name : null">
+            <mat-icon class="file-icon">{{ icon(file) }}</mat-icon>
+            <span class="file-name">{{ file.name }}</span>
+            <span class="file-size muted small">{{ formatSize(file.size) }}</span>
+            <span class="file-date muted small">{{ file.modified | date: 'mediumDate' }}</span>
+          </button>
+          <button mat-icon-button type="button" (click)="remove(file)" [attr.aria-label]="'Delete ' + file.name" matTooltip="Delete">
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+        </li>
+      }
+    </ul>
+  } @else {
+    <div class="empty muted">
+      <mat-icon>folder_open</mat-icon>
+      <span>This folder is empty.</span>
+    </div>
+  }
+
+  <label class="dropzone" [class.dragging]="dragging()"
+    (dragover)="$event.preventDefault(); dragging.set(true)" (dragleave)="dragging.set(false)" (drop)="onDrop($event)">
+    <mat-icon>cloud_upload</mat-icon>
+    <span><strong>Drop files here</strong> or click to choose · they go to <strong>{{ path() || 'Uploads' }}</strong></span>
+    <input type="file" multiple class="visually-hidden"
+      accept=".zip,.tar,.tar.gz,.tgz,.mp3,.ogg,.flac,.wav,.wma,application/zip,application/gzip,application/x-tar,audio/*"
+      (change)="addFiles($any($event.target).files); $any($event.target).value = ''">
+  </label>
+
+  @if (items().length) {
+    <ul class="uploads">
+      @for (item of items(); track item) {
+        <li class="upload" [class.error]="item.state === 'error'">
+          <mat-icon class="state-icon">
+            @switch (item.state) {
+              @case ('done') { check_circle }
+              @case ('error') { error }
+              @case ('uploading') { cloud_upload }
+              @default { schedule }
+            }
+          </mat-icon>
+          <div class="upload-body">
+            <span class="file-name">{{ item.file.name }} <span class="muted small">{{ formatSize(item.file.size) }}</span></span>
+            @if (item.state === 'uploading') {
+              <mat-progress-bar [mode]="item.progress < 100 ? 'determinate' : 'indeterminate'" [value]="item.progress"></mat-progress-bar>
+            }
+            @if (item.result; as result) {
+              <span class="small" [class.muted]="!result.error">
+                {{ result.error ? result.error : (result.imported?.length ?? 0) + ' audio file(s) added' }}
+              </span>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+    <div class="actions">
+      <button mat-button type="button" (click)="clearFinished()" [disabled]="uploading()">Clear the list</button>
+    </div>
+  }
+</section>

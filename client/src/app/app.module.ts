@@ -50,7 +50,6 @@ import { MetadatasComponent } from './metadatas/metadatas.component';
 import { SearchComponent } from './search/search.component';
 import { ArtistComponent } from './artist';
 import { AlbumComponent } from './artist/album/';
-import { LibraryComponent } from './library/library.component';
 import { RadiosComponent } from './radios/radios.component';
 
 import { UsersService } from './users';
@@ -75,7 +74,6 @@ import { ShellComponent } from './v3/shell/shell.component';
         SearchComponent,
         ArtistComponent,
         AlbumComponent,
-        LibraryComponent,
         RadiosComponent,
         ReloadComponent
     ],
