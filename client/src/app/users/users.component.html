@@ -1,19 +1,74 @@
-<div class="content">
-  <mat-grid-list cols="7">
-    @for (user of users; track user) {
-      <mat-grid-tile>
-        <a class="user" routerLink='/profile/{{user.username}}'>
-          @if (user) {
-            <mat-card appearance="outlined" class="user" [style.backgroundImage]="'url(/static' + user.avatar + ')'">
-              <mat-card-header>
-                <mat-card-title>{{user.username}}</mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-              </mat-card-content>
-            </mat-card>
-          }
-        </a>
-      </mat-grid-tile>
+<div class="users">
+  <header class="page-header">
+    <span class="eyebrow">Community</span>
+    <h1>Users</h1>
+    <p class="muted">
+      @if (users(); as list) {
+        {{ list.length }} member{{ list.length === 1 ? '' : 's' }} on this server.
+      } @else if (!failed()) {
+        Loading…
+      }
+    </p>
+  </header>
+
+  @if (failed()) {
+    <div class="state">
+      <mat-icon class="state-icon">cloud_off</mat-icon>
+      <h2>The users could not be loaded</h2>
+      <button mat-stroked-button type="button" (click)="load()">Retry</button>
+    </div>
+  } @else if (users() === null) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  } @else {
+    <div class="toolbar">
+      <mat-form-field class="search" subscriptSizing="dynamic">
+        <mat-icon matPrefix>search</mat-icon>
+        <mat-label>Search a user</mat-label>
+        <input matInput [ngModel]="filter()" (ngModelChange)="filter.set($event)">
+      </mat-form-field>
+      <mat-button-toggle-group [value]="sort()" (change)="sort.set($event.value)" aria-label="Sort">
+        <mat-button-toggle value="name">Name</mat-button-toggle>
+        <mat-button-toggle value="tracks">Largest libraries</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    @if (visible().length) {
+      <ul class="grid">
+        @for (user of visible(); track user.username) {
+          <li>
+            <a class="card" [routerLink]="['/profile', user.username]" [class.me]="user.username === me">
+              <span class="banner" aria-hidden="true">
+                <img [src]="'/static/user/' + user.username + '/cover'" alt="" loading="lazy" (error)="$any($event.target).remove()">
+              </span>
+              <span class="avatar" aria-hidden="true">
+                {{ user.username.charAt(0).toUpperCase() }}
+                <img [src]="'/static/user/' + user.username + '/avatar'" alt="" loading="lazy" (error)="$any($event.target).remove()">
+              </span>
+              <span class="body">
+                <span class="name">
+                  {{ user.username }}
+                  @if (user.username === me) {
+                    <span class="muted small">(you)</span>
+                  }
+                </span>
+                @if (user.administrator) {
+                  <span class="badge">Administrator</span>
+                }
+                <span class="stats muted small">
+                  <span><mat-icon>music_note</mat-icon>{{ user.tracks }} track{{ user.tracks === 1 ? '' : 's' }}</span>
+                  <span><mat-icon>queue_music</mat-icon>{{ user.playlists }} playlist{{ user.playlists === 1 ? '' : 's' }}</span>
+                </span>
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="state">
+        <mat-icon class="state-icon">person_outline</mat-icon>
+        <h2>No user matches “{{ filter() }}”</h2>
+        <button mat-button type="button" (click)="filter.set('')">Clear the search</button>
+      </div>
     }
-  </mat-grid-list>
+  }
 </div>

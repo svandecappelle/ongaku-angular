@@ -303,6 +303,27 @@ class UserRedisModel extends security {
         });
     };
 
+    /**
+     * The enabled accounts with public fields only (no e-mail, which is the uid, nor settings).
+     */
+    listPublic (callback) {
+        this.listAll((err, users) => {
+            if (err) {
+                return callback(err);
+            }
+            async.map(users.filter((userData) => !userData.banned && userData.username), (userData, next) => {
+                db.setsCount([userData.username + ':library', userData.username + ':playlists'], (err, counts) => {
+                    next(err, {
+                        username: userData.username,
+                        administrator: userData.administrator,
+                        tracks: counts ? parseInt(counts[0], 10) || 0 : 0,
+                        playlists: counts ? parseInt(counts[1], 10) || 0 : 0
+                    });
+                });
+            }, callback);
+        });
+    };
+
     setPassword (uid, password, callback) {
         this.hashPassword(password, (err, hash) => {
             if (err) {

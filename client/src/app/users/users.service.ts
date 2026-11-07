@@ -1,6 +1,4 @@
-
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 
 import { HttpClient } from '@angular/common/http';
@@ -12,9 +10,8 @@ export class UsersService {
 
   constructor(private http: HttpClient) { }
 
-
   get(): Observable<User[]> {
-    return this.http.get(`/api/users/list`).pipe(map((page: User[]) => page));
+    return this.http.get<User[]>(`/api/users/list`);
   }
 
 }

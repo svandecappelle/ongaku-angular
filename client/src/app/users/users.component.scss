@@ -1,57 +1,236 @@
-img.user-avatar {
-    height: 100%;
-    position: absolute;
-    left: 0;
-    right: 0;
-    text-align: center;
+:host {
+  display: block;
+  color: var(--ongaku-text);
 }
 
-.content {
-    padding: 1em;
-    padding-bottom: 1em;
-    padding-bottom: 4em;
+.users {
+  max-width: 1240px;
+  margin: 0 auto;
+  // The fixed header is cleared by the notifications container (64px margin)
+  padding: 24px 24px 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
 
-    a.user {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        margin: 0.5em;
+.muted {
+  color: var(--ongaku-muted);
+}
 
-        &:hover {
-            /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
-            mat-card {
-                transition: all linear 150ms;
-                margin-top: -0.5em;
-            }
-        }
-        /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
-        /* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
-        mat-card {
-            width: 100%;
-            height: 100%;
-            padding: 0;
-            background-size: cover;
-            background-position: center;
-            transition: all linear 150ms;
+.small {
+  font-size: 13px;
+  font-weight: normal;
+}
 
-            .mat-mdc-card-header {
-                position: relative;
-            }
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ongaku-accent);
+}
 
-            .mat-mdc-card-title {
-                position: absolute;
-                z-index: 1;
-                top: 0;
-                left: 0;
-                right: 0;
-                padding: 0.5em;
-                background-color: color-mix(in srgb, var(--ongaku-bg) 70%, transparent);
-                color: var(--ongaku-text);
-                font-size: 1.5em;
-                text-align: center;
-            }
-        }
+// Opaque: the profile background image may be busy
+.page-header {
+  padding: 24px 28px;
+  border-radius: var(--ongaku-radius-xl);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: color-mix(in srgb, var(--ongaku-accent) 12%, var(--ongaku-surface));
+  border: 1px solid var(--ongaku-border);
+  h1 {
+    margin: 0;
+    font-size: 40px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  p {
+    margin: 0;
+  }
+}
+
+.toolbar {
+  padding: 12px 16px;
+  border-radius: var(--ongaku-radius-lg);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--ongaku-surface);
+  border: 1px solid var(--ongaku-border);
+}
+
+.search {
+  width: min(100%, 320px);
+}
+
+.grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--ongaku-radius-lg);
+  display: flex;
+  flex-direction: column;
+  color: inherit;
+  text-decoration: none;
+  background: var(--ongaku-surface);
+  border: 1px solid var(--ongaku-border);
+  transition: transform .15s, border-color .15s, box-shadow .15s;
+  &:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--ongaku-accent) 50%, var(--ongaku-border));
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .25);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--ongaku-accent);
+    outline-offset: 2px;
+  }
+  &.me {
+    border-color: var(--ongaku-accent);
+  }
+}
+
+// The cover of the profile, over a gradient when there is none
+.banner {
+  position: relative;
+  height: 88px;
+  flex: none;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ongaku-accent) 45%, var(--ongaku-surface-2)), var(--ongaku-surface-2));
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+// Initial of the name, covered by the avatar when it loads
+.avatar {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 16px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--ongaku-accent);
+  background: color-mix(in srgb, var(--ongaku-accent) 16%, var(--ongaku-surface-2));
+  border: 3px solid var(--ongaku-surface);
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.body {
+  padding: 8px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ongaku-accent);
+  background: color-mix(in srgb, var(--ongaku-accent) 14%, transparent);
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  mat-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+  }
+}
+
+.state {
+  min-height: 280px;
+  padding: 24px;
+  border-radius: var(--ongaku-radius-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  background: var(--ongaku-surface);
+  border: 1px solid var(--ongaku-border);
+  h2 {
+    margin: 0;
+    font-size: 20px;
+  }
+  .state-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 48px;
+    color: var(--ongaku-muted);
+  }
+}
+
+@media (max-width: 800px) {
+  .users {
+    padding: 16px 16px 120px;
+  }
+  .page-header {
+    padding: 20px;
+    h1 {
+      font-size: 32px;
     }
+  }
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  .search {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+    &:hover {
+      transform: none;
+    }
+  }
 }
