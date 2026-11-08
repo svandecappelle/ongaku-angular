@@ -144,6 +144,7 @@ Sans nginx, pour un essai : `make app MUSIC_DIR=…`, puis depuis votre poste
 | `redis-data` | Base Redis : comptes, playlists, statistiques, réglages et sessions (on reste connecté après un redémarrage). |
 | `ongaku-users` | Avatars, fonds d'écran et fichiers envoyés par les utilisateurs. |
 | `ongaku-covers` | Photos d'artistes enregistrées. |
+| `ongaku-lyrics` | Paroles ajoutées par les administrateurs. |
 
 ```sh
 docker compose exec redis redis-cli BGSAVE

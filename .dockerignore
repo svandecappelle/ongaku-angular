@@ -15,6 +15,7 @@ logs
 # Local data and secrets
 public/user
 public/artists-covers
+public/lyrics
 server/certificate
 config/
 deploy

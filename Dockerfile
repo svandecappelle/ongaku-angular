@@ -44,14 +44,14 @@ COPY --from=client /build/client/dist ./client/dist
 # index.html loads moment from /node_modules
 COPY --from=client /build/client/node_modules/moment/min ./client/node_modules/moment/min
 
-# Written at runtime: user images and uploads, artist pictures
-RUN mkdir -p public/user public/artists-covers \
+# Written at runtime: user images and uploads, artist pictures, lyrics
+RUN mkdir -p public/user public/artists-covers public/lyrics \
   && chown -R node:node public
 USER node
 
 # Port of server/config/config.yml for NODE_ENV=production
 EXPOSE 3000
-VOLUME ["/app/public/user", "/app/public/artists-covers"]
+VOLUME ["/app/public/user", "/app/public/artists-covers", "/app/public/lyrics"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s \
   CMD node -e "fetch('http://127.0.0.1:3000/api/auth').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"

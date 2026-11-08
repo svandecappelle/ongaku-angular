@@ -284,10 +284,22 @@
     text-transform: uppercase;
     color: var(--ongaku-muted);
   }
-  .header-spacer {
-    width: 48px;
+  // Balances the hide button so that the title stays centred
+  .header-actions {
+    min-width: 48px;
     flex: none;
+    display: flex;
+    justify-content: flex-end;
+    .active {
+      color: var(--ongaku-accent);
+    }
   }
+}
+
+// Replaces the cover: same footprint, so that the controls do not move
+.sheet-lyrics {
+  width: 100%;
+  aspect-ratio: 1;
 }
 
 .sheet-cover {

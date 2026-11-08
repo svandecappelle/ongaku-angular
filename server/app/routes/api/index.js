@@ -9,6 +9,7 @@ const uploader = require('./uploader');
 const playlist = require('./playlist');
 const likes = require('./likes');
 const tracks = require('./tracks');
+const lyrics = require('./lyrics');
 const statistics = require('./statistics');
 
 
@@ -17,6 +18,7 @@ router.use('/audio', audio);
 router.use('/playlist', playlist);
 router.use('/likes', likes);
 router.use('/tracks', tracks);
+router.use('/lyrics', lyrics);
 router.use('/downloader', downloader);
 router.use('/uploader', uploader);
 router.use('/statistics', statistics);

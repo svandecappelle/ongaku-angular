@@ -11,6 +11,7 @@ import { LikesService } from '../../services/likes.service';
 import { AuthenticationService } from '../../services/authentication.service';
 import { TracksService } from '../../services/tracks.service';
 import { DeleteTracksDialogComponent } from './delete-tracks-dialog.component';
+import { LyricsEditorDialogComponent } from '../lyrics/lyrics-editor-dialog.component';
 
 /**
  * Selection and actions on the tracks of a page. Provided by each page
@@ -155,6 +156,19 @@ export class TrackActions {
       this.notify(`${tracks.length} tracks ${unlike ? 'removed from' : 'added to'} your liked tracks`);
       this.clear();
     }
+  }
+
+  isAdministrator() {
+    return this.administrator();
+  }
+
+  /** Lyrics editor, for the administrators */
+  editLyrics(track: Song) {
+    this.dialog.open(LyricsEditorDialogComponent, { data: track, autoFocus: 'dialog' }).afterClosed().subscribe((lyrics) => {
+      if (lyrics) {
+        this.notify(lyrics.lrc ? 'Lyrics saved' : 'Lyrics removed');
+      }
+    });
   }
 
   /** The server checks it again: administrators delete any track, users their own uploads */

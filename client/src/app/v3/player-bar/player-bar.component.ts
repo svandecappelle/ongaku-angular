@@ -1,10 +1,19 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { MatDialog } from '@angular/material/dialog';
+import { of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { A11yModule } from '@angular/cdk/a11y';
 import { RouterLink } from '@angular/router';
 
 import { MaterialModule } from '../../modules/material.module';
 import { PlaybackService } from '../../services/playback.service';
 import { LikesService } from '../../services/likes.service';
+import { LyricsService } from '../../services/lyrics.service';
+import { AuthenticationService } from '../../services/authentication.service';
+import { LyricsViewComponent } from '../lyrics/lyrics-view.component';
+import { LyricsEditorDialogComponent } from '../lyrics/lyrics-editor-dialog.component';
+import { parseLrc } from '../lyrics/lrc';
 import { Song } from '../../app-state';
 import { formatTime } from '../format-time';
 import { albumLink } from '../library';
@@ -14,7 +23,7 @@ import { albumLink } from '../library';
   templateUrl: './player-bar.component.html',
   styleUrls: ['./player-bar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialModule, A11yModule, RouterLink],
+  imports: [MaterialModule, A11yModule, RouterLink, LyricsViewComponent],
   host: {
     '[class.visible]': 'playback.started()',
     '[class.expanded]': 'expanded()',
@@ -23,6 +32,20 @@ import { albumLink } from '../library';
 export class PlayerBarComponent {
   readonly playback = inject(PlaybackService);
   readonly likes = inject(LikesService);
+  private readonly lyricsService = inject(LyricsService);
+  private readonly dialog = inject(MatDialog);
+  readonly administrator = toSignal(inject(AuthenticationService).isAdministrator(), { initialValue: false });
+
+  /** Lyrics of the current track, null when it has none */
+  readonly lyrics = toSignal(
+    toObservable(computed(() => ({ uid: this.playback.current()?.uid, version: this.lyricsService.version() }))).pipe(
+      switchMap(({ uid }) => (uid ? this.lyricsService.get(String(uid)).pipe(map((lyrics) => (lyrics.lrc ? parseLrc(lyrics.lrc) : null))) : of(null))),
+      map((lyrics) => (lyrics?.lines.length ? lyrics : null)),
+    ),
+    { initialValue: null },
+  );
+  /** The full-screen player shows the lyrics instead of the cover */
+  readonly showLyrics = signal(false);
 
   readonly queueOpen = input(false);
   readonly toggleQueue = output<void>();
@@ -42,6 +65,19 @@ export class PlayerBarComponent {
 
   toggleLike(track: Song) {
     (this.likes.has(track) ? this.likes.unlike([track]) : this.likes.like([track])).subscribe();
+  }
+
+  openLyrics() {
+    this.showLyrics.set(true);
+    this.expanded.set(true);
+  }
+
+  editLyrics(track: Song) {
+    this.dialog.open(LyricsEditorDialogComponent, { data: track, autoFocus: 'dialog' }).afterClosed().subscribe((lyrics) => {
+      if (lyrics) {
+        this.showLyrics.set(!!lyrics.lrc);
+      }
+    });
   }
 
   openQueue() {

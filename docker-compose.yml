@@ -22,6 +22,7 @@ services:
       - ${MUSIC_DIR}/Imported:/music/Imported
       - ongaku-users:/app/public/user
       - ongaku-covers:/app/public/artists-covers
+      - ongaku-lyrics:/app/public/lyrics
 
   redis:
     image: redis:7-alpine
@@ -43,4 +44,5 @@ services:
 volumes:
   ongaku-users:
   ongaku-covers:
+  ongaku-lyrics:
   redis-data:

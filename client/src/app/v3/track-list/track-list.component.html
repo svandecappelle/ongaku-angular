@@ -96,6 +96,12 @@
                 <mat-icon>description</mat-icon>
                 <span>Details and tags…</span>
               </button>
+              @if (actions.isAdministrator()) {
+                <button mat-menu-item (click)="actions.editLyrics(track)">
+                  <mat-icon>subject</mat-icon>
+                  <span>Lyrics…</span>
+                </button>
+              }
               @if (actions.canDelete(track)) {
                 <button mat-menu-item class="danger" (click)="actions.deleteTracks([track])">
                   <mat-icon>delete_forever</mat-icon>

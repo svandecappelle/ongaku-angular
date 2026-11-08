@@ -58,6 +58,7 @@ typings/
 .env
 
 public/user
+public/lyrics
 
 
 # Local configuration of docker-compose.yml (secret, API keys)

@@ -66,7 +66,8 @@ class Server {
       next();
     });
     app.use(bodyParser.urlencoded({ extended: true }));
-    app.use(bodyParser.json());
+    // Room for lyrics (256 KB) and long playlists (5000 uids)
+    app.use(bodyParser.json({ limit: '1mb' }));
     app.use(errorhandler());
     app.use(cookieParser());
     if (app.get('env') === 'production') {

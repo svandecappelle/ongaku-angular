@@ -43,6 +43,11 @@
   </div>
 
   <div class="extras">
+    @if (lyrics()) {
+      <button mat-icon-button type="button" class="lyrics-button" (click)="openLyrics()" aria-label="Lyrics" matTooltip="Lyrics">
+        <mat-icon>subject</mat-icon>
+      </button>
+    }
     @if (playback.current(); as track) {
       @let liked = likes.has(track);
       <button mat-icon-button type="button" class="like" [class.liked]="liked" (click)="toggleLike(track)"
@@ -75,13 +80,30 @@
           <mat-icon>keyboard_arrow_down</mat-icon>
         </button>
         <span class="eyebrow">{{ track.album ? 'Playing from ' + track.album : 'Now playing' }}</span>
-        <span class="header-spacer"></span>
+        <span class="header-actions">
+          @if (lyrics()) {
+            <button mat-icon-button type="button" [class.active]="showLyrics()" (click)="showLyrics.set(!showLyrics())"
+              [attr.aria-pressed]="showLyrics()" aria-label="Lyrics" matTooltip="Lyrics">
+              <mat-icon>subject</mat-icon>
+            </button>
+          }
+          @if (administrator()) {
+            <button mat-icon-button type="button" (click)="editLyrics(track)" [attr.aria-label]="(lyrics() ? 'Edit' : 'Add') + ' the lyrics'"
+              [matTooltip]="lyrics() ? 'Edit the lyrics' : 'Add lyrics'">
+              <mat-icon>{{ lyrics() ? 'edit' : 'playlist_add' }}</mat-icon>
+            </button>
+          }
+        </span>
       </header>
 
-      <span class="sheet-cover">
-        <mat-icon aria-hidden="true">album</mat-icon>
-        <img [src]="cover(track.uid)" alt="" (error)="$any($event.target).hidden = true">
-      </span>
+      @if (showLyrics() && lyrics(); as lyrics) {
+        <app-lyrics-view class="sheet-lyrics" [lyrics]="lyrics"></app-lyrics-view>
+      } @else {
+        <span class="sheet-cover">
+          <mat-icon aria-hidden="true">album</mat-icon>
+          <img [src]="cover(track.uid)" alt="" (error)="$any($event.target).hidden = true">
+        </span>
+      }
 
       <div class="sheet-meta">
         <div class="sheet-titles">
