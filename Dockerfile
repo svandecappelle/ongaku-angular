@@ -18,7 +18,7 @@ RUN npx ng build --configuration production
 FROM node:${NODE_VERSION}-bookworm-slim AS server-deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-# The optional dependencies (nodegit, identicon, node-wave from a git+ssh
+# The optional dependencies (identicon, node-wave from a git+ssh
 # repository) are native modules the server works without; node-wave is
 # missing from the lock file, so npm ci can't be used. The install scripts
 # only build optional native add-ons of webtorrent, which have JS fallbacks.

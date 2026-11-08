@@ -2,15 +2,7 @@ const nconf = require('nconf');
 const path = require('path');
 const semver = require('semver');
 const models = require('../models');
-
-
-var git;
-try {
-  git = require('nodegit');
-} catch (error) {
-  git = require('./../middleware/git');
-  console.warn('Git plugin not installed.');
-}
+const git = require('./../middleware/git');
 
 class Version {
 
@@ -18,16 +10,9 @@ class Version {
     return require(path.resolve(__dirname, '../../../package')).version;
   }
 
-  async sha() {
-    if (git.Repository) {
-      return await git.Repository.open(path.resolve(__dirname, '../../../')).then((repo) => {
-        return repo.getHeadCommit();
-      }).then(commit => {
-        return commit.sha();
-      });
-    } else {
-      return git.version();
-    }
+  /** Commit of the running code, null without a git checkout (Docker image) */
+  sha() {
+    return git.version();
   }
 
   installed() {
