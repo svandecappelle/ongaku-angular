@@ -13,12 +13,14 @@ const { formatOf } = require("./../../middleware/deduplicate");
 const middleware = require("./../../middleware/middleware");
 const importer = require("./../../middleware/importer");
 const scanner = require("./../../middleware/scanner");
+const sessionGuard = require("./../../middleware/session-guard");
 const images = require("./../../middleware/images");
 const statistics = require("./../../model/statistics");
 const application = require("./../../index");
 const user = require("./../../model/user");
 const groups = require("./../../model/groups");
 const meta = require("./../../meta");
+const communication = require("./../../communication");
 const db = require("./../../model/database");
 
 const MONTHS = 30;
@@ -151,11 +153,6 @@ router.get('/statistics', (req, res) => {
             });
         });
     });
-});
-
-router.get('/current', (req, res) => {
-    console.debug("get current playlist");
-    res.send({ all: _.compact(req.session.playlist), name: req.session.playlistname });
 });
 
 router.get('/statistics/users/access', (req, res) => {
@@ -316,7 +313,19 @@ router.put('/users/:username', (req, res) => {
         }
         async.series([
             (next) => changes.password ? user.setPassword(uid, changes.password, next) : next(),
-            (next) => changes.banned !== undefined ? user.setUserField(uid, 'banned', changes.banned ? 1 : 0, next) : next(),
+            (next) => {
+                if (changes.banned === undefined) {
+                    return next();
+                }
+                user.setUserField(uid, 'banned', changes.banned ? 1 : 0, (err) => {
+                    // A disabled account is signed out at once (sessions and sockets)
+                    sessionGuard.forget(uid);
+                    if (changes.banned) {
+                        communication.disconnectUser(req.params.username);
+                    }
+                    next(err);
+                });
+            },
             (next) => {
                 if (changes.uploadQuota === undefined) {
                     return next();
@@ -361,6 +370,9 @@ router.delete('/users/:username', (req, res) => {
             if (err) {
                 return sendError(res, err);
             }
+            // Signed out at once (sessions and sockets)
+            sessionGuard.forget(uid);
+            communication.disconnectUser(username);
             // Uploaded files, avatar and cover; the tracks leave the library on the next reload
             if (req.query.files === 'true') {
                 fs.rmSync(path.join(USERS_DIRECTORY, path.basename(username)), { recursive: true, force: true });

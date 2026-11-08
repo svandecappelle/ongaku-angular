@@ -61,7 +61,7 @@ else
 fi
 endef
 
-.PHONY: help install app nginx https update upgrade uninstall status logs deps dev build clean gen-certificate
+.PHONY: help install app nginx https update upgrade uninstall status logs deps dev build test test-api clean gen-certificate
 
 help:
 	@cat <<'EOF'
@@ -84,6 +84,9 @@ help:
 	  make deps      Install the npm dependencies of the server and the client.
 	  make dev       Run the server and the client in watch mode.
 	  make build     Build the client and package dist.tar.gz.
+	  make test      Run the automated tests (API and browser) on a throw-away instance:
+	                 port 4200, Redis database 14 (flushed). Needs ffmpeg; the browser tests a Chromium.
+	  make test-api  The API tests only (no client build).
 	  make clean     Remove the dependencies and the builds.
 	EOF
 
@@ -279,6 +282,15 @@ dev: deps
 build: deps
 	@cd client && npm run build && cd ..
 	tar -zcvf dist.tar.gz client/dist server package.json LICENSE README.md
+
+# A throw-away instance (port ONGAKU_TEST_PORT=4200, Redis database ONGAKU_TEST_REDIS_DB=14, flushed)
+# with generated music; the browser tests need the built client and a Chromium (CHROME=…).
+test:
+	@if [ ! -f client/dist/index.html ]; then (cd client && npx ng build); fi
+	node test/run.mjs
+
+test-api:
+	@node test/run.mjs api
 
 clean:
 	@rm -rf node_modules client/node_modules client/dist dist.tar.gz

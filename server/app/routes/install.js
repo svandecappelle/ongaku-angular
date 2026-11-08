@@ -27,12 +27,27 @@ router.get('/', function (req, res, next) {
   });
 });
 
+// Creates the first administrator: only while the server has no account yet
 router.post('/', (req, res) => {
+  const user = require('../model/user');
+  user.count((err, count) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+    if (count > 0) {
+      return res.status(403).json({ message: 'Ongaku is already installed' });
+    }
+    install(req, res);
+  });
+});
+
+function install(req, res) {
   installer.install(req.body).then((installed, errors) => {
     res.json({ install: 'ok' });
   }).catch((error) => {
     res.status(500).json(error);
   });
-})
+}
 
 module.exports = router;

@@ -41,8 +41,6 @@ COPY server ./server
 COPY public/img ./public/img
 COPY docker/application.yml ./server/config/application.yml
 COPY --from=client /build/client/dist ./client/dist
-# index.html loads moment from /node_modules
-COPY --from=client /build/client/node_modules/moment/min ./client/node_modules/moment/min
 
 # Written at runtime: user images and uploads, artist pictures, lyrics
 RUN mkdir -p public/user public/artists-covers public/lyrics \

@@ -2,7 +2,7 @@ const models = require('../models');
 const express = require('express');
 const async = require('async');
 const path = require('path');
-const yaml_config = require('node-yaml-config');
+const nconf = require('nconf');
 
 const version = require(path.resolve(__dirname, '../utils/version'));
 const upgrader = require(path.resolve(__dirname, '../../db/postgres/upgrade'));
@@ -23,9 +23,9 @@ router.get('/', function (req, res, next) {
       title: 'Upgrader',
       version: version.launched,
       bddVersion: version.installed,
-      database: yaml_config.load(path.resolve(__dirname, '../../../config/config.yml')).database
+      database: nconf.get('database')
     });
-  });
+  }).catch(next);
 });
 
 router.post('/git/check', function (req, res, next) {
@@ -64,14 +64,11 @@ router.post('/git/check', function (req, res, next) {
       res.json({
         message: message
       });
+    }).catch((err) => {
+      console.error('Update failed', err);
+      res.status(500).json({ message: 'The application could not be updated (on Docker, run "make upgrade" on the server)' });
     });
   }
-});
-
-
-router.post('/git/check', function (req, res, next) {
-  version.check().then(version => {
-  });
 });
 
 router.post('/', (req, res) => {

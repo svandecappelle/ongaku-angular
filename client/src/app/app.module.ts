@@ -33,8 +33,6 @@ import {
   UserService,
   StatisticsService,
   AdminService,
-  AlbumService,
-  ArtistService,
   MetadataService
 } from './services';
 import { AuthGuard } from './guards/index';
@@ -76,8 +74,6 @@ import { ShellComponent } from './v3/shell/shell.component';
         AlertService,
         AuthenticationService,
         UserService,
-        ArtistService,
-        AlbumService,
         StatisticsService,
         AdminService,
         UsersService,

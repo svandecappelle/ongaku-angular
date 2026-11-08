@@ -6,23 +6,17 @@ const nconf = require("nconf");
 const _ = require("underscore");
 const path = require("path");
 const ffmetadata = require("ffmetadata");
-const https = require('https');
 const fs = require('fs');
 const async = require("async");
-const crypto = require('crypto');
 
 const library = require("./../../middleware/library");
-const quota = require("./../../middleware/quota");
 const middleware = require("./../../middleware/middleware");
-const importer = require("./../../middleware/importer");
 const meta = require("./../../meta");
 const communication = require("./../../communication");
 const statistics = require("./../../model/statistics");
 const security = require("./../../model/security");
 const user = require("./../../model/user");
 // const translator = require("./../../middleware/translator");
-const algorithm = 'aes-192-cbc';
-const password = nconf.get('secret');
 var router = express.Router();
 
 try {
@@ -31,74 +25,9 @@ try {
     logger.warn('Application cannot be used using desktop player.');
 }
 
-const DEFAULT_USERS__DIRECTORY = path.resolve(__dirname, "../../../../public/user/");
 const DEFAULT_GROUP_BY = ['artist', 'album'];
 const DEFAULT_SORT_BY = 'artist';
-const userFilesOpts = {
-    root: DEFAULT_USERS__DIRECTORY,
-    dotfiles: 'deny',
-    headers: {
-        'x-timestamp': Date.now(),
-        'x-sent': true
-    }
-};
 
-const lights_themes = ["light"];
-const key = crypto.scryptSync(password, 'salt', 24);
-const iv = Buffer.alloc(16, 0);
-const filesMap = {};
-
-var rmdirAsync = function (path, callback) {
-
-    fs.readdir(path, function (err, files) {
-        if (err) {
-            // Pass the error on to callback
-            callback(err, []);
-            return;
-        }
-        var wait = files.length,
-            count = 0,
-            folderDone = function (err) {
-                count++;
-                // If we cleaned out all the files, continue
-                if (count >= wait || err) {
-                    fs.rmdir(path, callback);
-                }
-            };
-        // Empty directory to bail early
-        if (!wait) {
-            folderDone();
-            return;
-        }
-
-        // Remove one or more trailing slash to keep from doubling up
-        path = path.replace(/\/+$/, "");
-        files.forEach(function (file) {
-            var curPath = path + "/" + file;
-            fs.lstat(curPath, function (err, stats) {
-                if (err) {
-                    callback(err, []);
-                    return;
-                }
-                if (stats.isDirectory()) {
-                    rmdirAsync(curPath, folderDone);
-                } else {
-                    fs.unlink(curPath, folderDone);
-                }
-            });
-        });
-    });
-};
-
-var rmRecurse = function (path, callback) {
-    fs.lstat(path, function (err, stats) {
-        if (stats.isDirectory()) {
-            rmdirAsync(path, callback);
-        } else {
-            fs.unlink(path, callback);
-        }
-    });
-};
 
 var getStatistics = function (name, callback) {
     var statisticsValues = {};
@@ -148,35 +77,8 @@ var getStatistics = function (name, callback) {
     });
 };
 
-class SuccessCall {
-
-    json() {
-        return {
-            code: 200,
-            message: "Success"
-        };
-    }
-
-};
 class Helpers {
 
-
-    encrypt(text) {
-        const cipher = crypto.createCipheriv(algorithm, key, iv);
-        cipher.setAutoPadding(true);
-        var crypted = cipher.update(text.trim(), 'utf8', 'hex')
-        crypted += cipher.final('hex');
-        this.decrypt(crypted);
-        return crypted.trim().replace(/[^\x20-\x7E]+/g, '');
-    }
-
-    decrypt(text) {
-        const decipher = crypto.createDecipheriv(algorithm, key, iv);
-        decipher.setAutoPadding(false);
-        var dec = decipher.update(text.trim(), 'hex', 'utf8')
-        dec += decipher.final('utf8');
-        return dec.trim().replace(/[^\x20-\x7E]+/g, '');
-    }
 
     incrementPlays(mediauid, userSession) {
         if (mediauid) {
@@ -368,24 +270,6 @@ router.get('/artist/:name', (req, res) => {
     middleware.json(req, res, datas);
 });
 
-router.post('/artist-properties/:name', (req, res) => {
-    console.log('Save artist image: ', library.getArtistImage(req.params.name));
-    if (!fs.existsSync(path.resolve(__dirname, '../../../../public/artists-covers'))) {
-        fs.mkdirSync(path.resolve(__dirname, '../../../../public/artists-covers'));
-    }
-    var file = fs.createWriteStream(path.resolve(__dirname, `../../../../public/artists-covers/${req.params.name}`));
-
-    https.get(library.getArtistImage(req.params.name), (response) => {
-        response.pipe(file);
-
-        response.on('end', () => {
-            res.json({
-                message: "ok"
-            });
-        });
-    });
-});
-
 router.get('/artists/filter/:search/:page', (req, res) => {
     // load by page of 3 artists.
 
@@ -470,6 +354,12 @@ router.get('/stream/:media', (req, res) => {
             res.status(404).json({ "error": "media not found" });
         });
     };
+    // The private uploads are streamed to their owner only
+    const track = library.getByUid(req.params.media);
+    const session = req.session && req.session.passport ? req.session.passport.user : null;
+    if (track && track.private && (!session || session.username !== track.user)) {
+        return res.status(404).json({ message: 'media not found' });
+    }
     helpers.checkingAuthorization(req, res, () => {
         stream().then((mediauid) => {
             // TODO change the increment plays to get real play state.
@@ -586,150 +476,6 @@ router.post('/metadata/set/:id', (req, res) => {
 
 router.put('/metadata/selection/set/', (req, res) => {
     withEditableTracks(req, res, req.body.ids, (tracks) => writeTags(res, tracks, req.body.metadatas));
-});
-
-router.get(['/my-library', '/my-library/:folder'], (req, res) => {
-    //if (nconf.get("allowUpload") === 'true') {
-    if (req.session.passport && req.session.passport.user) {
-        const username = req.session.passport.user.username;
-        const folder = req.params.folder ? helpers.decrypt(filesMap[req.params.folder]).trim() : req.params.folder;
-        let folderReading = path.join(DEFAULT_USERS__DIRECTORY, username, "imported");
-        let canonicalFolderName = '';
-        if (!fs.existsSync(path.join(DEFAULT_USERS__DIRECTORY, username))) {
-            fs.mkdirSync(path.join(DEFAULT_USERS__DIRECTORY, username));
-            fs.mkdirSync(path.join(DEFAULT_USERS__DIRECTORY, username, "imported"));
-        }
-        if (!fs.existsSync(folderReading)) {
-            return res.status(500).json({
-                message: 'Destination file doesn\'t exists contact your administrator'
-            });
-        }
-        let fileAskLocationEncrypt = '';
-        if (folder) {
-            folderReading = path.join(folderReading, folder);
-            canonicalFolderName = path.join(canonicalFolderName, folder);
-
-            const fileAskLocation = path.join(DEFAULT_USERS__DIRECTORY, username, canonicalFolderName, '..');
-            fileAskLocationEncrypt = helpers.encrypt(fileAskLocation);
-            filesMap[fileAskLocationEncrypt.substring(0, 32)] = fileAskLocationEncrypt;
-        }
-        
-        try {
-            const fileToTest = folderReading.replace(/[^\x20-\x7E]+/g, '').trim();
-            if (fs.statSync(fileToTest).isFile()) {
-                var rstream = fs.createReadStream(fileToTest);
-                return rstream.pipe(res);
-            }
-            var files = fs.readdirSync(folderReading);
-            files = _.map(files, (file) => {
-                const canonicalName = path.resolve(folderReading, file);
-                const stat = fs.statSync(canonicalName);
-                const location = path.join(canonicalFolderName, file);
-                const encrypted = helpers.encrypt(location);
-                filesMap[encrypted.substring(0, 32).trim()] = encrypted;
-                return {
-                    name: file,
-                    type: stat.isDirectory(path.resolve(folderReading, file)) ? 'directory' : 'file',
-                    stat: stat,
-                    location: encrypted.substring(0, 32).trim(),
-                    locationFolder: canonicalName
-                };
-            });
-            let locationFolder = req.params.folder ? folderReading: '';
-            const locationFolderParent = path.resolve(folderReading, '..');
-            const encryptedFolderParent = locationFolder !== '' ? helpers.encrypt(locationFolderParent).substring(0, 32): '';
-            const folderId = helpers.encrypt(folderReading);
-            filesMap[folderId.substring(0, 32)] = folderId;
-            res.send({
-                files: files,
-                location: {
-                    name: `/${folder ? folder : ''}`,
-                    id: folderId.substring(0, 32),
-                    parent: encryptedFolderParent
-                }
-            });
-        } catch (err) {
-            console.error(err);
-            res.status(500).json(err);
-        }
-    }
-    /*} else {
-        res.status(403).json({ message: 'Not allowed.' });
-    }*/
-});
-
-router.post('/my-library/create-folder', (req, res) => {
-    if (req.session.passport && req.session.passport.user) {
-        const username = req.session.passport.user.username;
-        const folder = req.body.location && req.body.location.id ? helpers.decrypt(filesMap[req.body.location.id]).trim() : '';
-        
-        let userFolder = path.join(DEFAULT_USERS__DIRECTORY, username, "imported");
-        if (!fs.existsSync(path.join(DEFAULT_USERS__DIRECTORY, username))) {
-            fs.mkdirSync(path.join(DEFAULT_USERS__DIRECTORY, username));
-            fs.mkdirSync(path.join(DEFAULT_USERS__DIRECTORY, username, "imported"));
-        }
-        if (!fs.existsSync(userFolder)) {
-            fs.mkdirSync(userFolder);
-        }
-        if (req.body.folder.indexOf('..') !== -1){
-            return res.status(500).json({
-                msg: 'Cannot create relative dir'
-            });
-        }
-        const targetFolder = path.resolve(folder, req.body.folder);
-        fs.mkdirSync(targetFolder);
-        const encrypted = helpers.encrypt(targetFolder);
-        filesMap[encrypted.substring(0, 32).trim()] = encrypted;
-        res.send({
-            files: [],
-            location: {
-                name: `/${targetFolder.replace(userFolder, '')}`,
-                id: encrypted.substring(0, 32).trim(),
-                location: targetFolder
-            }
-        })
-    } else {
-        req.status(403).send()
-    }
-});
-
-router.post(['/upload', '/upload/:folder'], (req, res) => {
-    //if (nconf.get("allowUpload") === 'true') {
-    if (req.session.passport && req.session.passport.user) {
-        const folder = req.params.folder ? helpers.decrypt(filesMap[req.params.folder]).trim() : req.params.folder;
-        var username = req.session.passport.user.username;
-        var folderReading = path.join(DEFAULT_USERS__DIRECTORY, username, "imported");
-
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
-        if (!fs.existsSync(path.join(DEFAULT_USERS__DIRECTORY, username))) {
-            fs.mkdirSync(path.join(DEFAULT_USERS__DIRECTORY, username));
-        }
-
-        if (!fs.existsSync(folderReading)) {
-            fs.mkdirSync(folderReading);
-        }
-
-        if (folder) {
-            folderReading = path.join(folderReading, folder);
-        }
-
-        quota.check(req, res, username, (remaining) => importer.receive(req, folderReading, remaining).then((results) => {
-            library.addFolder({
-                path: path.join(DEFAULT_USERS__DIRECTORY, username),
-                username: username,
-                private: true
-            }, (scanResult) => {
-                console.log("Folder added");
-                res.json({
-                    message: 'ok',
-                    files: results
-                });
-            });
-        }));
-    }
-    /*} else {
-        res.status(403).json({ message: 'Not allowed.' });
-    }*/
 });
 
 router.get("/featured/:page", (req, res) => {

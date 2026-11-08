@@ -37,13 +37,19 @@ class Communication {
 			if (!user || !user.username) {
 				return;
 			}
-			// Messages for the user (see emit) and for every member (presence)
-			socket.join(user.username);
-			socket.join('members');
-			this.connect(socket, user);
+			// Not for an account disabled or deleted since its login
+			require('./middleware/session-guard').check(user.uid, user.username, (valid) => {
+				if (!valid || !socket.connected) {
+					return socket.disconnect(true);
+				}
+				// Messages for the user (see emit) and for every member (presence)
+				socket.join(user.username);
+				socket.join('members');
+				this.connect(socket, user);
 
-			socket.on('now-playing', (data) => this.setNowPlaying(user.username, data));
-			socket.on('disconnect', () => this.disconnect(socket, user));
+				socket.on('now-playing', (data) => this.setNowPlaying(user.username, data));
+				socket.on('disconnect', () => this.disconnect(socket, user));
+			});
 		});
 	}
 
@@ -122,6 +128,13 @@ class Communication {
 			at: Date.now()
 		} : null;
 		this.publish(username);
+	}
+
+	/** Closes the sockets of a user (account disabled or deleted) */
+	disconnectUser(username) {
+		if (this.io) {
+			this.io.in(username).disconnectSockets(true);
+		}
 	}
 
 	setHidden(username, hidden) {

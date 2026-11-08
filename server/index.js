@@ -5,7 +5,6 @@ const nconfYaml = require('nconf-yaml');
 const winston = require('winston');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-const errorhandler = require('errorhandler');
 const favicon = require('serve-favicon');
 const session = require('express-session');
 const { RedisStore } = require('connect-redis');
@@ -69,7 +68,6 @@ class Server {
     app.use(bodyParser.urlencoded({ extended: true }));
     // Room for lyrics (256 KB) and long playlists (5000 uids)
     app.use(bodyParser.json({ limit: '1mb' }));
-    app.use(errorhandler());
     app.use(cookieParser());
     if (app.get('env') === 'production') {
       app.set('trust proxy', 1) // trust first proxy
