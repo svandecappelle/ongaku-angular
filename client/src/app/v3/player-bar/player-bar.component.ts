@@ -7,6 +7,7 @@ import { PlaybackService } from '../../services/playback.service';
 import { LikesService } from '../../services/likes.service';
 import { Song } from '../../app-state';
 import { formatTime } from '../format-time';
+import { albumLink } from '../library';
 
 @Component({
   selector: 'app-player-bar',
@@ -37,6 +38,7 @@ export class PlayerBarComponent {
   readonly volume = computed(() => Math.min(1, this.playback.gain()));
   readonly muted = computed(() => this.playback.gain() === 0);
   readonly formatTime = formatTime;
+  readonly albumLink = albumLink;
 
   toggleLike(track: Song) {
     (this.likes.has(track) ? this.likes.unlike([track]) : this.likes.like([track])).subscribe();

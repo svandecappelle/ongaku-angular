@@ -1,3 +1,5 @@
+@use '../placeholder';
+
 :host {
   position: fixed;
   right: 0;
@@ -68,8 +70,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--ongaku-accent);
-  background: var(--ongaku-surface-2);
+  @include placeholder.placeholder;
   img {
     position: absolute;
     inset: 0;
@@ -298,8 +299,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--ongaku-accent);
-  background: var(--ongaku-surface-2);
+  @include placeholder.placeholder;
   box-shadow: 0 24px 60px rgba(0, 0, 0, .4);
   mat-icon {
     width: 120px;

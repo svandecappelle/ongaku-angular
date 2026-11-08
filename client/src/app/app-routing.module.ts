@@ -21,6 +21,9 @@ import { RegisterComponent } from './user/register/register.component';
 const routes: Routes = [
   { path: 'artist/:artist', canActivate: [AuthGuard],
     loadComponent: () => import('./v3/artist-page/artist-page.component').then((m) => m.ArtistPageComponent) },
+  { path: 'album/:artist/:album', canActivate: [AuthGuard],
+    loadComponent: () => import('./v3/album-page/album-page.component').then((m) => m.AlbumPageComponent) },
+  // Former links, giving only the title
   { path: 'album/:album', canActivate: [AuthGuard],
     loadComponent: () => import('./v3/album-page/album-page.component').then((m) => m.AlbumPageComponent) },
   { path: 'playlists', canActivate: [AuthGuard],

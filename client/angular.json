@@ -22,7 +22,9 @@
             ],
             "assets": [
               "src/assets",
-              "src/favicon.ico"
+              "src/favicon.ico",
+              "src/favicon.svg",
+              "src/apple-touch-icon.png"
             ],
             "styles": [
               "node_modules/@fontsource-variable/dm-sans/index.css",
@@ -97,7 +99,9 @@
             ],
             "assets": [
               "src/assets",
-              "src/favicon.ico"
+              "src/favicon.ico",
+              "src/favicon.svg",
+              "src/apple-touch-icon.png"
             ]
           }
         }

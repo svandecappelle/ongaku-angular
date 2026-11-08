@@ -76,14 +76,14 @@
       @for (album of visible(); track trackKey(album)) {
         <section class="album" [attr.aria-label]="album.title + ' by ' + album.artist">
           <header class="album-header">
-            <a class="cover" [routerLink]="['/album', album.title]" [attr.aria-label]="'Open the album ' + album.title">
+            <a class="cover" [routerLink]="albumLink(album.tracks[0])" [attr.aria-label]="'Open the album ' + album.title">
               <mat-icon aria-hidden="true">album</mat-icon>
               @if (album.cover) {
                 <img [src]="album.cover" alt="" loading="lazy" (error)="$any($event.target).hidden = true">
               }
             </a>
             <div class="album-text">
-              <a class="album-title" [routerLink]="['/album', album.title]">{{ album.title }}</a>
+              <a class="album-title" [routerLink]="albumLink(album.tracks[0])">{{ album.title }}</a>
               <span class="muted">
                 <a class="artist-link" [routerLink]="['/artist', album.artist]">{{ album.artist }}</a>
                 · {{ album.tracks.length }} track{{ album.tracks.length === 1 ? '' : 's' }}

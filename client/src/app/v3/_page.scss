@@ -1,3 +1,5 @@
+@use 'placeholder';
+
 // Layout shared by the pages of the new interface: page frame, loading and
 // error states, and the hero header (cover, title, actions)
 @mixin layout {
@@ -72,14 +74,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--ongaku-accent);
-    background: var(--ongaku-surface-2);
     box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
+    @include placeholder.placeholder;
     mat-icon {
       width: 96px;
       height: 96px;
       font-size: 96px;
-      opacity: .6;
     }
     img {
       position: absolute;

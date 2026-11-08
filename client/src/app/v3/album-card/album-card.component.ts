@@ -13,6 +13,8 @@ import { MaterialModule } from '../../modules/material.module';
 })
 export class AlbumCardComponent {
   readonly name = input.required<string>();
+  /** Artist of the album: albums of different artists may share a title */
+  readonly artist = input.required<string>();
   readonly cover = input<string | null>(null);
   readonly subtitle = input<string | null>(null);
   readonly play = output<void>();

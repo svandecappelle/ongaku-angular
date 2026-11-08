@@ -205,10 +205,10 @@
                   <li class="health-item">
                     <span class="thumb-frame">
                       <span class="thumb"><mat-icon aria-hidden="true">album</mat-icon></span>
-                      <app-cover-edit [artist]="album.artist" [album]="album.album" (changed)="loadHealth()"></app-cover-edit>
+                      <app-cover-edit [artist]="album.coverArtist" [album]="album.album" (changed)="loadHealth()"></app-cover-edit>
                     </span>
                     <span class="health-text">
-                      <a [routerLink]="['/album', album.album]" class="strong">{{ album.album }}</a>
+                      <a [routerLink]="['/album', album.artist, album.album]" class="strong">{{ album.album }}</a>
                       <span class="muted small">{{ album.artist }} · {{ album.tracks }} {{ album.tracks === 1 ? 'track' : 'tracks' }}</span>
                     </span>
                   </li>

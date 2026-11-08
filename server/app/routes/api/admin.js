@@ -400,19 +400,21 @@ function missingTags(track) {
 router.get('/library/health', (req, res) => {
     const tracks = library.flatten.filter((track) => !track.private);
 
+    // Albums told apart by their artist; the cover is stored under the artist of a track
     const albums = new Map();
     tracks.forEach((track) => {
         if (!track.album || track.album === UNKNOWN_ALBUM) {
             return;
         }
-        const key = track.artist + '\u0000' + track.album;
+        const artist = library.albumArtistOf(track);
+        const key = library.albumKey(artist, track.album);
         if (!albums.has(key)) {
-            albums.set(key, { artist: track.artist, album: track.album, tracks: 0 });
+            albums.set(key, { artist: artist, coverArtist: track.artist, album: track.album, tracks: 0 });
         }
         albums.get(key).tracks++;
     });
     const withoutCover = Array.from(albums.values())
-        .filter((album) => !library.hasAlbumCover(album.artist, album.album))
+        .filter((album) => !library.hasAlbumCover(album.coverArtist, album.album))
         .sort((a, b) => String(a.artist).localeCompare(String(b.artist)) || String(a.album).localeCompare(String(b.album)));
 
     const untagged = tracks

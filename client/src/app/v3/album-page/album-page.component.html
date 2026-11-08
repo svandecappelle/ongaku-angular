@@ -14,6 +14,33 @@
         <a mat-stroked-button routerLink="/my-library">Open my library</a>
       </div>
     }
+    @case ('choose') {
+      @if (load(); as choice) {
+        <div class="state choose">
+          <mat-icon class="state-icon">album</mat-icon>
+          <h1>Several albums are named “{{ $any(choice).title }}”</h1>
+          <span class="muted">Pick the artist.</span>
+          <ul class="choices">
+            @for (item of $any(choice).choices; track item.artist) {
+              <li>
+                <a class="choice" [routerLink]="['/album', item.artist, $any(choice).title]">
+                  <span class="choice-cover">
+                    <mat-icon aria-hidden="true">album</mat-icon>
+                    @if (item.cover) {
+                      <img [src]="item.cover" alt="" (error)="$any($event.target).hidden = true">
+                    }
+                  </span>
+                  <span class="choice-text">
+                    <strong>{{ item.artist }}</strong>
+                    <span class="muted">{{ item.tracks }} {{ item.tracks === 1 ? 'track' : 'tracks' }}</span>
+                  </span>
+                </a>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    }
   }
 
   @if (album(); as album) {
@@ -25,13 +52,17 @@
             <img [src]="cover" alt="" (error)="$any($event.target).hidden = true">
           }
         </span>
-        <app-cover-edit [artist]="album.artist" [album]="album.title" (changed)="coverChanged(album.artist, album.title)"></app-cover-edit>
+        <app-cover-edit [artist]="album.coverArtist" [album]="album.title" (changed)="coverChanged(album.coverArtist, album.title)"></app-cover-edit>
       </span>
       <div class="hero-text">
         <span class="eyebrow">Album@if (album.year) { · {{ album.year }}}</span>
         <h1>{{ album.title }}</h1>
         <span class="muted">
-          <a class="artist-link" [routerLink]="['/artist', album.artist]">{{ album.artist }}</a>
+          @if (artistHasPage()) {
+            <a class="artist-link" [routerLink]="['/artist', album.artist]">{{ album.artist }}</a>
+          } @else {
+            <strong>{{ album.artist }}</strong>
+          }
           · {{ album.tracks.length }} {{ album.tracks.length > 1 ? 'tracks' : 'track' }}
           @if (totalDuration()) { · {{ formatTime(totalDuration()) }}}
         </span>

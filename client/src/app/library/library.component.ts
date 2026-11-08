@@ -12,13 +12,12 @@ import { TrackActions } from '../v3/track-list/track-actions.service';
 import { TrackListComponent } from '../v3/track-list/track-list.component';
 import { LikedTracksComponent } from './liked-tracks.component';
 import { UploadsBrowserComponent } from './uploads-browser.component';
+import { albumLink, coverOf } from '../v3/library';
 
 type Tab = 'music' | 'liked' | 'uploads';
 
 /** Albums shown at first, then by this many more */
 const ALBUMS_STEP = 20;
-/** Placeholder the server gives to albums without a cover */
-const NO_COVER = '/static/img/album.png';
 
 /** "My library": the tracks the user added and uploaded, and his uploaded files */
 @Component({
@@ -31,6 +30,7 @@ const NO_COVER = '/static/img/album.png';
 })
 export class LibraryComponent {
   readonly actions = inject(TrackActions);
+  readonly albumLink = albumLink;
   private readonly library = inject(MyLibraryService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -108,7 +108,8 @@ export class LibraryComponent {
   load() {
     this.failed.set(false);
     this.library.content().subscribe({
-      next: (content) => this.albums.set(content.albums.map((album) => ({ ...album, cover: album.cover === NO_COVER ? null : album.cover }))),
+      // The server gives a URL, an album info or a placeholder path
+      next: (content) => this.albums.set(content.albums.map((album) => ({ ...album, cover: coverOf(album.cover) }))),
       error: () => this.failed.set(true),
     });
   }

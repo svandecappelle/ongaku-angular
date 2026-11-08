@@ -10,7 +10,7 @@ import { MaterialModule } from '../../modules/material.module';
 import { PlaybackService } from '../../services/playback.service';
 import { AlbumCardComponent } from '../album-card/album-card.component';
 import { ArtistCardComponent } from '../artist-card/artist-card.component';
-import { AlbumItem, ArtistItem } from '../library';
+import { AlbumItem, ArtistItem, albumLink } from '../library';
 import { LibraryService } from '../library.service';
 import { Paged } from '../paged';
 import { SelectionBarComponent } from '../selection-bar/selection-bar.component';
@@ -57,8 +57,10 @@ export class DiscoverPageComponent {
     this.store.dispatch(new SearchLibraryAction(''));
   }
 
-  playAlbum(name: string) {
-    this.library.album(name).subscribe((album) => {
+  readonly albumLink = albumLink;
+
+  playAlbum(artist: string, name: string) {
+    this.library.album(artist, name).subscribe((album) => {
       if (album) {
         this.actions.playFrom(album.tracks);
       }

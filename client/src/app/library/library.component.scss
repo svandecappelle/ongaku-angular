@@ -1,3 +1,5 @@
+@use '../v3/placeholder';
+
 :host {
   display: block;
   color: var(--ongaku-text);
@@ -126,13 +128,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--ongaku-accent);
-  background: var(--ongaku-surface-2);
+  @include placeholder.placeholder;
   mat-icon {
     width: 36px;
     height: 36px;
     font-size: 36px;
-    opacity: .6;
   }
   img {
     position: absolute;

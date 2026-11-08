@@ -1,0 +1,11 @@
+// Shown while an image loads and when there is none: made from the theme colours,
+// so it fits every theme (the former album.png did not)
+@mixin placeholder {
+  color: var(--ongaku-accent);
+  background:
+    radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--ongaku-accent) 26%, transparent), transparent 62%),
+    linear-gradient(140deg, color-mix(in srgb, var(--ongaku-accent) 14%, var(--ongaku-surface-2)), var(--ongaku-surface-2));
+  mat-icon {
+    opacity: .85;
+  }
+}

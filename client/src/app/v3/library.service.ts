@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { Song } from '../app-state';
-import { AlbumItem, AlbumView, ArtistItem, ArtistView, toAlbumItems, toAlbumView, toArtistItems, toArtistView } from './library';
+import { AlbumItem, AlbumView, ArtistItem, ArtistView, coverOf, toAlbumItems, toAlbumView, toArtistItems, toArtistView } from './library';
 
 /** Lists of the library API, as used by the Discover page (routes of server/app/routes/api/audio.js) */
 @Injectable({ providedIn: 'root' })
@@ -36,8 +36,16 @@ export class LibraryService {
       .pipe(map((answer) => (Array.isArray(answer?.stats?.plays) ? answer.stats.plays : [])));
   }
 
-  album(name: string): Observable<AlbumView | null> {
-    return this.http.get(`/api/audio/album/${encodeURIComponent(name)}`).pipe(map((details) => toAlbumView(name, details)));
+  album(artist: string, name: string): Observable<AlbumView | null> {
+    return this.http.get(`/api/audio/album/${encodeURIComponent(artist)}/${encodeURIComponent(name)}`)
+      .pipe(map((details) => toAlbumView(name, details)));
+  }
+
+  /** Artists having an album of this title (links that only give the title) */
+  albumArtists(name: string): Observable<{ artist: string; tracks: number; cover: string | null }[]> {
+    return this.http.get<any[]>(`/api/audio/album-artists/${encodeURIComponent(name)}`).pipe(
+      map((list) => (Array.isArray(list) ? list : []).map((item) => ({ artist: item.artist, tracks: item.tracks, cover: coverOf(item.info) }))),
+    );
   }
 
   artist(name: string): Observable<ArtistView | null> {

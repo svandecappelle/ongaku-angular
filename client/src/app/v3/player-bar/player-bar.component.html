@@ -89,7 +89,7 @@
           <span class="links">
             <a [routerLink]="['/artist', track.artist]" (click)="expanded.set(false)">{{ track.artist }}</a>
             @if (track.album) {
-              · <a [routerLink]="['/album', track.album]" (click)="expanded.set(false)">{{ track.album }}</a>
+              · <a [routerLink]="albumLink(track)" (click)="expanded.set(false)">{{ track.album }}</a>
             }
           </span>
         </div>

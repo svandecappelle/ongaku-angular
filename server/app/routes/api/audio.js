@@ -400,6 +400,15 @@ router.get('/artists/filter/:search/:page', (req, res) => {
     middleware.json(req, res, libraryDatas);
 });
 
+// An album: its artist tells it apart from the albums of other artists with the same title
+router.get('/album/:artist/:album', (req, res) => {
+    middleware.json(req, res, visibleLibrary(req).getAlbumOf(req.params.artist, req.params.album));
+});
+
+router.get('/album-artists/:name', (req, res) => {
+    middleware.json(req, res, visibleLibrary(req).getAlbumArtists(req.params.name));
+});
+
 router.get('/album/:name', (req, res) => {
 
     logger.debug("Get detail page of artist ".concat(req.params.name));
@@ -471,20 +480,21 @@ router.get('/stream/:media', (req, res) => {
     });
 });
 
+/**
+ * Placeholder put in the library data when an album or artist has no image. It is never
+ * sent as an image: the routes answer 404 and the client shows its own placeholder, which
+ * follows the theme.
+ */
+function realImage(url) {
+    return typeof url === 'string' && url.trim() !== '' && !url.endsWith('/static/img/album.png') && !url.endsWith('/static/img/artist.jpg')
+        ? url : null;
+}
+
 router.get("/song-image/:songid", (req, res) => {
-    var albumart = library.getAlbumArtImage(req.params.songid);
-    if (albumart && albumart.cover) {
-        if (req.query.quality === 'best') {
-            albumart = _.last(albumart);
-        }
-        if (albumart.cover[0]) {
-            res.redirect(albumart.cover[0]);
-        } else {
-            res.redirect("/static/img/album.png");
-        }
-    } else {
-        res.redirect("/static/img/album.png");
-    }
+    var track = library.getByUid(req.params.songid);
+    var albumart = track && library.getAlbumArtImage(req.params.songid);
+    var image = albumart && albumart.cover ? realImage(albumart.cover[0]) : null;
+    image ? res.redirect(image) : res.status(404).end();
 });
 
 // Image chosen by an administrator, then the cover of the album folder, then Last.fm
@@ -494,8 +504,8 @@ router.get("/static/covers/:artist/:album/cover.jpg", (req, res) => {
     if (albumart) {
         res.sendFile(albumart);
     } else {
-        var image = library.getCoverImage(req.params.artist, req.params.album);
-        res.redirect(image && !image.startsWith('/api/audio/static/covers/') ? image : "/static/img/album.png");
+        var image = realImage(library.getCoverImage(req.params.artist, req.params.album));
+        image && !image.startsWith('/api/audio/static/covers/') ? res.redirect(image) : res.status(404).end();
     }
 });
 
@@ -508,7 +518,7 @@ router.get("/static/covers/:artist/cover.jpg", (req, res) => {
     } else if (req.params.artist === path.basename(req.params.artist) && fs.existsSync(downloaded) && fs.statSync(downloaded).isFile()) {
         res.sendFile(downloaded);
     } else {
-        var image = library.getArtistImage(req.params.artist);
+        var image = realImage(library.getArtistImage(req.params.artist));
         // No image: the client shows its placeholder
         image ? res.redirect(image) : res.status(404).end();
     }

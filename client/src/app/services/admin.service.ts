@@ -63,7 +63,8 @@ export interface LibraryHealth {
   scanning: boolean;
   counts: { withoutCover: number; missingTags: number; duplicates: number; unreadable: number };
   /** Lists hold the first 500 items */
-  withoutCover: { artist: string; album: string; tracks: number }[];
+  /** artist: of the album; coverArtist: the one its cover is stored under */
+  withoutCover: { artist: string; coverArtist: string; album: string; tracks: number }[];
   missingTags: { uid: string; title: string; artist: string; album: string; file: string; missing: ('artist' | 'album' | 'title')[]; tags: Partial<TrackTags> }[];
   unreadable: { file: string; error: string }[];
 }

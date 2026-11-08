@@ -20,7 +20,7 @@
           <h1>{{ track.title }}</h1>
           <span class="muted">
             <a [routerLink]="['/artist', track.artist]">{{ track.artist }}</a>
-            @if (track.album) { · <a [routerLink]="['/album', track.album]">{{ track.album }}</a>}
+            @if (track.album) { · <a [routerLink]="albumLink(track)">{{ track.album }}</a>}
           </span>
           <div class="now-actions">
             <button mat-flat-button color="accent" type="button" (click)="playback.toggle()">
@@ -78,8 +78,8 @@
     <section class="section" aria-labelledby="albums-title">
       <h2 id="albums-title">Albums</h2>
       <ul class="grid albums">
-        @for (album of albums.items(); track album.name) {
-          <li><app-album-card [name]="album.name" [cover]="album.cover" (play)="playAlbum(album.name)"></app-album-card></li>
+        @for (album of albums.items(); track album.artist + '/' + album.name) {
+          <li><app-album-card [name]="album.name" [artist]="album.artist" [subtitle]="album.artist" [cover]="album.cover" (play)="playAlbum(album.artist, album.name)"></app-album-card></li>
         }
       </ul>
       <ng-container *ngTemplateOutlet="more; context: { $implicit: albums, label: 'albums' }"></ng-container>

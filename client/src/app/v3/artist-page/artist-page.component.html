@@ -66,7 +66,7 @@
           <ul class="album-grid">
             @for (album of artist.albums; track album.title) {
               <li>
-                <app-album-card [name]="album.title" [cover]="album.cover"
+                <app-album-card [name]="album.title" [artist]="album.artist" [cover]="album.cover"
                   [subtitle]="(album.year ?? 'Unknown year') + ' · ' + album.tracks.length + (album.tracks.length > 1 ? ' tracks' : ' track')"
                   (play)="actions.playFrom(album.tracks)"></app-album-card>
               </li>
@@ -84,7 +84,7 @@
                 }
               </span>
               <div class="album-heading">
-                <h3 [id]="albumId(album)"><a [routerLink]="['/album', album.title]">{{ album.title }}</a></h3>
+                <h3 [id]="albumId(album)"><a [routerLink]="['/album', album.artist, album.title]">{{ album.title }}</a></h3>
                 <span class="muted small">{{ album.year ?? 'Unknown year' }}</span>
               </div>
               <button mat-icon-button type="button" (click)="actions.playFrom(album.tracks)" [attr.aria-label]="'Play ' + album.title" matTooltip="Play the album">

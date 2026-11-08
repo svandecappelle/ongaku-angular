@@ -621,36 +621,55 @@ class Library {
     return artists;
   }
 
-  getLibAlbums(page, lenght, search, asc) {
-    var albums;
-    albums = _.sortBy(_.uniq(_.map(this.flatten, (track) => {
-      return {
-        title: track.album,
-        artist: track.artist
-      };
-    }), false, (element) => {
-      return element.title;
-    }), (element) => {
-      return element.title;
+  /** Artist of the album of a track: its "album artist" tag (compilations), or its artist */
+  albumArtistOf(track) {
+    const tags = track.metadatas || {};
+    let value = tags.album_artist || tags.albumartist || tags.ALBUMARTIST || tags.ALBUM_ARTIST || tags['ALBUM ARTIST'];
+    value = Array.isArray(value) ? value[0] : value;
+    value = value === undefined || value === null ? '' : String(value).trim();
+    return value || track.artist;
+  }
+
+  /** Albums are told apart by their artist (case insensitive) and title: two artists may use the same title */
+  albumKey(artist, album) {
+    return String(artist || '').trim().toLowerCase() + '\u0000' + String(album);
+  }
+
+  /** Albums of the library: { title, artist, tracks } with `coverArtist`, the artist their cover is stored under */
+  listAlbums() {
+    const albums = new Map();
+    this.flatten.forEach((track) => {
+      const artist = this.albumArtistOf(track);
+      const key = this.albumKey(artist, track.album);
+      if (!albums.has(key)) {
+        albums.set(key, { title: track.album, artist: artist, coverArtist: track.artist, tracks: [] });
+      }
+      albums.get(key).tracks.push(track);
     });
+    return Array.from(albums.values());
+  }
+
+  albumInfo(album) {
+    const byArtist = this.loadingCoverAlbums[album.coverArtist] && this.loadingCoverAlbums[album.coverArtist][album.title];
+    return byArtist || this.loadingCoversAlbumsFlatten[album.title];
+  }
+
+  getLibAlbums(page, lenght, search, asc) {
+    let albums = _.sortBy(this.listAlbums(), (album) => String(album.title).toLowerCase() + '\u0000' + String(album.artist).toLowerCase());
 
     if (search) {
+      const filter = search.toLowerCase();
       albums = _.filter(albums, (album) => {
-        if (album && album.title) {
-          let albumNameMatches = album.title.trim().toLowerCase().match(
-            `.*${search.toLowerCase()}.*`);
-          let artistNameMatches = album.artist.trim().toLowerCase().match(
-            `.*${search.toLowerCase()}.*`);
-          return albumNameMatches || artistNameMatches;
-        }
-        return false;
+        return album && album.title && (String(album.title).trim().toLowerCase().includes(filter) ||
+          String(album.artist).trim().toLowerCase().includes(filter));
       });
     }
 
     albums = _.map(albums, (album) => {
       return {
         name: album.title,
-        info: this.loadingCoversAlbumsFlatten[album.title]
+        artist: album.artist,
+        info: this.albumInfo(album)
       };
     });
 
@@ -658,6 +677,32 @@ class Library {
       albums = _.first(_.rest(albums, page * lenght), lenght);
     }
     return albums
+  }
+
+  /** Artists having an album of this title, for the links that only give the title */
+  getAlbumArtists(album) {
+    return this.listAlbums()
+      .filter((entry) => entry.title === album)
+      .map((entry) => ({ artist: entry.artist, tracks: entry.tracks.length, info: this.albumInfo(entry) }));
+  }
+
+  /**
+   * An album, told apart by its artist: same shape as getAlbum('all', title), with the
+   * artist of the album on the group. Empty when the artist has no album of this title.
+   */
+  getAlbumOf(artist, album) {
+    const key = this.albumKey(artist, album);
+    const entry = this.listAlbums().find((candidate) => this.albumKey(candidate.artist, candidate.title) === key);
+    if (!entry) {
+      return [];
+    }
+    const groups = this.groupby(entry.tracks, ['album']).map((group) => _.extend(group, {
+      artist: entry.artist,
+      // The cover is stored under the artist of a track (see getAlbumCover)
+      coverArtist: entry.coverArtist,
+      album_info: group.album_info || this.albumInfo(entry)
+    }));
+    return [{ artists: [entry.artist], albums: groups }];
   }
 
   /*
@@ -798,11 +843,8 @@ class Library {
     uuid = uuid.replace(".ogg", "");
     uuid = uuid.replace(".wav", "");
 
-    return this.loadingCoverAlbums[_.find(this.flatten, {
-      uuid: uuid
-    }).artist][_.find(this.flatten, {
-      uuid: uuid
-    }).album];
+    const track = this.getByUid(uuid);
+    return track && this.loadingCoverAlbums[track.artist] ? this.loadingCoverAlbums[track.artist][track.album] : undefined;
   };
 
   /**
