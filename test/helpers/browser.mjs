@@ -88,6 +88,10 @@ export async function openBrowser({ width = 1366, height = 900 } = {}) {
     /** Opens a page of the instance, logged in with this session cookie (or anonymous) */
     async goto(urlPath, cookie) {
       await send('Network.enable');
+      // The page left first: a request still made by it would get a new anonymous session
+      // cookie, put in place of the one set below
+      await send('Page.navigate', { url: 'about:blank' });
+      await page.waitFor(`location.href === 'about:blank'`, { what: 'the blank page' }).catch(() => {});
       await send('Network.clearBrowserCookies');
       if (cookie) {
         const [name, value] = cookie.split('=');
