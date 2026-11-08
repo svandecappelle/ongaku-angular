@@ -7,6 +7,7 @@ const authority = require('./../middleware/authority');
 const meta = require('./../meta');
 const utils = require('./../utils');
 const user = require('./../model/user');
+const { limitLogins, limitSignUps } = require('./../middleware/attempts');
 
 class Authenticator {
 
@@ -61,8 +62,9 @@ class Authenticator {
     this.app.get('/api/auth/register', this.register);
 
     this.app.post('/api/auth/logout', authority.logout);
-    this.app.post('/api/auth/register', authority.register);
-    this.app.post('/api/auth/login', (req, res, next) => {
+    // Slowed down: the guessing of passwords, the creation of accounts in numbers
+    this.app.post('/api/auth/register', limitSignUps, authority.register);
+    this.app.post('/api/auth/login', limitLogins, (req, res, next) => {
 
       if (req.body.username && utils.isEmailValid(req.body.username)) {
         user.getUsernameByEmail(req.body.username, (err, username) => {

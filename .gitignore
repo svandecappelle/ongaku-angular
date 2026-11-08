@@ -66,3 +66,7 @@ public/lyrics
 
 # Redis backups of "make upgrade"
 /backups/
+
+# Configuration of an instance: its session secret and API keys (the server creates it from
+# server/config/application.example.yml)
+/server/config/application.yml

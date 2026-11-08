@@ -9,6 +9,7 @@ const upgrade = require('./upgrade');
 const authentication = require('./authentication');
 const sessionGuard = require('../middleware/session-guard');
 const guards = require('../middleware/guards');
+const { sameOrigin } = require('../middleware/same-origin');
 const version = require(path.resolve(__dirname, '../utils/version'));
 
 class Routes {
@@ -36,6 +37,8 @@ class Routes {
       console.log('Error on checking installation', err);
     });
 
+    // What changes something comes from the pages of this site, not from another one
+    app.use('/api', sameOrigin());
     // The sessions of the accounts disabled or deleted since their login end here
     app.use('/api', sessionGuard.middleware());
     // Login required everywhere but the authentication, the installation and the stream

@@ -77,7 +77,8 @@ class Authority {
           duration = 1000 * 60 * 60 * 8;
           req.session.cookie.maxAge = duration;
         }
-        logger.info("Connecting: " , userData);
+        // Not the whole user data: its access key stays out of the logs
+        logger.info("Connecting: ", userData.uid);
         if (userData.settings){
           req.session = _.extend(req.session, userData.settings);
         }

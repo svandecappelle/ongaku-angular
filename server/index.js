@@ -11,8 +11,18 @@ const { RedisStore } = require('connect-redis');
 const redis = require('redis');
 const yaml_config = require('node-yaml-config');
 const http = require('http');
+const log4js = require('log4js');
 
 require('colors');
+
+// A configuration file, with a session secret nobody else knows, before anything reads it
+try {
+  require('./app/utils/config-file').ensureConfig();
+} catch (err) {
+  console.error(err.message);
+  // EX_CONFIG: the supervisor (ongaku.js) does not start the server again for nothing
+  process.exit(78);
+}
 
 nconf.file({
   file: path.resolve(__dirname, './config/application.yml'),
@@ -61,8 +71,10 @@ class Server {
 
   initExpressMiddleWare () {
     // app.use(morgan('dev'));
+    // Every request at the debug level only: one line, without the stack of the call
+    const requests = log4js.getLogger('http');
     app.use((req, res, next) => {
-      console.trace(`${req.method} -> ${req.url}`);
+      requests.debug(`${req.method} ${req.originalUrl}`);
       next();
     });
     app.use(bodyParser.urlencoded({ extended: true }));
@@ -71,7 +83,6 @@ class Server {
     app.use(cookieParser());
     if (app.get('env') === 'production') {
       app.set('trust proxy', 1) // trust first proxy
-      // sess.cookie.secure = true // serve secure cookies
     }
 
     // The secret of application.yml signs the session cookies
@@ -79,8 +90,10 @@ class Server {
       store: this.sessionStore(),
       resave: false,
       saveUninitialized: true,
-      secret: nconf.get('secret') || 'keyboard cat',
-      cookie: {}
+      secret: nconf.get('secret'),
+      // Not sent with the requests that other sites make (forms, images): no cross-site request
+      // forgery. Secure behind HTTPS, as told by the proxy (trust proxy).
+      cookie: { httpOnly: true, sameSite: 'lax', secure: 'auto' }
     });
     app.use(this.sessionMiddleware);
 
@@ -95,8 +108,11 @@ class Server {
     });
     */
 
+    // An exception nobody caught leaves the server in an unknown state: it stops, and the
+    // supervisor (ongaku.js, or the restart policy of Docker) starts it again
     process.on('uncaughtException', (err) => {
-      if (err) console.log(err, err.stack);
+      console.error('Uncaught exception: the server stops', err);
+      process.exit(1);
     });
 
     process.on('unhandledRejection', (reason, p) => {

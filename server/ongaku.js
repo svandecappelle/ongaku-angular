@@ -16,6 +16,8 @@ const SERVER = path.join(__dirname, 'index.js');
 const STABLE_AFTER = 10 * 1000;
 const MIN_DELAY = 1000;
 const MAX_DELAY = 30 * 1000;
+/** Exit code of a server that cannot start with its configuration (sysexits.h) */
+const EX_CONFIG = 78;
 
 let child = null;
 let stopping = false;
@@ -28,6 +30,10 @@ function start() {
     child = null;
     if (stopping) {
       return;
+    }
+    if (code === EX_CONFIG) {
+      console.log('[ongaku] The configuration must be fixed first (see above): the server is not started again');
+      process.exit(code);
     }
     delay = Date.now() - startedAt >= STABLE_AFTER ? MIN_DELAY : Math.min(delay * 2, MAX_DELAY);
     console.log(`[ongaku] The server stopped (${signal || `code ${code}`}): starting it again in ${delay / 1000} s`);

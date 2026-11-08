@@ -1,0 +1,37 @@
+# Copy of reference for config/application.yml, which holds the secrets of an instance and stays out
+# of git. The server creates config/application.yml from this file when it is missing, and writes
+# a random "secret" in it when the one there is empty or known (it signs the session cookies).
+product-name: application
+# possible levels:  error, warn, info, verbose, debug, silly
+log-level: info
+port: 4000
+hostname: localhost
+uploader: false
+library: [/path/to/your/music]
+audio: [mp3,  wav, wma, ogg, flac]
+video: [mp4, webm, flv, ogv, mpg]
+defaultLanguage: fr
+database: redis
+type: browser
+playingtype: streaming
+redis:
+    host: 127.0.0.1
+    port: 6379
+    password:
+    database: 0
+secret:
+bcrypt_rounds: 12
+gravatar: true
+local: false
+requireLogin: false
+allowUpload: true
+allowRegisteration: 3
+third-party:
+    spotify:
+        clientId:
+        secret:
+    lastfm:
+        api-key:
+        secret:
+theme:
+  base-color: rgb(230, 217, 45)
