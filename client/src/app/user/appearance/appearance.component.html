@@ -178,6 +178,19 @@
           </mat-button-toggle-group>
           <span class="hint">The waveform of the track in the seek bar, and the equalizer next to the track playing, moving with the sound.</span>
         </div>
+
+        <div class="field">
+          <span class="field-label" id="player-animation-label">Full-screen player</span>
+          <mat-button-toggle-group class="player-animations" [value]="settings().playerAnimation" (change)="setPlayerAnimation($event.value)" aria-labelledby="player-animation-label">
+            @for (option of playerAnimations; track option.id) {
+              <mat-button-toggle [value]="option.id">
+                <mat-icon aria-hidden="true">{{ option.icon }}</mat-icon>
+                {{ option.label }}
+              </mat-button-toggle>
+            }
+          </mat-button-toggle-group>
+          <span class="hint">What moves with the music around the cover. Also in the header of the player.</span>
+        </div>
       </section>
 
       <section class="panel" aria-labelledby="schedule-title">

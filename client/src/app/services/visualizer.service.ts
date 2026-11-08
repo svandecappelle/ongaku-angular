@@ -15,9 +15,18 @@ export interface VisualFrame {
   readonly eq: Float32Array;
   /** Energy of the low frequencies, smoothed: quick to rise, slow to fall */
   readonly bass: number;
+  /** The spectrum in BANDS bands from 40 Hz to 14 kHz, spaced as the ear hears them, from 0 to 1 */
+  readonly bands: Float32Array;
+  /** Overall loudness, slowly smoothed, from 0 to 1 */
+  readonly loudness: number;
   /** 0.5 for "subtle", 1 for "lively" */
   readonly intensity: number;
 }
+
+/** Bands of VisualFrame.bands */
+export const BANDS = 48;
+const LOW_HZ = 40;
+const HIGH_HZ = 14000;
 
 export type FrameListener = (frame: VisualFrame) => void;
 
@@ -48,7 +57,7 @@ export class VisualizerService {
   readonly running = computed(() => this.motion() === 'full' && this.playback.playing() && !this.hidden() && this.listeners().size > 0);
 
   private readonly bins = new Uint8Array(this.playback.analyser.frequencyBinCount);
-  private readonly frame = { eq: new Float32Array(4), bass: 0, intensity: 0.5 };
+  private readonly frame = { eq: new Float32Array(4), bass: 0, bands: new Float32Array(BANDS), loudness: 0, intensity: 0.5 };
   private raf = 0;
 
   constructor() {
@@ -87,7 +96,9 @@ export class VisualizerService {
       this.raf = 0;
     }
     this.frame.bass = 0;
+    this.frame.loudness = 0;
     this.frame.eq.fill(0);
+    this.frame.bands.fill(0);
   }
 
   private tick() {
@@ -118,6 +129,17 @@ export class VisualizerService {
     this.frame.eq[3] = Math.min(1, band(4000, 12000) * 1.8);
     const bass = band(40, 130);
     this.frame.bass += (bass - this.frame.bass) * (bass > this.frame.bass ? 0.5 : 0.08);
+    for (let i = 0; i < BANDS; i++) {
+      const from = LOW_HZ * Math.pow(HIGH_HZ / LOW_HZ, i / BANDS);
+      const to = LOW_HZ * Math.pow(HIGH_HZ / LOW_HZ, (i + 1) / BANDS);
+      // The highs are quieter: lifted little by little
+      this.frame.bands[i] = Math.min(1, band(from, to) * (1 + (i / BANDS) * 0.8));
+    }
+    let total = 0;
+    for (let i = 0; i < this.bins.length; i++) {
+      total += this.bins[i];
+    }
+    this.frame.loudness += (total / this.bins.length / 255 - this.frame.loudness) * 0.05;
     this.frame.intensity = this.theme.visualizers() === 'lively' ? 1 : 0.5;
   }
 }

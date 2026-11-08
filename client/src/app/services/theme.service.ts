@@ -9,6 +9,9 @@ import {
 export type Density = 'comfortable' | 'compact';
 /** Animations that follow the music: off, subtle or lively (see VisualizerService) */
 export type Visualizers = 'off' | 'subtle' | 'lively';
+/** Animation of the full-screen player (see the components of v3/visualizers) */
+export type PlayerAnimation = 'none' | 'glow' | 'spectrum' | 'ambient' | 'disc';
+export const PLAYER_ANIMATIONS: readonly PlayerAnimation[] = ['none', 'glow', 'spectrum', 'ambient', 'disc'];
 /** Automatic switch between a day theme and a night theme */
 export type Schedule = 'off' | 'system' | 'timed';
 
@@ -29,6 +32,7 @@ export interface ThemePreference {
   radius: RadiusId;
   reduceMotion: boolean;
   visualizers: Visualizers;
+  playerAnimation: PlayerAnimation;
   showBackground: boolean;
   /** Opacity of the veil drawn over the background image, 0–100 */
   backgroundVeil: number;
@@ -49,6 +53,7 @@ export const DEFAULT_PREFERENCE: ThemePreference = {
   radius: 'round',
   reduceMotion: false,
   visualizers: 'subtle',
+  playerAnimation: 'glow',
   showBackground: true,
   backgroundVeil: 50,
   customThemes: [],
@@ -89,6 +94,7 @@ export class ThemeService {
   readonly showBackground = computed(() => this.preference().showBackground);
   readonly reduceMotion = computed(() => this.preference().reduceMotion);
   readonly visualizers = computed(() => this.preference().visualizers);
+  readonly playerAnimation = computed(() => this.preference().playerAnimation);
   readonly backgroundVeil = computed(() => this.preference().backgroundVeil);
   /** URL of the profile background image: the version changes when the user replaces it, the
    *  server revalidates it otherwise (sendFile answers with max-age=0 and an ETag) */
@@ -334,6 +340,7 @@ export class ThemeService {
       radius: RADII.some((r) => r.id === pref.radius) ? pref.radius : d.radius,
       reduceMotion: !!pref.reduceMotion,
       visualizers: (['off', 'subtle', 'lively'] as const).find((v) => v === pref.visualizers) ?? d.visualizers,
+      playerAnimation: PLAYER_ANIMATIONS.find((a) => a === pref.playerAnimation) ?? d.playerAnimation,
       showBackground: pref.showBackground ?? d.showBackground,
       backgroundVeil: number(pref.backgroundVeil, d.backgroundVeil, 0, 100),
       customThemes,

@@ -3,7 +3,8 @@ import { RouterLink } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { MaterialModule } from '../../modules/material.module';
-import { CONTENT_SCALE_MAX, CONTENT_SCALE_MIN, Density, Schedule, ThemeService, Visualizers } from '../../services/theme.service';
+import { CONTENT_SCALE_MAX, CONTENT_SCALE_MIN, Density, PlayerAnimation, Schedule, ThemeService, Visualizers } from '../../services/theme.service';
+import { PLAYER_ANIMATION_CHOICES } from '../../v3/visualizers/player-animations';
 import { ThemePreviewComponent } from '../../theme/theme-preview/theme-preview.component';
 import { AccentId, FontId, RadiusId } from '../../theme/themes';
 
@@ -86,6 +87,12 @@ export class AppearanceComponent {
 
   setVisualizers(visualizers: Visualizers) {
     this.theme.update({ visualizers });
+  }
+
+  readonly playerAnimations = PLAYER_ANIMATION_CHOICES;
+
+  setPlayerAnimation(playerAnimation: PlayerAnimation) {
+    this.theme.update({ playerAnimation });
   }
 
   setSchedule(schedule: Schedule) {

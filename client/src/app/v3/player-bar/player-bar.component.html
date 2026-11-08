@@ -104,6 +104,9 @@
 @if (expanded() && playback.current(); as track) {
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" [class.side-by-side]="lyricsBesideCover()"
     cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (keydown.escape)="expanded.set(false)">
+    @if (showAmbient()) {
+      <app-ambient-backdrop class="sheet-ambient"></app-ambient-backdrop>
+    }
     <div class="sheet-content">
       <header class="sheet-header">
         <button mat-icon-button type="button" (click)="expanded.set(false)" aria-label="Hide the player" cdkFocusInitial>
@@ -111,6 +114,20 @@
         </button>
         <span class="eyebrow">{{ libraryRadio.active() ? 'Radio · ' + libraryRadio.active()!.name : track.album ? 'Playing from ' + track.album : 'Now playing' }}</span>
         <span class="header-actions">
+          <button mat-icon-button type="button" class="animation-picker" [matMenuTriggerFor]="animationMenu" aria-label="Animation" matTooltip="Animation">
+            <mat-icon>graphic_eq</mat-icon>
+          </button>
+          <mat-menu #animationMenu="matMenu" class="animation-menu">
+            @for (option of animations; track option.id) {
+              <button mat-menu-item type="button" role="menuitemradio" [attr.aria-checked]="animation() === option.id" (click)="setAnimation(option.id)">
+                <mat-icon>{{ option.icon }}</mat-icon>
+                <span>{{ option.label }}</span>
+                @if (animation() === option.id) {
+                  <mat-icon class="checked" aria-hidden="true">check</mat-icon>
+                }
+              </button>
+            }
+          </mat-menu>
           @if (lyrics()) {
             <button mat-icon-button type="button" [class.active]="showLyrics()" (click)="showLyrics.set(!showLyrics())"
               [attr.aria-pressed]="showLyrics()" aria-label="Lyrics" matTooltip="Lyrics">
@@ -128,11 +145,21 @@
 
       @if (lyricsInsteadOfCover()) {
         <app-lyrics-view class="sheet-lyrics" [lyrics]="lyrics()!"></app-lyrics-view>
+      } @else if (showDisc()) {
+        <app-spinning-disc class="sheet-disc" [src]="cover(track.uid)"></app-spinning-disc>
       } @else {
-        <span class="sheet-cover">
-          <mat-icon aria-hidden="true">album</mat-icon>
-          <img [src]="cover(track.uid)" alt="" (error)="$any($event.target).hidden = true">
+        <span class="sheet-stage">
+          @if (showGlow()) {
+            <app-cover-glow class="sheet-glow"></app-cover-glow>
+          }
+          <span class="sheet-cover">
+            <mat-icon aria-hidden="true">album</mat-icon>
+            <img [src]="cover(track.uid)" alt="" (error)="$any($event.target).hidden = true">
+          </span>
         </span>
+      }
+      @if (showSpectrum()) {
+        <app-spectrum class="sheet-spectrum" [peaks]="peaks()"></app-spectrum>
       }
 
       <div class="sheet-meta">

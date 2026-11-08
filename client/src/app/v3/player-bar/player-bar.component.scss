@@ -383,6 +383,48 @@
   min-height: 0;
 }
 
+// ---------- Animations of the full-screen player ----------
+
+// Behind everything, filling the screen while the sheet scrolls
+.sheet-ambient {
+  position: fixed;
+  inset: 0;
+}
+
+.sheet-content,
+.sheet-side {
+  position: relative;
+}
+
+.sheet-stage {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  > .sheet-cover {
+    position: relative;
+  }
+}
+
+// Around the cover, under it
+.sheet-glow {
+  position: absolute;
+  inset: -16%;
+}
+
+.sheet-disc {
+  width: 100%;
+}
+
+.sheet-spectrum {
+  margin-bottom: -14px;
+}
+
+.checked {
+  margin: 0 0 0 auto;
+  color: var(--ongaku-accent);
+}
+
 // Replaces the cover: same footprint, so that the controls do not move
 .sheet-lyrics {
   width: 100%;

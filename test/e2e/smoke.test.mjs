@@ -321,6 +321,49 @@ test('the seek bar shows the waveform, the row playing an equalizer; both follow
   await page.waitFor(`document.querySelector('app-player-bar .seek mat-slider') && !document.querySelector('app-player-bar app-waveform-seek')`, { what: 'the plain slider' });
 });
 
+test('the full player offers its animations, each one drawn; turned off, only the still disc stays', { skip }, async (t) => {
+  const appearance = async (label, choice) => {
+    await page.goto('/profile/appearance', await login('carol'));
+    await page.waitFor(`document.querySelector('[aria-labelledby="${label}"]')`, { what: `the setting ${label}` });
+    await page.eval(`[...document.querySelectorAll('[aria-labelledby="${label}"] button')].find((b) => b.textContent.trim().endsWith(${JSON.stringify(choice)})).click()`);
+  };
+  t.after(async () => {
+    await appearance('visualizers-label', 'Subtle');
+    await appearance('player-animation-label', 'Breathing cover');
+  });
+  const painted = (selector) => `(() => { const c = document.querySelector('${selector}'); const d = c && c.width > 1 && c.getContext('2d').getImageData(0, 0, c.width, c.height).data; return !!d && d.some((v, i) => i % 4 === 3 && v > 0); })()`;
+  const open = async () => {
+    await page.goto('/album/Lyric%20Band/Songs', await login('carol'));
+    await page.waitFor(`document.querySelectorAll('app-track-list tbody tr').length === 3`, { what: 'the tracks' });
+    await playRow('No lyrics song');
+    await page.waitFor(`document.querySelector('app-player-bar .now-playing')`, { what: 'the player' });
+    await page.eval(`document.querySelector('app-player-bar .now-playing').click()`);
+    await page.waitFor(`document.querySelector('app-player-bar .sheet .animation-picker')`, { what: 'the full player' });
+  };
+  const pick = async (label) => {
+    await page.eval(`document.querySelector('app-player-bar .sheet .animation-picker').click()`);
+    await page.waitFor(`[...document.querySelectorAll('.animation-menu [role="menuitemradio"]')].some((item) => item.textContent.includes(${JSON.stringify(label)}))`, { what: 'the animation menu' });
+    await page.eval(`[...document.querySelectorAll('.animation-menu [role="menuitemradio"]')].find((item) => item.textContent.includes(${JSON.stringify(label)})).click()`);
+  };
+
+  await open();
+  for (const [label, selector] of [['Breathing cover', 'app-cover-glow'], ['Spectrum', 'app-spectrum'], ['Ambient backdrop', 'app-ambient-backdrop'], ['Spinning disc', 'app-spinning-disc']]) {
+    await pick(label);
+    await page.waitFor(painted(`app-player-bar .sheet ${selector} canvas`), { what: `the ${label} drawn` });
+  }
+  assert.ok(await page.eval(`!!document.querySelector('app-player-bar .sheet app-spinning-disc .disc')`), 'the disc holds the cover');
+  await pick('Cover only');
+  await page.waitFor(`!document.querySelector('app-player-bar .sheet app-spinning-disc, app-player-bar .sheet app-cover-glow') && document.querySelector('app-player-bar .sheet .sheet-cover')`, { what: 'the cover alone' });
+
+  // The choice is a setting: Appearance shows it, and the visualizers turned off keep the disc only
+  await appearance('player-animation-label', 'Ambient backdrop');
+  await appearance('visualizers-label', 'Off');
+  await open();
+  assert.ok(!(await page.eval(`!!document.querySelector('app-player-bar .sheet app-ambient-backdrop')`)), 'no backdrop with the visualizers off');
+  await pick('Spinning disc');
+  await page.waitFor(painted('app-player-bar .sheet app-spinning-disc canvas'), { what: 'the still disc and its progress ring' });
+});
+
 test('a backup is downloaded and restored from the Backup tab, the data and the music apart', { skip }, async () => {
   await page.goto('/admin', await login('boss'));
   await page.waitFor(`[...document.querySelectorAll('.mdc-tab')].some((tab) => tab.textContent.trim() === 'Backup')`, { what: 'the tabs' });
