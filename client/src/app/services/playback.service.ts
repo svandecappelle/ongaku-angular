@@ -56,6 +56,8 @@ export class PlaybackService {
   private readonly gainNode = this.context.createGain();
   /** Position to start the next loaded track at, in seconds */
   private startAt = 0;
+  /** The next loaded track stays paused (a queue put back after a reload) */
+  private holdAfterLoad = false;
 
   readonly tracks = toSignal(this.store.select((state) => state.trackList), { initialValue: [] as Song[] });
   readonly current = signal<Song | null>(null);
@@ -94,7 +96,12 @@ export class PlaybackService {
     this.audio.addEventListener('ended', () => this.next());
     this.audio.addEventListener('canplay', () => {
       if (this.state() === 'loading') {
-        this.resume();
+        if (this.holdAfterLoad) {
+          this.holdAfterLoad = false;
+          this.state.set('paused');
+        } else {
+          this.resume();
+        }
       }
     });
 
@@ -174,6 +181,11 @@ export class PlaybackService {
     }
   }
 
+  /** Where the current track is, or will start once loaded */
+  resumeTime(): number {
+    return (this.state() === 'loading' && this.startAt) || this.audio.currentTime || 0;
+  }
+
   seek(seconds: number) {
     this.audio.currentTime = seconds;
     this.currentTime.set(seconds);
@@ -224,6 +236,24 @@ export class PlaybackService {
     if (at >= 0) {
       this.play(queue[at], snapshot.time);
     }
+  }
+
+  /**
+   * Puts back a queue saved before a reload of the page, paused on its track at `time`:
+   * the browsers do not let a page play sound before the user clicks in it.
+   */
+  restoreSession(tracks: Song[], index: number, time: number) {
+    const queue = tracks.map((track, i) => ({ ...track, index: i }));
+    const track = queue[index];
+    if (!track) {
+      return;
+    }
+    // Set first: the first track of an empty queue would start playing
+    this.current.set(track);
+    this.store.dispatch(new SetPlaylist(queue));
+    this.startAt = time;
+    this.holdAfterLoad = true;
+    this.load(track);
   }
 
   removeAt(index: number) {
