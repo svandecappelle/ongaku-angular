@@ -41,8 +41,24 @@
     </div>
   } @else if (files() === null) {
     <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-  } @else if (files()!.length) {
-    <ul class="files">
+  } @else {
+    @if (paged()) {
+      <div class="list-tools">
+        <mat-form-field class="filter" subscriptSizing="dynamic">
+          <mat-icon matPrefix>search</mat-icon>
+          <mat-label>Filter by name</mat-label>
+          <input matInput [ngModel]="filter()" (ngModelChange)="setFilter($event)" autocomplete="off">
+        </mat-form-field>
+        <span class="muted small" role="status">{{ total() }} {{ total() === 1 ? 'item' : 'items' }}{{ filter().trim() ? ' match' : '' }}</span>
+      </div>
+    }
+    <div class="list-progress">
+      @if (loading()) {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      }
+    </div>
+  @if (files()!.length) {
+    <ul class="files" [class.stale]="loading()">
       @for (file of files(); track file.name) {
         <li class="file" [class.directory]="file.type === 'directory'">
           <button type="button" class="file-main" (click)="open(file)" [disabled]="file.type !== 'directory'"
@@ -58,11 +74,21 @@
         </li>
       }
     </ul>
+    @if (paged()) {
+      <mat-paginator [length]="total()" [pageIndex]="page()" [pageSize]="pageSize()" [pageSizeOptions]="pageSizes"
+        (page)="onPage($event)" aria-label="Pages of the folder"></mat-paginator>
+    }
+  } @else if (filter().trim()) {
+    <div class="empty muted">
+      <mat-icon>search_off</mat-icon>
+      <span>No file matches “{{ filter().trim() }}” in this folder.</span>
+    </div>
   } @else {
     <div class="empty muted">
       <mat-icon>folder_open</mat-icon>
       <span>This folder is empty.</span>
     </div>
+  }
   }
 
   @if (quota(); as q) {

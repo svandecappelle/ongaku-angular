@@ -274,3 +274,29 @@
     display: none;
   }
 }
+
+// Filter and pages, for the large folders
+.list-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.filter {
+  width: min(100%, 320px);
+}
+
+// Room kept for the bar: the list does not move when a page loads
+.list-progress {
+  height: 4px;
+}
+
+.files.stale {
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+mat-paginator {
+  background: transparent;
+}

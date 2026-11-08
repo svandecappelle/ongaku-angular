@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse, HttpEventType, HttpParams, HttpRequest } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { PageEvent } from '@angular/material/paginator';
 
 import { MaterialModule } from '../modules/material.module';
 
@@ -18,6 +19,27 @@ interface ImportResult {
   file: string;
   imported?: string[];
   error?: string;
+}
+
+/** A page of a folder (GET /api/user/files) */
+interface FilesPage {
+  files: UploadedFile[];
+  total: number;
+  page: number;
+  size: number;
+}
+
+/** The paginator and the filter show from this many items */
+const MIN_PAGED = 25;
+const PAGE_SIZE_KEY = 'ongaku.uploads.pageSize';
+
+function savedPageSize(): number {
+  try {
+    const size = Number(localStorage.getItem(PAGE_SIZE_KEY));
+    return [25, 50, 100, 200].includes(size) ? size : 50;
+  } catch {
+    return 50;
+  }
 }
 
 /** Upload quota of the user, in bytes; quota and remaining are null when unlimited */
@@ -55,6 +77,18 @@ export class UploadsBrowserComponent {
 
   readonly files = signal<UploadedFile[] | null>(null);
   readonly failed = signal(false);
+  /** A page is loading: the previous one stays shown meanwhile */
+  readonly loading = signal(false);
+  readonly page = signal(0);
+  readonly pageSize = signal(savedPageSize());
+  /** Items of the folder (matching the filter) */
+  readonly total = signal(0);
+  readonly filter = signal('');
+  readonly pageSizes = [25, 50, 100, 200];
+  readonly paged = computed(() => this.total() > MIN_PAGED || this.page() > 0 || !!this.filter());
+  private filterTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Answers of an older request are dropped */
+  private request = 0;
   readonly newFolder = signal<string | null>(null);
   readonly items = signal<UploadItem[]>([]);
   readonly uploading = computed(() => this.items().some((item) => item.state === 'uploading'));
@@ -72,22 +106,67 @@ export class UploadsBrowserComponent {
   });
 
   constructor() {
+    // Another folder: its first page, without filter
     effect(() => {
       this.path();
-      untracked(() => this.load());
+      untracked(() => {
+        this.page.set(0);
+        this.filter.set('');
+        this.files.set(null);
+        this.load();
+      });
     });
   }
 
   load() {
     this.failed.set(false);
+    this.loading.set(true);
+    const request = ++this.request;
     this.http.get<Quota>('/api/user/quota').subscribe({ next: (quota) => this.quota.set(quota), error: () => this.quota.set(null) });
-    this.http.get<{ files: UploadedFile[] }>('/api/user/files', { params: { path: this.path() } }).subscribe({
-      next: (answer) => this.files.set(answer.files),
+    const params = { path: this.path(), page: this.page(), size: this.pageSize(), q: this.filter().trim() };
+    this.http.get<FilesPage>('/api/user/files', { params }).subscribe({
+      next: (answer) => {
+        if (request !== this.request) {
+          return;
+        }
+        this.loading.set(false);
+        this.files.set(answer.files);
+        this.total.set(answer.total ?? answer.files.length);
+        // The server goes back to the last page when files were deleted
+        this.page.set(answer.page ?? 0);
+      },
       error: () => {
+        if (request !== this.request) {
+          return;
+        }
+        this.loading.set(false);
         this.files.set(null);
         this.failed.set(true);
       },
     });
+  }
+
+  onPage(event: PageEvent) {
+    if (event.pageSize !== this.pageSize()) {
+      this.pageSize.set(event.pageSize);
+      try {
+        localStorage.setItem(PAGE_SIZE_KEY, String(event.pageSize));
+      } catch {
+        // Storage unavailable: the size lasts for this visit
+      }
+    }
+    this.page.set(event.pageIndex);
+    this.load();
+  }
+
+  /** Filters by name, once the typing pauses */
+  setFilter(value: string) {
+    this.filter.set(value);
+    clearTimeout(this.filterTimer);
+    this.filterTimer = setTimeout(() => {
+      this.page.set(0);
+      this.load();
+    }, 250);
   }
 
   open(file: UploadedFile) {

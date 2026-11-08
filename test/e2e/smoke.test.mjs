@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 
-import { MUSIC, api, eventually, login } from '../helpers/client.mjs';
+import { APP, MUSIC, api, eventually, login } from '../helpers/client.mjs';
 import { openBrowser } from '../helpers/browser.mjs';
 
 const skip = !process.env.CHROME ? 'no Chromium (set CHROME)' : !process.env.ONGAKU_TEST_CLIENT ? 'client not built (client/dist)' : false;
@@ -271,6 +271,26 @@ test('the Files tab of the administration tells why files are not listed', { ski
   await page.eval(`(() => { const input = document.querySelector('.files-filter input'); input.value = 'Misc'; input.dispatchEvent(new Event('input', { bubbles: true })); })()`);
   await page.waitFor(`![...document.querySelectorAll('#files-formats code')].some((c) => c.textContent.includes('Audit/Formats'))`, { what: 'the filtered list' });
   assert.ok(await page.eval(`[...document.querySelectorAll('#files-unreadable code')].some((c) => c.textContent.includes('Misc/broken.mp3'))`));
+});
+
+test('a large uploads folder is shown by page, and can be filtered', { skip }, async (t) => {
+  await api('/api/user/files/folder', { as: 'carol', json: { name: 'Big folder' } });
+  t.after(() => api(`/api/user/files?path=${encodeURIComponent('Big folder')}`, { as: 'carol', method: 'DELETE' }));
+  const target = path.join(APP, 'public/user/carol/imported/Big folder');
+  for (let n = 1; n <= 63; n++) {
+    fs.writeFileSync(path.join(target, `note-${n}.txt`), 'x');
+  }
+
+  await page.goto('/my-library?tab=uploads&path=Big%20folder', await login('carol'));
+  await page.waitFor(`document.querySelectorAll('app-uploads-browser .file').length === 50`, { what: 'the first page' });
+  assert.ok(await page.eval(`!!document.querySelector('app-uploads-browser mat-paginator')`), 'a paginator');
+  await page.eval(`document.querySelector('app-uploads-browser .mat-mdc-paginator-navigation-next').click()`);
+  await page.waitFor(`document.querySelectorAll('app-uploads-browser .file').length === 13`, { what: 'the second page' });
+  assert.equal(await page.eval(`document.querySelector('app-uploads-browser .file-name').textContent.trim()`), 'note-51.txt', 'natural order');
+
+  await page.eval(`(() => { const input = document.querySelector('app-uploads-browser .filter input'); input.value = 'note-6'; input.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+  // note-6 and note-60 to note-63
+  await page.waitFor(`document.querySelectorAll('app-uploads-browser .file').length === 5`, { what: 'the filtered files' });
 });
 
 test('no uncaught error in the pages', { skip }, () => {

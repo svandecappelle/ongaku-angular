@@ -11,6 +11,7 @@ const middleware = require("./../../middleware/middleware");
 const scanner = require("./../../middleware/scanner");
 const quota = require("./../../middleware/quota");
 const communication = require("./../../communication");
+const searchText = require("./../../middleware/search-text");
 
 const userlib = require("./../../model/library");
 const likes = require("./../../model/likes");
@@ -150,23 +151,42 @@ function withUploadsPath(req, res, callback) {
     callback(username, target, path.relative(uploadsRoot(username), target).split(path.sep).join('/'));
 }
 
+/** Files shown by page in the uploads view */
+const FILES_PAGE = 50;
+const MAX_FILES_PAGE = 200;
+const NAME_ORDER = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+
+/**
+ * A folder of the uploads, by page: ?page= (from 0), ?size= (50, at most 200) and ?q= (part of
+ * the name, ignoring case and accents). Folders first, then by name; only the files of the page
+ * are read for their size and date. { path, files, total, page, size }
+ */
 router.get('/files', (req, res) => {
     withUploadsPath(req, res, (username, target, relative) => {
         fs.readdir(target, { withFileTypes: true }, (err, entries) => {
             if (err) {
                 return res.status(err.code === 'ENOENT' ? 404 : 500).json({ message: err.code === 'ENOENT' ? 'No such folder' : 'Internal server error' });
             }
-            const files = entries.filter((entry) => !entry.name.startsWith('.')).map((entry) => {
-                const stat = fs.statSync(path.join(target, entry.name));
-                return {
+            const size = Math.min(Math.max(parseInt(req.query.size, 10) || FILES_PAGE, 1), MAX_FILES_PAGE);
+            const query = typeof req.query.q === 'string' ? searchText.normalize(req.query.q).trim() : '';
+            // Folders first; accents in their place, "track 2" before "track 10"
+            const visible = entries
+                .filter((entry) => !entry.name.startsWith('.') && (!query || searchText.normalize(entry.name).includes(query)))
+                .sort((a, b) => (b.isDirectory() - a.isDirectory()) || NAME_ORDER.compare(a.name, b.name));
+            const pages = Math.max(1, Math.ceil(visible.length / size));
+            // Past the end (files deleted meanwhile): the last page
+            const page = Math.min(Math.max(parseInt(req.query.page, 10) || 0, 0), pages - 1);
+            Promise.all(visible.slice(page * size, (page + 1) * size).map((entry) => fs.promises.stat(path.join(target, entry.name))
+                .then((stat) => stat, () => null)
+                .then((stat) => ({
                     name: entry.name,
                     type: entry.isDirectory() ? 'directory' : 'file',
-                    size: entry.isDirectory() ? null : stat.size,
-                    modified: stat.mtimeMs,
+                    size: entry.isDirectory() || !stat ? null : stat.size,
+                    modified: stat ? stat.mtimeMs : null,
                     audio: !entry.isDirectory() && importer.isAudio(entry.name)
-                };
+                })))).then((files) => {
+                res.json({ path: relative, files: files, total: visible.length, page: page, size: size });
             });
-            res.json({ path: relative, files: _.sortBy(files, (file) => (file.type === 'directory' ? '0' : '1') + file.name.toLowerCase()) });
         });
     });
 });
