@@ -296,6 +296,31 @@
   }
 }
 
+// Wide screens: the player on the left, the lyrics on the right
+.sheet.side-by-side {
+  align-items: flex-start;
+  gap: 56px;
+  padding: 0 32px;
+  box-sizing: border-box;
+}
+
+.sheet-side {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  flex: 0 1 560px;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 72px 0 28px;
+  display: flex;
+  animation: sheet-in .25s ease-out;
+}
+
+.side-lyrics {
+  flex: 1;
+  min-height: 0;
+}
+
 // Replaces the cover: same footprint, so that the controls do not move
 .sheet-lyrics {
   width: 100%;

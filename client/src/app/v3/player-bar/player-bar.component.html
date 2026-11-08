@@ -72,7 +72,7 @@
 
 <!-- Full-screen player, opened from the cover -->
 @if (expanded() && playback.current(); as track) {
-  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title"
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" [class.side-by-side]="lyricsBesideCover()"
     cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (keydown.escape)="expanded.set(false)">
     <div class="sheet-content">
       <header class="sheet-header">
@@ -96,8 +96,8 @@
         </span>
       </header>
 
-      @if (showLyrics() && lyrics(); as lyrics) {
-        <app-lyrics-view class="sheet-lyrics" [lyrics]="lyrics"></app-lyrics-view>
+      @if (lyricsInsteadOfCover()) {
+        <app-lyrics-view class="sheet-lyrics" [lyrics]="lyrics()!"></app-lyrics-view>
       } @else {
         <span class="sheet-cover">
           <mat-icon aria-hidden="true">album</mat-icon>
@@ -148,5 +148,11 @@
         Queue · {{ playback.upcoming().length }} up next
       </button>
     </div>
+    <!-- Wide screens: the lyrics beside the cover -->
+    @if (lyricsBesideCover()) {
+      <aside class="sheet-side" aria-label="Lyrics">
+        <app-lyrics-view class="side-lyrics" [lyrics]="lyrics()!"></app-lyrics-view>
+      </aside>
+    }
   </div>
 }

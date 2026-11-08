@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { A11yModule } from '@angular/cdk/a11y';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { RouterLink } from '@angular/router';
 
 import { MaterialModule } from '../../modules/material.module';
@@ -44,8 +45,11 @@ export class PlayerBarComponent {
     ),
     { initialValue: null },
   );
-  /** The full-screen player shows the lyrics instead of the cover */
+  /** The full-screen player shows the lyrics: instead of the cover, or next to it on wide screens */
   readonly showLyrics = signal(false);
+  private readonly wide = toSignal(inject(BreakpointObserver).observe('(min-width: 960px)').pipe(map((state) => state.matches)), { initialValue: false });
+  readonly lyricsBesideCover = computed(() => this.wide() && this.showLyrics() && !!this.lyrics());
+  readonly lyricsInsteadOfCover = computed(() => !this.wide() && this.showLyrics() && !!this.lyrics());
 
   readonly queueOpen = input(false);
   readonly toggleQueue = output<void>();
