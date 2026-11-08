@@ -27,6 +27,35 @@ test('the login page renders for an anonymous visitor', { skip }, async () => {
   assert.equal(await page.eval(`!!document.querySelector('app-shell')`), false, 'no shell before login');
 });
 
+/** Fills the login form and submits it */
+const signIn = (username, password) => page.eval(`(() => {
+  const set = (selector, value) => {
+    const input = document.querySelector(selector);
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  set('input[autocomplete=username]', ${JSON.stringify(username)});
+  set('input[autocomplete=current-password]', ${JSON.stringify(password)});
+  document.querySelector('app-login button[type=submit]').click();
+})()`);
+
+test('a wrong password is told; signing in goes back to the page asked for', { skip }, async () => {
+  await page.goto('/profile');
+  await page.waitFor(`location.pathname === '/login' && new URLSearchParams(location.search).get('returnUrl') === '/profile'`, { what: 'the login page with the page asked for' });
+  await page.waitFor(`document.querySelector('app-login input[autocomplete=username]')`, { what: 'the login form' });
+
+  await signIn('carol', 'not-the-password');
+  await page.waitFor(`document.querySelector('app-login .error')`, { what: 'the error message' });
+  assert.equal(await page.eval(`document.querySelector('app-login .error-text').textContent.trim()`), 'Wrong user name or password.');
+  await signIn('nobody', 'whatever1');
+  await page.waitFor(`document.querySelector('app-login .error') && !document.querySelector('app-login button[type=submit]').disabled`, { what: 'the second answer' });
+  assert.equal(await page.eval(`document.querySelector('app-login .error-text').textContent.trim()`), 'Wrong user name or password.', 'an unknown user: same message');
+
+  await signIn('carol', 'carolpass1');
+  await page.waitFor(`location.pathname === '/profile' && document.querySelector('app-shell')`, { what: 'the profile after signing in' });
+  assert.equal(await page.eval(`!!document.querySelector('app-login')`), false);
+});
+
 test('Discover shows artists and albums', { skip }, async () => {
   await page.goto('/', await login('boss'));
   await page.waitFor(`document.querySelectorAll('app-album-card').length > 0`, { what: 'album cards' });

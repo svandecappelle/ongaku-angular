@@ -1,37 +1,72 @@
-<div class="signin-content">
-  <mat-card appearance="outlined">
-    <mat-card-content>
-      <form [formGroup]="form" (ngSubmit)="onSubmit()">
-        <p>Please login to continue</p>
-        <mat-form-field class="full-width-input">
-          <mat-label>User</mat-label>
-          <input matInput
-            formControlName="userName" required>
-          @if (isFieldInvalid('userName')) {
-            <mat-error>
-              Please inform your user name
-            </mat-error>
-          }
-        </mat-form-field>
-        <mat-form-field class="full-width-input">
-          <mat-label>Password</mat-label>
-          <input matInput type="password"
-            formControlName="password" required>
-          @if (isFieldInvalid('userName')) {
-            <mat-error>
-              Please inform your password
-            </mat-error>
-          }
-        </mat-form-field>
-        <div>
-          <mat-checkbox matCheckbox formControlName="rememberme">Remember me</mat-checkbox>
-        </div>
-        <button mat-raised-button color="primary" type="submit">Login</button>
-      </form>
-      <a routerLink="/register">Not have an account ?</a>
-      @if (loginInProgress) {
-        <mat-progress-bar class="login-in-progress" [mode]="'indeterminate'"></mat-progress-bar>
-      }
-    </mat-card-content>
-  </mat-card>
-</div>
+<main class="login-page">
+  <div class="glow" aria-hidden="true"></div>
+
+  <section class="card" aria-labelledby="login-title">
+    <div class="brand">
+      <span class="logo" [class.busy]="submitting()" aria-hidden="true">
+        <svg viewBox="0 0 64 64">
+          <rect width="64" height="64" rx="15" class="logo-bg"/>
+          <g class="logo-note">
+            <path d="M24 17.5 50 11.5v9l-26 6z"/>
+            <rect x="24" y="17.5" width="6" height="27"/>
+            <rect x="44" y="12.5" width="6" height="27"/>
+            <ellipse cx="21" cy="45" rx="8.4" ry="6.4" transform="rotate(-22 21 45)"/>
+            <ellipse cx="41" cy="40" rx="8.4" ry="6.4" transform="rotate(-22 41 40)"/>
+          </g>
+        </svg>
+      </span>
+      <span class="wordmark">Ongaku</span>
+    </div>
+
+    <header class="intro">
+      <h1 id="login-title">Welcome back</h1>
+      <p class="muted">Sign in to listen to your library.</p>
+    </header>
+
+    @if (error(); as message) {
+      <p class="error" role="alert">
+        <mat-icon aria-hidden="true">error_outline</mat-icon>
+        <span class="error-text">{{ message }}</span>
+      </p>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <mat-form-field appearance="outline">
+        <mat-label>User name or e-mail</mat-label>
+        <mat-icon matPrefix aria-hidden="true">person_outline</mat-icon>
+        <input matInput formControlName="userName" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+        @if (form.controls.userName.hasError('required')) {
+          <mat-error>Enter your user name or e-mail</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Password</mat-label>
+        <mat-icon matPrefix aria-hidden="true">lock_outline</mat-icon>
+        <input #passwordInput matInput [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="current-password" required>
+        <button mat-icon-button matSuffix type="button" (click)="showPassword.set(!showPassword())"
+          [attr.aria-label]="showPassword() ? 'Hide the password' : 'Show the password'" [attr.aria-pressed]="showPassword()">
+          <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        @if (form.controls.password.hasError('required')) {
+          <mat-error>Enter your password</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-checkbox formControlName="rememberme">Keep me signed in</mat-checkbox>
+
+      <button mat-flat-button color="accent" type="submit" class="submit" [disabled]="submitting()" [attr.aria-busy]="submitting()">
+        @if (submitting()) {
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          Signing in…
+        } @else {
+          Sign in
+        }
+      </button>
+    </form>
+
+    <p class="footer muted">
+      No account yet? <a routerLink="/register">Create one</a>
+    </p>
+  </section>
+</main>

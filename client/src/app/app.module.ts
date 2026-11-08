@@ -25,7 +25,6 @@ import { InstallService } from './install/install.service';
 
 
 import { AppStateModule } from './app-state';
-import { LoginComponent } from './login/login.component';
 
 import {
   AlertService,
@@ -53,7 +52,6 @@ import { ShellComponent } from './v3/shell/shell.component';
         ContentComponent,
         InstallComponent,
         UpgradeComponent,
-        LoginComponent,
         MetadatasComponent,
         RadiosComponent,
         ReloadComponent

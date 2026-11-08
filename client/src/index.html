@@ -29,28 +29,50 @@
       }
     } catch (e) {}
   </script>
+  <style>
+    /* Startup loader: the logo and an equalizer, in the colours of the last theme */
+    html, body { margin: 0; background: var(--ongaku-bg, #0f1115); }
+    .boot { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+      background: var(--ongaku-bg, #0f1115); animation: boot-in 0.4s ease-out 0.15s both; }
+    .boot-logo { width: 72px; height: 72px; filter: drop-shadow(0 12px 32px color-mix(in srgb, var(--ongaku-accent, #4fd1c5) 35%, transparent)); }
+    .boot-bg { fill: var(--ongaku-accent, #4fd1c5); }
+    .boot-note { fill: var(--ongaku-on-accent, #0f1115); transform-origin: 50% 70%; animation: boot-beat 1.2s ease-in-out infinite; }
+    .boot-eq { display: flex; align-items: flex-end; gap: 4px; height: 22px; }
+    .boot-eq i { width: 4px; height: 100%; border-radius: 2px; background: var(--ongaku-accent, #4fd1c5); transform-origin: bottom;
+      animation: boot-eq 1s ease-in-out infinite; }
+    .boot-eq i:nth-child(2) { animation-delay: -0.6s; }
+    .boot-eq i:nth-child(3) { animation-delay: -0.3s; }
+    .boot-eq i:nth-child(4) { animation-delay: -0.8s; }
+    .boot-eq i:nth-child(5) { animation-delay: -0.45s; }
+    @keyframes boot-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes boot-beat { 0%, 100% { transform: scale(1); } 25% { transform: scale(1.1) rotate(-4deg); } 50% { transform: scale(0.97); } }
+    @keyframes boot-eq { 0%, 100% { transform: scaleY(0.25); } 50% { transform: scaleY(1); } }
+    @media (prefers-reduced-motion: reduce) {
+      .boot, .boot-note, .boot-eq i { animation: none; }
+      .boot-eq i { transform: scaleY(0.5); }
+    }
+    html[data-motion='reduced'] .boot-note, html[data-motion='reduced'] .boot-eq i { animation: none; }
+  </style>
   <!--<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">-->
   <link href="/assets/fonts/iconfont/material-icons.css?family=Material+Icons" rel="stylesheet">
 
 </head>
 <body>
   <app-root>
-
-      <div class="loader">
-        <div class="segment-holder">
-          <div class="segment one"></div>
-        </div>
-        <div class="segment-holder">
-          <div class="segment two"></div>
-        </div>
-        <div class="segment-holder">
-          <div class="segment three"></div>
-        </div>
-        <div class="segment-holder">
-          <div class="segment four"></div>
-        </div>
-      </div>
-
+    <!-- Shown until Angular starts; inline styles so that it appears before the stylesheets -->
+    <div class="boot" role="status" aria-label="Loading Ongaku">
+      <svg class="boot-logo" viewBox="0 0 64 64" aria-hidden="true">
+        <rect width="64" height="64" rx="15" class="boot-bg"/>
+        <g class="boot-note">
+          <path d="M24 17.5 50 11.5v9l-26 6z"/>
+          <rect x="24" y="17.5" width="6" height="27"/>
+          <rect x="44" y="12.5" width="6" height="27"/>
+          <ellipse cx="21" cy="45" rx="8.4" ry="6.4" transform="rotate(-22 21 45)"/>
+          <ellipse cx="41" cy="40" rx="8.4" ry="6.4" transform="rotate(-22 41 40)"/>
+        </g>
+      </svg>
+      <span class="boot-eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+    </div>
   </app-root>
 </body>
 </html>

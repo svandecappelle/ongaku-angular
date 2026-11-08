@@ -7,6 +7,21 @@
 
 @if (loggedIn) {
   <app-shell></app-shell>
+} @else if (loggedIn === null) {
+  <!-- Same loader as index.html (styles there) while the session is checked -->
+  <div class="boot" role="status" aria-label="Loading Ongaku">
+    <svg class="boot-logo" viewBox="0 0 64 64" aria-hidden="true">
+      <rect width="64" height="64" rx="15" class="boot-bg"/>
+      <g class="boot-note">
+        <path d="M24 17.5 50 11.5v9l-26 6z"/>
+        <rect x="24" y="17.5" width="6" height="27"/>
+        <rect x="44" y="12.5" width="6" height="27"/>
+        <ellipse cx="21" cy="45" rx="8.4" ry="6.4" transform="rotate(-22 21 45)"/>
+        <ellipse cx="41" cy="40" rx="8.4" ry="6.4" transform="rotate(-22 41 40)"/>
+      </g>
+    </svg>
+    <span class="boot-eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+  </div>
 }
 <app-notifications></app-notifications>
 
