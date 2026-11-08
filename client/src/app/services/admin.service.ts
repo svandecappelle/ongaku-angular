@@ -3,7 +3,7 @@ import { map, catchError } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
 
-import { HttpClient, HttpEvent, HttpParams, HttpRequest } from '@angular/common/http';
+import { HttpClient, HttpEvent, HttpHeaders, HttpParams, HttpRequest } from '@angular/common/http';
 
 /** An account, as listed by the administration */
 export interface AdminUser {
@@ -67,6 +67,25 @@ export interface LibraryHealth {
   withoutCover: { artist: string; coverArtist: string; album: string; tracks: number }[];
   missingTags: { uid: string; title: string; artist: string; album: string; file: string; missing: ('artist' | 'album' | 'title')[]; tags: Partial<TrackTags> }[];
   unreadable: { file: string; error: string }[];
+}
+
+/** What a backup holds (Administration > Backup); sizes in bytes */
+export interface BackupSummary {
+  /** A backup or a restore running */
+  busy: 'backup' | 'restore' | null;
+  database: { keys: number };
+  data: { name: 'user' | 'artists-covers' | 'lyrics'; size: number }[];
+  music: { index: number; path: string; exists: boolean; writable: boolean; size: number }[];
+}
+
+/** What a restore did */
+export interface RestoreReport {
+  database: number;
+  data: string[];
+  music: { files: number; skipped: number; folders: { index: number; path: string; writable: boolean }[] };
+  ignored: number;
+  rescan: 'started' | 'busy';
+  manifest?: { createdAt: string; application: string };
 }
 
 /** The music folders against the library (Administration > Files); lists hold the first 500 items */
@@ -179,6 +198,23 @@ export class AdminService {
 
   audit(): Observable<LibraryAudit> {
     return this.http.get<LibraryAudit>('/api/admin/library/audit');
+  }
+
+  backupSummary(): Observable<BackupSummary> {
+    return this.http.get<BackupSummary>('/api/admin/backup/summary');
+  }
+
+  /** Address of the backup file: the browser downloads it (it can be very large) */
+  backupUrl(music: boolean): string {
+    return `/api/admin/backup${music ? '?music=1' : ''}`;
+  }
+
+  /** Restores a backup: the .tar file is sent as it is, with the progress of the upload */
+  restoreBackup(file: File): Observable<HttpEvent<RestoreReport>> {
+    return this.http.request<RestoreReport>(new HttpRequest('POST', '/api/admin/backup/restore', file, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/x-tar' }),
+      reportProgress: true,
+    }));
   }
 
   /** Rescans the music folders in the background */

@@ -9,7 +9,7 @@ import { Chart, registerables } from 'chart.js';
 import moment from 'moment';
 
 import { MaterialModule } from '../modules/material.module';
-import { AdminService, AdminUser, Duplicates, ImportFolder, ImportResult, LibraryAudit, LibraryHealth, UserChanges } from '../services/admin.service';
+import { AdminService, AdminUser, BackupSummary, Duplicates, ImportFolder, ImportResult, LibraryAudit, LibraryHealth, RestoreReport, UserChanges } from '../services/admin.service';
 import { CoverEditComponent } from '../v3/cover-edit/cover-edit.component';
 import { TagEditorDialogComponent, TagEditorData } from './tag-editor-dialog.component';
 import { StatisticsService } from '../services/statistics.service';
@@ -89,8 +89,21 @@ export class AdminComponent {
 
   readonly duplicates = signal<Duplicates | null>(null);
 
-  /** Overview, Library, Health, Files, Users, Settings */
+  /** Overview, Library, Health, Files, Backup, Users, Settings */
   readonly selectedTab = signal(0);
+  /** Index of the Backup tab: its sizes are computed when it is first shown */
+  readonly backupTab = 4;
+  readonly backupSummary = signal<BackupSummary | null>(null);
+  readonly includeMusic = signal(false);
+  readonly restoreFile = signal<File | null>(null);
+  readonly restoreConfirmed = signal(false);
+  /** Upload of the backup, in percent; 100 while the server restores it */
+  readonly restoreProgress = signal<number | null>(null);
+  readonly restoreReport = signal<RestoreReport | null>(null);
+  readonly restoreError = signal<string | null>(null);
+  readonly dataSize = computed(() => (this.backupSummary()?.data ?? []).reduce((total, item) => total + item.size, 0));
+  readonly musicSize = computed(() => (this.backupSummary()?.music ?? []).reduce((total, item) => total + item.size, 0));
+  readonly readOnlyMusic = computed(() => (this.backupSummary()?.music ?? []).filter((folder) => folder.exists && !folder.writable));
   /** Index of the Files tab, loaded when it is first shown (it reads every music folder) */
   readonly filesTab = 3;
   readonly audit = signal<LibraryAudit | null>(null);
@@ -184,6 +197,11 @@ export class AdminComponent {
     effect(() => this.drawStorage(this.storageCanvas(), this.statistics()));
     effect(() => this.drawLogins(this.loginsCanvas(), this.logins()));
     effect(() => this.drawPlays(this.playsCanvas(), this.plays()));
+    effect(() => {
+      if (this.selectedTab() === this.backupTab && !untracked(() => this.backupSummary())) {
+        untracked(() => this.loadBackupSummary());
+      }
+    });
     // The Files tab reads every music folder: only when it is shown
     effect(() => {
       if (this.selectedTab() === this.filesTab && !untracked(() => this.audit() || this.auditLoading())) {
@@ -193,6 +211,54 @@ export class AdminComponent {
     inject(DestroyRef).onDestroy(() => {
       this.charts.forEach((chart) => chart.destroy());
       clearInterval(this.auditTimer);
+    });
+  }
+
+  // ---------- Backup ----------
+
+  loadBackupSummary() {
+    this.admin.backupSummary().subscribe({
+      next: (summary) => this.backupSummary.set(summary),
+      error: (err) => this.error(err, 'Could not measure the backup'),
+    });
+  }
+
+  backupUrl(): string {
+    return this.admin.backupUrl(this.includeMusic());
+  }
+
+  chooseRestoreFile(input: HTMLInputElement) {
+    this.restoreFile.set(input.files?.[0] ?? null);
+    this.restoreReport.set(null);
+    this.restoreError.set(null);
+  }
+
+  restore() {
+    const file = this.restoreFile();
+    if (!file || !this.restoreConfirmed() || this.restoreProgress() !== null) {
+      return;
+    }
+    this.restoreProgress.set(0);
+    this.restoreReport.set(null);
+    this.restoreError.set(null);
+    this.admin.restoreBackup(file).subscribe({
+      next: (event) => {
+        if (event.type === HttpEventType.UploadProgress && event.total) {
+          this.restoreProgress.set(Math.round((100 * event.loaded) / event.total));
+        } else if (event.type === HttpEventType.Response) {
+          this.restoreProgress.set(null);
+          this.restoreReport.set(event.body);
+          this.restoreFile.set(null);
+          this.restoreConfirmed.set(false);
+          this.loadBackupSummary();
+          this.loadHealth();
+          this.loadDuplicates();
+        }
+      },
+      error: (err: HttpErrorResponse) => {
+        this.restoreProgress.set(null);
+        this.restoreError.set(err.status === 0 ? 'The connection was lost during the upload.' : err.error?.message || 'The backup could not be restored.');
+      },
     });
   }
 

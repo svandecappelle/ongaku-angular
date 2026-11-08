@@ -14,6 +14,7 @@ const middleware = require("./../../middleware/middleware");
 const importer = require("./../../middleware/importer");
 const scanner = require("./../../middleware/scanner");
 const libraryAudit = require("./../../middleware/library-audit");
+const backup = require("./../../middleware/backup");
 const sessionGuard = require("./../../middleware/session-guard");
 const images = require("./../../middleware/images");
 const statistics = require("./../../model/statistics");
@@ -459,6 +460,80 @@ router.get('/library/health', (req, res) => {
         withoutCover: withoutCover.slice(0, HEALTH_LIMIT),
         missingTags: untagged.slice(0, HEALTH_LIMIT),
         unreadable: unreadable.slice(0, HEALTH_LIMIT)
+    });
+});
+
+// ---------- Backup ----------
+
+/** A backup or a restore runs: one at a time */
+let backupBusy = null;
+
+/** What a backup holds, with the sizes */
+router.get('/backup/summary', (req, res, next) => {
+    backup.summary().then((summary) => res.json(Object.assign({ busy: backupBusy }, summary))).catch(next);
+});
+
+/**
+ * Downloads a backup as one .tar file: the database, the data folders (uploads, images, lyrics),
+ * the configuration for reference and, with ?music=1, the music folders. Streamed as it is made.
+ */
+router.get('/backup', (req, res, next) => {
+    if (backupBusy) {
+        return res.status(409).json({ message: `A ${backupBusy} is already running` });
+    }
+    const music = req.query.music === '1' || req.query.music === 'true';
+    const stamp = moment().format('YYYYMMDD-HHmm');
+    backupBusy = 'backup';
+    res.set({
+        'Content-Type': 'application/x-tar',
+        'Content-Disposition': `attachment; filename="ongaku-backup-${stamp}${music ? '-with-music' : ''}.tar"`,
+        'Cache-Control': 'no-store',
+        'X-Content-Type-Options': 'nosniff'
+    });
+    backup.create(res, { music: music }).catch((err) => {
+        console.error('Backup failed', err);
+        if (!res.headersSent) {
+            return next(err);
+        }
+        res.destroy(err);
+    }).finally(() => {
+        backupBusy = null;
+    });
+});
+
+/**
+ * Restores a backup sent as the body (the .tar file itself). The database and the data folders are
+ * replaced, the music is added to the music folders that can be written; then the library is
+ * rescanned. The sessions stay, but an account missing from the backup is signed out.
+ */
+router.post('/backup/restore', (req, res) => {
+    if (backupBusy) {
+        return res.status(409).json({ message: `A ${backupBusy} is already running` });
+    }
+    backupBusy = 'restore';
+    backup.restore(req).then(async (report) => {
+        // The accounts, the settings and the library come from the backup now
+        sessionGuard.accounts.clear();
+        await Promise.all(['deduplicate', 'uploadQuota'].map((key) => new Promise((resolve) => meta.settings.getOne('global', key, (err, value) => {
+            nconf.set(key, !err && value !== null && value !== undefined ? value : undefined);
+            resolve();
+        }))));
+        library.refreshDeduplication();
+        let rescan = 'started';
+        if (library.scanProgress === true) {
+            rescan = 'busy';
+        } else {
+            application.reload();
+        }
+        res.json(Object.assign({ message: 'restored', rescan: rescan }, report));
+    }).catch((err) => {
+        if (err instanceof backup.BackupError) {
+            return res.status(400).json({ message: err.message });
+        }
+        console.error('Restore failed', err);
+        res.status(500).json({ message: 'The backup could not be restored: see the server log' });
+    }).finally(() => {
+        backupBusy = null;
     });
 });
 

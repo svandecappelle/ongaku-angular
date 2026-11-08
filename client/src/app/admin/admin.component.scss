@@ -597,3 +597,53 @@ mat-slide-toggle .hint {
 .notice.ok mat-icon {
   color: var(--ongaku-accent);
 }
+
+// ---------- Backup ----------
+.backup-contents {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  mat-icon {
+    flex: none;
+    color: var(--ongaku-muted);
+  }
+}
+
+.backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  .disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  .small {
+    flex: 1 1 280px;
+  }
+}
+
+.restore-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.restore-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.notice.error mat-icon {
+  color: #ff8a8a;
+}

@@ -317,6 +317,34 @@ test('the seek bar shows the waveform, the row playing an equalizer; both follow
   await page.waitFor(`document.querySelector('app-player-bar .seek mat-slider') && !document.querySelector('app-player-bar app-waveform-seek')`, { what: 'the plain slider' });
 });
 
+test('a backup is downloaded and restored from the Backup tab', { skip }, async () => {
+  await page.goto('/admin', await login('boss'));
+  await page.waitFor(`[...document.querySelectorAll('.mdc-tab')].some((tab) => tab.textContent.trim() === 'Backup')`, { what: 'the tabs' });
+  await page.eval(`[...document.querySelectorAll('.mdc-tab')].find((tab) => tab.textContent.trim() === 'Backup').click()`);
+  await page.waitFor(`document.querySelector('.mat-mdc-tab-body-active .backup-actions a[download]')`, { what: 'the download link' });
+  assert.equal(await page.eval(`document.querySelector('.mat-mdc-tab-body-active .backup-actions a[download]').getAttribute('href')`), '/api/admin/backup');
+  await page.eval(`document.querySelector('.mat-mdc-tab-body-active mat-checkbox input').click()`);
+  await page.waitFor(`document.querySelector('.mat-mdc-tab-body-active .backup-actions a[download]').getAttribute('href') === '/api/admin/backup?music=1'`, { what: 'the music included' });
+
+  // A backup made from the page, then restored through the form
+  await page.eval(`fetch('/api/admin/backup').then((r) => r.blob()).then((blob) => {
+    const input = document.querySelector('.mat-mdc-tab-body-active input[type=file]');
+    const files = new DataTransfer();
+    files.items.add(new File([blob], 'ongaku-backup.tar', { type: 'application/x-tar' }));
+    input.files = files.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  })`);
+  await page.waitFor(`[...document.querySelectorAll('.mat-mdc-tab-body-active mat-checkbox')].length === 2`, { what: 'the confirmation' });
+  await page.eval(`[...document.querySelectorAll('.mat-mdc-tab-body-active mat-checkbox input')][1].click()`);
+  await page.eval(`[...document.querySelectorAll('.mat-mdc-tab-body-active button')].find((b) => b.textContent.includes('Restore this backup')).click()`);
+  await page.waitFor(`document.querySelector('.mat-mdc-tab-body-active .notice.ok')?.textContent.includes('Backup restored')`, { what: 'the restore report', timeout: 30000 });
+  await eventually(async () => {
+    const health = await api('/api/admin/library/health', { as: 'boss' });
+    const tracks = await api('/api/audio/tracks/filter/Sidecar/0', { as: 'boss' });
+    return !health.body.scanning && Array.isArray(tracks.body) && tracks.body.length > 0;
+  }, { timeout: 30000, what: 'the library after the restore' });
+});
+
 test('no uncaught error in the pages', { skip }, () => {
   assert.deepEqual(page.errors, []);
 });
