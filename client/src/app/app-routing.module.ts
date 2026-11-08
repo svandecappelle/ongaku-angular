@@ -10,7 +10,6 @@ import { UpgradeComponent } from './upgrade/upgrade.component';
 import { AdminComponent } from './admin/admin.component';
 
 import { UsersComponent } from './users/users.component';
-import { RadiosComponent } from './radios/radios.component';
 import { LibraryComponent } from './library/library.component';
 import { ReloadComponent } from './library/reload/reload.component';
 import { UserComponent } from './user/user.component';
@@ -31,7 +30,8 @@ const routes: Routes = [
   { path: 'playlists/:name', canActivate: [AuthGuard],
     loadComponent: () => import('./v3/playlist-page/playlist-page.component').then((m) => m.PlaylistPageComponent) },
   { path: 'users', component: UsersComponent, canActivate: [AuthGuard]},
-  { path: 'radios', component: RadiosComponent, canActivate: [AuthGuard]},
+  { path: 'radios', canActivate: [AuthGuard],
+    loadComponent: () => import('./v3/radios-page/radios-page.component').then((m) => m.RadiosPageComponent) },
   { path: 'my-library/:folder', component: LibraryComponent, canActivate: [AuthGuard]},
   { path: 'my-library', component: LibraryComponent, canActivate: [AuthGuard]},
   // The uploads are a tab of My library

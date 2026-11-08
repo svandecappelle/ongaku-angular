@@ -82,8 +82,9 @@ export class QueueStorageService {
 
   private save() {
     const username = this.username();
-    // Not before the saved queue is back: it would be replaced by an empty one
-    if (!username || this.restoredFor !== username) {
+    // Not before the saved queue is back: it would be replaced by an empty one.
+    // Not while a station plays either: the queue saved before it is kept.
+    if (!username || this.restoredFor !== username || this.playback.station()) {
       return;
     }
     const tracks = this.playback.tracks();

@@ -9,6 +9,20 @@ import { AppendPlaylist, SetPlaylist } from '../state/playlist-state';
 
 export type PlaybackState = 'stopped' | 'loading' | 'playing' | 'paused';
 
+/** An internet radio station (server/app/routes/api/radios.js) */
+export interface RadioStation {
+  id: string;
+  name: string;
+  genre: string | null;
+  type: string | null;
+  bitrate: number | null;
+  /** The stream address: for the administrators only */
+  url?: string;
+  favourite: boolean;
+  /** Last title sent by the station, when someone listens to it */
+  nowPlaying: string | null;
+}
+
 /** The chosen volume is kept in the browser, to be restored on the next visit */
 const VOLUME_KEY = 'ongaku.volume';
 const DEFAULT_GAIN = 0.75;
@@ -59,6 +73,15 @@ export class PlaybackService {
   /** The next loaded track stays paused (a queue put back after a reload) */
   private holdAfterLoad = false;
 
+  /**
+   * The internet station playing, instead of a track: there is then no current track (the
+   * history, the presence and the lyrics ignore it) and the queue waits, untouched.
+   */
+  readonly station = signal<RadioStation | null>(null);
+  /** Why the station stopped, when it did by itself */
+  readonly stationError = signal<string | null>(null);
+  readonly live = computed(() => this.station() !== null);
+
   readonly tracks = toSignal(this.store.select((state) => state.trackList), { initialValue: [] as Song[] });
   readonly current = signal<Song | null>(null);
   readonly state = signal<PlaybackState>('stopped');
@@ -93,7 +116,12 @@ export class PlaybackService {
       this.startAt = 0;
     });
     this.audio.addEventListener('timeupdate', () => this.currentTime.set(this.audio.currentTime));
-    this.audio.addEventListener('ended', () => this.next());
+    this.audio.addEventListener('ended', () => (this.station() ? this.stationStopped('The station stopped broadcasting') : this.next()));
+    this.audio.addEventListener('error', () => {
+      if (this.station() && this.audio.getAttribute('src')) {
+        this.stationStopped('The station cannot be played right now');
+      }
+    });
     this.audio.addEventListener('canplay', () => {
       if (this.state() === 'loading') {
         if (this.holdAfterLoad) {
@@ -111,9 +139,9 @@ export class PlaybackService {
       }
     });
 
-    // The first track added to an empty queue starts playing
+    // The first track added to an empty queue starts playing (not while a station plays)
     this.store.select((state) => state.trackList).subscribe((tracks) => {
-      if (!this.current() && tracks?.length) {
+      if (!this.current() && !this.station() && tracks?.length) {
         this.load(tracks[0]);
       }
     });
@@ -128,6 +156,23 @@ export class PlaybackService {
   }
 
   resume() {
+    const station = this.station();
+    if (station) {
+      // Live: a pause dropped the stream; join the broadcast where it is now
+      if (!this.audio.getAttribute('src')) {
+        this.stationError.set(null);
+        this.state.set('loading');
+        this.audio.src = this.stationUrl(station);
+      }
+      if (this.context.state === 'suspended') {
+        this.context.resume();
+      }
+      this.audio.play()
+        .then(() => this.state.set('playing'))
+        // Still connecting: canplay tries again; refused by the browser: wait for a click
+        .catch(() => this.state() !== 'loading' && this.state.set('paused'));
+      return;
+    }
     if (!this.current()) {
       return;
     }
@@ -142,6 +187,55 @@ export class PlaybackService {
 
   pause() {
     this.audio.pause();
+    if (this.station()) {
+      // Live: stop receiving the stream while paused
+      this.audio.removeAttribute('src');
+      this.audio.load();
+    }
+    this.state.set('paused');
+  }
+
+  /** Plays an internet station; the queue waits until a track is played again */
+  playStation(station: RadioStation) {
+    this.station.set(station);
+    this.stationError.set(null);
+    this.current.set(null);
+    this.started.set(true);
+    this.duration.set(0);
+    this.currentTime.set(0);
+    this.startAt = 0;
+    this.holdAfterLoad = false;
+    this.state.set('loading');
+    this.audio.src = this.stationUrl(station);
+    // In the click that chose the station: browsers only resume the audio during one
+    if (this.context.state === 'suspended') {
+      this.context.resume();
+    }
+    // Playing starts on canplay (see the constructor), as for a track
+  }
+
+  /** Leaves the station: nothing plays until a track is chosen */
+  stopStation() {
+    if (!this.station()) {
+      return;
+    }
+    this.audio.pause();
+    this.audio.removeAttribute('src');
+    this.audio.load();
+    this.station.set(null);
+    this.stationError.set(null);
+    this.state.set('stopped');
+  }
+
+  private stationUrl(station: RadioStation) {
+    // A new address each time: the browser must not resume an old buffer of a live stream
+    return `/api/radios/${encodeURIComponent(station.id)}/stream?t=${Date.now()}`;
+  }
+
+  private stationStopped(message: string) {
+    this.audio.removeAttribute('src');
+    this.audio.load();
+    this.stationError.set(message);
     this.state.set('paused');
   }
 
@@ -283,6 +377,8 @@ export class PlaybackService {
   }
 
   private load(track: Song) {
+    this.station.set(null);
+    this.stationError.set(null);
     this.current.set(track);
     this.state.set('loading');
     this.started.set(true);

@@ -12,6 +12,7 @@ import { AuthenticationService } from '../../services/authentication.service';
 import { ThemeService } from '../../services/theme.service';
 import { PresenceService } from '../../services/presence.service';
 import { HistoryService } from '../../services/history.service';
+import { LibraryRadioService } from '../../services/library-radio.service';
 import { MediaSessionService } from '../../services/media-session.service';
 import { QueueStorageService } from '../../services/queue-storage.service';
 import { PlayerBarComponent } from '../player-bar/player-bar.component';
@@ -45,6 +46,8 @@ export class ShellComponent {
   private readonly mediaSession = inject(MediaSessionService);
   // Plays of the user, for Recently played and the listening stats
   private readonly history = inject(HistoryService);
+  // Library stations keep adding tracks, whatever page is shown
+  private readonly libraryRadio = inject(LibraryRadioService);
   private readonly auth = inject(AuthenticationService);
   private readonly store = inject<Store<IAppState>>(Store);
   private readonly router = inject(Router);

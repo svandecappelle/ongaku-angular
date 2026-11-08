@@ -1,7 +1,11 @@
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { api, eventually, login } from '../helpers/client.mjs';
+import fs from 'node:fs';
+import http from 'node:http';
+import path from 'node:path';
+
+import { MUSIC, api, eventually, login } from '../helpers/client.mjs';
 import { openBrowser } from '../helpers/browser.mjs';
 
 const skip = !process.env.CHROME ? 'no Chromium (set CHROME)' : !process.env.ONGAKU_TEST_CLIENT ? 'client not built (client/dist)' : false;
@@ -179,6 +183,81 @@ test('the Health tab of the administration renders', { skip }, async () => {
   await page.waitFor(`document.querySelectorAll('.mat-mdc-tab-body-active .tile').length === 4`, { what: 'the health tiles' });
   const sections = await page.eval(`[...document.querySelectorAll('.mat-mdc-tab-body-active section h2')].map((h) => h.textContent.trim())`);
   assert.deepEqual(sections, ['Albums without cover', 'Tracks with missing tags', 'Duplicates', 'Unreadable files']);
+});
+
+test('an internet station plays live from the Radios page, then a track takes over', { skip }, async (t) => {
+  // A small radio: an MP3 of the fixture in a loop, with ICY titles every 4 KB
+  const METAINT = 4096;
+  const TITLE = 'Browser Band - On Air';
+  const audio = fs.readFileSync(path.join(MUSIC, 'Air/Moon Safari/1.mp3'));
+  const meta = Buffer.from(`StreamTitle='${TITLE}';`);
+  const block = Buffer.alloc(1 + Math.ceil(meta.length / 16) * 16);
+  block[0] = (block.length - 1) / 16;
+  meta.copy(block, 1);
+  const radio = http.createServer((req, res) => {
+    const icy = req.headers['icy-metadata'] === '1';
+    res.writeHead(200, { 'Content-Type': 'audio/mpeg', 'icy-name': 'Browser FM', ...(icy ? { 'icy-metaint': String(METAINT) } : {}) });
+    let offset = 0;
+    const send = () => {
+      for (let i = 0; i < 8; i++) {
+        const piece = Buffer.alloc(METAINT);
+        for (let filled = 0; filled < METAINT;) {
+          const size = Math.min(METAINT - filled, audio.length - offset);
+          audio.copy(piece, filled, offset, offset + size);
+          filled += size;
+          offset = (offset + size) % audio.length;
+        }
+        res.write(icy ? Buffer.concat([piece, block]) : piece);
+      }
+    };
+    send();
+    const timer = setInterval(send, 250);
+    res.on('close', () => clearInterval(timer));
+  });
+  await new Promise((resolve) => radio.listen(0, '127.0.0.1', resolve));
+  const created = await api('/api/radios', { as: 'boss', json: { name: 'Browser FM', genre: 'Test', url: `http://127.0.0.1:${radio.address().port}/live.mp3` } });
+  assert.equal(created.status, 200, JSON.stringify(created.body));
+  t.after(async () => {
+    await api(`/api/radios/${created.body.id}`, { as: 'boss', method: 'DELETE' });
+    radio.closeAllConnections();
+    radio.close();
+  });
+
+  await page.goto('/radios', await login('carol'));
+  await page.waitFor(`[...document.querySelectorAll('app-radios-page .station-name')].some((n) => n.textContent.trim() === 'Browser FM')`, { what: 'the station' });
+  assert.equal(await page.eval(`!!document.querySelector('app-radios-page .create')`), false, 'no "Add a station" for a member');
+  await page.eval(`[...document.querySelectorAll('app-radios-page .station')].find((row) => row.querySelector('.station-name').textContent.trim() === 'Browser FM').querySelector('button.play').click()`);
+
+  await page.waitFor(`document.querySelector('app-player-bar .live-badge.on')`, { what: 'the live badge playing' });
+  await page.waitFor(`document.querySelector('app-player-bar .now-playing .sub')?.textContent.trim() === ${JSON.stringify(TITLE)}`, { what: 'the title on air', timeout: 15000 });
+  assert.equal(await page.eval(`document.querySelector('app-player-bar .now-playing .title').textContent.trim()`), 'Browser FM');
+  assert.equal(await page.eval(`navigator.mediaSession.metadata.title`), TITLE);
+  assert.equal(await page.eval(`document.querySelector('app-player-bar .seek')`), null, 'no seek bar on live radio');
+
+  await page.eval(`document.querySelector('app-player-bar .play').click()`);
+  await page.waitFor(`document.querySelector('app-player-bar .live-badge:not(.on)')`, { what: 'the paused station' });
+
+  // A track played afterwards leaves the live mode
+  await page.goto('/album/Lyric%20Band/Songs', await login('carol'));
+  await page.waitFor(`document.querySelectorAll('app-track-list tbody tr').length === 3`, { what: 'the tracks' });
+  await playRow('Tagged song');
+  await page.waitFor(`document.querySelector('app-player-bar .now-playing .title')?.textContent.trim() === 'Tagged song' && document.querySelector('app-player-bar .seek')`, { what: 'the track with its seek bar' });
+});
+
+test('a library station starts from the Radios page and says why each track was picked', { skip }, async () => {
+  await page.goto('/radios', await login('carol'));
+  await page.waitFor(`document.querySelector('app-radios-page .mix h3')?.textContent.trim() === 'Made for carol'`, { what: 'the mix' });
+  await page.waitFor(`[...document.querySelectorAll('app-radios-page .library-name')].some((n) => n.textContent.trim() === 'Electronic')`, { what: 'the genre station' });
+  await page.eval(`[...document.querySelectorAll('app-radios-page .library-card')].find((card) => card.querySelector('.library-name').textContent.trim() === 'Electronic').querySelector('.library-play').click()`);
+
+  await page.waitFor(`document.querySelector('app-radios-page .library-card.current .library-name')?.textContent.trim() === 'Electronic'`, { what: 'the station playing' });
+  const title = await page.eval(`document.querySelector('app-player-bar .now-playing .title')?.textContent.trim()`);
+  assert.match(title, /^(Discovery|Moon Safari) \d$/, `an Electronic track: ${title}`);
+
+  await page.eval(`document.querySelector('app-player-bar .now-playing').click()`);
+  await page.waitFor(`document.querySelector('app-player-bar .sheet .eyebrow')?.textContent.trim() === 'Radio · Electronic'`, { what: 'the radio in the full player' });
+  assert.match(await page.eval(`document.querySelector('app-player-bar .sheet .reason').textContent`), /Picked: (liked|same genre)/);
+  await page.eval(`document.querySelector('app-player-bar .sheet button[aria-label="Hide the player"]').click()`);
 });
 
 test('no uncaught error in the pages', { skip }, () => {

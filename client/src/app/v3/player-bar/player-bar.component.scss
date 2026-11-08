@@ -151,6 +151,64 @@
   }
 }
 
+// Live radio: no seek bar
+.live-row {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ongaku-muted);
+  background: var(--ongaku-surface-2);
+  .live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  &.on {
+    color: #ff8f8f;
+    background: color-mix(in srgb, #ff6b6b 14%, transparent);
+    .live-dot {
+      background: #ff6b6b;
+      animation: live-pulse 1.6s ease-in-out infinite;
+    }
+  }
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-badge.on .live-dot {
+    animation: none;
+  }
+}
+
+.live-error {
+  color: #ff8f8f;
+}
+
+// Live radio on a phone: no progress line, and the mini player has no room for the badge
+@media (max-width: 599px) {
+  :host(.live) .mini-progress,
+  .live-row {
+    display: none;
+  }
+}
+
 .extras {
   grid-column: 3;
   display: flex;
@@ -384,6 +442,20 @@
     &:hover {
       text-decoration: underline;
     }
+  }
+}
+
+.reason {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ongaku-muted);
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
   }
 }
 

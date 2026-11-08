@@ -37,7 +37,6 @@ import { AuthGuard } from './guards/index';
 
 // import { EditMetadataComponent } from './metadatas/edit-metadata/edit-metadata.component';
 import { MetadatasComponent } from './metadatas/metadatas.component';
-import { RadiosComponent } from './radios/radios.component';
 
 import { UsersService } from './users';
 import { ReloadComponent } from './library/reload/reload.component';
@@ -51,7 +50,6 @@ import { ShellComponent } from './v3/shell/shell.component';
         ContentComponent,
         UpgradeComponent,
         MetadatasComponent,
-        RadiosComponent,
         ReloadComponent
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,

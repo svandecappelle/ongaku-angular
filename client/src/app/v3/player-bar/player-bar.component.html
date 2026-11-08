@@ -13,11 +13,19 @@
         <span class="sub">{{ track.artist }}@if (track.album) { · {{ track.album }}}</span>
       </span>
     </button>
+  } @else if (playback.station(); as station) {
+    <button type="button" class="now-playing" routerLink="/radios" [attr.aria-label]="'Live radio: ' + station.name + '. Open the radios'">
+      <app-station-tile class="station-cover" [name]="station.name" [size]="56"></app-station-tile>
+      <span class="meta">
+        <span class="title">{{ station.name }}</span>
+        <span class="sub">{{ playback.stationError() || radios.onAir() || 'Live radio' }}</span>
+      </span>
+    </button>
   }
 
   <div class="transport">
     <div class="buttons">
-      <button mat-icon-button type="button" class="skip" (click)="playback.previous()" [disabled]="playback.position() <= 0" aria-label="Previous track">
+      <button mat-icon-button type="button" class="skip" (click)="playback.previous()" [disabled]="playback.live() || playback.position() <= 0" aria-label="Previous track">
         <mat-icon>skip_previous</mat-icon>
       </button>
       <button type="button" class="play" (click)="playback.toggle()" [attr.aria-label]="playback.playing() ? 'Pause' : 'Play'">
@@ -27,10 +35,19 @@
           <mat-icon>{{ playback.playing() ? 'pause' : 'play_arrow' }}</mat-icon>
         }
       </button>
-      <button mat-icon-button type="button" class="skip" (click)="playback.next()" [disabled]="!playback.upcoming().length" aria-label="Next track">
+      <button mat-icon-button type="button" class="skip" (click)="playback.next()" [disabled]="playback.live() || !playback.upcoming().length" aria-label="Next track">
         <mat-icon>skip_next</mat-icon>
       </button>
     </div>
+    @if (playback.live()) {
+      <div class="live-row" role="status">
+        @if (playback.stationError(); as error) {
+          <span class="live-error">{{ error }}: press play to try again</span>
+        } @else {
+          <span class="live-badge" [class.on]="playback.playing()"><span class="live-dot" aria-hidden="true"></span>LIVE</span>
+        }
+      </div>
+    } @else {
     <div class="seek">
       <span class="time">{{ formatTime(position()) }}</span>
       <mat-slider [min]="0" [max]="playback.duration() || 1" [step]="1" [disabled]="!playback.duration()">
@@ -40,6 +57,7 @@
       </mat-slider>
       <span class="time">{{ formatTime(playback.duration()) }}</span>
     </div>
+    }
   </div>
 
   <div class="extras">
@@ -53,6 +71,13 @@
       <button mat-icon-button type="button" class="like" [class.liked]="liked" (click)="toggleLike(track)"
         [attr.aria-label]="(liked ? 'Unlike ' : 'Like ') + track.title" [attr.aria-pressed]="liked" [matTooltip]="liked ? 'Unlike' : 'Like'">
         <mat-icon>{{ liked ? 'favorite' : 'favorite_border' }}</mat-icon>
+      </button>
+    }
+    @if (playback.station(); as station) {
+      <button mat-icon-button type="button" class="like" [class.liked]="station.favourite" (click)="toggleStationFavourite()"
+        [attr.aria-label]="(station.favourite ? 'Remove ' + station.name + ' from favourites' : 'Add ' + station.name + ' to favourites')"
+        [attr.aria-pressed]="station.favourite" [matTooltip]="station.favourite ? 'Remove from favourites' : 'Add to favourites'">
+        <mat-icon>{{ station.favourite ? 'favorite' : 'favorite_border' }}</mat-icon>
       </button>
     }
     <button mat-icon-button type="button" (click)="toggleQueue.emit()" [class.active]="queueOpen()"
@@ -79,7 +104,7 @@
         <button mat-icon-button type="button" (click)="expanded.set(false)" aria-label="Hide the player" cdkFocusInitial>
           <mat-icon>keyboard_arrow_down</mat-icon>
         </button>
-        <span class="eyebrow">{{ track.album ? 'Playing from ' + track.album : 'Now playing' }}</span>
+        <span class="eyebrow">{{ libraryRadio.active() ? 'Radio · ' + libraryRadio.active()!.name : track.album ? 'Playing from ' + track.album : 'Now playing' }}</span>
         <span class="header-actions">
           @if (lyrics()) {
             <button mat-icon-button type="button" [class.active]="showLyrics()" (click)="showLyrics.set(!showLyrics())"
@@ -114,6 +139,9 @@
               · <a [routerLink]="albumLink(track)" (click)="expanded.set(false)">{{ track.album }}</a>
             }
           </span>
+          @if (libraryRadio.reasonOf(track); as reason) {
+            <span class="reason"><mat-icon aria-hidden="true">radio</mat-icon>Picked: {{ reason }}</span>
+          }
         </div>
         @let sheetLiked = likes.has(track);
         <button mat-icon-button type="button" class="like" [class.liked]="sheetLiked" (click)="toggleLike(track)"

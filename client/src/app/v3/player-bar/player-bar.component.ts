@@ -13,6 +13,9 @@ import { LikesService } from '../../services/likes.service';
 import { LyricsService } from '../../services/lyrics.service';
 import { AuthenticationService } from '../../services/authentication.service';
 import { LyricsViewComponent } from '../lyrics/lyrics-view.component';
+import { StationTileComponent } from '../radios-page/station-tile.component';
+import { RadiosService } from '../../services/radios.service';
+import { LibraryRadioService } from '../../services/library-radio.service';
 import { LyricsEditorDialogComponent } from '../lyrics/lyrics-editor-dialog.component';
 import { parseLrc } from '../lyrics/lrc';
 import { Song } from '../../app-state';
@@ -24,15 +27,18 @@ import { albumLink } from '../library';
   templateUrl: './player-bar.component.html',
   styleUrls: ['./player-bar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialModule, A11yModule, RouterLink, LyricsViewComponent],
+  imports: [MaterialModule, A11yModule, RouterLink, LyricsViewComponent, StationTileComponent],
   host: {
     '[class.visible]': 'playback.started()',
     '[class.expanded]': 'expanded()',
+    '[class.live]': 'playback.live()',
   },
 })
 export class PlayerBarComponent {
   readonly playback = inject(PlaybackService);
   readonly likes = inject(LikesService);
+  readonly radios = inject(RadiosService);
+  readonly libraryRadio = inject(LibraryRadioService);
   private readonly lyricsService = inject(LyricsService);
   private readonly dialog = inject(MatDialog);
   readonly administrator = toSignal(inject(AuthenticationService).isAdministrator(), { initialValue: false });
@@ -69,6 +75,18 @@ export class PlayerBarComponent {
 
   toggleLike(track: Song) {
     (this.likes.has(track) ? this.likes.unlike([track]) : this.likes.like([track])).subscribe();
+  }
+
+  toggleStationFavourite() {
+    const station = this.playback.station();
+    if (!station) {
+      return;
+    }
+    const favourite = !station.favourite;
+    this.playback.station.set({ ...station, favourite });
+    this.radios.setFavourite(station.id, favourite).subscribe({
+      error: () => this.playback.station.update((current) => current && current.id === station.id ? { ...current, favourite: !favourite } : current),
+    });
   }
 
   openLyrics() {

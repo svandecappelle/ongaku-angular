@@ -1,0 +1,190 @@
+<div class="page">
+  <header class="page-header">
+    <div class="header-text">
+      <span class="eyebrow">Listen</span>
+      <h1>Radios</h1>
+      <span class="muted">Endless stations made from your music, and live radio from the internet.</span>
+    </div>
+    @if (administrator()) {
+      <button mat-flat-button color="accent" type="button" class="create" (click)="add()">
+        <mat-icon>add</mat-icon>
+        Add a station
+      </button>
+    }
+  </header>
+
+  @if (mix(); as m) {
+    <section class="section" aria-labelledby="library-title">
+      <div class="section-header">
+        <h2 id="library-title">From your library</h2>
+        <span class="muted small">Never ends: new tracks are picked as you listen</span>
+      </div>
+
+      @let mixPlaying = libraryRadio.isActive(m) && playback.playing();
+      <div class="mix" [class.current]="libraryRadio.isActive(m)">
+        <span class="mix-art" aria-hidden="true"><mat-icon>radio</mat-icon></span>
+        <div class="mix-text">
+          <span class="eyebrow">Your mix</span>
+          <h3>{{ m.name }}</h3>
+          <p class="muted">{{ m.text }}</p>
+          <div class="mix-actions">
+            <button mat-flat-button color="accent" type="button" class="mix-play" (click)="toggleLibrary(m)" [disabled]="libraryRadio.starting()">
+              <mat-icon>{{ mixPlaying ? 'pause' : 'play_arrow' }}</mat-icon>
+              {{ mixPlaying ? 'Pause' : libraryRadio.isActive(m) ? 'Resume' : 'Start the radio' }}
+            </button>
+            @if (m.artists?.length) {
+              <span class="muted small">{{ m.artists!.join(' · ') }}</span>
+            }
+          </div>
+        </div>
+      </div>
+
+      @if (otherLibraryStations().length) {
+        <ul class="library-grid">
+          @for (station of otherLibraryStations(); track station.kind + '/' + station.seed) {
+            @let active = libraryRadio.isActive(station);
+            @let stationPlaying = active && playback.playing();
+            <li class="library-card" [class.current]="active">
+              <span class="library-art" [attr.data-kind]="station.kind" aria-hidden="true">
+                <mat-icon>{{ station.kind === 'artist' ? 'person' : station.kind === 'genre' ? 'graphic_eq' : 'history' }}</mat-icon>
+              </span>
+              <span class="library-kind">{{ kindLabel(station) }}</span>
+              <strong class="library-name">{{ station.name }}</strong>
+              <span class="muted small library-text">{{ station.text }}</span>
+              <button mat-stroked-button type="button" class="library-play" (click)="toggleLibrary(station)" [disabled]="libraryRadio.starting()"
+                [attr.aria-label]="(stationPlaying ? 'Pause ' : active ? 'Resume ' : 'Start ') + station.name">
+                <mat-icon>{{ stationPlaying ? 'pause' : 'play_arrow' }}</mat-icon>
+                {{ stationPlaying ? 'Pause' : active ? 'Resume' : 'Start' }}
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+
+  @switch (status()) {
+    @case ('loading') {
+      <div class="state" role="status">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span class="muted">Loading the stations…</span>
+      </div>
+    }
+    @case ('error') {
+      <div class="state" role="alert">
+        <mat-icon class="state-icon">error_outline</mat-icon>
+        <h2>The stations could not be loaded</h2>
+        <button mat-stroked-button type="button" (click)="load()">
+          <mat-icon>replay</mat-icon>
+          Retry
+        </button>
+      </div>
+    }
+    @case ('ready') {
+      @if (!stations().length) {
+        <section class="section" aria-labelledby="live-empty-title">
+          <h2 id="live-empty-title" class="section-title">Internet radio</h2>
+          <div class="live-empty">
+            <mat-icon aria-hidden="true">radio</mat-icon>
+            @if (administrator()) {
+              <p class="muted">No station yet. Add the stream address of an internet radio: every member will be able to listen to it.</p>
+              <button mat-stroked-button type="button" (click)="add()">
+                <mat-icon>add</mat-icon>
+                Add a station
+              </button>
+            } @else {
+              <p class="muted">No internet station yet: an administrator can add some for every member.</p>
+            }
+          </div>
+        </section>
+      } @else {
+        <section class="section" aria-labelledby="live-title">
+          <div class="section-header">
+            <h2 id="live-title">Internet radio</h2>
+            @if (stations().length > 6) {
+              <mat-form-field class="search" subscriptSizing="dynamic">
+                <mat-icon matPrefix>search</mat-icon>
+                <mat-label>Filter the stations</mat-label>
+                <input matInput [ngModel]="search()" (ngModelChange)="search.set($event)" autocomplete="off">
+              </mat-form-field>
+            }
+          </div>
+
+          @if (chips().length > 1) {
+            <div class="chips" role="group" aria-label="Show">
+              @for (chip of chips(); track chip) {
+                <button type="button" class="chip" [class.selected]="filter() === chip" [attr.aria-pressed]="filter() === chip" (click)="filter.set(chip)">
+                  @if (chip === 'Favourites') {
+                    <mat-icon aria-hidden="true">favorite</mat-icon>
+                  }
+                  {{ chip }}
+                </button>
+              }
+            </div>
+          }
+
+          @if (shown().length) {
+            <ul class="stations">
+              @for (station of shown(); track station.id) {
+                @let current = playback.station()?.id === station.id;
+                @let playing = isPlaying(station);
+                <li class="station" [class.current]="current">
+                  <app-station-tile [name]="station.name" [size]="52"></app-station-tile>
+                  <div class="station-text">
+                    <strong class="station-name">{{ station.name }}</strong>
+                    @if (details(station); as text) {
+                      <span class="muted small">{{ text }}</span>
+                    }
+                  </div>
+                  <div class="on-air">
+                    @if (current && playback.stationError(); as error) {
+                      <span class="live-error">{{ error }}</span>
+                    } @else if (onAir(station); as title) {
+                      <span class="live-badge" [class.on]="playing">LIVE</span>
+                      <span class="on-air-title">{{ title }}</span>
+                    } @else if (current) {
+                      <span class="live-badge" [class.on]="playing">LIVE</span>
+                      <span class="muted small">{{ playing ? 'No title sent by the station' : 'Connecting…' }}</span>
+                    }
+                  </div>
+                  <span class="actions">
+                    <button mat-icon-button type="button" class="favourite" [class.on]="station.favourite" (click)="toggleFavourite(station)"
+                      [attr.aria-pressed]="station.favourite"
+                      [attr.aria-label]="(station.favourite ? 'Remove ' + station.name + ' from favourites' : 'Add ' + station.name + ' to favourites')">
+                      <mat-icon>{{ station.favourite ? 'favorite' : 'favorite_border' }}</mat-icon>
+                    </button>
+                    @if (administrator()) {
+                      <button mat-icon-button type="button" [matMenuTriggerFor]="stationMenu" [attr.aria-label]="'More for ' + station.name">
+                        <mat-icon>more_vert</mat-icon>
+                      </button>
+                      <mat-menu #stationMenu="matMenu">
+                        <button mat-menu-item type="button" (click)="edit(station)">
+                          <mat-icon>edit</mat-icon>
+                          Change
+                        </button>
+                        <button mat-menu-item type="button" (click)="remove(station)">
+                          <mat-icon>delete</mat-icon>
+                          Delete
+                        </button>
+                      </mat-menu>
+                    }
+                    <button type="button" class="play" [class.on]="current" (click)="togglePlay(station)"
+                      [attr.aria-label]="(playing ? 'Pause ' : 'Play ') + station.name">
+                      @if (current && playback.state() === 'loading') {
+                        <mat-spinner diameter="20" strokeWidth="3" aria-hidden="true"></mat-spinner>
+                      } @else {
+                        <mat-icon>{{ playing ? 'pause' : 'play_arrow' }}</mat-icon>
+                      }
+                    </button>
+                  </span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="muted empty">No station matches.</p>
+          }
+        </section>
+      }
+    }
+  }
+</div>

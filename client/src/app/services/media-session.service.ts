@@ -1,6 +1,7 @@
 import { Injectable, effect, inject, untracked } from '@angular/core';
 
 import { PlaybackService } from './playback.service';
+import { RadiosService } from './radios.service';
 
 /** Step of the "seek backward / forward" buttons, when the system does not give one */
 const SEEK_STEP = 10;
@@ -15,6 +16,7 @@ type Handlers = Partial<Record<MediaSessionAction, MediaSessionActionHandler | n
 @Injectable({ providedIn: 'root' })
 export class MediaSessionService {
   private readonly playback = inject(PlaybackService);
+  private readonly radios = inject(RadiosService);
   private readonly session = 'mediaSession' in navigator ? navigator.mediaSession : null;
 
   constructor() {
@@ -26,6 +28,12 @@ export class MediaSessionService {
     // Title, artist, album and cover of the current track
     effect(() => {
       const track = this.playback.current();
+      const station = this.playback.station();
+      if (station) {
+        // Live radio: the title sent by the station, under the name of the station
+        session.metadata = new MediaMetadata({ title: this.radios.onAir() || station.name, artist: station.name, album: 'Live radio' });
+        return;
+      }
       session.metadata = track
         ? new MediaMetadata({
             title: String(track.title ?? ''),
@@ -44,8 +52,9 @@ export class MediaSessionService {
 
     // The previous and next buttons only appear when there is a track to go to
     effect(() => {
-      const hasPrevious = this.playback.position() > 0;
-      const hasNext = this.playback.upcoming().length > 0;
+      const live = this.playback.live();
+      const hasPrevious = !live && this.playback.position() > 0;
+      const hasNext = !live && this.playback.upcoming().length > 0;
       this.setHandlers({
         previoustrack: hasPrevious ? () => this.playback.previous() : null,
         nexttrack: hasNext ? () => this.playback.next() : null,
