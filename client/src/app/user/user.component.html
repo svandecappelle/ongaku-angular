@@ -40,7 +40,11 @@
           <div class="names">
             <span class="eyebrow">{{ p.self ? 'Your profile' : 'Profile' }}</span>
             <h1 id="profile-name">{{ p.username }}</h1>
+            @let live = presence.of(p.username);
             <div class="meta">
+              <span class="presence small" [class.online]="live.online">
+                <span class="presence-dot" aria-hidden="true"></span>{{ live.online ? 'Online' : 'Offline' }}
+              </span>
               @if (p.administrator) {
                 <span class="badge">Administrator</span>
               }
@@ -49,6 +53,22 @@
               }
             </div>
           </div>
+          @if (live.nowPlaying; as playing) {
+            <div class="listening-now">
+              <mat-icon aria-hidden="true">{{ playing.playing ? 'equalizer' : 'pause' }}</mat-icon>
+              <span class="listening-text">
+                <span class="muted small">{{ p.self ? 'You are listening to' : 'Listening to' }}</span>
+                <strong>{{ playing.title }}</strong>
+                <span class="muted small">{{ playing.artist }}</span>
+              </span>
+              @if (!p.self) {
+                <button mat-stroked-button type="button" (click)="presence.listenAlong(playing)">
+                  <mat-icon>headset</mat-icon>
+                  Listen along
+                </button>
+              }
+            </div>
+          }
           @if (p.self) {
             <a mat-stroked-button routerLink="/profile/appearance" class="appearance">
               <mat-icon>palette</mat-icon>
@@ -95,6 +115,16 @@
       </div>
 
       @if (p.self) {
+        <section class="panel" aria-labelledby="privacy-title">
+          <div class="panel-header">
+            <h2 id="privacy-title">Listening now</h2>
+            <span class="muted">The other members see on the Users page what you play, and can listen along.</span>
+          </div>
+          <mat-slide-toggle [checked]="p.shareListening !== false" (change)="setShareListening($event.checked)">
+            Show what I listen to
+          </mat-slide-toggle>
+        </section>
+
         <section class="panel" aria-labelledby="images-title">
           <div class="panel-header">
             <h2 id="images-title">Images</h2>

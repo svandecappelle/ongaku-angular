@@ -1,9 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 
 import { MaterialModule } from '../modules/material.module';
 import { UsersService } from './users.service';
+import { AuthenticationService } from '../services/authentication.service';
+import { NowPlaying, PresenceService } from '../services/presence.service';
 import { User } from './index';
 
 type Sort = 'name' | 'tracks';
@@ -18,12 +21,17 @@ type Sort = 'name' | 'tracks';
 })
 export class UsersComponent {
   private readonly service = inject(UsersService);
+  readonly presence = inject(PresenceService);
 
   readonly users = signal<User[] | null>(null);
   readonly failed = signal(false);
   readonly filter = signal('');
   readonly sort = signal<Sort>('name');
-  readonly me = currentUsername();
+  /** The connected user */
+  readonly me = toSignal(inject(AuthenticationService).username(), { initialValue: null });
+
+  /** Members online, live */
+  readonly onlineCount = computed(() => (this.users() ?? []).filter((user) => this.presence.of(user.username).online).length);
 
   readonly visible = computed(() => {
     const filter = this.filter().trim().toLowerCase();
@@ -35,20 +43,15 @@ export class UsersComponent {
     this.load();
   }
 
+  listenAlong(nowPlaying: NowPlaying) {
+    this.presence.listenAlong(nowPlaying);
+  }
+
   load() {
     this.failed.set(false);
     this.service.get().subscribe({
       next: (users) => this.users.set(users),
       error: () => this.failed.set(true),
     });
-  }
-}
-
-/** Username saved at login by AuthenticationService */
-function currentUsername(): string | null {
-  try {
-    return JSON.parse(localStorage.getItem('currentUser') ?? 'null')?.username ?? null;
-  } catch {
-    return null;
   }
 }

@@ -4,7 +4,7 @@
     <h1>Users</h1>
     <p class="muted">
       @if (users(); as list) {
-        {{ list.length }} member{{ list.length === 1 ? '' : 's' }} on this server.
+        {{ list.length }} member{{ list.length === 1 ? '' : 's' }} on this server · {{ onlineCount() }} online.
       } @else if (!failed()) {
         Loading…
       }
@@ -35,8 +35,9 @@
     @if (visible().length) {
       <ul class="grid">
         @for (user of visible(); track user.username) {
-          <li>
-            <a class="card" [routerLink]="['/profile', user.username]" [class.me]="user.username === me">
+          @let live = presence.of(user.username);
+          <li class="member" [class.me]="user.username === me()" [class.listening]="!!live.nowPlaying">
+            <a class="card" [routerLink]="['/profile', user.username]">
               <span class="banner" aria-hidden="true">
                 <img [src]="'/static/user/' + user.username + '/cover'" alt="" loading="lazy" (error)="$any($event.target).remove()">
               </span>
@@ -44,13 +45,15 @@
                 {{ user.username.charAt(0).toUpperCase() }}
                 <img [src]="'/static/user/' + user.username + '/avatar'" alt="" loading="lazy" (error)="$any($event.target).remove()">
               </span>
+              <span class="dot" [class.online]="live.online" aria-hidden="true"></span>
               <span class="body">
                 <span class="name">
                   {{ user.username }}
-                  @if (user.username === me) {
+                  @if (user.username === me()) {
                     <span class="muted small">(you)</span>
                   }
                 </span>
+                <span class="status small" [class.online]="live.online">{{ live.online ? 'Online' : 'Offline' }}</span>
                 @if (user.administrator) {
                   <span class="badge">Administrator</span>
                 }
@@ -60,6 +63,21 @@
                 </span>
               </span>
             </a>
+            @if (live.nowPlaying; as playing) {
+              <div class="now-playing" [attr.aria-label]="user.username + ' is listening to ' + playing.title">
+                <mat-icon class="np-state" [class.paused]="!playing.playing" aria-hidden="true">{{ playing.playing ? 'equalizer' : 'pause' }}</mat-icon>
+                <span class="np-text">
+                  <span class="np-title">{{ playing.title }}</span>
+                  <span class="muted small">{{ playing.artist }}</span>
+                </span>
+                @if (user.username !== me()) {
+                  <button mat-icon-button type="button" class="along" (click)="listenAlong(playing)"
+                    [attr.aria-label]="'Listen along with ' + user.username" matTooltip="Listen along">
+                    <mat-icon>headset</mat-icon>
+                  </button>
+                }
+              </div>
+            }
           </li>
         }
       </ul>

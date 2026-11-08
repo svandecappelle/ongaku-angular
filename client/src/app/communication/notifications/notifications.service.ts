@@ -1,18 +1,17 @@
-import { Injectable } from '@angular/core';
-import { Observable ,  Observer } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
 import { Message } from '../model/message';
 import { Event } from '../model/event';
-import { io } from 'socket.io-client';
+import { SocketService } from '../../services/socket.service';
 
 @Injectable()
 export class NotificationsService {
 
+  private readonly sockets = inject(SocketService);
   private socket;
 
-  constructor() { }
-
   public initSocket(): void {
-    this.socket = io();
+    this.socket = this.sockets.socket;
   }
 
   public send(message: Message): void {

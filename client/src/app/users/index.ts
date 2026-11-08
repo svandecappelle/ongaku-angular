@@ -5,6 +5,8 @@ export interface User {
     /** Tracks in the user's library */
     tracks: number;
     playlists: number;
+    /** Live in PresenceService */
+    online?: boolean;
 }
 
 export * from './users.service';

@@ -320,3 +320,46 @@
     padding: 16px;
   }
 }
+
+.presence {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ongaku-muted);
+  &.online {
+    color: #43a047;
+    font-weight: 600;
+  }
+}
+
+.presence-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.listening-now {
+  padding: 10px 14px;
+  border-radius: var(--ongaku-radius-lg);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: color-mix(in srgb, var(--ongaku-accent) 12%, var(--ongaku-surface));
+  border: 1px solid var(--ongaku-border);
+  > mat-icon {
+    color: var(--ongaku-accent);
+  }
+}
+
+.listening-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  strong,
+  span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}

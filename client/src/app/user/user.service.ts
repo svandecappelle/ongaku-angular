@@ -23,6 +23,8 @@ export interface Profile {
   artistsCount: number;
   playlists: number;
   likes: number;
+  /** Only on the profile of the connected user: the others see what he plays */
+  shareListening?: boolean;
   /** quota: bytes, only for the user himself (null: no limit) */
   uploads: { files: number; size: number; quota?: number | null };
   artists: ProfileArtist[];
@@ -39,6 +41,10 @@ export class UserService {
 
   getUserInfos(username: string): Observable<Profile> {
     return this.http.get<Profile>(`/api/user/${encodeURIComponent(username)}`);
+  }
+
+  setShareListening(share: boolean): Observable<{ share: boolean }> {
+    return this.http.put<{ share: boolean }>('/api/user/settings/listening', { share });
   }
 
   resetImage(type: ProfileImage): Observable<unknown> {

@@ -10,6 +10,7 @@ const images = require("./../../middleware/images");
 const middleware = require("./../../middleware/middleware");
 const scanner = require("./../../middleware/scanner");
 const quota = require("./../../middleware/quota");
+const communication = require("./../../communication");
 
 const userlib = require("./../../model/library");
 const likes = require("./../../model/likes");
@@ -54,6 +55,7 @@ function profile(uid, username, self, callback) {
     async.parallel({
         administrator: (next) => user.isAdministrator(uid, next),
         email: (next) => self ? user.getUserField(uid, 'email', next) : next(null, undefined),
+        hideListening: (next) => self ? user.getUserField(uid, 'hideListening', next) : next(null, undefined),
         uids: (next) => userlib.get(username, next),
         playlists: (next) => db.setCount(username + ':playlists', next),
         likes: (next) => likes.count(username, next),
@@ -76,6 +78,8 @@ function profile(uid, username, self, callback) {
         callback(null, {
             username: username,
             email: data.email,
+            // Setting of the user himself: the others see what he plays
+            shareListening: self ? String(data.hideListening) !== '1' : undefined,
             self: self,
             administrator: !!data.administrator,
             tracks: artists.reduce((count, artist) => count + artist.tracks, 0),
@@ -261,6 +265,25 @@ router.get('/library/content', (req, res) => {
             }));
         });
         res.json({ albums: albums, uids: withCanonicalUids(uids) });
+    });
+});
+
+/** Whether the other members see what the connected user plays: { share } */
+router.put('/settings/listening', (req, res) => {
+    if (!middleware.isAuthenticated(req)) {
+        return res.status(403).json({ message: 'You need to be logged' });
+    }
+    if (typeof (req.body && req.body.share) !== 'boolean') {
+        return res.status(400).json({ message: 'share must be true or false' });
+    }
+    const { uid, username } = req.session.passport.user;
+    user.setUserField(uid, 'hideListening', req.body.share ? 0 : 1, (err) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+        communication.setHidden(username, !req.body.share);
+        res.json({ share: req.body.share });
     });
 });
 

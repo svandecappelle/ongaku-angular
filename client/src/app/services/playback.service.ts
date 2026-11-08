@@ -142,7 +142,12 @@ export class PlaybackService {
   play(track: Song, startAt = 0) {
     if (track.uid === this.current()?.uid) {
       this.current.set(track);
-      this.seek(startAt);
+      // Still loading (the first track of an empty queue loads as soon as it is added): applied once loaded
+      if (this.state() === 'loading') {
+        this.startAt = startAt;
+      } else {
+        this.seek(startAt);
+      }
       this.resume();
     } else {
       this.startAt = startAt;
@@ -191,11 +196,11 @@ export class PlaybackService {
     this.store.dispatch(new AppendPlaylist(tracks.map((track, i) => ({ ...track, index: start + i }))));
   }
 
-  /** Adds a track at the end of the queue and plays it */
-  playNow(track: Song) {
+  /** Adds a track at the end of the queue and plays it, from `startAt` seconds */
+  playNow(track: Song, startAt = 0) {
     const copy = { ...track, index: this.tracks().length };
     this.store.dispatch(new AppendPlaylist([copy]));
-    this.play(copy);
+    this.play(copy, startAt);
   }
 
   /** Replaces the queue with the given tracks and plays one of them; returns what to restore to undo it */

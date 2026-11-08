@@ -51,7 +51,8 @@ class Server {
     service.listen(config.port, () => {
       console.log('Listening on http://localhost:%d', config.port);
     });
-    communication.start(service)
+    // The sockets read the session of the page: the server knows their user
+    communication.start(service, this.sessionMiddleware)
   }
 
   initViewEngine () {
@@ -76,13 +77,14 @@ class Server {
     }
 
     // The secret of application.yml signs the session cookies
-    app.use(session({
+    this.sessionMiddleware = session({
       store: this.sessionStore(),
       resave: false,
       saveUninitialized: true,
       secret: nconf.get('secret') || 'keyboard cat',
       cookie: {}
-    }))
+    });
+    app.use(this.sessionMiddleware);
 
     /*
     app.use(csrf({ cookie: true }));

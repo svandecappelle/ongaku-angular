@@ -10,6 +10,7 @@ import { SearchLibraryAction } from '../../state/search-state';
 import { MaterialModule } from '../../modules/material.module';
 import { AuthenticationService } from '../../services/authentication.service';
 import { ThemeService } from '../../services/theme.service';
+import { PresenceService } from '../../services/presence.service';
 import { PlayerBarComponent } from '../player-bar/player-bar.component';
 import { QueuePanelComponent } from '../queue-panel/queue-panel.component';
 
@@ -33,6 +34,8 @@ interface NavItem {
 })
 export class ShellComponent {
   readonly theme = inject(ThemeService);
+  // Online status and "listening now" of the connected user, for the other members
+  private readonly presence = inject(PresenceService);
   private readonly auth = inject(AuthenticationService);
   private readonly store = inject<Store<IAppState>>(Store);
   private readonly router = inject(Router);

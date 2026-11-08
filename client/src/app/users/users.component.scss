@@ -75,8 +75,24 @@
   gap: 16px;
 }
 
-.card {
+// The card, and what the member plays under it
+.member {
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  &.me .card,
+  &.me .now-playing {
+    border-color: var(--ongaku-accent);
+  }
+  &.listening .card {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
+.card {
+  position: relative;
+  flex: 1;
   overflow: hidden;
   border-radius: var(--ongaku-radius-lg);
   display: flex;
@@ -94,9 +110,6 @@
   &:focus-visible {
     outline: 2px solid var(--ongaku-accent);
     outline-offset: 2px;
-  }
-  &.me {
-    border-color: var(--ongaku-accent);
   }
 }
 
@@ -233,4 +246,68 @@
       transform: none;
     }
   }
+}
+
+// Online: a dot on the avatar
+.dot {
+  position: absolute;
+  // Bottom right of the avatar (88px banner, 64px avatar raised by 32px)
+  top: 104px;
+  left: 66px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ongaku-muted);
+  border: 3px solid var(--ongaku-surface);
+  opacity: .7;
+  &.online {
+    background: #43a047;
+    opacity: 1;
+  }
+}
+
+.status {
+  color: var(--ongaku-muted);
+  &.online {
+    color: #43a047;
+    font-weight: 600;
+  }
+}
+
+.now-playing {
+  margin-top: -1px;
+  padding: 8px 8px 8px 14px;
+  border-radius: 0 0 var(--ongaku-radius-lg) var(--ongaku-radius-lg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: color-mix(in srgb, var(--ongaku-accent) 12%, var(--ongaku-surface));
+  border: 1px solid var(--ongaku-border);
+  .np-state {
+    flex: none;
+    color: var(--ongaku-accent);
+    &.paused {
+      color: var(--ongaku-muted);
+    }
+  }
+  .along {
+    flex: none;
+    color: var(--ongaku-accent);
+  }
+}
+
+.np-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+.np-title {
+  font-weight: 600;
 }

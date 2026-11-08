@@ -9,6 +9,7 @@ import { ThemeService } from '../services/theme.service';
 import { ArtistCardComponent } from '../v3/artist-card/artist-card.component';
 import { artistImages } from '../v3/library';
 import { Profile, ProfileImage, UserService } from './user.service';
+import { PresenceService } from '../services/presence.service';
 
 interface ImageSlot {
   type: ProfileImage;
@@ -28,6 +29,7 @@ export class UserComponent {
   private readonly service = inject(UserService);
   private readonly theme = inject(ThemeService);
   private readonly snackBar = inject(MatSnackBar);
+  readonly presence = inject(PresenceService);
 
   readonly profile = signal<Profile | null>(null);
   readonly state = signal<'loading' | 'ready' | 'missing' | 'failed'>('loading');
@@ -51,6 +53,16 @@ export class UserComponent {
     inject(ActivatedRoute).paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       this.username = params.get('user') ?? undefined;
       this.load();
+    });
+  }
+
+  setShareListening(share: boolean) {
+    this.service.setShareListening(share).subscribe({
+      next: () => {
+        this.profile.update((profile) => profile && { ...profile, shareListening: share });
+        this.snackBar.open(share ? 'The other members see what you listen to' : 'What you listen to is hidden', undefined, { duration: 3000 });
+      },
+      error: () => this.snackBar.open('The setting could not be saved', undefined, { duration: 5000 }),
     });
   }
 
