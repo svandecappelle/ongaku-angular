@@ -65,9 +65,9 @@ function tone(file, tags = {}, { seconds = 2, frequency = 440, codec = [] } = {}
   ffmpeg(['-f', 'lavfi', '-i', `sine=frequency=${frequency}:duration=${seconds}`, ...metadata, ...quality, file]);
 }
 
-function album(music, artist, title, count, { start = 300, folder } = {}) {
+function album(music, artist, title, count, { start = 300, folder, genre } = {}) {
   for (let n = 1; n <= count; n++) {
-    tone(path.join(music, folder ?? path.join(artist, title), `${n}.mp3`), { artist, album: title, title: `${title} ${n}`, track: n }, { frequency: start + n * 37 });
+    tone(path.join(music, folder ?? path.join(artist, title), `${n}.mp3`), { artist, album: title, title: `${title} ${n}`, track: n, ...(genre ? { genre } : {}) }, { frequency: start + n * 37 });
   }
 }
 
@@ -82,9 +82,10 @@ function zip(target, cwd, files) {
 
 /** The music of the tests: every scenario relies on these names */
 function buildMusic(music) {
-  album(music, 'Daft Punk', 'Discovery', 3);
-  album(music, 'Radiohead', 'OK Computer', 4, { start: 500 });
-  album(music, 'Air', 'Moon Safari', 2, { start: 700 });
+  // Genres for the library radio stations
+  album(music, 'Daft Punk', 'Discovery', 3, { genre: 'Electronic' });
+  album(music, 'Radiohead', 'OK Computer', 4, { start: 500, genre: 'Rock' });
+  album(music, 'Air', 'Moon Safari', 2, { start: 700, genre: 'Electronic' });
   ffmpeg(['-f', 'lavfi', '-i', 'color=c=blue:s=64x64', '-frames:v', '1', path.join(music, 'Air/Moon Safari/cover.jpg')]);
 
   // Duplicates of Discovery: track 1 in flac, track 2 with a lowercase artist
