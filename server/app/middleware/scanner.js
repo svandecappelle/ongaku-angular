@@ -64,8 +64,27 @@ class Scanner extends events.EventEmitter {
   }
 
   status () {
-    return this.scanned_files_count * 100 / this.all_files_count;
+    return this.all_files_count ? Math.min(100, this.scanned_files_count * 100 / this.all_files_count) : 100;
   };
+
+  /** Progress for the notifications: at most every 250ms, and always the end */
+  broadcastProgress () {
+    const send = () => {
+      this.progressTimer = null;
+      communication.broadcast("library:scanner:progress", {
+        content: 'Scanning the music folders',
+        value: this.status(),
+        from: 'System'
+      });
+    };
+    if (this.status() >= 100) {
+      clearTimeout(this.progressTimer);
+      return send();
+    }
+    if (!this.progressTimer) {
+      this.progressTimer = setTimeout(send, 250);
+    }
+  }
 
   addToScan (folder){
     this.all_files_count += walkSync(folder).length;
@@ -189,13 +208,7 @@ class Scanner extends events.EventEmitter {
         logger.debug(`${this.all_files_count}/${this.scanned_files_count} left to scan on ${apath}`);
         logger.debug(`${this.status()} elapsed on ${apath}`);
 
-        setTimeout( () => {
-          communication.broadcast("library:scanner:progress", {
-            content: 'A reload is in progress on library datas', 
-            value: this.status(),
-            from: 'System'
-          });
-        }, 250);
+        this.broadcastProgress();
 
         appender.decode(file).then((song) => {
           logger.debug("decoded", song);

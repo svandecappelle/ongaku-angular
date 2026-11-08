@@ -1,27 +1,36 @@
 <div class="notification-container">
-  @for (message of messages; track message) {
-    <div class="flag note note--secondary">
-      <div class="flag__image note__icon">
-        <i class="fa fa-comment"></i>
+  <div class="stack" aria-live="polite">
+    @if (scan(); as progress) {
+      <div class="card" role="status">
+        <span class="icon" [class.done]="progress.done" aria-hidden="true">
+          <mat-icon [class.spin]="!progress.done">{{ progress.done ? 'check_circle' : 'sync' }}</mat-icon>
+        </span>
+        <div class="body">
+          <span class="title">{{ progress.done ? 'Library scan finished' : 'Library scan' }}</span>
+          <span class="text">
+            {{ progress.text }}
+            @if (!progress.done) {
+              <span class="percent">· {{ progress.value | number: '1.0-0' }}%</span>
+            }
+          </span>
+          <mat-progress-bar mode="determinate" [value]="progress.value" aria-label="Scan progress"></mat-progress-bar>
+        </div>
+        <button mat-icon-button type="button" class="close" (click)="closeScan()" aria-label="Hide">
+          <mat-icon>close</mat-icon>
+        </button>
       </div>
-      <div class="flag__body note__text">
-        {{ message.content }}
-      </div>
-      <a class="note__close" (click)='close(message)'>
-        <i class="fa fa-times"></i>
-      </a>
-    </div>
-  }
+    }
 
-  @if (scanMessage) {
-    <div class="flag note note--secondary">
-      <div class="flag__image note__icon">
-        <i class="fa fa-comment"></i>
+    @for (notice of notices(); track notice.id) {
+      <div class="card" role="alert">
+        <span class="icon" aria-hidden="true"><mat-icon>notifications</mat-icon></span>
+        <div class="body">
+          <span class="text">{{ notice.text }}</span>
+        </div>
+        <button mat-icon-button type="button" class="close" (click)="close(notice)" aria-label="Dismiss">
+          <mat-icon>close</mat-icon>
+        </button>
       </div>
-      <div class="flag__body note__text">
-        {{ scanMessage.content }}
-      </div>
-      <mat-progress-bar mode="determinate" value='{{scanProgressValue}}'></mat-progress-bar>
-    </div>
-  }
+    }
+  </div>
 </div>
