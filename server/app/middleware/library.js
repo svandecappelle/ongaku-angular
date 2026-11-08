@@ -13,6 +13,31 @@ const CUSTOM_COVERS_DIRECTORY = path.resolve(__dirname, '../../../public/artists
 const getSize = (folder, callback) => getFolderSize.strict(folder).then((size) => callback(null, size), callback);
 const connector = require("./connectors");
 const { deduplicate } = require("./deduplicate");
+const searchText = require("./search-text");
+
+/** Tags searched besides the title, the artist and the album (not the lyrics nor the comments) */
+const SEARCHED_TAGS = ['album_artist', 'albumartist', 'ALBUMARTIST', 'album_origin', 'genre', 'GENRE', 'composer', 'COMPOSER', 'performer', 'artists', 'date', 'year'];
+/** The searched text of each track, prepared once (the tracks are new objects after a scan) */
+const searchIndex = new WeakMap();
+
+function trackFields(track) {
+  const tags = track.metadatas || {};
+  return [
+    { value: track.title, weight: 4 },
+    { value: track.artist, weight: 3 },
+    { value: track.album, weight: 2 },
+    { value: SEARCHED_TAGS.map((tag) => tags[tag]).flat(), weight: 1 },
+  ];
+}
+
+function preparedTrack(track) {
+  let prepared = searchIndex.get(track);
+  if (!prepared) {
+    prepared = searchText.prepare(trackFields(track));
+    searchIndex.set(track, prepared);
+  }
+  return prepared;
+}
 
 var library;
 try {
@@ -598,13 +623,8 @@ class Library {
     });
 
     if (search) {
-      artists = _.filter(artists, (name) => {
-        if (name) {
-          return name.trim().toLowerCase().match(
-            `.*${search.toLowerCase()}.*`);
-        }
-        return false;
-      });
+      // The best matches first: "air" lists Air before Fair Weather
+      artists = searchText.rank(_.compact(artists), search, (name) => [{ value: name, weight: 1 }]);
     }
 
     artists = _.map(artists, (name) => {
@@ -658,11 +678,9 @@ class Library {
     let albums = _.sortBy(this.listAlbums(), (album) => String(album.title).toLowerCase() + '\u0000' + String(album.artist).toLowerCase());
 
     if (search) {
-      const filter = search.toLowerCase();
-      albums = _.filter(albums, (album) => {
-        return album && album.title && (String(album.title).trim().toLowerCase().includes(filter) ||
-          String(album.artist).trim().toLowerCase().includes(filter));
-      });
+      // The words in the title or the artist, in any order: "moon air" finds Moon Safari by Air
+      albums = searchText.rank(albums.filter((album) => album && album.title), search,
+        (album) => [{ value: album.title, weight: 2 }, { value: album.artist, weight: 1 }]);
     }
 
     albums = _.map(albums, (album) => {
@@ -860,80 +878,28 @@ class Library {
       sortby = opts.sortby;
     var searchResultList;
 
-    if (filter.indexOf("~") === 0) {
-      var filters = filter.substring(1, filter.length).split(" ");
-      console.debug("Search into any of these values: ", filters);
-      _.each(filters, (subFilter) => {
-        if (searchResultList) {
-          searchResultList = this.search({
-            filter: subFilter,
-            type: type,
-            groupby: undefined
-          }, searchResultList);
-        } else {
-          searchResultList = this.search({
-            filter: subFilter,
-            type: type,
-            groupby: undefined
-          });
-        }
-      });
-      return this.groupby(searchResultList, groupby);
-    }
-
     if (!fromList) {
       // Public tracks, and the private uploads of the user himself
       fromList = _.filter(this.flatten, (track) => {
         return !track.private || (opts.user && track.user === opts.user);
       });
     }
-    if (filter) {
-      searchResultList = _.filter(fromList, (obj) => {
-        var filterClause = ".*".concat(filter.latinize().toLowerCase().trim()
-            .replace(/ /g, ".*")).concat(".*"),
-          found = false;
-        if (type === "video" && obj.type === type) {
-          found = obj.name.toLowerCase().match(filterClause);
-        } else if (type === "audio" && obj.type === type) {
-          if (!obj.title) {
-            console.error("error checking object: ", obj);
-          }
-          found = obj.title.toString().latinize().toLowerCase().match(
-            filterClause);
-          found = found ? found : obj.album.toString().latinize().toLowerCase()
-            .match(filterClause);
-          found = found ? found : obj.artist.toString().latinize().toLowerCase()
-            .match(filterClause);
-
-          if (!found) {
-            _.each(obj.metadatas, (val, key) => {
-              if (!found) {
-                if (typeof val === 'String') {
-                  if (val.latinize().toLowerCase().match(filterClause)) {
-                    found = true;
-                  }
-                } else if (Array.isArray(val)) {
-                  for (var value of val) {
-                    if (value.toString().latinize().toLowerCase().match(
-                        filterClause)) {
-                      found = true
-                      break;
-                    }
-                  }
-                } else {
-                  if (val === filterClause) {
-                    found = true
-                  }
-                }
-              }
-            });
-          }
-        }
-        return found;
-      });
-    } else {
-      searchResultList = this.flatten;
+    if (filter && searchText.isSearch(filter)) {
+      // Every word somewhere in the track, the most relevant first (see search-text.js)
+      const search = searchText.parse(filter);
+      searchResultList = _.filter(fromList, (obj) => obj.type === type || (!obj.type && type === 'audio'))
+        .map((obj, index) => ({ obj, index, score: type === 'video' ? searchText.score(searchText.prepare([{ value: obj.name, weight: 1 }]), search) : searchText.score(preparedTrack(obj), search) }))
+        .filter((entry) => entry.score > 0)
+        .sort((a, b) => b.score - a.score || a.index - b.index)
+        .map((entry) => entry.obj);
+      // Grouped results keep the order of the groups; a sort only reorders inside them
+      if (type === "audio" && groupby) {
+        return this.groupby(searchResultList, groupby, sortby);
+      }
+      return searchResultList;
     }
+    // No search: the tracks the user may see (not the private uploads of the others)
+    searchResultList = filter ? [] : fromList;
     var arrayResults = [];
 
     if (type === "audio" && groupby) {

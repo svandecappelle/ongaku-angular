@@ -124,6 +124,10 @@ function buildMusic(music) {
   fs.writeFileSync(path.join(music, 'Audit/notes.txt'), 'Not music');
   tone(path.join(music, 'Audit/Gone/1.mp3'), { artist: 'Gone Band', album: 'Gone', title: 'Moved away', track: 1 }, { frequency: 2000 });
 
+  // Search: punctuation and accents in the names
+  tone(path.join(music, 'Search/ACDC/1.mp3'), { artist: 'AC/DC', album: 'Back in Black', title: 'Shoot to Thrill', track: 1 }, { frequency: 2050 });
+  tone(path.join(music, 'Search/Sigur/1.mp3'), { artist: 'Sigur Rós', album: 'Ágætis byrjun', title: 'Svefn-g-englar', track: 1 }, { frequency: 2100 });
+
   fs.mkdirSync(path.join(music, 'Imported'), { recursive: true });
 }
 
