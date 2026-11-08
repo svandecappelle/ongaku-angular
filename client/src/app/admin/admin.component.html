@@ -322,6 +322,213 @@
       </div>
     </mat-tab>
 
+    <!-- ========== Files ========== -->
+    <mat-tab label="Files">
+      <div class="tab">
+        <section class="panel" aria-labelledby="files-title">
+          <div class="panel-row">
+            <div class="panel-header">
+              <h2 id="files-title">Music folders</h2>
+              <span class="muted">Every file of the music folders, against what the library lists: why an audio file does not show in the artists, the albums or the search.</span>
+            </div>
+            <span class="files-actions">
+              <button mat-stroked-button type="button" (click)="loadAudit()" [disabled]="auditLoading() || rescanning()">
+                <mat-icon>refresh</mat-icon>
+                Check again
+              </button>
+              <button mat-flat-button color="accent" type="button" (click)="rescanLibrary()" [disabled]="rescanning()">
+                <mat-icon>sync</mat-icon>
+                {{ rescanning() ? 'Rescanning…' : 'Rescan the library' }}
+              </button>
+            </span>
+          </div>
+          @if (audit(); as a) {
+            <ul class="folders">
+              @for (folder of a.folders; track folder.path) {
+                <li>
+                  <mat-icon aria-hidden="true">{{ folder.exists ? 'folder' : 'folder_off' }}</mat-icon>
+                  <code>{{ folder.path }}</code>
+                  <span class="muted small">{{ folder.exists ? (folder.files | number) + ' files' : 'This folder does not exist' }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        @if (auditLoading() && !audit()) {
+          <div class="panel" role="status">
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+            <span class="muted">Reading the music folders…</span>
+          </div>
+        }
+
+        @if (audit(); as a) {
+          @let lists = auditLists()!;
+          <div class="tiles">
+            @for (item of auditTiles(); track item.id) {
+              <a class="tile tile-button" [class.warn]="item.warn" [href]="'#' + item.id" (click)="$event.preventDefault(); scrollTo(item.id)">
+                <mat-icon>{{ item.icon }}</mat-icon>
+                <span class="tile-value">{{ item.count | number }}</span>
+                <span class="muted">{{ item.label }}</span>
+              </a>
+            }
+          </div>
+
+          @if (a.scanning) {
+            <p class="notice" role="status">
+              <mat-icon aria-hidden="true">info</mat-icon>
+              <span>A scan is running: files not read yet show as “not scanned”. This page updates until it is over.</span>
+            </p>
+          } @else if (!notListed() && !a.counts.missing) {
+            <p class="notice ok">
+              <mat-icon aria-hidden="true">verified</mat-icon>
+              <span>Every audio file of the music folders is in the library{{ a.counts.duplicates ? ' (hidden duplicates aside)' : '' }}.</span>
+            </p>
+          }
+
+          <mat-form-field class="files-filter" subscriptSizing="dynamic">
+            <mat-icon matPrefix>search</mat-icon>
+            <mat-label>Filter by path</mat-label>
+            <input matInput [ngModel]="auditFilter()" (ngModelChange)="auditFilter.set($event)" autocomplete="off">
+          </mat-form-field>
+
+          <section class="panel" id="files-not-scanned" aria-labelledby="not-scanned-title">
+            <div class="panel-header">
+              <h2 id="not-scanned-title">Not scanned yet</h2>
+              <span class="muted">Audio files of an enabled format that the library does not hold. A rescan adds them.</span>
+            </div>
+            @if (!lists.notScanned.length) {
+              <p class="muted">{{ auditFilter() ? 'No file matches.' : 'Every file of an enabled format was scanned.' }}</p>
+            } @else {
+              <ul class="health-list">
+                @for (file of shown(lists.notScanned, 'files-not-scanned'); track file.folder + file.file) {
+                  <li class="health-item">
+                    <mat-icon class="item-icon" aria-hidden="true">update</mat-icon>
+                    <span class="health-text">
+                      <code>{{ file.file }}</code>
+                      <span class="muted small">{{ notScannedReason(file.reason) }}</span>
+                    </span>
+                  </li>
+                }
+              </ul>
+              <ng-container *ngTemplateOutlet="more; context: { list: lists.notScanned, total: a.counts.notScanned, key: 'files-not-scanned' }"></ng-container>
+            }
+          </section>
+
+          <section class="panel" id="files-formats" aria-labelledby="formats-title">
+            <div class="panel-header">
+              <h2 id="formats-title">Formats not enabled</h2>
+              <span class="muted">
+                Audio files the scan skips. Enabled now: {{ a.enabledFormats.join(', ') }}. To add a format, put it in the
+                <code>audio</code> list of <code>server/config/application.yml</code>, restart the server and rescan.
+              </span>
+            </div>
+            @if (!lists.disabledFormat.length) {
+              <p class="muted">{{ auditFilter() ? 'No file matches.' : 'No audio file of another format.' }}</p>
+            } @else {
+              <div class="format-chips">
+                @for (item of disabledFormats(); track item.format) {
+                  <span class="badge">.{{ item.format }} · {{ item.count | number }}</span>
+                }
+              </div>
+              <ul class="health-list">
+                @for (file of shown(lists.disabledFormat, 'files-formats'); track file.folder + file.file) {
+                  <li class="health-item">
+                    <mat-icon class="item-icon" aria-hidden="true">block</mat-icon>
+                    <span class="health-text"><code>{{ file.file }}</code></span>
+                  </li>
+                }
+              </ul>
+              <ng-container *ngTemplateOutlet="more; context: { list: lists.disabledFormat, total: a.counts.disabledFormat, key: 'files-formats' }"></ng-container>
+            }
+          </section>
+
+          <section class="panel" id="files-unreadable" aria-labelledby="files-unreadable-title">
+            <div class="panel-header">
+              <h2 id="files-unreadable-title">Unreadable</h2>
+              <span class="muted">The last scan could not decode them: damaged files, or not really audio.</span>
+            </div>
+            @if (!lists.unreadable.length) {
+              <p class="muted">{{ auditFilter() ? 'No file matches.' : 'Every audio file could be read.' }}</p>
+            } @else {
+              <ul class="health-list">
+                @for (file of shown(lists.unreadable, 'files-unreadable'); track file.folder + file.file) {
+                  <li class="health-item">
+                    <mat-icon class="item-icon" aria-hidden="true">broken_image</mat-icon>
+                    <span class="health-text">
+                      <code>{{ file.file }}</code>
+                      <span class="muted small">{{ file.error }}</span>
+                    </span>
+                  </li>
+                }
+              </ul>
+              <ng-container *ngTemplateOutlet="more; context: { list: lists.unreadable, total: a.counts.unreadable, key: 'files-unreadable' }"></ng-container>
+            }
+          </section>
+
+          <section class="panel" id="files-duplicates" aria-labelledby="files-duplicates-title">
+            <div class="panel-header">
+              <h2 id="files-duplicates-title">Hidden duplicates</h2>
+              <span class="muted">In the library, but not listed: another copy of the same track is listed instead. “Show each track once” in Settings turns this off.</span>
+            </div>
+            @if (!lists.duplicates.length) {
+              <p class="muted">{{ auditFilter() ? 'No file matches.' : 'No hidden copy.' }}</p>
+            } @else {
+              <ul class="health-list">
+                @for (file of shown(lists.duplicates, 'files-duplicates'); track file.folder + file.file) {
+                  <li class="health-item">
+                    <mat-icon class="item-icon" aria-hidden="true">content_copy</mat-icon>
+                    <span class="health-text">
+                      <code>{{ file.file }}</code>
+                      <span class="muted small">{{ file.artist }} · {{ file.title }}@if (file.keptFile) { · listed instead: <code>{{ file.keptFile }}</code>}</span>
+                    </span>
+                  </li>
+                }
+              </ul>
+              <ng-container *ngTemplateOutlet="more; context: { list: lists.duplicates, total: a.counts.duplicates, key: 'files-duplicates' }"></ng-container>
+            }
+          </section>
+
+          <section class="panel" id="files-missing" aria-labelledby="missing-title">
+            <div class="panel-header">
+              <h2 id="missing-title">Gone from the disk</h2>
+              <span class="muted">Listed in the library, but their file was deleted or moved since the scan: they cannot be played. A rescan removes them.</span>
+            </div>
+            @if (!lists.missing.length) {
+              <p class="muted">{{ auditFilter() ? 'No file matches.' : 'Every listed track has its file.' }}</p>
+            } @else {
+              <ul class="health-list">
+                @for (track of shown(lists.missing, 'files-missing'); track track.file) {
+                  <li class="health-item">
+                    <mat-icon class="item-icon" aria-hidden="true">link_off</mat-icon>
+                    <span class="health-text">
+                      <span class="strong">{{ track.title }}</span>
+                      <span class="muted small">{{ track.artist }} · {{ track.album }} · <code>{{ track.file }}</code></span>
+                    </span>
+                  </li>
+                }
+              </ul>
+              <ng-container *ngTemplateOutlet="more; context: { list: lists.missing, total: a.counts.missing, key: 'files-missing' }"></ng-container>
+            }
+          </section>
+
+          @if (otherFiles().length) {
+            <section class="panel" aria-labelledby="other-title">
+              <div class="panel-header">
+                <h2 id="other-title">Other files</h2>
+                <span class="muted">Not audio: covers, playlists, lyrics, texts… They are not meant to be in the library.</span>
+              </div>
+              <div class="format-chips">
+                @for (item of otherFiles(); track item.extension) {
+                  <span class="badge muted-badge">.{{ item.extension }} · {{ item.count | number }}</span>
+                }
+              </div>
+            </section>
+          }
+        }
+      </div>
+    </mat-tab>
+
     <!-- ========== Users ========== -->
     <mat-tab label="Users">
       <div class="tab">

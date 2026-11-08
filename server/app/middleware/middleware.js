@@ -134,7 +134,7 @@ class Middleware {
       logger.info("Stream " + type);
       var fs = require("fs"),
         src = library.getRelativePath(path.basename(uuid)),
-        extension = path.extname(src).replace(".", "");
+        extension = path.extname(src).replace(".", "").toLowerCase();
       if (type === 'audio' && !_.contains(allowedStreamingAudioTypes, extension)) {
         logger.info(src, "type: " + type, path.extname(src).replace(".", ""), "not in allowed direct streaming type need to convert: ", allowedStreamingAudioTypes);
         var libraryEntry = library.getByUid(uuid),

@@ -260,6 +260,19 @@ test('a library station starts from the Radios page and says why each track was 
   await page.eval(`document.querySelector('app-player-bar .sheet button[aria-label="Hide the player"]').click()`);
 });
 
+test('the Files tab of the administration tells why files are not listed', { skip }, async () => {
+  await page.goto('/admin', await login('boss'));
+  await page.waitFor(`[...document.querySelectorAll('.mdc-tab')].some((tab) => tab.textContent.trim() === 'Files')`, { what: 'the tabs' });
+  await page.eval(`[...document.querySelectorAll('.mdc-tab')].find((tab) => tab.textContent.trim() === 'Files').click()`);
+  await page.waitFor(`document.querySelectorAll('.mat-mdc-tab-body-active .tile').length === 6`, { what: 'the audit tiles' });
+  const formats = await page.eval(`[...document.querySelectorAll('#files-formats code')].map((c) => c.textContent.trim())`);
+  assert.ok(formats.includes('Audit/Formats/1.m4a'), `formats: ${formats}`);
+  // The filter keeps the matching paths
+  await page.eval(`(() => { const input = document.querySelector('.files-filter input'); input.value = 'Misc'; input.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+  await page.waitFor(`![...document.querySelectorAll('#files-formats code')].some((c) => c.textContent.includes('Audit/Formats'))`, { what: 'the filtered list' });
+  assert.ok(await page.eval(`[...document.querySelectorAll('#files-unreadable code')].some((c) => c.textContent.includes('Misc/broken.mp3'))`));
+});
+
 test('no uncaught error in the pages', { skip }, () => {
   assert.deepEqual(page.errors, []);
 });

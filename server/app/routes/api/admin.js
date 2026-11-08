@@ -13,6 +13,7 @@ const { formatOf } = require("./../../middleware/deduplicate");
 const middleware = require("./../../middleware/middleware");
 const importer = require("./../../middleware/importer");
 const scanner = require("./../../middleware/scanner");
+const libraryAudit = require("./../../middleware/library-audit");
 const sessionGuard = require("./../../middleware/session-guard");
 const images = require("./../../middleware/images");
 const statistics = require("./../../model/statistics");
@@ -459,6 +460,24 @@ router.get('/library/health', (req, res) => {
         missingTags: untagged.slice(0, HEALTH_LIMIT),
         unreadable: unreadable.slice(0, HEALTH_LIMIT)
     });
+});
+
+/**
+ * The files of the music folders against the library: the audio files that are listed, and why
+ * the others are not (not scanned yet, format not enabled, unreadable, hidden duplicate), plus the
+ * tracks whose file is gone. Lists are capped; the counts are complete.
+ */
+router.get('/library/audit', (req, res, next) => {
+    libraryAudit.audit().then((report) => res.json(report)).catch(next);
+});
+
+/** Rescans the music folders in the background: { rescan: 'started' | 'busy' } */
+router.post('/library/rescan', (req, res) => {
+    if (library.scanProgress === true) {
+        return res.json({ rescan: 'busy' });
+    }
+    application.reload();
+    res.json({ rescan: 'started' });
 });
 
 /** Music available several times: the copy shown and the hidden ones (see middleware/deduplicate.js) */

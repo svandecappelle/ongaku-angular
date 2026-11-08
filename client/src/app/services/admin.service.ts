@@ -69,6 +69,25 @@ export interface LibraryHealth {
   unreadable: { file: string; error: string }[];
 }
 
+/** The music folders against the library (Administration > Files); lists hold the first 500 items */
+export interface LibraryAudit {
+  scanning: boolean;
+  folders: { path: string; exists: boolean; files: number }[];
+  counts: { audio: number; listed: number; duplicates: number; unreadable: number; notScanned: number; disabledFormat: number; missing: number; other: number };
+  /** Supported audio files the library does not hold: added since the scan, or skipped by older scans */
+  notScanned: { file: string; folder: string; reason: 'after-scan' | 'uppercase-extension' }[];
+  /** Audio files of a format the configuration does not enable */
+  disabledFormat: { file: string; folder: string; format: string }[];
+  unreadable: { file: string; folder: string; error: string }[];
+  /** Hidden copies, with the file listed instead */
+  duplicates: { file: string; folder: string; title: string; artist: string; album: string; keptFile: string | null }[];
+  /** Tracks of the library whose file is gone */
+  missing: { file: string; title: string; artist: string; album: string }[];
+  /** Other files, by extension */
+  other: Record<string, number>;
+  enabledFormats: string[];
+}
+
 /** A copy of a track, in the duplicates report */
 export interface TrackCopy {
   uid: string;
@@ -156,6 +175,15 @@ export class AdminService {
 
   health(): Observable<LibraryHealth> {
     return this.http.get<LibraryHealth>('/api/admin/library/health');
+  }
+
+  audit(): Observable<LibraryAudit> {
+    return this.http.get<LibraryAudit>('/api/admin/library/audit');
+  }
+
+  /** Rescans the music folders in the background */
+  rescanLibrary(): Observable<{ rescan: 'started' | 'busy' }> {
+    return this.http.post<{ rescan: 'started' | 'busy' }>('/api/admin/library/rescan', {});
   }
 
   writeTags(uids: string[], tags: Partial<TrackTags>): Observable<unknown> {

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { DatePipe, DecimalPipe, NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -9,7 +9,7 @@ import { Chart, registerables } from 'chart.js';
 import moment from 'moment';
 
 import { MaterialModule } from '../modules/material.module';
-import { AdminService, AdminUser, Duplicates, ImportFolder, ImportResult, LibraryHealth, UserChanges } from '../services/admin.service';
+import { AdminService, AdminUser, Duplicates, ImportFolder, ImportResult, LibraryAudit, LibraryHealth, UserChanges } from '../services/admin.service';
 import { CoverEditComponent } from '../v3/cover-edit/cover-edit.component';
 import { TagEditorDialogComponent, TagEditorData } from './tag-editor-dialog.component';
 import { StatisticsService } from '../services/statistics.service';
@@ -89,8 +89,53 @@ export class AdminComponent {
 
   readonly duplicates = signal<Duplicates | null>(null);
 
-  /** Overview, Library, Health, Users, Settings */
+  /** Overview, Library, Health, Files, Users, Settings */
   readonly selectedTab = signal(0);
+  /** Index of the Files tab, loaded when it is first shown (it reads every music folder) */
+  readonly filesTab = 3;
+  readonly audit = signal<LibraryAudit | null>(null);
+  readonly auditLoading = signal(false);
+  /** Part of a path: filters every list of the Files tab */
+  readonly auditFilter = signal('');
+  readonly rescanning = signal(false);
+  private auditTimer: ReturnType<typeof setInterval> | undefined;
+
+  /** Audio files that are not listed, whatever the reason */
+  readonly notListed = computed(() => {
+    const counts = this.audit()?.counts;
+    return counts ? counts.notScanned + counts.disabledFormat + counts.unreadable : 0;
+  });
+  readonly auditTiles = computed(() => {
+    const counts = this.audit()?.counts;
+    return counts ? [
+      { id: 'files-listed', icon: 'library_music', count: counts.listed, label: `Listed, of ${counts.audio} audio files`, warn: false },
+      { id: 'files-not-scanned', icon: 'update', count: counts.notScanned, label: 'Not scanned yet', warn: counts.notScanned > 0 },
+      { id: 'files-formats', icon: 'block', count: counts.disabledFormat, label: 'Format not enabled', warn: counts.disabledFormat > 0 },
+      { id: 'files-unreadable', icon: 'broken_image', count: counts.unreadable, label: 'Unreadable', warn: counts.unreadable > 0 },
+      { id: 'files-duplicates', icon: 'content_copy', count: counts.duplicates, label: 'Hidden duplicates', warn: false },
+      { id: 'files-missing', icon: 'link_off', count: counts.missing, label: 'Gone from the disk', warn: counts.missing > 0 },
+    ] : [];
+  });
+  /** The lists of the report, filtered by path */
+  readonly auditLists = computed(() => {
+    const report = this.audit();
+    const filter = this.auditFilter().trim().toLowerCase();
+    const keep = <T extends { file: string }>(list: T[]) => (filter ? list.filter((item) => item.file.toLowerCase().includes(filter)) : list);
+    return report ? {
+      notScanned: keep(report.notScanned),
+      disabledFormat: keep(report.disabledFormat),
+      unreadable: keep(report.unreadable),
+      duplicates: keep(report.duplicates),
+      missing: keep(report.missing),
+    } : null;
+  });
+  /** Formats not enabled, the most frequent first */
+  readonly disabledFormats = computed(() => {
+    const counts = new Map<string, number>();
+    (this.audit()?.disabledFormat ?? []).forEach((item) => counts.set(item.format, (counts.get(item.format) ?? 0) + 1));
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([format, count]) => ({ format, count }));
+  });
+  readonly otherFiles = computed(() => Object.entries(this.audit()?.other ?? {}).sort((a, b) => b[1] - a[1]).map(([extension, count]) => ({ extension, count })));
   readonly health = signal<LibraryHealth | null>(null);
   readonly healthIssues = computed(() => {
     const counts = this.health()?.counts;
@@ -139,7 +184,71 @@ export class AdminComponent {
     effect(() => this.drawStorage(this.storageCanvas(), this.statistics()));
     effect(() => this.drawLogins(this.loginsCanvas(), this.logins()));
     effect(() => this.drawPlays(this.playsCanvas(), this.plays()));
-    inject(DestroyRef).onDestroy(() => this.charts.forEach((chart) => chart.destroy()));
+    // The Files tab reads every music folder: only when it is shown
+    effect(() => {
+      if (this.selectedTab() === this.filesTab && !untracked(() => this.audit() || this.auditLoading())) {
+        untracked(() => this.loadAudit());
+      }
+    });
+    inject(DestroyRef).onDestroy(() => {
+      this.charts.forEach((chart) => chart.destroy());
+      clearInterval(this.auditTimer);
+    });
+  }
+
+  // ---------- Files ----------
+
+  loadAudit() {
+    this.auditLoading.set(true);
+    this.admin.audit().subscribe({
+      next: (report) => {
+        this.audit.set(report);
+        this.auditLoading.set(false);
+      },
+      error: (err) => {
+        this.auditLoading.set(false);
+        this.error(err, 'Could not read the music folders');
+      },
+    });
+  }
+
+  /** Rescans the music folders, then reads them again until the scan is over */
+  rescanLibrary() {
+    this.rescanning.set(true);
+    this.admin.rescanLibrary().subscribe({
+      next: ({ rescan }) => {
+        this.snackBar.open(rescan === 'busy' ? 'A scan is already running' : 'The library is being rescanned', undefined, { duration: 4000 });
+        let checks = 0;
+        clearInterval(this.auditTimer);
+        this.auditTimer = setInterval(() => {
+          checks++;
+          this.admin.audit().subscribe({
+            next: (report) => {
+              this.audit.set(report);
+              // Over: the report is complete; give up after 15 minutes
+              if ((!report.scanning && checks > 1) || checks > 300) {
+                clearInterval(this.auditTimer);
+                this.rescanning.set(false);
+                this.loadHealth();
+                this.loadDuplicates();
+              }
+            },
+            error: () => undefined,
+          });
+        }, 3000);
+      },
+      error: (err) => {
+        this.rescanning.set(false);
+        this.error(err, 'Could not rescan the library');
+      },
+    });
+  }
+
+  /** Why a supported file is not in the library */
+  notScannedReason(reason: LibraryAudit['notScanned'][number]['reason']): string {
+    return reason === 'uppercase-extension'
+      ? 'Upper-case extension: skipped by the scans of older versions'
+      : 'Added after the last scan';
   }
 
   // ---------- Overview ----------

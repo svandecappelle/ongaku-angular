@@ -550,3 +550,50 @@ mat-slide-toggle .hint {
     flex-wrap: wrap;
   }
 }
+
+// ---------- Files ----------
+.files-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.folders {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  mat-icon {
+    color: var(--ongaku-muted);
+  }
+  code {
+    overflow-wrap: anywhere;
+  }
+}
+
+.files-filter {
+  width: min(100%, 360px);
+}
+
+.format-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.muted-badge {
+  color: var(--ongaku-text);
+  background: var(--ongaku-surface-2);
+}
+
+.notice.ok mat-icon {
+  color: var(--ongaku-accent);
+}

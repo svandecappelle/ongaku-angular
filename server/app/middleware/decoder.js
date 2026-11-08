@@ -9,6 +9,19 @@ const crypto = require('crypto');
 const ffmetadata = require("ffmetadata");
 const mm = require('music-metadata');
 
+/** Extension of a file, lower case and without its dot */
+function extensionOf(filePath) {
+  return path.extname(filePath).slice(1).toLowerCase();
+}
+
+/** A tag that may hold several values ("A" or ["A", "B"]), as one text: "A, B" */
+function tagText(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean).join(', ');
+  }
+  return String(value).trim();
+}
+
 class Decoder {
 
   constructor (type) {
@@ -51,19 +64,19 @@ class Decoder {
       metadatas.genre = ["Unknown"];
     }
 
-    var artist = metadatas.artist ? metadatas.artist : metadatas.ARTIST ? metadatas.ARTIST : metadatas.artistalbum ? metadatas.artistalbum : "Unknown artist";
-    if (Array.isArray(artist) && artist.length === 1) {
-      artist = artist[0].trim();
-    } else {
-      artist = artist.trim();
-    }
+    // Several artists in the tag: "A, B" (they made the decoding fail, so the file was left out)
+    var artist = tagText(metadatas.artist ? metadatas.artist : metadatas.ARTIST ? metadatas.ARTIST : metadatas.artistalbum ? metadatas.artistalbum : "Unknown artist") || "Unknown artist";
 
     if (metadatas.ALBUM) {
-      metadatas.album = metadatas.ALBUM.trim();
+      metadatas.album = tagText(metadatas.ALBUM);
+    } else if (Array.isArray(metadatas.album)) {
+      metadatas.album = tagText(metadatas.album);
     }
 
     if (metadatas.TITLE) {
-      metadatas.title = metadatas.TITLE.trim();
+      metadatas.title = tagText(metadatas.TITLE);
+    } else if (Array.isArray(metadatas.title)) {
+      metadatas.title = tagText(metadatas.title);
     }
 
     if ((metadatas.disk && metadatas.disk.of > 1) || metadatas.TPA) {
@@ -98,7 +111,7 @@ class Decoder {
       shasum = crypto.createHash('sha1');
 
     return new Promise((resolve, reject) => {
-      if (_.contains(nconf.get('video'), path.extname(filePath).replace(".", ""))) {
+      if (_.contains(nconf.get('video'), extensionOf(filePath))) {
         shasum.update(filePath);
         uuid = shasum.digest('hex');
         resolve({
@@ -116,13 +129,14 @@ class Decoder {
     });
   };
 
+  /** The file has an extension of this type; "Song.MP3" counts as mp3 */
   check(filePath) {
-    return _.contains(nconf.get(this.type), path.extname(filePath).replace(".", ""));
+    return _.contains(nconf.get(this.type), extensionOf(filePath));
   }
 
   audio(filePath) {
     return new Promise((resolve, reject) => {
-      if (_.contains(nconf.get('audio'), path.extname(filePath).replace(".", ""))) {
+      if (_.contains(nconf.get('audio'), extensionOf(filePath))) {
         logger.debug("Loading using mm: ", filePath);
         try {
           // Check if ffmetadata is best than mm

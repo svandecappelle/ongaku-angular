@@ -117,6 +117,13 @@ function buildMusic(music) {
   // Tags rewritten by the tests
   tone(path.join(music, 'Taggable/Tags/1.mp3'), { artist: 'Taggable', album: 'Tags', title: 'Retag me', track: 1 }, { frequency: 1800 });
 
+  // Library audit: an upper-case extension (once skipped by the scan), a format not enabled,
+  // another file, and a track the audit test moves away
+  tone(path.join(music, 'Audit/Caps/1.MP3'), { artist: 'Caps Band', album: 'Shouting', title: 'Uppercase extension', track: 1 }, { frequency: 1900 });
+  tone(path.join(music, 'Audit/Formats/1.m4a'), { artist: 'Formats Band', album: 'Formats', title: 'Not enabled', track: 1 }, { frequency: 1950, codec: ['-c:a', 'aac'] });
+  fs.writeFileSync(path.join(music, 'Audit/notes.txt'), 'Not music');
+  tone(path.join(music, 'Audit/Gone/1.mp3'), { artist: 'Gone Band', album: 'Gone', title: 'Moved away', track: 1 }, { frequency: 2000 });
+
   fs.mkdirSync(path.join(music, 'Imported'), { recursive: true });
 }
 
