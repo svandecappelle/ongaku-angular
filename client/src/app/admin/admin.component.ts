@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe, NgTemplateOutlet } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
 import { MatDialog } from '@angular/material/dialog';
@@ -8,7 +9,9 @@ import { Chart, registerables } from 'chart.js';
 import moment from 'moment';
 
 import { MaterialModule } from '../modules/material.module';
-import { AdminService, AdminUser, Duplicates, ImportFolder, ImportResult, UserChanges } from '../services/admin.service';
+import { AdminService, AdminUser, Duplicates, ImportFolder, ImportResult, LibraryHealth, UserChanges } from '../services/admin.service';
+import { CoverEditComponent } from '../v3/cover-edit/cover-edit.component';
+import { TagEditorDialogComponent, TagEditorData } from './tag-editor-dialog.component';
 import { StatisticsService } from '../services/statistics.service';
 import { ReloadService } from '../library/reload.service';
 import { DeleteUserDialogComponent } from './delete-user-dialog.component';
@@ -55,7 +58,7 @@ const flag = (value: unknown) => value === true || value === 'true';
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialModule, FormsModule, DatePipe, DecimalPipe],
+  imports: [MaterialModule, FormsModule, DatePipe, DecimalPipe, NgTemplateOutlet, RouterLink, CoverEditComponent],
 })
 export class AdminComponent {
   private readonly admin = inject(AdminService);
@@ -85,6 +88,26 @@ export class AdminComponent {
   readonly userColumns = ['user', 'role', 'status', 'storage', 'lastonline', 'actions'];
 
   readonly duplicates = signal<Duplicates | null>(null);
+
+  /** Overview, Library, Health, Users, Settings */
+  readonly selectedTab = signal(0);
+  readonly health = signal<LibraryHealth | null>(null);
+  readonly healthIssues = computed(() => {
+    const counts = this.health()?.counts;
+    return counts ? counts.withoutCover + counts.missingTags + counts.duplicates + counts.unreadable : 0;
+  });
+  readonly healthTiles = computed(() => {
+    const counts = this.health()?.counts;
+    return counts ? [
+      { id: 'health-covers', icon: 'album', count: counts.withoutCover, label: counts.withoutCover === 1 ? 'Album without cover' : 'Albums without cover' },
+      { id: 'health-tags', icon: 'label_off', count: counts.missingTags, label: counts.missingTags === 1 ? 'Track missing tags' : 'Tracks missing tags' },
+      { id: 'health-duplicates', icon: 'content_copy', count: counts.duplicates, label: counts.duplicates === 1 ? 'Hidden duplicate' : 'Hidden duplicates' },
+      { id: 'health-unreadable', icon: 'broken_image', count: counts.unreadable, label: counts.unreadable === 1 ? 'Unreadable file' : 'Unreadable files' },
+    ] : [];
+  });
+  /** Items of each Health list shown before "Show all" */
+  readonly healthStep = 20;
+  readonly expanded = signal<ReadonlySet<string>>(new Set());
   readonly importFolder = signal<ImportFolder | null>(null);
   readonly importSubFolder = signal('');
   readonly importItems = signal<ImportItem[]>([]);
@@ -109,6 +132,7 @@ export class AdminComponent {
       deduplicate: properties?.deduplicate === undefined || properties?.deduplicate === null || flag(properties.deduplicate),
     }));
     this.loadDuplicates();
+    this.loadHealth();
     this.admin.importFolder().subscribe((folder) => this.importFolder.set(folder));
 
     // The charts are drawn when their tab is shown (the canvases only exist then) and the data is loaded
@@ -134,12 +158,46 @@ export class AdminComponent {
         this.reloading.set(false);
         this.statisticsService.getStatistics().subscribe((statistics) => this.statistics.set(statistics));
         this.loadDuplicates();
+        this.loadHealth();
         this.snackBar.open('Library reloaded', undefined, { duration: 3000 });
       },
       error: (err) => {
         this.reloading.set(false);
         this.error(err, 'Could not reload the library');
       },
+    });
+  }
+
+  // ---------- Health ----------
+
+  loadHealth() {
+    this.admin.health().subscribe({
+      next: (health) => this.health.set(health),
+      error: (err) => this.error(err, 'Could not check the library'),
+    });
+  }
+
+  shown<T>(list: T[], key: string): T[] {
+    return this.expanded().has(key) ? list : list.slice(0, this.healthStep);
+  }
+
+  expand(key: string) {
+    this.expanded.update((expanded) => new Set(expanded).add(key));
+  }
+
+  scrollTo(id: string) {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  editTags(track: LibraryHealth['missingTags'][number]) {
+    this.dialog.open<TagEditorDialogComponent, TagEditorData, boolean>(TagEditorDialogComponent, {
+      data: { uid: track.uid, file: track.file, tags: track.tags },
+    }).afterClosed().subscribe((saved) => {
+      if (saved) {
+        this.snackBar.open('Tags saved', undefined, { duration: 3000 });
+        this.loadHealth();
+        this.loadDuplicates();
+      }
     });
   }
 

@@ -12,6 +12,7 @@ const library = require("./../../middleware/library");
 const { formatOf } = require("./../../middleware/deduplicate");
 const middleware = require("./../../middleware/middleware");
 const importer = require("./../../middleware/importer");
+const scanner = require("./../../middleware/scanner");
 const images = require("./../../middleware/images");
 const statistics = require("./../../model/statistics");
 const application = require("./../../index");
@@ -370,6 +371,81 @@ router.delete('/users/:username', (req, res) => {
 });
 
 // ---------- Public library import ----------
+
+const HEALTH_LIMIT = 500;
+const UNKNOWN_ARTIST = 'Unknown artist';
+// Spelling of the decoder (middleware/decoder.js)
+const UNKNOWN_ALBUM = 'Uknown album';
+
+/** Tags missing on a track: the decoder put a placeholder or the file name instead */
+function missingTags(track) {
+    const missing = [];
+    const blank = (value) => value === undefined || value === null || String(value).trim() === '' || String(value) === 'undefined';
+    if (blank(track.artist) || track.artist === UNKNOWN_ARTIST) {
+        missing.push('artist');
+    }
+    if (blank(track.album) || track.album === UNKNOWN_ALBUM) {
+        missing.push('album');
+    }
+    if (!track.metadatas || blank(track.metadatas.title)) {
+        missing.push('title');
+    }
+    return missing;
+}
+
+/**
+ * Problems of the public library, for the Health tab: albums without image, tracks with
+ * missing tags, files that could not be read, and the count of duplicates.
+ */
+router.get('/library/health', (req, res) => {
+    const tracks = library.flatten.filter((track) => !track.private);
+
+    const albums = new Map();
+    tracks.forEach((track) => {
+        if (!track.album || track.album === UNKNOWN_ALBUM) {
+            return;
+        }
+        const key = track.artist + '\u0000' + track.album;
+        if (!albums.has(key)) {
+            albums.set(key, { artist: track.artist, album: track.album, tracks: 0 });
+        }
+        albums.get(key).tracks++;
+    });
+    const withoutCover = Array.from(albums.values())
+        .filter((album) => !library.hasAlbumCover(album.artist, album.album))
+        .sort((a, b) => String(a.artist).localeCompare(String(b.artist)) || String(a.album).localeCompare(String(b.album)));
+
+    const untagged = tracks
+        .map((track) => ({ track: track, missing: missingTags(track) }))
+        .filter((entry) => entry.missing.length)
+        .map((entry) => ({
+            uid: entry.track.uid,
+            title: entry.track.title,
+            artist: entry.track.artist,
+            album: entry.track.album,
+            file: entry.track.file,
+            missing: entry.missing,
+            tags: _.pick(entry.track.metadatas || {}, 'artist', 'album', 'title', 'track', 'date', 'genre')
+        }))
+        .sort((a, b) => String(a.file).localeCompare(String(b.file)));
+
+    const unreadable = Array.from(scanner.failures.values())
+        .sort((a, b) => String(a.file).localeCompare(String(b.file)));
+
+    const deduplication = library.getDeduplication();
+    res.json({
+        scanning: library.scanning(),
+        counts: {
+            withoutCover: withoutCover.length,
+            missingTags: untagged.length,
+            duplicates: deduplication.canonical.size,
+            unreadable: unreadable.length
+        },
+        withoutCover: withoutCover.slice(0, HEALTH_LIMIT),
+        missingTags: untagged.slice(0, HEALTH_LIMIT),
+        unreadable: unreadable.slice(0, HEALTH_LIMIT)
+    });
+});
 
 /** Music available several times: the copy shown and the hidden ones (see middleware/deduplicate.js) */
 router.get('/library/duplicates', (req, res) => {

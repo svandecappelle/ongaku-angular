@@ -53,6 +53,14 @@ class Scanner extends events.EventEmitter {
     super();
     this.all_files_count = 0;
     this.scanned_files_count = 0;  
+    // Files that could not be read, by path: { file, error }
+    this.failures = new Map();
+  }
+
+  /** Readable cause of a decoding error: ffmpeg errors end with it, after its banner */
+  static reason (e) {
+    const lines = String((e && (e.message || e.cause)) || e || '').split('\n').map((line) => line.trim()).filter(Boolean);
+    return lines.length ? lines[lines.length - 1] : 'Unreadable file';
   }
 
   status () {
@@ -70,6 +78,7 @@ class Scanner extends events.EventEmitter {
   library () {
     this.all_files_count = 0;
     this.scanned_files_count = 0;
+    this.failures = new Map();
 
     var audio = [],
         video = [];
@@ -190,10 +199,12 @@ class Scanner extends events.EventEmitter {
 
         appender.decode(file).then((song) => {
           logger.debug("decoded", song);
+          this.failures.delete(file);
           this.emit('decoded', song, appender.type);
           next(null, song);
         }, (e) => {
           logger.error(e);
+          this.failures.set(file, { file: file, error: Scanner.reason(e) });
           next(null, null);
         }).catch((error) => {
           next(null, null);

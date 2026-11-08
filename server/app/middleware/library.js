@@ -699,6 +699,28 @@ class Library {
     this.setTracks(_.filter(this.tracks, (track) => track.uid !== uid));
   }
 
+  /** The album has an image: chosen by an administrator, in its folder or found on Last.fm */
+  hasAlbumCover(artist, album) {
+    if (fs.existsSync(this.customImagePath(artist, album))) {
+      return true;
+    }
+    if (this.coversLocation[artist] && this.coversLocation[artist][album]) {
+      return true;
+    }
+    const info = this.loadingCoverAlbums[artist] && this.loadingCoverAlbums[artist][album];
+    const image = info && typeof info === 'object' ? (info.image && info.image[0]) || (info.cover && info.cover[0]) : null;
+    return typeof image === 'string' && image.trim() !== '' && !image.endsWith('/static/img/album.png');
+  }
+
+  /**
+   * The library as a user sees it: public tracks and his own private uploads. The listing
+   * methods called on it (getArtists, getAlbum...) only see these tracks.
+   */
+  forUser(username) {
+    const tracks = this.flatten.filter((track) => !track.private || (username && track.user === username));
+    return Object.create(this, { flatten: { value: tracks } });
+  }
+
   /** After the "deduplicate" setting changed */
   refreshDeduplication() {
     this.deduplication = null;
@@ -747,9 +769,23 @@ class Library {
       uid: uuid
     });
     console.info("Update: ", index);
+    if (index < 0) {
+      return libElement;
+    }
+    // A decoded file only has its tags: where it comes from (private upload, owner) is kept
+    const previous = this.tracks[index];
+    _.extend(libElement, _.pick(previous, 'uuid', 'type', 'private', 'user', 'username', 'userfolder'));
+    libElement.metadatas = libElement.metadatas || {};
+    if (previous.metadatas && previous.metadatas.sharedBy) {
+      libElement.metadatas.sharedBy = previous.metadatas.sharedBy;
+    }
     // The tags may have changed: the duplicates are searched again
     this.deduplication = null;
-    return this.tracks[index] = libElement;
+    this.tracks[index] = libElement;
+    // A new artist or album: its images are looked for
+    this.getArtistCover({ artist: libElement.artist });
+    this.getAlbumCover({ artist: libElement.artist }, { title: libElement.album }, path.dirname(libElement.file));
+    return libElement;
   };
 
   /**
@@ -804,14 +840,10 @@ class Library {
     }
 
     if (!fromList) {
-      fromList = this.flatten;
-      if (opts.user && this.flatten) {
-        fromList = _.union(fromList, this.flatten[opts.user]);
-      } else {
-        fromList = _.filter(fromList, (track) => {
-          return track.private === undefined || !track.private;
-        });
-      }
+      // Public tracks, and the private uploads of the user himself
+      fromList = _.filter(this.flatten, (track) => {
+        return !track.private || (opts.user && track.user === opts.user);
+      });
     }
     if (filter) {
       searchResultList = _.filter(fromList, (obj) => {

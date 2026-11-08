@@ -19,6 +19,7 @@ const meta = require("./../../meta");
 const communication = require("./../../communication");
 const statistics = require("./../../model/statistics");
 const security = require("./../../model/security");
+const user = require("./../../model/user");
 // const translator = require("./../../middleware/translator");
 const algorithm = 'aes-192-cbc';
 const password = nconf.get('secret');
@@ -289,7 +290,7 @@ router.get('/library', (req, res) => {
     var groupby = req.session.groupby ? req.session.groupby : DEFAULT_GROUP_BY;
     var sortby = req.session.sortby ? req.session.sortby : DEFAULT_SORT_BY;
 
-    var libraryDatas = library.getAudio(groupby, sortby);
+    var libraryDatas = visibleLibrary(req).getAudio(groupby, sortby);
     middleware.json(req, res, libraryDatas);
 });
 
@@ -324,9 +325,9 @@ router.get('/library/:page', (req, res) => {
     var libraryDatas = null;
 
     if (req.params.page === "all") {
-        libraryDatas = library.getAudio(groupby, sortby);
+        libraryDatas = visibleLibrary(req).getAudio(groupby, sortby);
     } else {
-        libraryDatas = library.getAudio(req.params.page, 3, groupby, sortby);
+        libraryDatas = visibleLibrary(req).getAudio(req.params.page, 3, groupby, sortby);
     }
     middleware.json(req, res, libraryDatas);
 });
@@ -339,9 +340,9 @@ router.get('/artists/:page', (req, res) => {
     var libraryDatas = null;
 
     if (req.params.page === "all") {
-        libraryDatas = library.getArtists();
+        libraryDatas = visibleLibrary(req).getArtists();
     } else {
-        libraryDatas = library.getArtists(req.params.page, 4);
+        libraryDatas = visibleLibrary(req).getArtists(req.params.page, 4);
     }
     middleware.json(req, res, libraryDatas);
 });
@@ -353,9 +354,9 @@ router.get('/albums/:page', (req, res) => {
     var libraryDatas = null;
 
     if (req.params.page === "all") {
-        libraryDatas = library.getLibAlbums();
+        libraryDatas = visibleLibrary(req).getLibAlbums();
     } else {
-        libraryDatas = library.getLibAlbums(req.params.page, 4);
+        libraryDatas = visibleLibrary(req).getLibAlbums(req.params.page, 4);
     }
     middleware.json(req, res, libraryDatas);
 });
@@ -363,7 +364,7 @@ router.get('/albums/:page', (req, res) => {
 router.get('/artist/:name', (req, res) => {
 
     logger.debug("Get detail page of artist ".concat(req.params.name));
-    var datas = library.getArtistDetails(req.params.name);
+    var datas = visibleLibrary(req).getArtistDetails(req.params.name);
     middleware.json(req, res, datas);
 });
 
@@ -392,9 +393,9 @@ router.get('/artists/filter/:search/:page', (req, res) => {
     var libraryDatas = null;
 
     if (req.params.page === "all") {
-        libraryDatas = library.getArtists(null, null, req.params.search);
+        libraryDatas = visibleLibrary(req).getArtists(null, null, req.params.search);
     } else {
-        libraryDatas = library.getArtists(req.params.page, 4, req.params.search);
+        libraryDatas = visibleLibrary(req).getArtists(req.params.page, 4, req.params.search);
     }
     middleware.json(req, res, libraryDatas);
 });
@@ -402,7 +403,7 @@ router.get('/artists/filter/:search/:page', (req, res) => {
 router.get('/album/:name', (req, res) => {
 
     logger.debug("Get detail page of artist ".concat(req.params.name));
-    var datas = libraryDatas = library.getAlbum('all', req.params.name);
+    var datas = libraryDatas = visibleLibrary(req).getAlbum('all', req.params.name);
     middleware.json(req, res, datas);
 });
 
@@ -413,9 +414,9 @@ router.get('/albums/filter/:search/:page', (req, res) => {
     var libraryDatas = null;
 
     if (req.params.page === "all") {
-        libraryDatas = library.getLibAlbums(null, null, req.params.search);
+        libraryDatas = visibleLibrary(req).getLibAlbums(null, null, req.params.search);
     } else {
-        libraryDatas = library.getLibAlbums(req.params.page, 4, req.params.search);
+        libraryDatas = visibleLibrary(req).getLibAlbums(req.params.page, 4, req.params.search);
     }
     middleware.json(req, res, libraryDatas);
 });
@@ -513,44 +514,68 @@ router.get("/static/covers/:artist/cover.jpg", (req, res) => {
     }
 });
 
-router.post('/metadata/set/:id', (req, res) => {
-    var id = req.params.id;
-    var data = req.body;
-    var metadata = req.body.metadatas;
-    var filename = library.getFile(id);
+/** The library as the connected user sees it: no private uploads of the other users */
+function visibleLibrary(req) {
+    return library.forUser(req.session && req.session.passport && req.session.passport.user ? req.session.passport.user.username : null);
+}
 
-    ffmetadata.write(filename, data, (err) => {
-        if (err) {
-            res.status(500).json('Error writing metadata');
-            logger.error("Error writing metadata", err);
-        } else {
-            logger.info("Data written");
-            res.status(200).json('Data written');
-            library.refreshMetadatas(id);
+/**
+ * Calls back with the tracks of `ids` whose tags the connected user may write: administrators
+ * any track, the other users their own uploads. Answers 401/403 otherwise.
+ */
+function withEditableTracks(req, res, ids, callback) {
+    if (!middleware.isAuthenticated(req)) {
+        return res.status(401).json({ message: 'You need to be logged' });
+    }
+    if (!Array.isArray(ids) || !ids.length || !ids.every((id) => typeof id === 'string')) {
+        return res.status(400).json({ message: 'ids must be a list of track uids' });
+    }
+    const { uid, username } = req.session.passport.user;
+    user.isAdministrator(uid, (err, administrator) => {
+        const tracks = ids.map((id) => library.getByUid(id));
+        if (tracks.some((track) => !track)) {
+            return res.status(404).json({ message: 'No such track' });
         }
+        if (!administrator && tracks.some((track) => !track.private || track.user !== username)) {
+            return res.status(403).json({ message: 'You can only edit the tags of your own uploads' });
+        }
+        callback(tracks);
     });
-});
+}
 
-router.put('/metadata/selection/set/', (req, res) => {
-    var ids = req.body.ids;
-    var metadata = req.body.metadatas;
-
-    logger.info("set metadata on ", ids, metadata);
-    async.eachLimit(ids, 10, (id, next) => {
-        var filename = library.getFile(id);
-        ffmetadata.write(filename, metadata, (err) => {
-            library.refreshMetadatas(id);
-            next(err);
+/** Writes the tags into the files, then reads them again; answers with the updated tracks */
+function writeTags(res, tracks, metadata) {
+    if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
+        return res.status(400).json({ message: 'metadatas must be an object' });
+    }
+    const updated = [];
+    async.eachLimit(tracks, 10, (track, next) => {
+        ffmetadata.write(track.file, metadata, (err) => {
+            if (err) {
+                return next(err);
+            }
+            library.refreshMetadatas(track.uid).then((element) => {
+                updated.push(element);
+                next();
+            }, next);
         });
     }, (err) => {
         if (err) {
-            res.status(500).json('Error writing metadata');
             logger.error("Error writing metadata", err);
-        } else {
-            logger.info("Data written");
-            res.status(200).json('Data written');
+            const readOnly = err && ['EROFS', 'EACCES', 'EPERM'].includes(err.code) || /permission denied|read-only/i.test(String(err && err.message));
+            return res.status(500).json({ message: readOnly ? 'The file is read-only on the server' : 'The tags could not be written' });
         }
+        logger.info("Data written");
+        res.status(200).json({ message: 'Data written', tracks: updated });
     });
+}
+
+router.post('/metadata/set/:id', (req, res) => {
+    withEditableTracks(req, res, [req.params.id], (tracks) => writeTags(res, tracks, req.body));
+});
+
+router.put('/metadata/selection/set/', (req, res) => {
+    withEditableTracks(req, res, req.body.ids, (tracks) => writeTags(res, tracks, req.body.metadatas));
 });
 
 router.get(['/my-library', '/my-library/:folder'], (req, res) => {

@@ -48,6 +48,26 @@ export interface ImportResponse {
   rescan: 'none' | 'started' | 'busy';
 }
 
+/** Tags written by the tag editor */
+export interface TrackTags {
+  artist: string;
+  album: string;
+  title: string;
+  track: string;
+  date: string;
+  genre: string;
+}
+
+/** Problems of the public library (Administration > Health) */
+export interface LibraryHealth {
+  scanning: boolean;
+  counts: { withoutCover: number; missingTags: number; duplicates: number; unreadable: number };
+  /** Lists hold the first 500 items */
+  withoutCover: { artist: string; album: string; tracks: number }[];
+  missingTags: { uid: string; title: string; artist: string; album: string; file: string; missing: ('artist' | 'album' | 'title')[]; tags: Partial<TrackTags> }[];
+  unreadable: { file: string; error: string }[];
+}
+
 /** A copy of a track, in the duplicates report */
 export interface TrackCopy {
   uid: string;
@@ -131,6 +151,14 @@ export class AdminService {
 
   private imageParams(artist: string, album?: string) {
     return new HttpParams({ fromObject: album === undefined ? { artist } : { artist, album } });
+  }
+
+  health(): Observable<LibraryHealth> {
+    return this.http.get<LibraryHealth>('/api/admin/library/health');
+  }
+
+  writeTags(uids: string[], tags: Partial<TrackTags>): Observable<unknown> {
+    return this.http.put('/api/audio/metadata/selection/set/', { ids: uids, metadatas: tags });
   }
 
   duplicates(): Observable<Duplicates> {

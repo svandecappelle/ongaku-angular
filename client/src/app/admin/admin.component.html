@@ -14,7 +14,7 @@
     </p>
   </header>
 
-  <mat-tab-group mat-stretch-tabs="false" animationDuration="0ms" class="tabs">
+  <mat-tab-group mat-stretch-tabs="false" animationDuration="0ms" class="tabs" [selectedIndex]="selectedTab()" (selectedIndexChange)="selectedTab.set($event)">
 
     <!-- ========== Overview ========== -->
     <mat-tab label="Overview">
@@ -40,6 +40,11 @@
             <span class="tile-value">{{ statistics()?.storage?.total?.label ?? '—' }}</span>
             <span class="muted">Storage used</span>
           </div>
+          <button type="button" class="tile tile-button" [class.warn]="healthIssues()" (click)="selectedTab.set(2)">
+            <mat-icon>{{ healthIssues() ? 'report_problem' : 'verified_user' }}</mat-icon>
+            <span class="tile-value">{{ health() ? (healthIssues() | number) : '—' }}</span>
+            <span class="muted">{{ healthIssues() === 1 ? 'Library issue' : 'Library issues' }} · see Health</span>
+          </button>
         </div>
 
         <div class="charts">
@@ -79,55 +84,6 @@
             </button>
           </div>
           @if (reloading()) {
-            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-          }
-        </section>
-
-        <section class="panel" aria-labelledby="duplicates-title">
-          <div class="panel-header">
-            <h2 id="duplicates-title">Duplicates</h2>
-            <span class="muted">Tracks found several times (same artist, album, title, number and duration). The public copy with the best encoding is listed, the others are hidden; libraries and playlists that saved a hidden copy play the listed one.</span>
-          </div>
-          @if (duplicates(); as d) {
-            @if (!d.enabled) {
-              <p class="notice">
-                <mat-icon aria-hidden="true">info</mat-icon>
-                <span>Showing each track once is turned off in Settings: every copy is listed.</span>
-              </p>
-            }
-            @if (!d.total) {
-              <p class="muted">No duplicate found.</p>
-            } @else {
-              <p>
-                <strong>{{ d.hidden }}</strong> hidden {{ d.hidden === 1 ? 'copy' : 'copies' }} of
-                <strong>{{ d.total }}</strong> {{ d.total === 1 ? 'track' : 'tracks' }}@if (d.total > d.groups.length) { (first {{ d.groups.length }} shown)}.
-              </p>
-              <mat-accordion class="duplicates" displayMode="flat">
-                @for (group of d.groups; track group.kept.uid) {
-                  <mat-expansion-panel>
-                    <mat-expansion-panel-header>
-                      <mat-panel-title>{{ group.kept.title }}</mat-panel-title>
-                      <mat-panel-description>{{ group.kept.artist }} · {{ group.kept.album }} · {{ group.copies.length + 1 }} copies</mat-panel-description>
-                    </mat-expansion-panel-header>
-                    <ul class="copies">
-                      <li class="kept">
-                        <span class="badge">Listed</span>
-                        <code>{{ group.kept.file }}</code>
-                        <span class="muted">{{ group.kept.format }} · {{ group.kept.duration }}@if (group.kept.user) { · upload of {{ group.kept.user }}}</span>
-                      </li>
-                      @for (copy of group.copies; track copy.uid) {
-                        <li>
-                          <span class="badge hidden-badge">Hidden</span>
-                          <code>{{ copy.file }}</code>
-                          <span class="muted">{{ copy.format }} · {{ copy.duration }}@if (copy.user) { · upload of {{ copy.user }}}</span>
-                        </li>
-                      }
-                    </ul>
-                  </mat-expansion-panel>
-                }
-              </mat-accordion>
-            }
-          } @else {
             <mat-progress-bar mode="indeterminate"></mat-progress-bar>
           }
         </section>
@@ -207,6 +163,162 @@
             </div>
           }
         </section>
+      </div>
+    </mat-tab>
+
+    <!-- ========== Health ========== -->
+    <mat-tab label="Health">
+      <div class="tab">
+        @if (health(); as h) {
+          <div class="tiles">
+            @for (item of healthTiles(); track item.id) {
+              <a class="tile tile-button" [class.warn]="item.count" [href]="'#' + item.id" (click)="$event.preventDefault(); scrollTo(item.id)">
+                <mat-icon>{{ item.icon }}</mat-icon>
+                <span class="tile-value">{{ item.count | number }}</span>
+                <span class="muted">{{ item.label }}</span>
+              </a>
+            }
+          </div>
+          @if (h.scanning) {
+            <p class="notice">
+              <mat-icon aria-hidden="true">info</mat-icon>
+              <span>A scan is running: the report is not complete yet.</span>
+            </p>
+          }
+
+          <section class="panel" id="health-covers" aria-labelledby="covers-title">
+            <div class="panel-row">
+              <div class="panel-header">
+                <h2 id="covers-title">Albums without cover</h2>
+                <span class="muted">No image in the album folder, none found on Last.fm and none chosen. Pick one with the edit button.</span>
+              </div>
+              <button mat-stroked-button type="button" (click)="loadHealth()">
+                <mat-icon>refresh</mat-icon>
+                Refresh
+              </button>
+            </div>
+            @if (!h.withoutCover.length) {
+              <p class="muted">Every album has a cover.</p>
+            } @else {
+              <ul class="health-list">
+                @for (album of shown(h.withoutCover, 'covers'); track album.artist + '/' + album.album) {
+                  <li class="health-item">
+                    <span class="thumb-frame">
+                      <span class="thumb"><mat-icon aria-hidden="true">album</mat-icon></span>
+                      <app-cover-edit [artist]="album.artist" [album]="album.album" (changed)="loadHealth()"></app-cover-edit>
+                    </span>
+                    <span class="health-text">
+                      <a [routerLink]="['/album', album.album]" class="strong">{{ album.album }}</a>
+                      <span class="muted small">{{ album.artist }} · {{ album.tracks }} {{ album.tracks === 1 ? 'track' : 'tracks' }}</span>
+                    </span>
+                  </li>
+                }
+              </ul>
+              <ng-container *ngTemplateOutlet="more; context: { list: h.withoutCover, total: h.counts.withoutCover, key: 'covers' }"></ng-container>
+            }
+          </section>
+
+          <section class="panel" id="health-tags" aria-labelledby="tags-title">
+            <div class="panel-header">
+              <h2 id="tags-title">Tracks with missing tags</h2>
+              <span class="muted">They are listed under “Unknown artist” or with their file name. The tags are written into the files.</span>
+            </div>
+            @if (!h.missingTags.length) {
+              <p class="muted">Every track has an artist, an album and a title.</p>
+            } @else {
+              <ul class="health-list">
+                @for (track of shown(h.missingTags, 'tags'); track track.uid) {
+                  <li class="health-item">
+                    <mat-icon class="item-icon" aria-hidden="true">label_off</mat-icon>
+                    <span class="health-text">
+                      <span class="strong">{{ track.title }}</span>
+                      <span class="muted small">No {{ track.missing.join(', no ') }} · <code>{{ track.file }}</code></span>
+                    </span>
+                    <button mat-stroked-button type="button" (click)="editTags(track)">
+                      <mat-icon>edit</mat-icon>
+                      Edit tags
+                    </button>
+                  </li>
+                }
+              </ul>
+              <ng-container *ngTemplateOutlet="more; context: { list: h.missingTags, total: h.counts.missingTags, key: 'tags' }"></ng-container>
+            }
+          </section>
+
+        <section class="panel" id="health-duplicates" aria-labelledby="duplicates-title">
+          <div class="panel-header">
+            <h2 id="duplicates-title">Duplicates</h2>
+            <span class="muted">Tracks found several times (same artist, album, title, number and duration). The public copy with the best encoding is listed, the others are hidden; libraries and playlists that saved a hidden copy play the listed one.</span>
+          </div>
+          @if (duplicates(); as d) {
+            @if (!d.enabled) {
+              <p class="notice">
+                <mat-icon aria-hidden="true">info</mat-icon>
+                <span>Showing each track once is turned off in Settings: every copy is listed.</span>
+              </p>
+            }
+            @if (!d.total) {
+              <p class="muted">No duplicate found.</p>
+            } @else {
+              <p>
+                <strong>{{ d.hidden }}</strong> hidden {{ d.hidden === 1 ? 'copy' : 'copies' }} of
+                <strong>{{ d.total }}</strong> {{ d.total === 1 ? 'track' : 'tracks' }}@if (d.total > d.groups.length) { (first {{ d.groups.length }} shown)}.
+              </p>
+              <mat-accordion class="duplicates" displayMode="flat">
+                @for (group of d.groups; track group.kept.uid) {
+                  <mat-expansion-panel>
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>{{ group.kept.title }}</mat-panel-title>
+                      <mat-panel-description>{{ group.kept.artist }} · {{ group.kept.album }} · {{ group.copies.length + 1 }} copies</mat-panel-description>
+                    </mat-expansion-panel-header>
+                    <ul class="copies">
+                      <li class="kept">
+                        <span class="badge">Listed</span>
+                        <code>{{ group.kept.file }}</code>
+                        <span class="muted">{{ group.kept.format }} · {{ group.kept.duration }}@if (group.kept.user) { · upload of {{ group.kept.user }}}</span>
+                      </li>
+                      @for (copy of group.copies; track copy.uid) {
+                        <li>
+                          <span class="badge hidden-badge">Hidden</span>
+                          <code>{{ copy.file }}</code>
+                          <span class="muted">{{ copy.format }} · {{ copy.duration }}@if (copy.user) { · upload of {{ copy.user }}}</span>
+                        </li>
+                      }
+                    </ul>
+                  </mat-expansion-panel>
+                }
+              </mat-accordion>
+            }
+          } @else {
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+          }
+        </section>
+
+          <section class="panel" id="health-unreadable" aria-labelledby="unreadable-title">
+            <div class="panel-header">
+              <h2 id="unreadable-title">Unreadable files</h2>
+              <span class="muted">Audio files the last scan could not decode (damaged or not really audio). They are not in the library.</span>
+            </div>
+            @if (!h.unreadable.length) {
+              <p class="muted">Every audio file could be read.</p>
+            } @else {
+              <ul class="health-list">
+                @for (file of shown(h.unreadable, 'unreadable'); track file.file) {
+                  <li class="health-item">
+                    <mat-icon class="item-icon" aria-hidden="true">broken_image</mat-icon>
+                    <span class="health-text">
+                      <code>{{ file.file }}</code>
+                      <span class="muted small">{{ file.error }}</span>
+                    </span>
+                  </li>
+                }
+              </ul>
+              <ng-container *ngTemplateOutlet="more; context: { list: h.unreadable, total: h.counts.unreadable, key: 'unreadable' }"></ng-container>
+            }
+          </section>
+        } @else {
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        }
       </div>
     </mat-tab>
 
@@ -400,3 +512,13 @@
     </mat-tab>
   </mat-tab-group>
 </div>
+
+<!-- "Show all" of the Health lists -->
+<ng-template #more let-list="list" let-total="total" let-key="key">
+  @if (list.length > healthStep && !expanded().has(key)) {
+    <button mat-button type="button" class="show-all" (click)="expand(key)">Show all ({{ list.length }})</button>
+  }
+  @if (total > list.length) {
+    <p class="muted small">The first {{ list.length }} of {{ total }} are listed.</p>
+  }
+</ng-template>
