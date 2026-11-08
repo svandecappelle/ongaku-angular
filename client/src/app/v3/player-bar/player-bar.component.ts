@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output, si
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map, startWith, switchMap } from 'rxjs/operators';
 import { A11yModule } from '@angular/cdk/a11y';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { RouterLink } from '@angular/router';
@@ -70,7 +70,8 @@ export class PlayerBarComponent {
   /** Waveform of the current track, null while it loads or when it cannot be read */
   readonly peaks = toSignal(
     toObservable(computed(() => this.playback.current()?.uid ?? null)).pipe(
-      switchMap((uid) => (uid ? this.peaksService.get(String(uid)) : of(null))),
+      // The plain slider until the waveform of the new track comes: never the previous one
+      switchMap((uid) => (uid ? this.peaksService.get(String(uid)).pipe(startWith(null)) : of(null))),
     ),
     { initialValue: null },
   );

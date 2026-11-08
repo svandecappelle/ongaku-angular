@@ -119,6 +119,8 @@ export class WaveformSeekComponent {
       this.shownPosition();
       this.hover();
       this.visualizer.motion();
+      // Stopped (pause, hidden tab): the bars lifted by the last frame come down
+      this.visualizer.running();
       this.draw();
     });
     // Moving: on every frame, while the visualizers run

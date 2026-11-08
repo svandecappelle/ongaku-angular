@@ -306,6 +306,10 @@ test('the seek bar shows the waveform, the row playing an equalizer; both follow
   await playRow('No lyrics song');
   await page.waitFor(`document.querySelector('app-player-bar app-waveform-seek[role="slider"]')?.getAttribute('aria-valuemax') === '20'`, { what: 'the waveform seek bar' });
   assert.ok(await page.eval(`!!document.querySelector('app-track-list tr.current app-equalizer canvas')`), 'the equalizer of the row playing');
+  // Both are drawn: some pixels of their canvas are painted
+  const painted = (selector) => `(() => { const c = document.querySelector('${selector}'); const d = c && c.width && c.getContext('2d').getImageData(0, 0, c.width, c.height).data; return !!d && d.some((v, i) => i % 4 === 3 && v > 0); })()`;
+  await page.waitFor(painted('app-player-bar app-waveform-seek canvas'), { what: 'the bars of the waveform' });
+  await page.waitFor(painted('app-track-list tr.current app-equalizer canvas'), { what: 'the bars of the equalizer' });
 
   // The keyboard moves 5 seconds forward
   const before = Number(await page.eval(`document.querySelector('app-player-bar app-waveform-seek').getAttribute('aria-valuenow')`));
