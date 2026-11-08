@@ -33,6 +33,12 @@ export interface ThemePreference {
   reduceMotion: boolean;
   visualizers: Visualizers;
   playerAnimation: PlayerAnimation;
+  /** The seek bar of the player bar draws the waveform of the track (a plain slider otherwise) */
+  waveformBar: boolean;
+  /** Same for the seek bar of the full-screen player */
+  waveformFull: boolean;
+  /** The equalizer next to the track playing moves with the sound (a still icon otherwise) */
+  liveEqualizer: boolean;
   showBackground: boolean;
   /** Opacity of the veil drawn over the background image, 0–100 */
   backgroundVeil: number;
@@ -54,6 +60,9 @@ export const DEFAULT_PREFERENCE: ThemePreference = {
   reduceMotion: false,
   visualizers: 'subtle',
   playerAnimation: 'glow',
+  waveformBar: true,
+  waveformFull: true,
+  liveEqualizer: true,
   showBackground: true,
   backgroundVeil: 50,
   customThemes: [],
@@ -95,6 +104,9 @@ export class ThemeService {
   readonly reduceMotion = computed(() => this.preference().reduceMotion);
   readonly visualizers = computed(() => this.preference().visualizers);
   readonly playerAnimation = computed(() => this.preference().playerAnimation);
+  readonly waveformBar = computed(() => this.preference().waveformBar);
+  readonly waveformFull = computed(() => this.preference().waveformFull);
+  readonly liveEqualizer = computed(() => this.preference().liveEqualizer);
   readonly backgroundVeil = computed(() => this.preference().backgroundVeil);
   /** URL of the profile background image: the version changes when the user replaces it, the
    *  server revalidates it otherwise (sendFile answers with max-age=0 and an ETag) */
@@ -341,6 +353,9 @@ export class ThemeService {
       reduceMotion: !!pref.reduceMotion,
       visualizers: (['off', 'subtle', 'lively'] as const).find((v) => v === pref.visualizers) ?? d.visualizers,
       playerAnimation: PLAYER_ANIMATIONS.find((a) => a === pref.playerAnimation) ?? d.playerAnimation,
+      waveformBar: typeof pref.waveformBar === 'boolean' ? pref.waveformBar : d.waveformBar,
+      waveformFull: typeof pref.waveformFull === 'boolean' ? pref.waveformFull : d.waveformFull,
+      liveEqualizer: typeof pref.liveEqualizer === 'boolean' ? pref.liveEqualizer : d.liveEqualizer,
       showBackground: pref.showBackground ?? d.showBackground,
       backgroundVeil: number(pref.backgroundVeil, d.backgroundVeil, 0, 100),
       customThemes,
@@ -356,6 +371,11 @@ export class ThemeService {
           const dark = PRESET_THEMES.find((t) => t.id === stored.theme)?.dark ?? true;
           stored.schedule = 'system';
           stored.nightTheme = dark ? stored.theme : DEFAULT_THEME;
+        }
+        // Saved before the waveform had its own setting: "Off" showed the plain slider
+        if (stored.waveformBar === undefined && stored.waveformFull === undefined && stored.visualizers === 'off') {
+          stored.waveformBar = false;
+          stored.waveformFull = false;
         }
         return this.sanitize({ ...DEFAULT_PREFERENCE, ...stored });
       }

@@ -293,17 +293,39 @@ test('a large uploads folder is shown by page, and can be filtered', { skip }, a
   await page.waitFor(`document.querySelectorAll('app-uploads-browser .file').length === 5`, { what: 'the filtered files' });
 });
 
-test('the seek bar shows the waveform, the row playing an equalizer; both follow the Visualizers setting', { skip }, async (t) => {
-  const visualizers = async (choice) => {
-    await page.goto('/profile/appearance', await login('carol'));
-    await page.waitFor(`document.querySelector('[aria-labelledby="visualizers-label"]')`, { what: 'the Visualizers setting' });
-    await page.eval(`[...document.querySelectorAll('[aria-labelledby="visualizers-label"] button')].find((b) => b.textContent.trim() === ${JSON.stringify(choice)}).click()`);
-  };
-  t.after(() => visualizers('Subtle'));
+/** Opens Appearance and clicks the button of a toggle group whose text ends with `choice` */
+async function appearance(group, choice) {
+  await page.goto('/profile/appearance', await login('carol'));
+  await page.waitFor(`document.querySelector('${group}')`, { what: `the setting ${group}` });
+  await page.eval(`[...document.querySelectorAll('${group} button')].find((b) => b.textContent.trim().endsWith(${JSON.stringify(choice)})).click()`);
+}
+const MOVEMENT = '.visualizers .movement';
+const PLAYER_ANIMATION = '[aria-labelledby="player-animation-label"]';
 
-  await page.goto('/album/Lyric%20Band/Songs', await login('carol'));
-  await page.waitFor(`document.querySelectorAll('app-track-list tbody tr').length === 3`, { what: 'the tracks' });
-  await playRow('No lyrics song');
+/** Opens Appearance and chooses where the seek bar draws the waveform */
+async function waveformPlaces({ bar, full }) {
+  const group = '.waveform-places';
+  await page.goto('/profile/appearance', await login('carol'));
+  await page.waitFor(`document.querySelector('${group} button')`, { what: 'the places of the waveform' });
+  for (const [label, wanted] of [['Player bar', bar], ['Full screen', full]]) {
+    await page.eval(`(() => { const b = [...document.querySelectorAll('${group} button')].find((b) => b.textContent.includes(${JSON.stringify(label)})); if ((b.getAttribute('aria-pressed') === 'true') !== ${wanted}) b.click(); })()`);
+    await page.waitFor(`[...document.querySelectorAll('${group} button')].find((b) => b.textContent.includes(${JSON.stringify(label)})).getAttribute('aria-pressed') === '${wanted}'`, { what: `${label} set` });
+  }
+}
+
+test('the seek bar shows the waveform, the row playing an equalizer; each one chosen apart from the movement', { skip }, async (t) => {
+  t.after(async () => {
+    await appearance(MOVEMENT, 'Subtle');
+    await waveformPlaces({ bar: true, full: true });
+  });
+  const playing = async () => {
+    await page.goto('/album/Lyric%20Band/Songs', await login('carol'));
+    await page.waitFor(`document.querySelectorAll('app-track-list tbody tr').length === 3`, { what: 'the tracks' });
+    await playRow('No lyrics song');
+    await page.waitFor(`document.querySelector('app-player-bar .now-playing')`, { what: 'the player' });
+  };
+
+  await playing();
   await page.waitFor(`document.querySelector('app-player-bar app-waveform-seek[role="slider"]')?.getAttribute('aria-valuemax') === '20'`, { what: 'the waveform seek bar' });
   assert.ok(await page.eval(`!!document.querySelector('app-track-list tr.current app-equalizer canvas')`), 'the equalizer of the row playing');
   // Both are drawn: some pixels of their canvas are painted
@@ -316,20 +338,31 @@ test('the seek bar shows the waveform, the row playing an equalizer; both follow
   await page.eval(`document.querySelector('app-player-bar app-waveform-seek').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))`);
   await page.waitFor(`Number(document.querySelector('app-player-bar app-waveform-seek').getAttribute('aria-valuenow')) >= ${before + 4}`, { what: 'the seek by the keyboard' });
 
-  // Turned off: the plain slider
-  await visualizers('Off');
+  // The visualizers moving, without the waveform: the plain slider, the equalizer still there
+  await waveformPlaces({ bar: false, full: false });
+  assert.ok(await page.eval(`!!document.querySelector('.visualizers .plain-slider') && !document.querySelector('.visualizers app-waveform-seek')`), 'the preview shows the plain slider');
+  await playing();
   await page.waitFor(`document.querySelector('app-player-bar .seek mat-slider') && !document.querySelector('app-player-bar app-waveform-seek')`, { what: 'the plain slider' });
+  await page.waitFor(painted('app-track-list tr.current app-equalizer canvas'), { what: 'the equalizer without the waveform' });
+
+  // In the full-screen player only: the plain slider in the bar, the waveform once opened
+  await waveformPlaces({ bar: false, full: true });
+  await playing();
+  await page.waitFor(`document.querySelector('app-player-bar .seek mat-slider') && !document.querySelector('app-player-bar app-waveform-seek')`, { what: 'the plain slider in the bar' });
+  await page.eval(`document.querySelector('app-player-bar .now-playing').click()`);
+  await page.waitFor(painted('app-player-bar .sheet app-waveform-seek canvas'), { what: 'the waveform of the full-screen player' });
+
+  // The waveform without movement: shown, standing still
+  await waveformPlaces({ bar: true, full: true });
+  await appearance(MOVEMENT, 'Off');
+  await playing();
+  await page.waitFor(painted('app-player-bar app-waveform-seek canvas'), { what: 'the still waveform' });
 });
 
 test('the full player offers its animations, each one drawn; turned off, only the still disc stays', { skip }, async (t) => {
-  const appearance = async (label, choice) => {
-    await page.goto('/profile/appearance', await login('carol'));
-    await page.waitFor(`document.querySelector('[aria-labelledby="${label}"]')`, { what: `the setting ${label}` });
-    await page.eval(`[...document.querySelectorAll('[aria-labelledby="${label}"] button')].find((b) => b.textContent.trim().endsWith(${JSON.stringify(choice)})).click()`);
-  };
   t.after(async () => {
-    await appearance('visualizers-label', 'Subtle');
-    await appearance('player-animation-label', 'Breathing cover');
+    await appearance(MOVEMENT, 'Subtle');
+    await appearance(PLAYER_ANIMATION, 'Breathing cover');
   });
   const painted = (selector) => `(() => { const c = document.querySelector('${selector}'); const d = c && c.width > 1 && c.getContext('2d').getImageData(0, 0, c.width, c.height).data; return !!d && d.some((v, i) => i % 4 === 3 && v > 0); })()`;
   const open = async () => {
@@ -356,8 +389,8 @@ test('the full player offers its animations, each one drawn; turned off, only th
   await page.waitFor(`!document.querySelector('app-player-bar .sheet app-spinning-disc, app-player-bar .sheet app-cover-glow') && document.querySelector('app-player-bar .sheet .sheet-cover')`, { what: 'the cover alone' });
 
   // The choice is a setting: Appearance shows it, and the visualizers turned off keep the disc only
-  await appearance('player-animation-label', 'Ambient backdrop');
-  await appearance('visualizers-label', 'Off');
+  await appearance(PLAYER_ANIMATION, 'Ambient backdrop');
+  await appearance(MOVEMENT, 'Off');
   await open();
   assert.ok(!(await page.eval(`!!document.querySelector('app-player-bar .sheet app-ambient-backdrop')`)), 'no backdrop with the visualizers off');
   await pick('Spinning disc');

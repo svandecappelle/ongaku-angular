@@ -99,8 +99,9 @@ export class PlayerBarComponent {
     this.theme.update({ playerAnimation });
   }
 
-  /** The seek bars show the waveform, unless the visualizers are turned off */
-  readonly showWaveform = computed(() => !!this.peaks() && this.visualizer.motion() !== 'off');
+  /** The seek bars show the waveform where chosen in Appearance (it moves with the visualizers) */
+  readonly showWaveform = computed(() => !!this.peaks() && this.theme.waveformBar());
+  readonly showSheetWaveform = computed(() => !!this.peaks() && this.theme.waveformFull());
   /** Full-screen player, opened from the cover */
   readonly expanded = signal(false);
   /** Gain restored by unmuting (the saved volume may be muted: then the default) */

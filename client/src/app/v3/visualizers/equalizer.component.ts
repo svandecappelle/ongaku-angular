@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, effect, inject, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, effect, inject, untracked, viewChild } from '@angular/core';
 
 import { ThemeService } from '../../services/theme.service';
 import { VisualFrame, VisualizerService } from '../../services/visualizer.service';
@@ -10,7 +10,8 @@ const HEIGHT = 14;
 
 /**
  * Four bars next to the track playing: lows, low-mids, high-mids and highs of the actual sound.
- * They stand still when the visualizers do (reduced motion, turned off, paused).
+ * They stand still when the visualizers do (reduced motion, turned off, paused), or when the
+ * live equalizer is turned off in Appearance.
  */
 @Component({
   selector: 'app-equalizer',
@@ -47,13 +48,21 @@ export class EqualizerComponent {
       this.theme.accent();
       // The colour of the text around: the accent in a row playing
       this.colour = getComputedStyle(this.host.nativeElement).color || this.colour;
-      if (!this.visualizer.running()) {
+      if (!this.visualizer.running() || !this.theme.liveEqualizer()) {
         this.draw();
       }
     });
     afterNextRender(() => this.draw());
-    const stop = this.visualizer.listen((frame) => this.draw(frame));
-    inject(DestroyRef).onDestroy(stop);
+    // Moving only when chosen in Appearance: otherwise it does not keep the loop running
+    let stop = () => {};
+    effect(() => {
+      const live = this.theme.liveEqualizer();
+      untracked(() => {
+        stop();
+        stop = live ? this.visualizer.listen((frame) => this.draw(frame)) : () => {};
+      });
+    });
+    inject(DestroyRef).onDestroy(() => stop());
   }
 
   private draw(frame?: VisualFrame) {

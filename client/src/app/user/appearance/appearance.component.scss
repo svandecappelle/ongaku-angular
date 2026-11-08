@@ -389,10 +389,115 @@ mat-button-toggle-group {
   flex-wrap: wrap;
 }
 
-.player-animations mat-icon {
+.player-animations mat-icon,
+.waveform-places mat-icon {
   width: 18px;
   height: 18px;
   font-size: 18px;
   margin-right: 4px;
   vertical-align: -4px;
+}
+
+.visualizers {
+  .movement-hint {
+    margin: -6px 0 0;
+  }
+  .hint mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    margin-right: 4px;
+    vertical-align: -4px;
+  }
+}
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.viz-tile {
+  padding: 14px;
+  border-radius: var(--ongaku-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--ongaku-surface-2);
+  border: 2px solid transparent;
+  transition: border-color .2s, opacity .2s;
+  &:not(.off):not(.wide) {
+    border-color: color-mix(in srgb, var(--ongaku-accent) 55%, transparent);
+  }
+  &.wide {
+    grid-column: 1 / -1;
+  }
+  &.off .viz-preview {
+    opacity: .6;
+  }
+}
+
+// A small stage for the sample of each element
+.viz-preview {
+  height: 56px;
+  padding: 0 12px;
+  border-radius: var(--ongaku-radius-sm, 8px);
+  display: flex;
+  align-items: center;
+  background: var(--ongaku-bg);
+  transition: opacity .2s;
+  app-waveform-seek {
+    flex: 1;
+    cursor: default;
+  }
+}
+
+.plain-slider {
+  position: relative;
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--ongaku-muted) 35%, transparent);
+  .played {
+    position: absolute;
+    inset: 0 62% 0 0;
+    border-radius: inherit;
+    background: var(--ongaku-accent);
+  }
+  .thumb {
+    position: absolute;
+    top: 50%;
+    left: 38%;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--ongaku-accent);
+  }
+}
+
+.demo-row {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--ongaku-accent);
+  .demo-title {
+    flex: 1;
+    font-weight: 600;
+  }
+  .demo-time {
+    color: var(--ongaku-muted);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// Both places on one line, sharing the width of the tile
+.waveform-places {
+  align-self: stretch;
+  flex-wrap: nowrap;
+  mat-button-toggle {
+    flex: 1;
+  }
 }

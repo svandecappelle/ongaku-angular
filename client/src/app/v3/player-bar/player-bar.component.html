@@ -183,7 +183,7 @@
       </div>
 
       <div class="sheet-seek">
-        @if (showWaveform()) {
+        @if (showSheetWaveform()) {
           <app-waveform-seek class="sheet-wave" [peaks]="peaks()!" [position]="playback.currentTime()" [duration]="playback.duration()"
             (scrub)="seeking.set($event)" (seek)="playback.seek($event)"></app-waveform-seek>
         } @else {

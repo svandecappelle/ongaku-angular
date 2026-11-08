@@ -5,6 +5,10 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MaterialModule } from '../../modules/material.module';
 import { CONTENT_SCALE_MAX, CONTENT_SCALE_MIN, Density, PlayerAnimation, Schedule, ThemeService, Visualizers } from '../../services/theme.service';
 import { PLAYER_ANIMATION_CHOICES } from '../../v3/visualizers/player-animations';
+import { WaveformSeekComponent } from '../../v3/visualizers/waveform-seek.component';
+import { EqualizerComponent } from '../../v3/visualizers/equalizer.component';
+import { PlaybackService } from '../../services/playback.service';
+import { VisualizerService } from '../../services/visualizer.service';
 import { ThemePreviewComponent } from '../../theme/theme-preview/theme-preview.component';
 import { AccentId, FontId, RadiusId } from '../../theme/themes';
 
@@ -15,10 +19,12 @@ type AccentMode = 'theme' | 'fixed' | 'dynamic';
   templateUrl: './appearance.component.html',
   styleUrls: ['./appearance.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialModule, RouterLink, ThemePreviewComponent],
+  imports: [MaterialModule, RouterLink, ThemePreviewComponent, WaveformSeekComponent, EqualizerComponent],
 })
 export class AppearanceComponent {
   readonly theme = inject(ThemeService);
+  readonly visualizer = inject(VisualizerService);
+  readonly playback = inject(PlaybackService);
   private readonly snackBar = inject(MatSnackBar);
 
   readonly settings = this.theme.settings;
@@ -85,8 +91,32 @@ export class AppearanceComponent {
     this.theme.update({ reduceMotion });
   }
 
+  readonly movements: { id: Visualizers; label: string; hint: string }[] = [
+    { id: 'off', label: 'Off', hint: 'Nothing moves with the sound: the elements chosen below show, standing still.' },
+    { id: 'subtle', label: 'Subtle', hint: 'The chosen elements move gently with the sound.' },
+    { id: 'lively', label: 'Lively', hint: 'The chosen elements move with every beat.' },
+  ];
+  readonly movementHint = computed(() => this.movements.find((m) => m.id === this.settings().visualizers)?.hint ?? '');
+  /** A made-up waveform for the preview of the seek bar */
+  readonly demoPeaks = Array.from({ length: 400 }, (_, i) =>
+    Math.round(70 + 110 * Math.abs(Math.sin(i / 23) * Math.cos(i / 7.3)) + 40 * Math.sin(i / 61) ** 2));
+
   setVisualizers(visualizers: Visualizers) {
     this.theme.update({ visualizers });
+  }
+
+  readonly waveformPlaces = computed(() => [
+    ...(this.settings().waveformBar ? ['bar'] : []),
+    ...(this.settings().waveformFull ? ['full'] : []),
+  ]);
+  readonly showsWaveform = computed(() => this.waveformPlaces().length > 0);
+
+  setWaveformPlaces(places: string[]) {
+    this.theme.update({ waveformBar: places.includes('bar'), waveformFull: places.includes('full') });
+  }
+
+  setLiveEqualizer(liveEqualizer: boolean) {
+    this.theme.update({ liveEqualizer });
   }
 
   readonly playerAnimations = PLAYER_ANIMATION_CHOICES;

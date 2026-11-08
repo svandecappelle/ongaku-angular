@@ -169,28 +169,90 @@
           <span class="hint">Spinning cover, transitions and loading animations are stopped; the visualizers stand still.</span>
         </mat-slide-toggle>
 
-        <div class="field">
-          <span class="field-label" id="visualizers-label">Visualizers</span>
-          <mat-button-toggle-group [value]="settings().visualizers" (change)="setVisualizers($event.value)" aria-labelledby="visualizers-label">
-            <mat-button-toggle value="off">Off</mat-button-toggle>
-            <mat-button-toggle value="subtle">Subtle</mat-button-toggle>
-            <mat-button-toggle value="lively">Lively</mat-button-toggle>
-          </mat-button-toggle-group>
-          <span class="hint">The waveform of the track in the seek bar, and the equalizer next to the track playing, moving with the sound.</span>
-        </div>
+      </section>
 
-        <div class="field">
-          <span class="field-label" id="player-animation-label">Full-screen player</span>
-          <mat-button-toggle-group class="player-animations" [value]="settings().playerAnimation" (change)="setPlayerAnimation($event.value)" aria-labelledby="player-animation-label">
-            @for (option of playerAnimations; track option.id) {
-              <mat-button-toggle [value]="option.id">
-                <mat-icon aria-hidden="true">{{ option.icon }}</mat-icon>
-                {{ option.label }}
-              </mat-button-toggle>
+      <section class="panel visualizers" aria-labelledby="visualizers-title">
+        <div class="panel-row">
+          <div class="panel-header">
+            <h2 id="visualizers-title">Visualizers</h2>
+            <span class="muted">Animations that follow the music: how much they move, then where.</span>
+          </div>
+          <mat-button-toggle-group class="movement" [value]="settings().visualizers" (change)="setVisualizers($event.value)" aria-label="Movement of the visualizers">
+            @for (level of movements; track level.id) {
+              <mat-button-toggle [value]="level.id">{{ level.label }}</mat-button-toggle>
             }
           </mat-button-toggle-group>
-          <span class="hint">What moves with the music around the cover. Also in the header of the player.</span>
         </div>
+        <p class="hint movement-hint" aria-live="polite">
+          @if (visualizer.motion() === 'reduced') {
+            <mat-icon aria-hidden="true">slow_motion_video</mat-icon>
+            Animations are reduced (above, or by your system): the visualizers stand still.
+          } @else {
+            {{ movementHint() }}
+          }
+        </p>
+
+        <div class="viz-grid" [class.still]="visualizer.motion() !== 'full'">
+          <div class="viz-tile" [class.off]="!showsWaveform()">
+            <div class="viz-preview" aria-hidden="true">
+              @if (showsWaveform()) {
+                <app-waveform-seek inert [peaks]="demoPeaks" [position]="38" [duration]="100"></app-waveform-seek>
+              } @else {
+                <span class="plain-slider"><span class="played"></span><span class="thumb"></span></span>
+              }
+            </div>
+            <div class="field waveform-field">
+              <span class="field-label" id="waveform-label">Waveform seek bar</span>
+              <mat-button-toggle-group class="waveform-places" multiple [value]="waveformPlaces()" (change)="setWaveformPlaces($event.value)" aria-labelledby="waveform-label">
+                <mat-button-toggle value="bar">
+                  <mat-icon aria-hidden="true">call_to_action</mat-icon>
+                  Player bar
+                </mat-button-toggle>
+                <mat-button-toggle value="full">
+                  <mat-icon aria-hidden="true">fullscreen</mat-icon>
+                  Full screen
+                </mat-button-toggle>
+              </mat-button-toggle-group>
+              <span class="hint">Where the seek bar draws the track; its bars lift with the bass. Neither: a plain slider.</span>
+            </div>
+          </div>
+
+          <div class="viz-tile" [class.off]="!settings().liveEqualizer">
+            <div class="viz-preview" aria-hidden="true">
+              <span class="demo-row">
+                <app-equalizer></app-equalizer>
+                <span class="demo-title">Track playing</span>
+                <span class="demo-time">3:42</span>
+              </span>
+            </div>
+            <div class="field">
+              <span class="field-label" id="equalizer-label">Live equalizer</span>
+              <mat-slide-toggle class="equalizer-toggle" [checked]="settings().liveEqualizer" (change)="setLiveEqualizer($event.checked)" aria-labelledby="equalizer-label">
+                Moves with the sound
+              </mat-slide-toggle>
+              <span class="hint">Next to the track playing, in lists and the queue. Off: a still icon.</span>
+            </div>
+          </div>
+
+          <div class="viz-tile wide">
+            <div class="field">
+              <span class="field-label" id="player-animation-label">Full-screen player</span>
+              <mat-button-toggle-group class="player-animations" [value]="settings().playerAnimation" (change)="setPlayerAnimation($event.value)" aria-labelledby="player-animation-label">
+                @for (option of playerAnimations; track option.id) {
+                  <mat-button-toggle [value]="option.id">
+                    <mat-icon aria-hidden="true">{{ option.icon }}</mat-icon>
+                    {{ option.label }}
+                  </mat-button-toggle>
+                }
+              </mat-button-toggle-group>
+              <span class="hint">What moves with the music around the cover. Also in the header of the player.</span>
+            </div>
+          </div>
+        </div>
+
+        @if (!playback.playing()) {
+          <p class="hint"><mat-icon aria-hidden="true">play_circle_outline</mat-icon> Play a track: the previews above move with it.</p>
+        }
       </section>
 
       <section class="panel" aria-labelledby="schedule-title">
