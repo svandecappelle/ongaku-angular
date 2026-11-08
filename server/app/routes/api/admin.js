@@ -474,23 +474,29 @@ router.get('/backup/summary', (req, res, next) => {
 });
 
 /**
- * Downloads a backup as one .tar file: the database, the data folders (uploads, images, lyrics),
- * the configuration for reference and, with ?music=1, the music folders. Streamed as it is made.
+ * Downloads a backup as a .tar file, streamed as it is made. ?part=data (default): the database,
+ * the data folders (uploads, images, lyrics) and the configuration for reference; ?part=music: the
+ * music folders; ?part=all: both in one file (?music=1, the older form, means all too).
  */
 router.get('/backup', (req, res, next) => {
     if (backupBusy) {
         return res.status(409).json({ message: `A ${backupBusy} is already running` });
     }
-    const music = req.query.music === '1' || req.query.music === 'true';
+    const legacyAll = req.query.music === '1' || req.query.music === 'true';
+    const part = legacyAll ? 'all' : String(req.query.part || 'data');
+    if (!['data', 'music', 'all'].includes(part)) {
+        return res.status(400).json({ message: 'part must be data, music or all' });
+    }
+    const parts = part === 'all' ? ['data', 'music'] : [part];
     const stamp = moment().format('YYYYMMDD-HHmm');
     backupBusy = 'backup';
     res.set({
         'Content-Type': 'application/x-tar',
-        'Content-Disposition': `attachment; filename="ongaku-backup-${stamp}${music ? '-with-music' : ''}.tar"`,
+        'Content-Disposition': `attachment; filename="ongaku-backup-${stamp}-${part === 'all' ? 'full' : part}.tar"`,
         'Cache-Control': 'no-store',
         'X-Content-Type-Options': 'nosniff'
     });
-    backup.create(res, { music: music }).catch((err) => {
+    backup.create(res, { parts: parts }).catch((err) => {
         console.error('Backup failed', err);
         if (!res.headersSent) {
             return next(err);
@@ -512,8 +518,10 @@ router.post('/backup/restore', (req, res) => {
     }
     backupBusy = 'restore';
     backup.restore(req).then(async (report) => {
-        // The accounts, the settings and the library come from the backup now
-        sessionGuard.accounts.clear();
+        // The accounts, the settings and the library come from the backup now (not for the music alone)
+        if (report.parts.includes('data')) {
+            sessionGuard.accounts.clear();
+        }
         await Promise.all(['deduplicate', 'uploadQuota'].map((key) => new Promise((resolve) => meta.settings.getOne('global', key, (err, value) => {
             nconf.set(key, !err && value !== null && value !== undefined ? value : undefined);
             resolve();

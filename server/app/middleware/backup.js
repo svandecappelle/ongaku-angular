@@ -115,28 +115,41 @@ function musicEntryName(folder, index) {
   return `${index}-${path.basename(path.resolve(folder)).replace(/[^\w.-]+/g, '_') || 'music'}`;
 }
 
+/** The parts a backup can hold: "data" (database, data folders, configuration) and "music" */
+const PARTS = ['data', 'music'];
+
 /**
- * Writes a backup into `output` as a tar stream: manifest.json first, then the database, the
- * configuration (for reference: it is not restored), the data folders and, with `music`, the
- * library folders. The files are read from a folder of links, so nothing is copied first.
+ * Writes a backup into `output` as a tar stream: manifest.json first, then, for the "data" part,
+ * the database, the configuration (for reference: it is not restored) and the data folders, and
+ * for the "music" part the library folders. The two parts may go in one file or in two. The
+ * files are read from a folder of links, so nothing is copied first.
  */
-async function create(output, { music }) {
+async function create(output, { parts }) {
+  const wanted = new Set((parts || ['data']).filter((part) => PARTS.includes(part)));
+  if (!wanted.size) {
+    throw new BackupError('Nothing to back up');
+  }
   const stage = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'ongaku-backup-'));
   try {
-    const keys = await exportDatabase(path.join(stage, 'database.jsonl'));
-    const entries = ['manifest.json', 'database.jsonl'];
-    if (fs.existsSync(CONFIG)) {
-      await fs.promises.mkdir(path.join(stage, 'config'));
-      await fs.promises.symlink(CONFIG, path.join(stage, 'config/application.yml'));
-      entries.push('config');
+    const entries = ['manifest.json'];
+    let keys = 0;
+    let data = [];
+    if (wanted.has('data')) {
+      keys = await exportDatabase(path.join(stage, 'database.jsonl'));
+      entries.push('database.jsonl');
+      if (fs.existsSync(CONFIG)) {
+        await fs.promises.mkdir(path.join(stage, 'config'));
+        await fs.promises.symlink(CONFIG, path.join(stage, 'config/application.yml'));
+        entries.push('config');
+      }
+      await fs.promises.mkdir(path.join(stage, 'data'));
+      data = DATA_FOLDERS.filter((name) => fs.existsSync(path.join(PUBLIC, name)));
+      for (const name of data) {
+        await fs.promises.symlink(path.join(PUBLIC, name), path.join(stage, 'data', name));
+      }
+      entries.push('data');
     }
-    await fs.promises.mkdir(path.join(stage, 'data'));
-    const data = DATA_FOLDERS.filter((name) => fs.existsSync(path.join(PUBLIC, name)));
-    for (const name of data) {
-      await fs.promises.symlink(path.join(PUBLIC, name), path.join(stage, 'data', name));
-    }
-    entries.push('data');
-    const folders = music ? libraryFolders().map((folder, index) => ({ index, path: folder, name: musicEntryName(folder, index) })).filter((folder) => fs.existsSync(folder.path)) : [];
+    const folders = wanted.has('music') ? libraryFolders().map((folder, index) => ({ index, path: folder, name: musicEntryName(folder, index) })).filter((folder) => fs.existsSync(folder.path)) : [];
     if (folders.length) {
       await fs.promises.mkdir(path.join(stage, 'music'));
       for (const folder of folders) {
@@ -149,7 +162,8 @@ async function create(output, { music }) {
       version: VERSION,
       createdAt: new Date().toISOString(),
       application: require(path.resolve(__dirname, '../../../package.json')).version,
-      database: { keys },
+      parts: PARTS.filter((part) => wanted.has(part)),
+      database: wanted.has('data') ? { keys } : null,
       data,
       music: folders.map(({ index, name, path: folderPath }) => ({ index, name, path: folderPath })),
     };
@@ -237,7 +251,7 @@ async function importDatabase(file) {
 async function restore(input) {
   const stage = await fs.promises.mkdtemp(path.join(PUBLIC, '.restore-'));
   const folders = libraryFolders();
-  const report = { database: 0, data: [], music: { files: 0, skipped: 0, folders: [] }, ignored: 0 };
+  const report = { parts: [], database: 0, data: [], music: { files: 0, skipped: 0, folders: [] }, ignored: 0 };
   const writes = [];
   let manifest = null;
   let first = true;
@@ -361,8 +375,17 @@ async function restore(input) {
     if (!manifest) {
       throw new BackupError('This file is not an Ongaku backup');
     }
-    if (!fs.existsSync(path.join(stage, 'database.jsonl'))) {
+    // Backups made before the parts existed held the data, and the music when asked
+    const parts = Array.isArray(manifest.parts) ? manifest.parts : ['data'].concat((manifest.music || []).length ? ['music'] : []);
+    report.parts = parts;
+    const hasDatabase = fs.existsSync(path.join(stage, 'database.jsonl'));
+    if (parts.includes('data') && !hasDatabase) {
       throw new BackupError('The backup holds no database');
+    }
+    if (!hasDatabase) {
+      // The music part alone: nothing else changes
+      report.manifest = { createdAt: manifest.createdAt, application: manifest.application };
+      return report;
     }
 
     // The whole archive is read: the database and the data folders are replaced
@@ -389,4 +412,4 @@ async function restore(input) {
   }
 }
 
-module.exports = { create, restore, summary, BackupError, FORMAT, VERSION };
+module.exports = { create, restore, summary, BackupError, FORMAT, VERSION, PARTS };

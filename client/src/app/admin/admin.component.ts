@@ -9,7 +9,7 @@ import { Chart, registerables } from 'chart.js';
 import moment from 'moment';
 
 import { MaterialModule } from '../modules/material.module';
-import { AdminService, AdminUser, BackupSummary, Duplicates, ImportFolder, ImportResult, LibraryAudit, LibraryHealth, RestoreReport, UserChanges } from '../services/admin.service';
+import { AdminService, AdminUser, BackupManifest, BackupPart, BackupSummary, Duplicates, ImportFolder, ImportResult, LibraryAudit, LibraryHealth, RestoreReport, UserChanges } from '../services/admin.service';
 import { CoverEditComponent } from '../v3/cover-edit/cover-edit.component';
 import { TagEditorDialogComponent, TagEditorData } from './tag-editor-dialog.component';
 import { StatisticsService } from '../services/statistics.service';
@@ -94,8 +94,35 @@ export class AdminComponent {
   /** Index of the Backup tab: its sizes are computed when it is first shown */
   readonly backupTab = 4;
   readonly backupSummary = signal<BackupSummary | null>(null);
-  readonly includeMusic = signal(false);
   readonly restoreFile = signal<File | null>(null);
+  /** What the chosen file holds, read from its manifest; null while unknown */
+  readonly restoreManifest = signal<BackupManifest | null>(null);
+  /** The chosen file is not an Ongaku backup */
+  readonly restoreInvalid = signal(false);
+  /** The parts of the chosen file (the backups made before the parts held the data, and the music when asked) */
+  readonly restoreParts = computed<BackupPart[]>(() => {
+    const manifest = this.restoreManifest();
+    if (!manifest) {
+      return [];
+    }
+    return manifest.parts ?? (['data'] as BackupPart[]).concat(manifest.music?.length ? ['music'] : []);
+  });
+  /** What the chosen file holds, in words: "the data (412 database entries) and the music (1 folder)" */
+  readonly restoreHolds = computed(() => {
+    const manifest = this.restoreManifest();
+    const parts = this.restoreParts();
+    const said: string[] = [];
+    if (parts.includes('data')) {
+      said.push(manifest?.database ? `the data (${manifest.database.keys} database entries)` : 'the data');
+    }
+    if (parts.includes('music')) {
+      const folders = manifest?.music?.length ?? 0;
+      said.push(`the music (${folders} ${folders === 1 ? 'folder' : 'folders'})`);
+    }
+    return said.join(' and ');
+  });
+  /** Only a file with the data replaces something: a confirmation is asked for it */
+  readonly restoreReplaces = computed(() => this.restoreParts().includes('data'));
   readonly restoreConfirmed = signal(false);
   /** Upload of the backup, in percent; 100 while the server restores it */
   readonly restoreProgress = signal<number | null>(null);
@@ -223,19 +250,33 @@ export class AdminComponent {
     });
   }
 
-  backupUrl(): string {
-    return this.admin.backupUrl(this.includeMusic());
+  backupUrl(part: BackupPart | 'all'): string {
+    return this.admin.backupUrl(part);
   }
 
   chooseRestoreFile(input: HTMLInputElement) {
-    this.restoreFile.set(input.files?.[0] ?? null);
+    const file = input.files?.[0] ?? null;
+    input.value = '';
+    this.restoreFile.set(file);
+    this.restoreManifest.set(null);
+    this.restoreInvalid.set(false);
+    this.restoreConfirmed.set(false);
     this.restoreReport.set(null);
     this.restoreError.set(null);
+    if (file) {
+      this.admin.readBackupManifest(file).then((manifest) => {
+        if (this.restoreFile() !== file) {
+          return;
+        }
+        this.restoreManifest.set(manifest);
+        this.restoreInvalid.set(!manifest);
+      });
+    }
   }
 
   restore() {
     const file = this.restoreFile();
-    if (!file || !this.restoreConfirmed() || this.restoreProgress() !== null) {
+    if (!file || !this.restoreManifest() || (this.restoreReplaces() && !this.restoreConfirmed()) || this.restoreProgress() !== null) {
       return;
     }
     this.restoreProgress.set(0);
@@ -249,6 +290,7 @@ export class AdminComponent {
           this.restoreProgress.set(null);
           this.restoreReport.set(event.body);
           this.restoreFile.set(null);
+          this.restoreManifest.set(null);
           this.restoreConfirmed.set(false);
           this.loadBackupSummary();
           this.loadHealth();

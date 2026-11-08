@@ -535,39 +535,46 @@
         <section class="panel" aria-labelledby="backup-title">
           <div class="panel-header">
             <h2 id="backup-title">Download a backup</h2>
-            <span class="muted">One .tar file with everything Ongaku keeps, without its code: restore it here, on this server or a new one.</span>
+            <span class="muted">Everything Ongaku keeps, without its code, in two files: the data, and the music. Each one can be restored here, on this server or a new one.</span>
           </div>
           @if (backupSummary(); as b) {
-            <ul class="backup-contents">
-              <li>
-                <mat-icon aria-hidden="true">storage</mat-icon>
-                <span><strong>Database</strong> · {{ b.database.keys | number }} entries: accounts, playlists, likes, history, radios, settings, statistics</span>
-              </li>
-              <li>
-                <mat-icon aria-hidden="true">folder_shared</mat-icon>
-                <span><strong>Data</strong> · {{ formatSize(dataSize()) }}: uploads and profile images, artist and album images, lyrics</span>
-              </li>
-              <li>
-                <mat-icon aria-hidden="true">settings</mat-icon>
-                <span><strong>Configuration</strong> · for reference: it is not restored (it names the database of this server)</span>
-              </li>
-            </ul>
-            <mat-checkbox [checked]="includeMusic()" (change)="includeMusic.set($event.checked)">
-              Include the music · {{ formatSize(musicSize()) }} in {{ b.music.length }} {{ b.music.length === 1 ? 'folder' : 'folders' }}
-            </mat-checkbox>
-            <div class="backup-actions">
-              <a mat-flat-button color="accent" [href]="backupUrl()" download [class.disabled]="b.busy" [attr.aria-disabled]="!!b.busy">
-                <mat-icon>file_download</mat-icon>
-                Download the backup
-              </a>
-              <span class="muted small">
-                @if (b.busy) {
-                  A {{ b.busy }} is running: try again once it is over.
-                } @else {
-                  Made while it downloads: the file is ready when the download ends. Keep it somewhere safe: it holds the accounts (passwords are stored hashed) and the configuration.
-                }
-              </span>
+            <div class="backup-parts">
+              <div class="backup-part">
+                <div class="backup-part-text">
+                  <span class="backup-part-title"><mat-icon aria-hidden="true">storage</mat-icon>Data · {{ formatSize(dataSize()) }}</span>
+                  <span class="muted small">
+                    The database ({{ b.database.keys | number }} entries: accounts, playlists, likes, history, radios, settings, statistics),
+                    the uploads and profile images, the artist and album images, the lyrics, and the configuration for reference.
+                  </span>
+                </div>
+                <a mat-flat-button color="accent" class="download-data" [href]="backupUrl('data')" download [class.disabled]="b.busy" [attr.aria-disabled]="!!b.busy">
+                  <mat-icon>file_download</mat-icon>
+                  Download the data
+                </a>
+              </div>
+              <div class="backup-part">
+                <div class="backup-part-text">
+                  <span class="backup-part-title"><mat-icon aria-hidden="true">library_music</mat-icon>Music · {{ formatSize(musicSize()) }}</span>
+                  <span class="muted small">
+                    The {{ b.music.length === 1 ? 'music folder' : b.music.length + ' music folders' }}:
+                    @for (folder of b.music; track folder.index; let last = $last) {<code>{{ folder.path }}</code>{{ last ? '' : ', ' }}}
+                  </span>
+                </div>
+                <a mat-stroked-button class="download-music" [href]="backupUrl('music')" download [class.disabled]="b.busy" [attr.aria-disabled]="!!b.busy">
+                  <mat-icon>file_download</mat-icon>
+                  Download the music
+                </a>
+              </div>
             </div>
+            <p class="muted small backup-note">
+              @if (b.busy) {
+                A {{ b.busy }} is running: try again once it is over.
+              } @else {
+                Each file is made while it downloads: it is ready when the download ends.
+                Keep the data somewhere safe: it holds the accounts (passwords are stored hashed) and the configuration.
+                You can also download <a class="download-all" [href]="backupUrl('all')" download>everything in one file</a>.
+              }
+            </p>
           } @else {
             <mat-progress-bar mode="indeterminate"></mat-progress-bar>
             <span class="muted small">Measuring the data and the music…</span>
@@ -578,8 +585,8 @@
           <div class="panel-header">
             <h2 id="restore-title">Restore a backup</h2>
             <span class="muted">
-              Replaces the accounts, playlists, likes, history, radios, settings, uploads, images and lyrics with those of the backup.
-              The music of the backup is added to the music folders: nothing is deleted there. Then the library is rescanned.
+              A data file replaces the accounts, playlists, likes, history, radios, settings, uploads, images and lyrics with those of the backup.
+              A music file adds its music to the music folders: nothing is deleted there. Restore the data first, then the music. The library is rescanned after each one.
             </span>
           </div>
           @if (readOnlyMusic().length) {
@@ -587,7 +594,7 @@
               <mat-icon aria-hidden="true">info</mat-icon>
               <span>
                 {{ readOnlyMusic().length === 1 ? 'This music folder is' : 'These music folders are' }} read only for the server
-                (<code>{{ readOnlyMusic()[0].path }}</code>{{ readOnlyMusic().length > 1 ? '…' : '' }}): the music of the backup is skipped there.
+                (<code>{{ readOnlyMusic()[0].path }}</code>{{ readOnlyMusic().length > 1 ? '…' : '' }}): the music of a backup is skipped there.
                 Copy it from the .tar file by hand.
               </span>
             </p>
@@ -596,32 +603,42 @@
             <input #restoreInput type="file" accept=".tar,application/x-tar" class="visually-hidden" (change)="chooseRestoreFile(restoreInput)" aria-label="Choose a backup file">
             <button mat-stroked-button type="button" (click)="restoreInput.click()" [disabled]="restoreProgress() !== null">
               <mat-icon>file_upload</mat-icon>
-              Choose a backup
+              Choose a backup file
             </button>
             @if (restoreFile(); as file) {
               <span class="small"><code>{{ file.name }}</code> · {{ formatSize(file.size) }}</span>
             }
           </div>
-          @if (restoreFile()) {
-            <mat-checkbox [checked]="restoreConfirmed()" (change)="restoreConfirmed.set($event.checked)" [disabled]="restoreProgress() !== null">
-              I understand that the current data of this server is replaced
-            </mat-checkbox>
+
+          @if (restoreInvalid()) {
+            <p class="notice error" role="alert">
+              <mat-icon aria-hidden="true">error_outline</mat-icon>
+              <span>This file is not an Ongaku backup: choose a .tar file downloaded from this page.</span>
+            </p>
+          }
+          @if (restoreManifest(); as m) {
+            <div class="restore-holds">
+              <span class="small">
+                Made {{ m.createdAt | date: 'medium' }} · holds <strong>{{ restoreHolds() }}</strong>
+              </span>
+            </div>
+            @if (restoreReplaces()) {
+              <mat-checkbox class="restore-confirm" [checked]="restoreConfirmed()" (change)="restoreConfirmed.set($event.checked)" [disabled]="restoreProgress() !== null">
+                I understand that the current data of this server is replaced
+              </mat-checkbox>
+            }
             <div class="backup-actions">
-              <button mat-flat-button color="warn" type="button" (click)="restore()" [disabled]="!restoreConfirmed() || restoreProgress() !== null">
+              <button mat-flat-button [color]="restoreReplaces() ? 'warn' : 'accent'" type="button" class="restore-button" (click)="restore()"
+                [disabled]="(restoreReplaces() && !restoreConfirmed()) || restoreProgress() !== null">
                 <mat-icon>restore</mat-icon>
-                Restore this backup
+                {{ restoreReplaces() ? 'Restore this backup' : 'Add this music' }}
               </button>
             </div>
           }
-          @if (restoreProgress(); as progress) {
+          @if (restoreProgress() !== null) {
             <div class="restore-progress" role="status">
-              <mat-progress-bar [mode]="progress < 100 ? 'determinate' : 'indeterminate'" [value]="progress"></mat-progress-bar>
-              <span class="muted small">{{ progress < 100 ? 'Sending the backup… ' + progress + ' %' : 'Restoring… do not close this page.' }}</span>
-            </div>
-          } @else if (restoreProgress() === 0) {
-            <div class="restore-progress" role="status">
-              <mat-progress-bar mode="determinate" [value]="0"></mat-progress-bar>
-              <span class="muted small">Sending the backup… 0 %</span>
+              <mat-progress-bar [mode]="restoreProgress()! < 100 ? 'determinate' : 'indeterminate'" [value]="restoreProgress()!"></mat-progress-bar>
+              <span class="muted small">{{ restoreProgress()! < 100 ? 'Sending the backup… ' + restoreProgress() + ' %' : 'Restoring… do not close this page.' }}</span>
             </div>
           }
           @if (restoreError(); as message) {
@@ -634,10 +651,13 @@
             <div class="notice ok" role="status">
               <mat-icon aria-hidden="true">check_circle</mat-icon>
               <span>
-                <strong>Backup restored</strong>@if (report.manifest?.createdAt) { (made {{ report.manifest!.createdAt | date: 'medium' }})}:
-                {{ report.database | number }} database entries, {{ report.data.length ? report.data.join(', ') : 'no data folder' }},
-                {{ report.music.files | number }} music files written@if (report.music.skipped) {, {{ report.music.skipped | number }} skipped}.
-                The library is being rescanned. An account missing from the backup is signed out: sign in again if yours was.
+                @if (report.parts.includes('data')) {
+                  <strong>Data restored</strong>@if (report.manifest?.createdAt) { (made {{ report.manifest!.createdAt | date: 'medium' }})}:
+                  {{ report.database | number }} database entries, {{ report.data.length ? report.data.join(', ') : 'no data folder' }}@if (report.parts.includes('music')) {, {{ report.music.files | number }} music files written}@if (report.music.skipped) {, {{ report.music.skipped | number }} skipped}.
+                  The library is being rescanned. An account missing from the backup is signed out: sign in again if yours was.
+                } @else {
+                  <strong>Music added</strong>: {{ report.music.files | number }} files written@if (report.music.skipped) {, {{ report.music.skipped | number }} skipped}. The library is being rescanned.
+                }
               </span>
             </div>
           }

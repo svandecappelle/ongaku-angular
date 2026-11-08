@@ -16,7 +16,7 @@ async function download(query = '') {
   const response = await fetch(`${BASE}/api/admin/backup${query}`, { headers: { Cookie: await login('boss') } });
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('content-type'), 'application/x-tar');
-  assert.match(response.headers.get('content-disposition'), /attachment; filename="ongaku-backup-\d{8}-\d{4}(-with-music)?\.tar"/);
+  assert.match(response.headers.get('content-disposition'), /attachment; filename="ongaku-backup-\d{8}-\d{4}-(data|music|full)\.tar"/);
   const file = path.join(folder, `backup-${Date.now()}.tar`);
   await pipeline(Readable.fromWeb(response.body), fs.createWriteStream(file));
   return file;
@@ -93,6 +93,26 @@ test('a backup with the music, restored: the data comes back as it was saved', a
 
   const playlists = (await api('/api/playlist', { as: 'carol' })).body;
   assert.ok(JSON.stringify(playlists).includes('Backup probe'), 'the playlist is back; the session of carol stayed');
+});
+
+test('the music in a file of its own: restored alone, it leaves the database as it is', async (t) => {
+  const file = await download('?part=music');
+  const list = await entries(file);
+  assert.equal(list[0], 'manifest.json');
+  assert.ok(list.includes('music/0-music/Air/Moon Safari/1.mp3'));
+  assert.ok(!list.includes('database.jsonl') && !list.some((entry) => entry.startsWith('data/')), 'only the music');
+
+  // Made after the music backup: a restore of the music keeps it
+  t.after(() => api(`/api/playlist/${encodeURIComponent('Music only probe')}`, { as: 'carol', method: 'DELETE' }));
+  assert.equal((await api('/api/playlist', { as: 'carol', json: { name: 'Music only probe' } })).status, 201);
+  const { status, body } = await restore(fs.readFileSync(file));
+  assert.equal(status, 200, JSON.stringify(body));
+  assert.deepEqual(body.parts, ['music']);
+  assert.equal(body.database, 0);
+  assert.ok(body.music.files > 10);
+  await libraryBack();
+  assert.ok(JSON.stringify((await api('/api/playlist', { as: 'carol' })).body).includes('Music only probe'), 'the database is untouched');
+  assert.equal((await api('/api/admin/backup?part=everything', { as: 'boss' })).status, 400);
 });
 
 test('what is not a backup is refused, and nothing is changed', async () => {

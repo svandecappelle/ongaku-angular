@@ -78,8 +78,25 @@ export interface BackupSummary {
   music: { index: number; path: string; exists: boolean; writable: boolean; size: number }[];
 }
 
+/** The parts of a backup: "data" (database, data folders, configuration) and "music" */
+export type BackupPart = 'data' | 'music';
+
+/** The manifest at the start of a backup file */
+export interface BackupManifest {
+  format: string;
+  version: number;
+  createdAt: string;
+  application: string;
+  /** Missing in the backups made before the parts existed */
+  parts?: BackupPart[];
+  database: { keys: number } | null;
+  data: string[];
+  music: { index: number; name: string; path: string }[];
+}
+
 /** What a restore did */
 export interface RestoreReport {
+  parts: BackupPart[];
   database: number;
   data: string[];
   music: { files: number; skipped: number; folders: { index: number; path: string; writable: boolean }[] };
@@ -204,9 +221,28 @@ export class AdminService {
     return this.http.get<BackupSummary>('/api/admin/backup/summary');
   }
 
-  /** Address of the backup file: the browser downloads it (it can be very large) */
-  backupUrl(music: boolean): string {
-    return `/api/admin/backup${music ? '?music=1' : ''}`;
+  /** Address of a backup file: the browser downloads it (it can be very large) */
+  backupUrl(part: BackupPart | 'all'): string {
+    return `/api/admin/backup?part=${part}`;
+  }
+
+  /**
+   * The manifest of a backup file, read in the browser before sending it: the first entry of the
+   * tar file (a 512 byte header, then its content). Null when the file is not an Ongaku backup.
+   */
+  async readBackupManifest(file: File): Promise<BackupManifest | null> {
+    try {
+      const header = new Uint8Array(await file.slice(0, 512).arrayBuffer());
+      const text = (from: number, length: number) => new TextDecoder().decode(header.subarray(from, from + length)).replace(/\0.*$/s, '').trim();
+      const size = parseInt(text(124, 12), 8);
+      if (text(0, 100) !== 'manifest.json' || !(size > 0) || size > 1024 * 1024) {
+        return null;
+      }
+      const manifest = JSON.parse(await file.slice(512, 512 + size).text()) as BackupManifest;
+      return manifest?.format === 'ongaku-backup' ? manifest : null;
+    } catch {
+      return null;
+    }
   }
 
   /** Restores a backup: the .tar file is sent as it is, with the progress of the upload */

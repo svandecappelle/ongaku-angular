@@ -599,22 +599,62 @@ mat-slide-toggle .hint {
 }
 
 // ---------- Backup ----------
-.backup-contents {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.backup-parts {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  li {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
+}
+
+// One row by file: what it holds, and its download
+.backup-part {
+  padding: 14px 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 20px;
+  & + & {
+    border-top: 1px solid var(--ongaku-border);
   }
-  mat-icon {
+  a {
     flex: none;
+  }
+  .disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+}
+
+.backup-part-text {
+  flex: 1 1 320px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  code {
+    overflow-wrap: anywhere;
+  }
+}
+
+.backup-part-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  mat-icon {
     color: var(--ongaku-muted);
   }
+}
+
+.backup-note {
+  margin: 0;
+  a {
+    color: var(--ongaku-accent);
+  }
+}
+
+.restore-holds {
+  padding: 10px 12px;
+  border-radius: var(--ongaku-radius-md, 12px);
+  background: var(--ongaku-surface-2);
 }
 
 .backup-actions {
