@@ -40,7 +40,6 @@
     "node-unzip-2": "^0.2.8",
     "node-yaml-config": "^1.0.0",
     "ora": "^9.4.1",
-    "parse-torrent": "^11.0.24",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "pg": "^8.23.1",
@@ -56,14 +55,15 @@
     "throttle": "^1.0.3",
     "underscore": "^1.13.8",
     "uuid": "^14.0.2",
-    "webtorrent": "^3.0.21",
     "winston": "^3.19.0",
     "xregexp": "^5.1.3",
     "yauzl": "^3.4.0"
   },
   "optionalDependencies": {
     "identicon": "^3.1.1",
-    "node-wave": "git+ssh://git@github.com/svandecappelle/node-wave.git"
+    "node-wave": "git+ssh://git@github.com/svandecappelle/node-wave.git",
+    "parse-torrent": "^11.0.24",
+    "webtorrent": "^3.0.21"
   },
   "devDependencies": {
     "concurrently": "^10.0.6",

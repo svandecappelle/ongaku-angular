@@ -2,12 +2,24 @@ const chokidar = require('chokidar');
 const path = require("path");
 const nconf = require("nconf");
 const fs = require("fs");
-// webtorrent and parse-torrent are ESM only (with top-level await), so they must be loaded with import()
+// webtorrent and parse-torrent are ESM only (with top-level await), so they must be loaded with import().
+// Both are optional dependencies: without them, the .torrent files are not watched.
+const OPTIONAL_PACKAGES = ['webtorrent', 'parse-torrent'];
 const loadWebTorrent = () => import('webtorrent').then((module) => module.default);
 const loadParseTorrent = () => import('parse-torrent').then((module) => module.default);
 
 
+/** Whether a package is installed, without loading it (webtorrent is large and ESM only) */
+function installed(name) {
+  return (require.resolve.paths(name) || []).some((folder) => fs.existsSync(path.join(folder, name, 'package.json')));
+}
+
 class TorrentDownloader {
+
+  /** The optional packages needed to download torrents are installed */
+  available() {
+    return OPTIONAL_PACKAGES.every(installed);
+  }
 
   getClient() {
     if (!this.client) {
@@ -17,6 +29,10 @@ class TorrentDownloader {
   }
 
   watch() {
+    if (!this.available()) {
+      console.info(`Torrent downloads disabled: install the optional packages to enable them (npm install ${OPTIONAL_PACKAGES.join(' ')})`);
+      return;
+    }
     // Torrents dropped in the .torrents folder of the library; the library can be read only (Docker)
     const libraryTorrents = `${nconf.get('library')[0]}/.torrents`;
     try {
@@ -85,3 +101,4 @@ class TorrentDownloader {
 }
 
 module.exports = new TorrentDownloader();
+module.exports.installed = installed;

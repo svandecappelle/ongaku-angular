@@ -18,10 +18,11 @@ RUN npx ng build --configuration production
 FROM node:${NODE_VERSION}-bookworm-slim AS server-deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-# The optional dependencies (identicon, node-wave from a git+ssh
-# repository) are native modules the server works without; node-wave is
-# missing from the lock file, so npm ci can't be used. The install scripts
-# only build optional native add-ons of webtorrent, which have JS fallbacks.
+# The optional dependencies are left out: identicon and node-wave (from a
+# git+ssh repository) are native modules the server works without, and
+# webtorrent with parse-torrent only download the .torrent files dropped in
+# the library: the image does not download torrents. node-wave is missing from the
+# lock file, so npm ci can't be used.
 RUN npm pkg delete optionalDependencies \
   && npm install --omit=dev --ignore-scripts --no-audit --no-fund
 
