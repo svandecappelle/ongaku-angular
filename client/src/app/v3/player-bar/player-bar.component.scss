@@ -136,9 +136,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  mat-slider {
+  mat-slider,
+  .wave {
     flex: 1;
     min-width: 0;
+  }
+  .wave {
+    height: 30px;
   }
   .time {
     min-width: 40px;
@@ -457,6 +461,11 @@
     width: 16px;
     height: 16px;
   }
+}
+
+.sheet-wave {
+  height: 56px;
+  margin-bottom: 4px;
 }
 
 .sheet-seek {

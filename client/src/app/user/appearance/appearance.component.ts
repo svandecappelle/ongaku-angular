@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { MaterialModule } from '../../modules/material.module';
-import { CONTENT_SCALE_MAX, CONTENT_SCALE_MIN, Density, Schedule, ThemeService } from '../../services/theme.service';
+import { CONTENT_SCALE_MAX, CONTENT_SCALE_MIN, Density, Schedule, ThemeService, Visualizers } from '../../services/theme.service';
 import { ThemePreviewComponent } from '../../theme/theme-preview/theme-preview.component';
 import { AccentId, FontId, RadiusId } from '../../theme/themes';
 
@@ -82,6 +82,10 @@ export class AppearanceComponent {
 
   setReduceMotion(reduceMotion: boolean) {
     this.theme.update({ reduceMotion });
+  }
+
+  setVisualizers(visualizers: Visualizers) {
+    this.theme.update({ visualizers });
   }
 
   setSchedule(schedule: Schedule) {

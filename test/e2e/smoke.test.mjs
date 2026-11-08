@@ -293,6 +293,30 @@ test('a large uploads folder is shown by page, and can be filtered', { skip }, a
   await page.waitFor(`document.querySelectorAll('app-uploads-browser .file').length === 5`, { what: 'the filtered files' });
 });
 
+test('the seek bar shows the waveform, the row playing an equalizer; both follow the Visualizers setting', { skip }, async (t) => {
+  const visualizers = async (choice) => {
+    await page.goto('/profile/appearance', await login('carol'));
+    await page.waitFor(`document.querySelector('[aria-labelledby="visualizers-label"]')`, { what: 'the Visualizers setting' });
+    await page.eval(`[...document.querySelectorAll('[aria-labelledby="visualizers-label"] button')].find((b) => b.textContent.trim() === ${JSON.stringify(choice)}).click()`);
+  };
+  t.after(() => visualizers('Subtle'));
+
+  await page.goto('/album/Lyric%20Band/Songs', await login('carol'));
+  await page.waitFor(`document.querySelectorAll('app-track-list tbody tr').length === 3`, { what: 'the tracks' });
+  await playRow('No lyrics song');
+  await page.waitFor(`document.querySelector('app-player-bar app-waveform-seek[role="slider"]')?.getAttribute('aria-valuemax') === '20'`, { what: 'the waveform seek bar' });
+  assert.ok(await page.eval(`!!document.querySelector('app-track-list tr.current app-equalizer canvas')`), 'the equalizer of the row playing');
+
+  // The keyboard moves 5 seconds forward
+  const before = Number(await page.eval(`document.querySelector('app-player-bar app-waveform-seek').getAttribute('aria-valuenow')`));
+  await page.eval(`document.querySelector('app-player-bar app-waveform-seek').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))`);
+  await page.waitFor(`Number(document.querySelector('app-player-bar app-waveform-seek').getAttribute('aria-valuenow')) >= ${before + 4}`, { what: 'the seek by the keyboard' });
+
+  // Turned off: the plain slider
+  await visualizers('Off');
+  await page.waitFor(`document.querySelector('app-player-bar .seek mat-slider') && !document.querySelector('app-player-bar app-waveform-seek')`, { what: 'the plain slider' });
+});
+
 test('no uncaught error in the pages', { skip }, () => {
   assert.deepEqual(page.errors, []);
 });

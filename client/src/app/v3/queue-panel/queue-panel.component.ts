@@ -1,3 +1,4 @@
+import { EqualizerComponent } from '../visualizers/equalizer.component';
 import { ChangeDetectionStrategy, Component, computed, inject, output } from '@angular/core';
 import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList } from '@angular/cdk/drag-drop';
 
@@ -10,7 +11,7 @@ import { PlaylistUi } from '../playlists/playlist-ui.service';
   templateUrl: './queue-panel.component.html',
   styleUrls: ['./queue-panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialModule, CdkDropList, CdkDrag, CdkDragHandle],
+  imports: [MaterialModule, CdkDropList, CdkDrag, CdkDragHandle, EqualizerComponent],
 })
 export class QueuePanelComponent {
   readonly playback = inject(PlaybackService);

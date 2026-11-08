@@ -68,6 +68,8 @@ export class PlaybackService {
   /** Source node of the audio element, for the level meter */
   readonly source = this.context.createMediaElementSource(this.audio);
   private readonly gainNode = this.context.createGain();
+  /** Reads the sound for the visualizers, without changing it (a branch beside the volume) */
+  readonly analyser = this.context.createAnalyser();
   /** Position to start the next loaded track at, in seconds */
   private startAt = 0;
   /** The next loaded track stays paused (a queue put back after a reload) */
@@ -107,6 +109,9 @@ export class PlaybackService {
   constructor() {
     this.gainNode.gain.value = this.gain();
     this.source.connect(this.gainNode);
+    this.analyser.fftSize = 1024;
+    this.analyser.smoothingTimeConstant = 0.8;
+    this.source.connect(this.analyser);
     this.gainNode.connect(this.context.destination);
 
     this.audio.addEventListener('loadedmetadata', () => {

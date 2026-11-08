@@ -166,8 +166,18 @@
 
         <mat-slide-toggle [checked]="settings().reduceMotion" (change)="setReduceMotion($event.checked)">
           Reduce animations
-          <span class="hint">Spinning cover, transitions and loading animations are stopped.</span>
+          <span class="hint">Spinning cover, transitions and loading animations are stopped; the visualizers stand still.</span>
         </mat-slide-toggle>
+
+        <div class="field">
+          <span class="field-label" id="visualizers-label">Visualizers</span>
+          <mat-button-toggle-group [value]="settings().visualizers" (change)="setVisualizers($event.value)" aria-labelledby="visualizers-label">
+            <mat-button-toggle value="off">Off</mat-button-toggle>
+            <mat-button-toggle value="subtle">Subtle</mat-button-toggle>
+            <mat-button-toggle value="lively">Lively</mat-button-toggle>
+          </mat-button-toggle-group>
+          <span class="hint">The waveform of the track in the seek bar, and the equalizer next to the track playing, moving with the sound.</span>
+        </div>
       </section>
 
       <section class="panel" aria-labelledby="schedule-title">

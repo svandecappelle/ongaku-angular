@@ -7,6 +7,8 @@ import {
 } from '../theme/themes';
 
 export type Density = 'comfortable' | 'compact';
+/** Animations that follow the music: off, subtle or lively (see VisualizerService) */
+export type Visualizers = 'off' | 'subtle' | 'lively';
 /** Automatic switch between a day theme and a night theme */
 export type Schedule = 'off' | 'system' | 'timed';
 
@@ -26,6 +28,7 @@ export interface ThemePreference {
   contentScale: number;
   radius: RadiusId;
   reduceMotion: boolean;
+  visualizers: Visualizers;
   showBackground: boolean;
   /** Opacity of the veil drawn over the background image, 0–100 */
   backgroundVeil: number;
@@ -45,6 +48,7 @@ export const DEFAULT_PREFERENCE: ThemePreference = {
   contentScale: 100,
   radius: 'round',
   reduceMotion: false,
+  visualizers: 'subtle',
   showBackground: true,
   backgroundVeil: 50,
   customThemes: [],
@@ -83,6 +87,8 @@ export class ThemeService {
   readonly accent = computed(() => this.preference().accent);
   readonly density = computed(() => this.preference().density);
   readonly showBackground = computed(() => this.preference().showBackground);
+  readonly reduceMotion = computed(() => this.preference().reduceMotion);
+  readonly visualizers = computed(() => this.preference().visualizers);
   readonly backgroundVeil = computed(() => this.preference().backgroundVeil);
   /** URL of the profile background image: the version changes when the user replaces it, the
    *  server revalidates it otherwise (sendFile answers with max-age=0 and an ETag) */
@@ -327,6 +333,7 @@ export class ThemeService {
       contentScale: number(pref.contentScale, d.contentScale, CONTENT_SCALE_MIN, CONTENT_SCALE_MAX),
       radius: RADII.some((r) => r.id === pref.radius) ? pref.radius : d.radius,
       reduceMotion: !!pref.reduceMotion,
+      visualizers: (['off', 'subtle', 'lively'] as const).find((v) => v === pref.visualizers) ?? d.visualizers,
       showBackground: pref.showBackground ?? d.showBackground,
       backgroundVeil: number(pref.backgroundVeil, d.backgroundVeil, 0, 100),
       customThemes,

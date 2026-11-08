@@ -33,7 +33,7 @@
           <td class="col-number">
             <button type="button" class="number" (click)="actions.playFrom(rows(), i)" [attr.aria-label]="'Play ' + track.title">
               @if (isCurrent(track) && playback.playing()) {
-                <mat-icon class="equalizer" aria-hidden="true">equalizer</mat-icon>
+                <app-equalizer class="equalizer" aria-hidden="true"></app-equalizer>
               } @else {
                 <span class="digits">{{ reorderable() ? i + 1 : trackNumber(track, i) }}</span>
                 <mat-icon class="play-icon" aria-hidden="true">play_arrow</mat-icon>

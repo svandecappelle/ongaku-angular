@@ -190,3 +190,10 @@
     width: 100%;
   }
 }
+
+// The equalizer of the track playing, in the accent colour, over the cover placeholder
+.now-eq {
+  width: 20px;
+  height: 18px;
+  color: var(--ongaku-accent);
+}

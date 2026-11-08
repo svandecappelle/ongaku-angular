@@ -16,6 +16,7 @@ const communication = require("./../../communication");
 const statistics = require("./../../model/statistics");
 const security = require("./../../model/security");
 const user = require("./../../model/user");
+const peaks = require("./../../middleware/peaks");
 // const translator = require("./../../middleware/translator");
 var router = express.Router();
 
@@ -379,6 +380,25 @@ function realImage(url) {
     return typeof url === 'string' && url.trim() !== '' && !url.endsWith('/static/img/album.png') && !url.endsWith('/static/img/artist.jpg')
         ? url : null;
 }
+
+/**
+ * The waveform of a track: { peaks: 400 values from 0 to 255 }. Computed once by ffmpeg, then
+ * cached; a private upload only for its owner. A hidden duplicate gives the waveform of its copy.
+ */
+router.get("/peaks/:uid", (req, res) => {
+    const username = req.session && req.session.passport && req.session.passport.user ? req.session.passport.user.username : null;
+    const track = library.getVisibleByUid(String(req.params.uid));
+    if (!track || track.type === 'video' || (track.private && track.user !== username)) {
+        return res.status(404).json({ message: 'Unknown track' });
+    }
+    peaks.peaksOf(track).then((values) => {
+        res.set('Cache-Control', 'private, max-age=86400');
+        res.json({ peaks: values });
+    }).catch((err) => {
+        console.warn(`No waveform for ${track.file}: ${err.message}`);
+        res.status(422).json({ message: 'The waveform of this track cannot be read' });
+    });
+});
 
 router.get("/song-image/:songid", (req, res) => {
     var track = library.getByUid(req.params.songid);

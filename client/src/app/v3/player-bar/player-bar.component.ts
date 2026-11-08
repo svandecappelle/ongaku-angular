@@ -15,6 +15,9 @@ import { AuthenticationService } from '../../services/authentication.service';
 import { LyricsViewComponent } from '../lyrics/lyrics-view.component';
 import { StationTileComponent } from '../radios-page/station-tile.component';
 import { RadiosService } from '../../services/radios.service';
+import { PeaksService } from '../../services/peaks.service';
+import { VisualizerService } from '../../services/visualizer.service';
+import { WaveformSeekComponent } from '../visualizers/waveform-seek.component';
 import { LibraryRadioService } from '../../services/library-radio.service';
 import { LyricsEditorDialogComponent } from '../lyrics/lyrics-editor-dialog.component';
 import { parseLrc } from '../lyrics/lrc';
@@ -27,7 +30,7 @@ import { albumLink } from '../library';
   templateUrl: './player-bar.component.html',
   styleUrls: ['./player-bar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialModule, A11yModule, RouterLink, LyricsViewComponent, StationTileComponent],
+  imports: [MaterialModule, A11yModule, RouterLink, LyricsViewComponent, StationTileComponent, WaveformSeekComponent],
   host: {
     '[class.visible]': 'playback.started()',
     '[class.expanded]': 'expanded()',
@@ -61,7 +64,18 @@ export class PlayerBarComponent {
   readonly toggleQueue = output<void>();
 
   /** Position shown while the seek slider is dragged */
-  private readonly seeking = signal<number | null>(null);
+  readonly seeking = signal<number | null>(null);
+  private readonly visualizer = inject(VisualizerService);
+  private readonly peaksService = inject(PeaksService);
+  /** Waveform of the current track, null while it loads or when it cannot be read */
+  readonly peaks = toSignal(
+    toObservable(computed(() => this.playback.current()?.uid ?? null)).pipe(
+      switchMap((uid) => (uid ? this.peaksService.get(String(uid)) : of(null))),
+    ),
+    { initialValue: null },
+  );
+  /** The seek bars show the waveform, unless the visualizers are turned off */
+  readonly showWaveform = computed(() => !!this.peaks() && this.visualizer.motion() !== 'off');
   /** Full-screen player, opened from the cover */
   readonly expanded = signal(false);
   /** Gain restored by unmuting (the saved volume may be muted: then the default) */

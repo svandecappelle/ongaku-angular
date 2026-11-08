@@ -50,11 +50,16 @@
     } @else {
     <div class="seek">
       <span class="time">{{ formatTime(position()) }}</span>
-      <mat-slider [min]="0" [max]="playback.duration() || 1" [step]="1" [disabled]="!playback.duration()">
-        <input matSliderThumb [value]="position()" aria-label="Position in the track"
-          [attr.aria-valuetext]="formatTime(position()) + ' of ' + formatTime(playback.duration())"
-          (input)="dragSeek($event)" (change)="commitSeek($event)">
-      </mat-slider>
+      @if (showWaveform()) {
+        <app-waveform-seek class="wave" [peaks]="peaks()!" [position]="playback.currentTime()" [duration]="playback.duration()"
+          (scrub)="seeking.set($event)" (seek)="playback.seek($event)"></app-waveform-seek>
+      } @else {
+        <mat-slider [min]="0" [max]="playback.duration() || 1" [step]="1" [disabled]="!playback.duration()">
+          <input matSliderThumb [value]="position()" aria-label="Position in the track"
+            [attr.aria-valuetext]="formatTime(position()) + ' of ' + formatTime(playback.duration())"
+            (input)="dragSeek($event)" (change)="commitSeek($event)">
+        </mat-slider>
+      }
       <span class="time">{{ formatTime(playback.duration()) }}</span>
     </div>
     }
@@ -151,11 +156,16 @@
       </div>
 
       <div class="sheet-seek">
-        <mat-slider [min]="0" [max]="playback.duration() || 1" [step]="1" [disabled]="!playback.duration()">
-          <input matSliderThumb [value]="position()" aria-label="Position in the track"
-            [attr.aria-valuetext]="formatTime(position()) + ' of ' + formatTime(playback.duration())"
-            (input)="dragSeek($event)" (change)="commitSeek($event)">
-        </mat-slider>
+        @if (showWaveform()) {
+          <app-waveform-seek class="sheet-wave" [peaks]="peaks()!" [position]="playback.currentTime()" [duration]="playback.duration()"
+            (scrub)="seeking.set($event)" (seek)="playback.seek($event)"></app-waveform-seek>
+        } @else {
+          <mat-slider [min]="0" [max]="playback.duration() || 1" [step]="1" [disabled]="!playback.duration()">
+            <input matSliderThumb [value]="position()" aria-label="Position in the track"
+              [attr.aria-valuetext]="formatTime(position()) + ' of ' + formatTime(playback.duration())"
+              (input)="dragSeek($event)" (change)="commitSeek($event)">
+          </mat-slider>
+        }
         <span class="times"><span>{{ formatTime(position()) }}</span><span>{{ formatTime(playback.duration()) }}</span></span>
       </div>
 

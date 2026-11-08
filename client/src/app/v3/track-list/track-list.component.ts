@@ -6,6 +6,7 @@ import { Song } from '../../app-state';
 import { MaterialModule } from '../../modules/material.module';
 import { PlaybackService } from '../../services/playback.service';
 import { TracksService } from '../../services/tracks.service';
+import { EqualizerComponent } from '../visualizers/equalizer.component';
 import { AddToPlaylistMenuComponent } from '../playlists/add-to-playlist-menu.component';
 import { TrackActions } from './track-actions.service';
 
@@ -15,7 +16,7 @@ import { TrackActions } from './track-actions.service';
   templateUrl: './track-list.component.html',
   styleUrls: ['./track-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialModule, CdkDropList, CdkDrag, CdkDragHandle, AddToPlaylistMenuComponent],
+  imports: [MaterialModule, CdkDropList, CdkDrag, CdkDragHandle, AddToPlaylistMenuComponent, EqualizerComponent],
   // TrackActions sets the checked state, to handle Shift+click range selection
   providers: [{ provide: MAT_CHECKBOX_DEFAULT_OPTIONS, useValue: { clickAction: 'noop' } }],
 })
