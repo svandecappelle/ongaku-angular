@@ -20,13 +20,13 @@ class Application {
 
 	async start() {
 
-		// Saved by the administration; enabled by default
-		await new Promise((resolve) => meta.settings.getOne('global', 'deduplicate', (err, value) => {
+		// Settings saved by the administration and read through nconf
+		await Promise.all(['deduplicate', 'uploadQuota'].map((key) => new Promise((resolve) => meta.settings.getOne('global', key, (err, value) => {
 			if (!err && value !== null && value !== undefined) {
-				nconf.set('deduplicate', value);
+				nconf.set(key, value);
 			}
 			resolve();
-		}));
+		}))));
 		await library.setupConnectors();
 		downloader.watch();
 

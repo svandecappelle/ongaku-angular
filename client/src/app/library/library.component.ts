@@ -79,6 +79,8 @@ export class LibraryComponent {
   });
 
   constructor() {
+    // Users delete their own uploads from here
+    this.actions.ownDelete.set(true);
     this.load();
     // Tracks removed from the library (or added back by Undo) disappear from the page
     let first = true;

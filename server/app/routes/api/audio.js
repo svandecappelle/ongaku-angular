@@ -12,6 +12,7 @@ const async = require("async");
 const crypto = require('crypto');
 
 const library = require("./../../middleware/library");
+const quota = require("./../../middleware/quota");
 const middleware = require("./../../middleware/middleware");
 const importer = require("./../../middleware/importer");
 const meta = require("./../../meta");
@@ -677,7 +678,7 @@ router.post(['/upload', '/upload/:folder'], (req, res) => {
             folderReading = path.join(folderReading, folder);
         }
 
-        importer.receive(req, folderReading).then((results) => {
+        quota.check(req, res, username, (remaining) => importer.receive(req, folderReading, remaining).then((results) => {
             library.addFolder({
                 path: path.join(DEFAULT_USERS__DIRECTORY, username),
                 username: username,
@@ -689,7 +690,7 @@ router.post(['/upload', '/upload/:folder'], (req, res) => {
                     files: results
                 });
             });
-        });
+        }));
     }
     /*} else {
         res.status(403).json({ message: 'Not allowed.' });

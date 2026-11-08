@@ -15,6 +15,8 @@ export interface AdminUser {
   lastonline: number | null;
   /** Bytes of the files the user uploaded */
   storage: number;
+  /** MB; null: the default quota, 0: unlimited */
+  uploadQuota: number | null;
   /** The connected administrator */
   self: boolean;
 }
@@ -30,6 +32,7 @@ export interface UserChanges {
   password?: string;
   administrator?: boolean;
   banned?: boolean;
+  uploadQuota?: number | null;
 }
 
 /** Result of an import, per uploaded file: the imported audio files or the error */

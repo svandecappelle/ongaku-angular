@@ -37,6 +37,11 @@
       <button type="button" class="icon" (click)="actions.details(selected)" aria-label="Details and tags" matTooltip="Details and tags">
         <mat-icon>description</mat-icon>
       </button>
+      @if (actions.canDeleteAll(selected)) {
+        <button type="button" class="icon danger" (click)="actions.deleteTracks(selected)" aria-label="Delete the files" matTooltip="Delete the files">
+          <mat-icon>delete_forever</mat-icon>
+        </button>
+      }
       <span class="divider" aria-hidden="true"></span>
       <button type="button" class="icon" (click)="actions.clear()" aria-label="Clear the selection (Escape)" matTooltip="Clear (Esc)">
         <mat-icon>close</mat-icon>

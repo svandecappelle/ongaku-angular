@@ -20,6 +20,13 @@ interface ImportResult {
   error?: string;
 }
 
+/** Upload quota of the user, in bytes; quota and remaining are null when unlimited */
+interface Quota {
+  used: number;
+  quota: number | null;
+  remaining: number | null;
+}
+
 /** A file queued for upload */
 interface UploadItem {
   file: File;
@@ -52,6 +59,12 @@ export class UploadsBrowserComponent {
   readonly items = signal<UploadItem[]>([]);
   readonly uploading = computed(() => this.items().some((item) => item.state === 'uploading'));
   readonly dragging = signal(false);
+  readonly quota = signal<Quota | null>(null);
+  /** Share of the quota used, in percent */
+  readonly quotaPercent = computed(() => {
+    const quota = this.quota();
+    return quota?.quota ? Math.min(100, Math.round((100 * quota.used) / quota.quota)) : 0;
+  });
 
   readonly crumbs = computed(() => {
     const parts = this.path().split('/').filter(Boolean);
@@ -67,6 +80,7 @@ export class UploadsBrowserComponent {
 
   load() {
     this.failed.set(false);
+    this.http.get<Quota>('/api/user/quota').subscribe({ next: (quota) => this.quota.set(quota), error: () => this.quota.set(null) });
     this.http.get<{ files: UploadedFile[] }>('/api/user/files', { params: { path: this.path() } }).subscribe({
       next: (answer) => this.files.set(answer.files),
       error: () => {
@@ -141,6 +155,13 @@ export class UploadsBrowserComponent {
       this.changed.emit();
       return;
     }
+    // Known too large for the quota: not sent (the server checks anyway)
+    const remaining = this.quota()?.remaining;
+    if (remaining !== null && remaining !== undefined && item.file.size > remaining) {
+      this.patch(item, { state: 'error', result: { file: item.file.name, error: `Larger than your remaining quota (${this.formatSize(remaining)} left)` } });
+      this.next();
+      return;
+    }
     const formData = new FormData();
     formData.append('file', item.file, item.file.name);
     const request = new HttpRequest('POST', '/api/user/files/upload', formData, {
@@ -154,7 +175,9 @@ export class UploadsBrowserComponent {
           this.patch(item, { progress: Math.round(100 * event.loaded / event.total) });
         } else if (event.type === HttpEventType.Response) {
           const result = event.body?.files?.[0] ?? { file: item.file.name, imported: [] };
-          this.patch(item, { state: result.error ? 'error' : 'done', progress: 100, result });
+          // An archive may be partly imported (quota reached)
+          this.patch(item, { state: result.error && !result.imported?.length ? 'error' : 'done', progress: 100, result });
+          this.refreshQuota();
           this.next();
         }
       },
@@ -163,6 +186,10 @@ export class UploadsBrowserComponent {
         this.next();
       },
     });
+  }
+
+  private refreshQuota() {
+    this.http.get<Quota>('/api/user/quota').subscribe({ next: (quota) => this.quota.set(quota) });
   }
 
   icon(file: UploadedFile) {

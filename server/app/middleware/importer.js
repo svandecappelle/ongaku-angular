@@ -36,16 +36,22 @@ class Importer {
   /**
    * Import the uploaded file stored at `source` (named `filename` by the client) into `destination`.
    * Resolves with the paths, relative to `destination`, of the imported audio files.
+   * With a `budget` ({ remaining } bytes), the files that do not fit are skipped and counted
+   * in `budget.skipped`.
    */
-  async import(source, filename, destination) {
+  async import(source, filename, destination, budget) {
     switch (this.archiveType(filename)) {
       case "zip":
-        return this.extractZip(source, destination);
+        return this.extractZip(source, destination, budget);
       case "tar":
-        return this.extractTar(source, destination);
+        return this.extractTar(source, destination, budget);
       default:
         if (!this.isAudio(filename)) {
           throw new Error(`Unsupported file type: ${filename}`);
+        }
+        const size = (await fs.promises.stat(source)).size;
+        if (!this.fits(budget, size)) {
+          throw new Error('Upload quota exceeded');
         }
         const name = path.basename(filename);
         await fs.promises.copyFile(source, path.join(destination, name));
@@ -53,16 +59,32 @@ class Importer {
     }
   }
 
+  /** Takes `size` bytes from the budget when they fit; no budget: unlimited */
+  fits(budget, size) {
+    if (!budget || budget.remaining === null) {
+      return true;
+    }
+    if (size > budget.remaining) {
+      budget.skipped = (budget.skipped || 0) + 1;
+      return false;
+    }
+    budget.remaining -= size;
+    return true;
+  }
+
   /**
    * Receive the files of a multipart request and import each of them into `destination`.
    * Resolves with one result per file: { file, imported } or { file, error }.
    */
-  receive(req, destination) {
+  receive(req, destination, quota) {
     return new Promise((resolve) => {
       // Each file is buffered in a temporary folder, then unpacked (archives) or copied (audio files)
       const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ongaku-upload-'));
       const uploads = [];
-      const busboy = Busboy({ headers: req.headers });
+      // Bytes the user may still upload (null: unlimited), shared by the files of the request
+      const budget = { remaining: quota === undefined ? null : quota };
+      const limits = budget.remaining === null ? {} : { fileSize: budget.remaining + 1 };
+      const busboy = Busboy({ headers: req.headers, limits: limits });
       busboy.on('file', (fieldname, file, { filename }) => {
         if (!this.isSupported(filename)) {
           file.resume();
@@ -70,12 +92,23 @@ class Importer {
           return;
         }
         const tmpFile = path.join(tmpDir, `${uploads.length}`);
-        uploads.push(new Promise((done, fail) => {
+        // Files are imported one after the other, so the budget is taken in order
+        const previous = uploads.length ? uploads[uploads.length - 1] : Promise.resolve();
+        const received = new Promise((done, fail) => {
           file.pipe(fs.createWriteStream(tmpFile)).on('finish', done).on('error', fail);
-        }).then(() => this.import(tmpFile, filename, destination))
-          .then((imported) => ({ file: filename, imported: imported }))
+        });
+        uploads.push(Promise.all([received, previous]).then(() => {
+          if (file.truncated) {
+            throw new Error('Upload quota exceeded');
+          }
+          budget.skipped = 0;
+          return this.import(tmpFile, filename, destination, budget);
+        })
+          .then((imported) => budget.skipped
+            ? { file: filename, imported: imported, error: `Upload quota exceeded: ${budget.skipped} file(s) skipped` }
+            : { file: filename, imported: imported })
           .catch((err) => {
-            logger.error(`Cannot import ${filename}`, err);
+            logger.error(`Cannot import ${filename}`, err.message);
             return { file: filename, error: err.message };
           }));
       });
@@ -88,14 +121,14 @@ class Importer {
     });
   }
 
-  async extractTar(source, destination) {
+  async extractTar(source, destination, budget) {
     const imported = [];
     // node-tar strips absolute paths and '..' segments unless preservePaths is set
     await tar.x({
       file: source,
       cwd: destination,
       filter: (entryPath, entry) => {
-        const keep = entry.type === "File" && this.isAudio(entryPath);
+        const keep = entry.type === "File" && this.isAudio(entryPath) && this.fits(budget, entry.size);
         if (keep) {
           imported.push(entryPath);
         }
@@ -105,7 +138,7 @@ class Importer {
     return imported;
   }
 
-  extractZip(source, destination) {
+  extractZip(source, destination, budget) {
     const root = path.resolve(destination);
     return new Promise((resolve, reject) => {
       yauzl.open(source, { lazyEntries: true }, (err, zip) => {
@@ -124,6 +157,9 @@ class Importer {
           }
           if (!target.startsWith(root + path.sep)) {
             logger.warn(`Skipping unsafe zip entry: ${entry.fileName}`);
+            return zip.readEntry();
+          }
+          if (!this.fits(budget, entry.uncompressedSize)) {
             return zip.readEntry();
           }
           fs.promises.mkdir(path.dirname(target), { recursive: true }).then(() => {

@@ -694,6 +694,11 @@ class Library {
     return this.deduplication;
   }
 
+  /** Takes a track out of the library (its file was deleted); a hidden copy of it shows up instead */
+  removeTrack(uid) {
+    this.setTracks(_.filter(this.tracks, (track) => track.uid !== uid));
+  }
+
   /** After the "deduplicate" setting changed */
   refreshDeduplication() {
     this.deduplication = null;

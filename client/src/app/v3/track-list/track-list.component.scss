@@ -240,3 +240,11 @@ tr.cdk-drag-placeholder {
     }
   }
 }
+
+// Menu entry deleting files
+.danger {
+  color: var(--mat-sys-error, #d32f2f);
+  mat-icon {
+    color: inherit;
+  }
+}

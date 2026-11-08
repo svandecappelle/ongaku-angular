@@ -12,6 +12,7 @@ import { AdminService, AdminUser, Duplicates, ImportFolder, ImportResult, UserCh
 import { StatisticsService } from '../services/statistics.service';
 import { ReloadService } from '../library/reload.service';
 import { DeleteUserDialogComponent } from './delete-user-dialog.component';
+import { QuotaDialogComponent, QuotaDialogData } from './quota-dialog.component';
 import { UserDialogComponent, UserDialogResult } from './user-dialog.component';
 
 Chart.register(...registerables);
@@ -34,6 +35,8 @@ interface Settings {
   allowUpload: boolean;
   allowDownload: boolean;
   deduplicate: boolean;
+  /** Default upload quota in MB, 0: unlimited */
+  uploadQuota: number;
 }
 
 /** A file queued for the public library import */
@@ -102,6 +105,7 @@ export class AdminComponent {
       allowUpload: flag(properties?.allowUpload),
       allowDownload: flag(properties?.allowDownload),
       // Enabled unless turned off
+      uploadQuota: Math.max(0, parseFloat(properties?.uploadQuota) || 0),
       deduplicate: properties?.deduplicate === undefined || properties?.deduplicate === null || flag(properties.deduplicate),
     }));
     this.loadDuplicates();
@@ -353,6 +357,26 @@ export class AdminComponent {
           this.changeUser(user, { password: result.password }, `Password of “${user.username}” changed`);
         }
       });
+  }
+
+  setQuota(user: AdminUser) {
+    this.dialog.open<QuotaDialogComponent, QuotaDialogData, { uploadQuota: number | null }>(QuotaDialogComponent, {
+      data: { username: user.username, uploadQuota: user.uploadQuota, defaultQuota: this.settings()?.uploadQuota ?? 0 },
+    }).afterClosed().subscribe((result) => {
+      if (result) {
+        this.changeUser(user, { uploadQuota: result.uploadQuota }, `Upload quota of “${user.username}” changed`);
+      }
+    });
+  }
+
+  /** Quota shown in the users table */
+  quotaLabel(user: AdminUser) {
+    if (user.administrator) {
+      return 'no limit (administrator)';
+    }
+    const mb = user.uploadQuota === null ? this.settings()?.uploadQuota ?? 0 : user.uploadQuota;
+    const label = mb ? this.formatSize(mb * 1024 * 1024) : 'no limit';
+    return user.uploadQuota === null ? `${label} (default)` : label;
   }
 
   setAdministrator(user: AdminUser, administrator: boolean) {

@@ -9,6 +9,7 @@ import { catchError, map, switchMap } from 'rxjs/operators';
 import { Song } from '../../app-state';
 import { MaterialModule } from '../../modules/material.module';
 import { Playlist, PlaylistsService } from '../../services/playlists.service';
+import { TracksService } from '../../services/tracks.service';
 import { formatTime } from '../format-time';
 import { PlaylistCoverComponent } from '../playlists/playlist-cover.component';
 import { PlaylistUi } from '../playlists/playlist-ui.service';
@@ -38,7 +39,9 @@ export class PlaylistPageComponent {
 
   readonly load = signal<Load>({ status: 'loading' });
   readonly playlist = signal<Playlist | null>(null);
-  readonly tracks = computed(() => this.playlist()?.tracks ?? []);
+  private readonly deleted = inject(TracksService).deleted;
+  /** Deleted files leave at once (the server removed them from the playlist) */
+  readonly tracks = computed(() => (this.playlist()?.tracks ?? []).filter((track) => !this.deleted().has(String(track.uid))));
   readonly totalDuration = computed(() => this.tracks().reduce((sum, track) => sum + parseDuration(track), 0));
   /** A change is being saved */
   readonly saving = signal(false);

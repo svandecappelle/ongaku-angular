@@ -87,6 +87,9 @@
             @if (p.uploads.size) {
               · {{ formatSize(p.uploads.size) }}
             }
+            @if (p.uploads.quota) {
+              of {{ formatSize(p.uploads.quota) }}
+            }
           </span>
         </div>
       </div>

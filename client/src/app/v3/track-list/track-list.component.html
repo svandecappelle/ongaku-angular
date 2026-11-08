@@ -6,8 +6,8 @@
           <th class="col-handle" scope="col"><span class="visually-hidden">Move</span></th>
         }
         <th class="col-check" scope="col">
-          <mat-checkbox [checked]="selectedCount() === tracks().length" [indeterminate]="selectedCount() > 0 && selectedCount() < tracks().length"
-            (click)="actions.toggleAll(tracks())" [attr.aria-label]="'Select all: ' + label()"></mat-checkbox>
+          <mat-checkbox [checked]="selectedCount() === rows().length" [indeterminate]="selectedCount() > 0 && selectedCount() < rows().length"
+            (click)="actions.toggleAll(rows())" [attr.aria-label]="'Select all: ' + label()"></mat-checkbox>
         </th>
         <th class="col-number" scope="col">#</th>
         <th scope="col">Title</th>
@@ -16,8 +16,8 @@
       </tr>
     </thead>
     <tbody cdkDropList cdkDropListLockAxis="y" [cdkDropListDisabled]="!reorderable()" (cdkDropListDropped)="drop($event)">
-      @for (track of tracks(); track track.uid; let i = $index) {
-        <tr cdkDrag [class.selected]="actions.isSelected(track)" [class.current]="isCurrent(track)" (dblclick)="actions.playFrom(tracks(), i)">
+      @for (track of rows(); track track.uid; let i = $index) {
+        <tr cdkDrag [class.selected]="actions.isSelected(track)" [class.current]="isCurrent(track)" (dblclick)="actions.playFrom(rows(), i)">
           @if (reorderable()) {
             <td class="col-handle">
               <button type="button" class="handle" cdkDragHandle [attr.aria-label]="'Move ' + track.title + ' (drag, or use arrow keys)'"
@@ -31,7 +31,7 @@
               [attr.aria-label]="'Select ' + track.title"></mat-checkbox>
           </td>
           <td class="col-number">
-            <button type="button" class="number" (click)="actions.playFrom(tracks(), i)" [attr.aria-label]="'Play ' + track.title">
+            <button type="button" class="number" (click)="actions.playFrom(rows(), i)" [attr.aria-label]="'Play ' + track.title">
               @if (isCurrent(track) && playback.playing()) {
                 <mat-icon class="equalizer" aria-hidden="true">equalizer</mat-icon>
               } @else {
@@ -60,7 +60,7 @@
               <mat-icon>more_horiz</mat-icon>
             </button>
             <mat-menu #trackMenu="matMenu" xPosition="before">
-              <button mat-menu-item (click)="actions.playFrom(tracks(), i)">
+              <button mat-menu-item (click)="actions.playFrom(rows(), i)">
                 <mat-icon>play_arrow</mat-icon>
                 <span>Play from here</span>
               </button>
@@ -96,6 +96,12 @@
                 <mat-icon>description</mat-icon>
                 <span>Details and tags…</span>
               </button>
+              @if (actions.canDelete(track)) {
+                <button mat-menu-item class="danger" (click)="actions.deleteTracks([track])">
+                  <mat-icon>delete_forever</mat-icon>
+                  <span>Delete the file…</span>
+                </button>
+              }
             </mat-menu>
             <app-add-to-playlist-menu #playlistMenu [tracks]="[track]"></app-add-to-playlist-menu>
           </td>

@@ -3,14 +3,13 @@ const fs = require('fs');
 const path = require('path');
 const async = require("async");
 const _ = require("underscore");
-const getFolderSize = require('get-folder-size').default;
-const getSize = (folder, callback) => getFolderSize.strict(folder).then((size) => callback(null, size), callback);
 
 const library = require("./../../middleware/library");
 const importer = require("./../../middleware/importer");
 const images = require("./../../middleware/images");
 const middleware = require("./../../middleware/middleware");
 const scanner = require("./../../middleware/scanner");
+const quota = require("./../../middleware/quota");
 
 const userlib = require("./../../model/library");
 const likes = require("./../../model/likes");
@@ -43,19 +42,6 @@ class Helpers {
 var helpers = new Helpers();
 
 
-function userStorage(username) {
-    return new Promise((resolve, reject) => {
-        let folder = path.resolve(__dirname, `../../../../public/user/${username}/imported`);
-        if (!fs.existsSync(folder)) {
-            resolve(0);
-        } else {
-            getSize(folder, (err, size) => {
-                if (err) { throw err; }
-                resolve(size);
-            });
-        }
-    });
-}
 
 // Number of artists of the profile library shown on the profile page
 const PROFILE_ARTISTS = 12;
@@ -71,7 +57,8 @@ function profile(uid, username, self, callback) {
         uids: (next) => userlib.get(username, next),
         playlists: (next) => db.setCount(username + ':playlists', next),
         likes: (next) => likes.count(username, next),
-        usage: (next) => userStorage(username).then((size) => next(null, size), () => next(null, 0)),
+        usage: (next) => quota.usage(username).then((size) => next(null, size)),
+        quota: (next) => self ? quota.limit(uid, next) : next(null, null),
         files: (next) => scanner.files(path.resolve(USERS_DIRECTORY, username, 'imported'))
             .then((files) => next(null, files.length), () => next(null, 0))
     }, (err, data) => {
@@ -95,7 +82,8 @@ function profile(uid, username, self, callback) {
             artistsCount: artists.length,
             playlists: parseInt(data.playlists, 10) || 0,
             likes: parseInt(data.likes, 10) || 0,
-            uploads: { files: data.files, size: data.usage },
+            // The quota (bytes, null: unlimited) is only given to the user himself
+            uploads: { files: data.files, size: data.usage, quota: data.quota ? data.quota.quota : undefined },
             artists: _.first(_.sortBy(artists, (artist) => -artist.tracks), PROFILE_ARTISTS)
         });
     });
@@ -214,9 +202,26 @@ router.post('/files/upload', (req, res) => {
         if (!fs.existsSync(target)) {
             return res.status(404).json({ message: 'No such folder' });
         }
-        importer.receive(req, target).then((results) => {
-            rescanUser(username).then(() => res.json({ message: 'ok', files: results }));
+        quota.check(req, res, username, (remaining) => {
+            importer.receive(req, target, remaining).then((results) => {
+                rescanUser(username).then(() => res.json({ message: 'ok', files: results }));
+            });
         });
+    });
+});
+
+/** Upload quota of the connected user: { used, quota, remaining } in bytes (null: unlimited) */
+router.get('/quota', (req, res) => {
+    if (!middleware.isAuthenticated(req)) {
+        return res.status(403).json({ message: 'You need to be logged' });
+    }
+    const { uid, username } = req.session.passport.user;
+    quota.status(uid, username, (err, status) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+        res.json({ used: status.used, quota: status.quota, remaining: status.remaining });
     });
 });
 

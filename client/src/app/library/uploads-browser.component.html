@@ -65,6 +65,25 @@
     </div>
   }
 
+  @if (quota(); as q) {
+    <div class="quota" [class.full]="q.remaining === 0">
+      <div class="quota-text">
+        <mat-icon aria-hidden="true">data_usage</mat-icon>
+        @if (q.quota !== null) {
+          <span><strong>{{ formatSize(q.used) }}</strong> of {{ formatSize(q.quota) }} used · {{ formatSize(q.remaining) }} left</span>
+        } @else {
+          <span><strong>{{ formatSize(q.used) }}</strong> used · no upload limit</span>
+        }
+      </div>
+      @if (q.quota !== null) {
+        <mat-progress-bar mode="determinate" [value]="quotaPercent()" [attr.aria-label]="'Upload quota: ' + quotaPercent() + '% used'"></mat-progress-bar>
+        @if (q.remaining === 0) {
+          <span class="small">Your upload quota is reached: delete files to upload new ones, or ask an administrator for more room.</span>
+        }
+      }
+    </div>
+  }
+
   <label class="dropzone" [class.dragging]="dragging()"
     (dragover)="$event.preventDefault(); dragging.set(true)" (dragleave)="dragging.set(false)" (drop)="onDrop($event)">
     <mat-icon>cloud_upload</mat-icon>
@@ -93,7 +112,9 @@
             }
             @if (item.result; as result) {
               <span class="small" [class.muted]="!result.error">
-                {{ result.error ? result.error : (result.imported?.length ?? 0) + ' audio file(s) added' }}
+                @if (result.imported?.length || !result.error) { {{ result.imported?.length ?? 0 }} audio file(s) added }
+                @if (result.imported?.length && result.error) { · }
+                @if (result.error) { {{ result.error }} }
               </span>
             }
           </div>

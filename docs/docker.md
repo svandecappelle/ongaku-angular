@@ -77,6 +77,12 @@ depuis **Administration › Library**, pour tous les utilisateurs. `make app` le
 crée et le donne à l'uid 1000 (lancé en root), ou indique la commande `chown`
 à exécuter.
 
+Les administrateurs peuvent supprimer une piste depuis son menu ; avec ce
+montage, seules celles du dossier `Imported` (et les uploads des utilisateurs)
+peuvent l'être, les autres sont signalées en lecture seule. Le quota d'upload
+par défaut se règle dans **Administration › Settings**, et par utilisateur dans
+**Administration › Users**.
+
 ### Ce que fait l'installeur à nginx
 
 Il installe **un seul fichier dédié**, `ongaku.host.conf`, depuis le modèle

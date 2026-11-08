@@ -5,6 +5,7 @@ import { MAT_CHECKBOX_DEFAULT_OPTIONS } from '@angular/material/checkbox';
 import { Song } from '../../app-state';
 import { MaterialModule } from '../../modules/material.module';
 import { PlaybackService } from '../../services/playback.service';
+import { TracksService } from '../../services/tracks.service';
 import { AddToPlaylistMenuComponent } from '../playlists/add-to-playlist-menu.component';
 import { TrackActions } from './track-actions.service';
 
@@ -30,7 +31,13 @@ export class TrackListComponent {
   readonly reorderable = input(false);
   readonly moved = output<{ from: number; to: number }>();
 
-  readonly selectedCount = computed(() => this.tracks().filter((track) => this.actions.isSelected(track)).length);
+  private readonly deleted = inject(TracksService).deleted;
+  /** The tracks, without the ones deleted meanwhile */
+  readonly rows = computed(() => {
+    const deleted = this.deleted();
+    return deleted.size ? this.tracks().filter((track) => !deleted.has(String(track.uid))) : this.tracks();
+  });
+  readonly selectedCount = computed(() => this.rows().filter((track) => this.actions.isSelected(track)).length);
 
   trackNumber(track: Song, index: number): string {
     const value: any = (track.metadatas as any)?.track;
@@ -51,7 +58,7 @@ export class TrackListComponent {
   /** Keyboard alternative to dragging */
   moveBy(index: number, delta: number) {
     const to = index + delta;
-    if (to >= 0 && to < this.tracks().length) {
+    if (to >= 0 && to < this.rows().length) {
       this.moved.emit({ from: index, to });
     }
   }

@@ -55,7 +55,7 @@ class Authenticator {
         return res.send({ connected: false, administrator: nconf.get('type') === 'desktop' });
       }
       user.isAdministrator(req.session.passport.user.uid, (err, administrator) => {
-        res.send({ connected: true, administrator: !err && !!administrator });
+        res.send({ connected: true, username: req.session.passport.user.username, administrator: !err && !!administrator });
       });
     });
     this.app.get('/api/auth/logout', authority.logout);

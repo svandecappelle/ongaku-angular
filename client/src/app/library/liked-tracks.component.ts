@@ -62,6 +62,8 @@ export class LikedTracksComponent {
   readonly formatTime = formatTime;
 
   constructor() {
+    // Part of My library: users delete their own uploads here too
+    this.actions.ownDelete.set(true);
     this.load();
     // Tracks liked elsewhere (player bar) show up
     let first = true;

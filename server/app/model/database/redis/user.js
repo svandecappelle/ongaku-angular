@@ -282,7 +282,7 @@ class UserRedisModel extends security {
                 return callback(err);
             }
             var uids = Object.values(usernamesHash || {});
-            this.getMultipleUserFields(uids, ['username', 'email', 'banned', 'lastonline'], (err, usersData) => {
+            this.getMultipleUserFields(uids, ['username', 'email', 'banned', 'lastonline', 'uploadQuota'], (err, usersData) => {
                 if (err) {
                     return callback(err);
                 }
@@ -295,7 +295,10 @@ class UserRedisModel extends security {
                             email: userData.email,
                             administrator: !!isAdmin,
                             banned: parseInt(userData.banned, 10) === 1,
-                            lastonline: userData.lastonline ? parseInt(userData.lastonline, 10) : null
+                            lastonline: userData.lastonline ? parseInt(userData.lastonline, 10) : null,
+                            // MB; null: the default quota, 0: unlimited
+                            uploadQuota: userData.uploadQuota === undefined || userData.uploadQuota === null || userData.uploadQuota === ''
+                                ? null : parseFloat(userData.uploadQuota) || 0
                         });
                     });
                 }, callback);

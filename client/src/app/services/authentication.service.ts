@@ -12,6 +12,7 @@ export class AuthenticationService {
     private loggedIn = new BehaviorSubject<boolean>(true); // {1}
     // Hides the administration links; the server checks the rights on every admin request
     private administrator = new BehaviorSubject<boolean>(false);
+    private user = new BehaviorSubject<string | null>(null);
 
     constructor(private http: HttpClient, private router: Router) {
         this.refresh();
@@ -25,10 +26,16 @@ export class AuthenticationService {
         return this.administrator;
     }
 
+    /** Username of the connected user, null when not connected */
+    username(): Observable<string | null> {
+        return this.user;
+    }
+
     private refresh() {
         this.http.get<any>('/api/auth').subscribe((data) => {
             this.loggedIn.next(data.connected);
             this.administrator.next(!!data.administrator);
+            this.user.next(data.connected ? data.username ?? null : null);
         });
     }
 
@@ -45,6 +52,8 @@ export class AuthenticationService {
                 localStorage.setItem('currentUser', JSON.stringify(userConnected));
                 this.loggedIn.next(true);
                 this.administrator.next(!!data.user.administrator);
+                // The login may be the e-mail: the username comes from the server
+                this.refresh();
                 this.router.navigate(['/']);
             }
         }, error => { console.error(error); });
@@ -56,6 +65,7 @@ export class AuthenticationService {
             localStorage.removeItem('currentUser');
             this.loggedIn.next(false);
             this.administrator.next(false);
+            this.user.next(null);
             this.router.navigate(['/login']);
         });
     }

@@ -18,6 +18,7 @@ const application = require("./../../index");
 const user = require("./../../model/user");
 const groups = require("./../../model/groups");
 const meta = require("./../../meta");
+const db = require("./../../model/database");
 
 const MONTHS = 30;
 const WEEKS = 7;
@@ -316,6 +317,20 @@ router.put('/users/:username', (req, res) => {
             (next) => changes.password ? user.setPassword(uid, changes.password, next) : next(),
             (next) => changes.banned !== undefined ? user.setUserField(uid, 'banned', changes.banned ? 1 : 0, next) : next(),
             (next) => {
+                if (changes.uploadQuota === undefined) {
+                    return next();
+                }
+                // null: back to the default quota
+                if (changes.uploadQuota === null || changes.uploadQuota === '') {
+                    return db.deleteObjectField('user:' + uid, 'uploadQuota', next);
+                }
+                const mb = parseFloat(changes.uploadQuota);
+                if (!Number.isFinite(mb) || mb < 0) {
+                    return next({ status: 400, message: 'The quota must be a positive number of MB, 0 for unlimited' });
+                }
+                user.setUserField(uid, 'uploadQuota', mb, next);
+            },
+            (next) => {
                 if (changes.administrator === undefined) {
                     return next();
                 }
@@ -327,7 +342,12 @@ router.put('/users/:username', (req, res) => {
                     changes.administrator ? groups.join('administrators', uid, next) : groups.leave('administrators', uid, next);
                 });
             }
-        ], (err) => err ? sendError(res, err) : res.json({ message: 'updated' }));
+        ], (err) => {
+            if (err && err.status) {
+                return res.status(err.status).json({ message: err.message });
+            }
+            err ? sendError(res, err) : res.json({ message: 'updated' });
+        });
     });
 });
 

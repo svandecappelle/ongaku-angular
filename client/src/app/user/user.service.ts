@@ -23,7 +23,8 @@ export interface Profile {
   artistsCount: number;
   playlists: number;
   likes: number;
-  uploads: { files: number; size: number };
+  /** quota: bytes, only for the user himself (null: no limit) */
+  uploads: { files: number; size: number; quota?: number | null };
   artists: ProfileArtist[];
 }
 

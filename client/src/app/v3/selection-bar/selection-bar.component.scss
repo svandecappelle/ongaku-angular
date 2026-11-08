@@ -92,3 +92,7 @@
     }
   }
 }
+
+.bar button.danger {
+  color: var(--mat-sys-error, #ef5350);
+}

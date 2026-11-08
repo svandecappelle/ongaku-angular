@@ -1,4 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -7,6 +8,9 @@ import { MetadatasComponent } from '../../metadatas/metadatas.component';
 import { PlaybackService } from '../../services/playback.service';
 import { MyLibraryService } from '../../services/my-library.service';
 import { LikesService } from '../../services/likes.service';
+import { AuthenticationService } from '../../services/authentication.service';
+import { TracksService } from '../../services/tracks.service';
+import { DeleteTracksDialogComponent } from './delete-tracks-dialog.component';
 
 /**
  * Selection and actions on the tracks of a page. Provided by each page
@@ -20,6 +24,10 @@ export class TrackActions {
   private readonly snackBar = inject(MatSnackBar);
   private readonly library = inject(MyLibraryService);
   private readonly likes = inject(LikesService);
+  private readonly tracksService = inject(TracksService);
+  private readonly auth = inject(AuthenticationService);
+  private readonly administrator = toSignal(this.auth.isAdministrator(), { initialValue: false });
+  private readonly username = toSignal(this.auth.username(), { initialValue: null });
 
   /** Every track of the page, in display order */
   private readonly pageTracks = signal<Song[]>([]);
@@ -30,6 +38,8 @@ export class TrackActions {
   private pageDetails: unknown = null;
 
   readonly selected = computed(() => this.pageTracks().filter((track) => this.selectedUids().has(track.uid)));
+  /** Set by My library: the users may delete their own uploads there (administrators everywhere) */
+  readonly ownDelete = signal(false);
   /** Set by a playlist page: removes tracks from the playlist (menu and selection bar entry) */
   readonly remover = signal<{ label: string; remove: (tracks: Song[]) => void } | null>(null);
 
@@ -145,6 +155,42 @@ export class TrackActions {
       this.notify(`${tracks.length} tracks ${unlike ? 'removed from' : 'added to'} your liked tracks`);
       this.clear();
     }
+  }
+
+  /** The server checks it again: administrators delete any track, users their own uploads */
+  canDelete(track: Song) {
+    const own = track as Song & { private?: boolean; user?: string | null };
+    return this.administrator() || (this.ownDelete() && !!own.private && !!own.user && own.user === this.username());
+  }
+
+  canDeleteAll(tracks: Song[]) {
+    return tracks.length > 0 && tracks.every((track) => this.canDelete(track));
+  }
+
+  /** Deletes the files of the tracks, after a confirmation */
+  deleteTracks(tracks: Song[]) {
+    const deletable = tracks.filter((track) => this.canDelete(track));
+    if (!deletable.length) {
+      return;
+    }
+    this.dialog.open(DeleteTracksDialogComponent, { data: deletable }).afterClosed().subscribe((confirmed) => {
+      if (!confirmed) {
+        return;
+      }
+      this.tracksService.delete(deletable.map((track) => String(track.uid))).subscribe({
+        next: (result) => {
+          this.clear();
+          if (result.failed.length) {
+            const first = result.failed[0];
+            this.snackBar.open(`${result.deleted.length ? result.deleted.length + ' file(s) deleted. ' : ''}${first.title ? '“' + first.title + '”: ' : ''}${first.message}`,
+              undefined, { duration: 8000 });
+          } else {
+            this.notify(result.deleted.length === 1 ? 'File deleted' : `${result.deleted.length} files deleted`);
+          }
+        },
+        error: () => this.notify('The tracks could not be deleted'),
+      });
+    });
   }
 
   /** Metadata dialog, for one track or the common tags of several */
