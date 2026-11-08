@@ -42,6 +42,28 @@ test('an album page plays a track in the player bar', { skip }, async () => {
   await page.waitFor(`document.querySelector('app-player-bar .now-playing .title')?.textContent.trim() === 'Sidecar song'`, { what: 'the player bar' });
 });
 
+test('the track playing is given to the system media controls', { skip }, async () => {
+  // Continues the previous test: Sidecar song is playing
+  await page.waitFor(`navigator.mediaSession.playbackState === 'playing'`, { what: 'the media session state' });
+  const metadata = await page.eval(`(({ title, artist, album, artwork }) => ({ title, artist, album, artwork: artwork.map((a) => a.src) }))(navigator.mediaSession.metadata)`);
+  assert.equal(metadata.title, 'Sidecar song');
+  assert.equal(metadata.artist, 'Lyric Band');
+  assert.equal(metadata.album, 'Songs');
+  assert.match(metadata.artwork[0], /^http:\/\/[^/]+\/api\/audio\/song-image\/.+/);
+  // The player pauses: so do the system controls
+  await page.eval(`document.querySelector('app-player-bar .play').click()`);
+  await page.waitFor(`navigator.mediaSession.playbackState === 'paused'`, { what: 'the paused media session' });
+  await page.eval(`document.querySelector('app-player-bar .play').click()`);
+  await page.waitFor(`navigator.mediaSession.playbackState === 'playing'`, { what: 'the media session playing again' });
+});
+
+test('the app can be installed (web manifest)', { skip }, async () => {
+  const manifest = await page.eval(`fetch(document.querySelector('link[rel=manifest]').href).then((res) => res.json())`);
+  assert.equal(manifest.display, 'standalone');
+  const sizes = manifest.icons.map((icon) => icon.sizes);
+  assert.ok(sizes.includes('192x192') && sizes.includes('512x512'), `icons: ${sizes}`);
+});
+
 test('the queue is back after a reload, paused', { skip }, async () => {
   // Continues the previous test: Sidecar song is playing
   await page.waitFor(`localStorage.getItem('ongaku.queue.boss')`, { what: 'the saved queue' });
