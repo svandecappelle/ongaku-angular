@@ -1,0 +1,30 @@
+<main class="auth-page" [class.wide]="wide()">
+  <div class="glow" aria-hidden="true"></div>
+
+  <section class="card" aria-labelledby="auth-title">
+    <div class="brand">
+      <span class="logo" [class.busy]="busy()" aria-hidden="true">
+        <svg viewBox="0 0 64 64">
+          <rect width="64" height="64" rx="15" class="logo-bg"/>
+          <g class="logo-note">
+            <path d="M24 17.5 50 11.5v9l-26 6z"/>
+            <rect x="24" y="17.5" width="6" height="27"/>
+            <rect x="44" y="12.5" width="6" height="27"/>
+            <ellipse cx="21" cy="45" rx="8.4" ry="6.4" transform="rotate(-22 21 45)"/>
+            <ellipse cx="41" cy="40" rx="8.4" ry="6.4" transform="rotate(-22 41 40)"/>
+          </g>
+        </svg>
+      </span>
+      <span class="wordmark">Ongaku</span>
+    </div>
+
+    <header class="intro">
+      <h1 id="auth-title">{{ heading() }}</h1>
+      @if (subtitle(); as text) {
+        <p>{{ text }}</p>
+      }
+    </header>
+
+    <ng-content></ng-content>
+  </section>
+</main>

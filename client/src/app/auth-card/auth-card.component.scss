@@ -1,0 +1,127 @@
+:host {
+  display: block;
+  color: var(--ongaku-text);
+}
+
+.auth-page {
+  // The whole screen: no top bar here (the flow keeps room for it, see NotificationsComponent)
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 400px);
+  justify-content: center;
+  align-content: safe center;
+  padding: 32px 16px;
+  background: var(--ongaku-bg);
+  &.wide {
+    grid-template-columns: minmax(0, 460px);
+  }
+}
+
+// Slow drifting light in the accent colour behind the card
+.glow {
+  position: fixed;
+  inset: -20%;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 35% at 30% 30%, color-mix(in srgb, var(--ongaku-accent) 22%, transparent), transparent 70%),
+    radial-gradient(35% 30% at 75% 70%, color-mix(in srgb, var(--ongaku-accent) 12%, transparent), transparent 70%);
+  animation: drift 18s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  from { transform: translate3d(-3%, -2%, 0) scale(1); }
+  to { transform: translate3d(3%, 2%, 0) scale(1.08); }
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  border-radius: var(--ongaku-radius-xl, 24px);
+  background: color-mix(in srgb, var(--ongaku-surface) 88%, transparent);
+  border: 1px solid var(--ongaku-border);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+  animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .logo-bg {
+    fill: var(--ongaku-accent);
+  }
+  .logo-note {
+    fill: var(--ongaku-on-accent);
+    transform-origin: 50% 70%;
+  }
+  // In progress: the note beats
+  &.busy .logo-note {
+    animation: beat 0.9s ease-in-out infinite;
+  }
+}
+
+@keyframes beat {
+  0%, 100% { transform: scale(1); }
+  30% { transform: scale(1.12) rotate(-4deg); }
+  60% { transform: scale(0.96); }
+}
+
+.wordmark {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  h1 {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+  p {
+    margin: 0;
+    color: var(--ongaku-muted);
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 24px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow,
+  .card,
+  .logo.busy .logo-note {
+    animation: none;
+  }
+}

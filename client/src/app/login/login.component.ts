@@ -7,6 +7,7 @@ import { take } from 'rxjs/operators';
 import { MaterialModule } from '../modules/material.module';
 import { AuthenticationService } from '../services/authentication.service';
 import { InstallService } from '../install/install.service';
+import { AuthCardComponent } from '../auth-card/auth-card.component';
 
 /** Why the sign-in failed, from the answer of /api/auth/login */
 function failureMessage(err: unknown): string {
@@ -35,7 +36,7 @@ function failureMessage(err: unknown): string {
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialModule, ReactiveFormsModule, RouterLink],
+  imports: [MaterialModule, ReactiveFormsModule, RouterLink, AuthCardComponent],
 })
 export class LoginComponent {
   private readonly auth = inject(AuthenticationService);
@@ -50,6 +51,8 @@ export class LoginComponent {
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
   readonly showPassword = signal(false);
+  /** The link to the sign up page only shows while it is open */
+  readonly registrationOpen = signal(false);
   private readonly passwordInput = viewChild<ElementRef<HTMLInputElement>>('passwordInput');
 
   constructor() {
@@ -58,6 +61,10 @@ export class LoginComponent {
       if (connected) {
         this.router.navigateByUrl(this.returnUrl());
       }
+    });
+    this.auth.registration().subscribe({
+      next: (state) => this.registrationOpen.set(state.open),
+      error: () => this.registrationOpen.set(false),
     });
     // A new server goes to the installation first
     inject(InstallService).check().subscribe((result) => {

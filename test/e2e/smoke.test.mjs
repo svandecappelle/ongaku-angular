@@ -56,6 +56,47 @@ test('a wrong password is told; signing in goes back to the page asked for', { s
   assert.equal(await page.eval(`!!document.querySelector('app-login')`), false);
 });
 
+/** Fills inputs by form control name, then submits the form of the page */
+const fillAndSubmit = (host, fields) => page.eval(`(() => {
+  for (const [name, value] of Object.entries(${JSON.stringify(fields)})) {
+    const input = document.querySelector('${host} input[formcontrolname=' + name + ']');
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('blur', { bubbles: true }));
+  }
+  document.querySelector('${host} button[type=submit]').click();
+})()`);
+
+test('sign up from the login page creates the account and signs it in', { skip }, async (t) => {
+  t.after(async () => {
+    await api('/api/admin/users/joiner', { as: 'boss', method: 'DELETE' });
+    await api('/api/admin/configure', { as: 'boss', json: { allowRegisteration: 0 } });
+  });
+  await api('/api/admin/configure', { as: 'boss', json: { allowRegisteration: 20 } });
+  await page.goto('/login');
+  await page.waitFor(`document.querySelector('app-login .footer a[href="/register"]')`, { what: 'the sign up link' });
+  await page.eval(`document.querySelector('app-login .footer a').click()`);
+  await page.waitFor(`document.querySelector('app-register input[formcontrolname=username]')`, { what: 'the sign up form' });
+
+  await fillAndSubmit('app-register', { username: 'joiner', email: 'joiner@test.io', password: 'joinerpass1', confirmPassword: 'other-pass' });
+  await page.waitFor(`document.querySelector('app-register .field-error')`, { what: 'the mismatch message' });
+  await fillAndSubmit('app-register', { username: 'carol', email: 'joiner@test.io', password: 'joinerpass1', confirmPassword: 'joinerpass1' });
+  await page.waitFor(`document.querySelector('app-register .error-text')`, { what: 'the server refusal' });
+  assert.equal(await page.eval(`document.querySelector('app-register .error-text').textContent.trim()`), 'This user name is already used');
+
+  await fillAndSubmit('app-register', { username: 'joiner' });
+  await page.waitFor(`location.pathname === '/' && document.querySelector('app-shell')`, { what: 'the shell after signing up' });
+  assert.equal(await page.eval(`fetch('/api/auth/').then((res) => res.json()).then((auth) => auth.username)`), 'joiner', 'signed in as the new user');
+});
+
+test('sign up closed and an installed server are told', { skip }, async () => {
+  await page.goto('/register');
+  await page.waitFor(`document.querySelector('app-register .notice')`, { what: 'the closed message' });
+  assert.match(await page.eval(`document.querySelector('app-register .notice').textContent`), /Sign up is closed/);
+  await page.goto('/install');
+  await page.waitFor(`location.pathname === '/login'`, { what: 'the login page' });
+});
+
 test('Discover shows artists and albums', { skip }, async () => {
   await page.goto('/', await login('boss'));
   await page.waitFor(`document.querySelectorAll('app-album-card').length > 0`, { what: 'album cards' });

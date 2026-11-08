@@ -26,16 +26,15 @@ class Authenticator {
     });
   }
 
-  register (req, res, viewtype) {
+  /** Whether sign up is open, and for how many more accounts: { open, registerLeft } */
+  register (req, res) {
     user.count((err, usercount) => {
-      meta.settings.getOne("global", "allowRegisteration", (err, val) => {
-        if (parseInt(val) > 0){
-          middleware.json({
-            registerLeft: parseInt(val) - usercount > 0 ? parseInt(val) - usercount: 0,
-          });
-        } else {
-          middleware.status(403).json({"error" : "Cannot access to this"});
+      meta.settings.getOne("global", "allowRegisteration", (err2, val) => {
+        if (err || err2) {
+          return res.status(500).json({ message: 'Internal server error' });
         }
+        const left = Math.max((parseInt(val, 10) || 0) - (parseInt(usercount, 10) || 0), 0);
+        res.json({ open: left > 0, registerLeft: left });
       });
     });
   };

@@ -75,6 +75,24 @@ export class AuthenticationService {
         }));
     }
 
+    /** Whether sign up is open on this server, and for how many more accounts */
+    registration(): Observable<{ open: boolean; registerLeft: number }> {
+        return this.http.get<{ open: boolean; registerLeft: number }>('/api/auth/register');
+    }
+
+    /** Creates an account and signs it in; errors with the HTTP error (400: invalid field, 409: name or e-mail used, 403: closed) */
+    register(fields: { username: string; email: string; password: string; confirmPassword: string }): Observable<void> {
+        return this.http.post<any>('/api/auth/register', fields).pipe(map((data) => {
+            const userConnected = new User();
+            userConnected.id = data?.user?.uid;
+            userConnected.username = fields.username;
+            localStorage.setItem('currentUser', JSON.stringify(userConnected));
+            this.loggedIn.next(true);
+            this.administrator.next(false);
+            this.refresh();
+        }));
+    }
+
     logout() {
         // remove user from local storage to log user out
         this.http.post('/api/auth/logout', {}).subscribe((disconnected) => {

@@ -18,7 +18,6 @@ import { ThemeService } from './services/theme.service';
 import { CoverAccentService } from './services/cover-accent.service';
 import { ContentComponent } from './content/content.component';
 import { AppRoutingModule } from './app-routing.module';
-import { InstallComponent } from './install/install.component';
 import { UpgradeComponent } from './upgrade/upgrade.component';
 
 import { InstallService } from './install/install.service';
@@ -50,7 +49,6 @@ import { ShellComponent } from './v3/shell/shell.component';
 @NgModule({ declarations: [
         AppComponent,
         ContentComponent,
-        InstallComponent,
         UpgradeComponent,
         MetadatasComponent,
         RadiosComponent,

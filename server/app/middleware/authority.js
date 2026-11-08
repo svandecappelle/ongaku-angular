@@ -18,6 +18,7 @@ const security = require('./../model/security');
 const statistics = require('./../model/statistics');
 
 const utils = require('./../utils');
+const { invalidAccountFields } = require('./account-fields');
 
 
 const USERS_IMAGE_DIRECTORY = path.join(__dirname, "/../../../public/user/");
@@ -135,49 +136,51 @@ class Authority {
       })(req, res, next);
     };
 
-   register (req, res) {
+  /**
+   * Sign up, while the number of accounts is under the "allowRegisteration" setting:
+   * { username, email, password, confirmPassword }. The new user is signed in.
+   */
+  register (req, res) {
+    const body = req.body || {};
     user.count((err, usercount) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
       meta.settings.getOne("global", "allowRegisteration", (err, val) => {
-        if (usercount < parseInt(val)) {
-          if (req.body.password !== req.body.confirmPassword) {
-            return res.status(400).json({
-              message: 'Password and confirmation password mismatch'
-            });
-          }
-          var userData = {
-              username: req.body.username,
-              password: req.body.password,
-              email: req.body.email,
-              ip: req.ip
-          };
-
-          user.create(userData, (err, uid) => {
-            if (err || !uid) {
-              console.error(err);
-              return res.status(500).json({
-                message: 'Internal server error'
-              });
-            }
-
-            req.login({
-              uid: uid,
-            }, function () {
-              // TODO log conncetion on database
-              //user.logIP(uid, req.ip);
-              // for the connected users count
-              //require('../socket.io').emitUserCount();
-              req.user.username = userData.username;
-              res.json({
-                message: 'OK'
-              });
-            });
-          });
-        } else {
-          req.session.error = "Maximum user registered";
-          return res.status(403).json({
-            message: 'Forbidden: Maximum user registered'
-          });
+        if (err || !(usercount < (parseInt(val, 10) || 0))) {
+          return res.status(403).json({ message: 'Sign up is closed on this server' });
         }
+        const invalid = invalidAccountFields(body);
+        if (invalid) {
+          return res.status(400).json({ message: invalid });
+        }
+        if (body.password !== body.confirmPassword) {
+          return res.status(400).json({ message: 'The password and its confirmation are different' });
+        }
+        const userData = { username: body.username, password: body.password, email: body.email.trim(), ip: req.ip };
+        user.create(userData, (err, uid) => {
+          if (err === 'already exists username') {
+            return res.status(409).json({ message: 'This user name is already used' });
+          }
+          if (err === 'already exists email') {
+            return res.status(409).json({ message: 'This e-mail is already used' });
+          }
+          if (err || !uid) {
+            console.error(err);
+            return res.status(500).json({ message: 'Internal server error' });
+          }
+          // The same session as a login: the session guard checks the username
+          req.session.cookie.maxAge = 1000 * 60 * 60 * 8;
+          req.logIn({ uid: uid, username: userData.username, administrator: false }, (err) => {
+            if (err) {
+              console.error(err);
+              return res.status(500).json({ message: 'Internal server error' });
+            }
+            communication.setStatus(userData.username, 'online');
+            res.json({ message: 'OK', user: { uid: uid, username: userData.username, administrator: false } });
+          });
+        });
       });
     });
   };

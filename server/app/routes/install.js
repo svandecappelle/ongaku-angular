@@ -5,6 +5,7 @@ const async = require('async');
 const yaml_config = require('node-yaml-config');
 const version = require(path.resolve(__dirname, '../utils/version'));
 const nconf = require('nconf');
+const { invalidAccountFields } = require('../middleware/account-fields');
 
 var router = express.Router();
 var installer;
@@ -38,6 +39,10 @@ router.post('/', (req, res) => {
     if (count > 0) {
       return res.status(403).json({ message: 'Ongaku is already installed' });
     }
+    const invalid = invalidAccountFields(req.body);
+    if (invalid) {
+      return res.status(400).json({ message: invalid });
+    }
     install(req, res);
   });
 });
@@ -46,7 +51,8 @@ function install(req, res) {
   installer.install(req.body).then((installed, errors) => {
     res.json({ install: 'ok' });
   }).catch((error) => {
-    res.status(500).json(error);
+    console.error('Installation failed', error);
+    res.status(500).json({ message: 'The installation failed: see the server log' });
   });
 }
 

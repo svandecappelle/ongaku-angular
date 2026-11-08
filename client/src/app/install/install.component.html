@@ -1,52 +1,95 @@
-<mat-card appearance="outlined" class="main-process-card">
-  <mat-card-header>
-    <div mat-card-avatar class="system-avatar"></div>
-    <mat-card-title>Welcome to the application installer</mat-card-title>
-    <mat-card-subtitle>Let me take the lead and have a break.</mat-card-subtitle>
-  </mat-card-header>
-  <img mat-card-image src="assets/img/heads.jpg" alt="Photo of a Shiba Inu">
-  <mat-card-content>
-    <p>
-      The system has detected that the necessary components are not all installed.
-      <br/> This automated installer will install all needed components to run sofwtare and install the database scheme to store
-      datas on the server using your preferences.
-    </p>
+<app-auth-card heading="Welcome to Ongaku" subtitle="Create the administrator account to finish setting up your server."
+  [busy]="state() === 'checking' || step() !== 'idle'" [wide]="true">
+  @if (state() === 'checking') {
+    <div class="checking" role="status">
+      <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="muted">Checking the server…</span>
+    </div>
+  } @else {
+    <ol class="steps" aria-label="Setup">
+      <li class="done"><span class="step-icon"><mat-icon aria-hidden="true">check</mat-icon></span>Server running</li>
+      <li class="current" aria-current="step"><span class="step-icon"><mat-icon aria-hidden="true">supervisor_account</mat-icon></span>Administrator</li>
+      <li><span class="step-icon"><mat-icon aria-hidden="true">library_music</mat-icon></span>Your music</li>
+    </ol>
 
-    <form [formGroup]="form">
-      <p>Enter admin credentials</p>
-      <mat-form-field class="full-width-input">
-        <mat-label>User</mat-label>
-        <input matInput formControlName="userName" required>
-        @if (isFieldInvalid('userName')) {
-          <mat-error>
-            Please inform your user name
-          </mat-error>
-        }
-      </mat-form-field>
-      <mat-form-field class="full-width-input">
-        <mat-label>Email</mat-label>
-        <input matInput type="email" formControlName="email" required>
-        @if (isFieldInvalid('email')) {
-          <mat-error>
-            Please inform your email
-          </mat-error>
-        }
-      </mat-form-field>
-      <mat-form-field class="full-width-input">
-        <mat-label>Password</mat-label>
-        <input matInput type="password" formControlName="password" required>
-        @if (isFieldInvalid('userName')) {
-          <mat-error>
-            Please inform your password
-          </mat-error>
-        }
-      </mat-form-field>
-    </form>
-    @if (loginInProgress) {
-      <mat-progress-bar class="login-in-progress" [mode]="'indeterminate'"></mat-progress-bar>
+    @if (error(); as message) {
+      <p class="notice error" role="alert">
+        <mat-icon aria-hidden="true">error_outline</mat-icon>
+        <span class="error-text">{{ message }}</span>
+      </p>
     }
-  </mat-card-content>
-  <mat-card-actions>
-    <button mat-button color="primary" (click)="install()">Install</button>
-  </mat-card-actions>
-</mat-card>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <mat-form-field appearance="outline">
+        <mat-label>User name</mat-label>
+        <mat-icon matPrefix aria-hidden="true">person_outline</mat-icon>
+        <input matInput formControlName="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+        @if (form.controls.username.hasError('required')) {
+          <mat-error>Choose a user name</mat-error>
+        } @else if (form.controls.username.hasError('pattern')) {
+          <mat-error>Letters, digits, dots, dashes and underscores only</mat-error>
+        } @else if (form.controls.username.hasError('maxlength')) {
+          <mat-error>40 characters at most</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>E-mail</mat-label>
+        <mat-icon matPrefix aria-hidden="true">mail_outline</mat-icon>
+        <input matInput type="email" formControlName="email" autocomplete="email" autocapitalize="none" spellcheck="false" required>
+        @if (form.controls.email.hasError('required')) {
+          <mat-error>Enter an e-mail</mat-error>
+        } @else if (form.controls.email.hasError('email')) {
+          <mat-error>This e-mail address is not valid</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Password</mat-label>
+        <mat-icon matPrefix aria-hidden="true">lock_outline</mat-icon>
+        <input matInput [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="new-password" required>
+        <button mat-icon-button matSuffix type="button" (click)="showPassword.set(!showPassword())"
+          [attr.aria-label]="showPassword() ? 'Hide the passwords' : 'Show the passwords'" [attr.aria-pressed]="showPassword()">
+          <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        @if (form.controls.password.hasError('required')) {
+          <mat-error>Choose a password</mat-error>
+        } @else if (form.controls.password.hasError('minlength')) {
+          <mat-error>At least {{ minPassword }} characters</mat-error>
+        } @else {
+          <mat-hint>At least {{ minPassword }} characters</mat-hint>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Confirm the password</mat-label>
+        <mat-icon matPrefix aria-hidden="true">lock_outline</mat-icon>
+        <input matInput [type]="showPassword() ? 'text' : 'password'" formControlName="confirmPassword" autocomplete="new-password" required>
+        @if (form.controls.confirmPassword.hasError('required')) {
+          <mat-error>Type the password again</mat-error>
+        }
+      </mat-form-field>
+      @if (form.hasError('mismatch') && form.controls.confirmPassword.touched) {
+        <p class="field-error" role="alert">The two passwords are different</p>
+      }
+
+      <button mat-flat-button color="accent" type="submit" class="submit" [disabled]="step() !== 'idle'" [attr.aria-busy]="step() !== 'idle'">
+        @switch (step()) {
+          @case ('installing') {
+            <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            Setting up…
+          }
+          @case ('signing-in') {
+            <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            Signing you in…
+          }
+          @default {
+            Finish the setup
+          }
+        }
+      </button>
+    </form>
+
+    <p class="footer">This account manages the server: users, library and settings.</p>
+  }
+</app-auth-card>
