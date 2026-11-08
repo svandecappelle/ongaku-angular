@@ -7,6 +7,7 @@ const playlist = require('./playlist');
 const likes = require('./likes');
 const tracks = require('./tracks');
 const lyrics = require('./lyrics');
+const history = require('./history');
 
 
 var router = express.Router();
@@ -15,6 +16,7 @@ router.use('/playlist', playlist);
 router.use('/likes', likes);
 router.use('/tracks', tracks);
 router.use('/lyrics', lyrics);
+router.use('/history', history);
 
 router.use('/user', user);
 router.use('/users', users);

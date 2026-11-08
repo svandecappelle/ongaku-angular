@@ -10,6 +10,7 @@ import { ArtistCardComponent } from '../v3/artist-card/artist-card.component';
 import { artistImages } from '../v3/library';
 import { Profile, ProfileImage, UserService } from './user.service';
 import { PresenceService } from '../services/presence.service';
+import { HistoryService, ListeningStats } from '../services/history.service';
 
 interface ImageSlot {
   type: ProfileImage;
@@ -30,6 +31,7 @@ export class UserComponent {
   private readonly theme = inject(ThemeService);
   private readonly snackBar = inject(MatSnackBar);
   readonly presence = inject(PresenceService);
+  private readonly history = inject(HistoryService);
 
   readonly profile = signal<Profile | null>(null);
   readonly state = signal<'loading' | 'ready' | 'missing' | 'failed'>('loading');
@@ -46,6 +48,23 @@ export class UserComponent {
     { type: 'cover', label: 'Cover', description: 'The banner of your profile.' },
     { type: 'background', label: 'Background', description: 'Behind the pages, under a veil in the theme colours.' },
   ];
+
+  /** Listening figures, on the profile of the connected user only */
+  readonly stats = signal<ListeningStats | null>(null);
+  /** Bars of the chart of the last 7 days, height in % of the busiest day */
+  readonly chart = computed(() => {
+    const days = this.stats()?.days ?? [];
+    const max = Math.max(1, ...days.map((day) => day.plays));
+    const today = days.at(-1)?.date;
+    return days.map((day) => ({
+      ...day,
+      height: (day.plays / max) * 100,
+      today: day.date === today,
+      label: new Date(`${day.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short' }),
+      long: new Date(`${day.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }),
+    }));
+  });
+  readonly chartSummary = computed(() => this.chart().map((day) => `${day.long}: ${day.plays} play${day.plays === 1 ? '' : 's'}`).join('; '));
 
   readonly artists = computed(() => (this.profile()?.artists ?? []).map((artist) => ({ ...artist, images: artistImages(artist.name, null) })));
 
@@ -73,10 +92,55 @@ export class UserComponent {
       next: (profile) => {
         this.profile.set(profile);
         this.state.set('ready');
+        this.stats.set(null);
+        if (profile.self) {
+          this.loadStats();
+        }
       },
       error: (err: HttpErrorResponse) => this.state.set(err.status === 404 ? 'missing' : 'failed'),
     });
   }
+
+  loadStats() {
+    this.history.stats().subscribe({
+      next: (stats) => this.stats.set(stats),
+      error: () => this.stats.set(null),
+    });
+  }
+
+  setHistoryPaused(paused: boolean) {
+    this.history.setPaused(paused).subscribe({
+      next: () => {
+        this.stats.update((stats) => stats && { ...stats, paused });
+        this.snackBar.open(paused ? 'Your listening history is paused' : 'Your listening history is recorded again', undefined, { duration: 3000 });
+      },
+      error: () => this.snackBar.open('The setting could not be saved', undefined, { duration: 5000 }),
+    });
+  }
+
+  clearHistory() {
+    if (!confirm('Clear your listening history? Recently played and your listening figures start again from zero.')) {
+      return;
+    }
+    this.history.clear().subscribe({
+      next: () => {
+        this.loadStats();
+        this.snackBar.open('Listening history cleared', undefined, { duration: 3000 });
+      },
+      error: () => this.snackBar.open('The history could not be cleared', undefined, { duration: 5000 }),
+    });
+  }
+
+  /** Listening time: "45 min", "3 h 20", "27 h" */
+  readonly formatListened = (seconds: number) => {
+    const minutes = Math.round(seconds / 60);
+    if (minutes < 60) {
+      return `${minutes} min`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    return hours >= 10 || !rest ? `${hours} h` : `${hours} h ${String(rest).padStart(2, '0')}`;
+  };
 
   /** The connected user's images are served (and generated when missing) by the API, the others' are static files */
   image(type: ProfileImage): string {

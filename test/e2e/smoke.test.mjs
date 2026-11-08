@@ -1,7 +1,7 @@
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { login } from '../helpers/client.mjs';
+import { api, eventually, login } from '../helpers/client.mjs';
 import { openBrowser } from '../helpers/browser.mjs';
 
 const skip = !process.env.CHROME ? 'no Chromium (set CHROME)' : !process.env.ONGAKU_TEST_CLIENT ? 'client not built (client/dist)' : false;
@@ -78,6 +78,28 @@ test('the lyrics of the track show in the full-screen player', { skip }, async (
   await page.eval(`document.querySelector('app-player-bar .lyrics-button').click()`);
   await page.waitFor(`document.querySelectorAll('app-lyrics-view .line').length === 4`, { what: 'the lyrics lines' });
   assert.equal(await page.eval(`document.querySelector('app-lyrics-view .line').textContent.trim()`), 'First line from the file');
+});
+
+test('a track listened to is in Recently played and the listening figures', { skip }, async (t) => {
+  t.after(() => api('/api/history', { as: 'carol', method: 'DELETE' }));
+  const carol = await login('carol');
+  await page.goto('/album/Air/Moon%20Safari', carol);
+  await page.waitFor(`document.querySelectorAll('app-track-list tbody tr').length === 2`, { what: 'the tracks' });
+  // A 2 second track: played to its end, it counts
+  await playRow('Moon Safari 1');
+  await eventually(async () => (await api('/api/history', { as: 'carol' })).body.tracks.length > 0, { what: 'the recorded play' });
+
+  await page.goto('/', carol);
+  await page.waitFor(`document.querySelector('#recent-title')`, { what: 'Recently played' });
+  const recent = await page.eval(`[...document.querySelector('#recent-title').parentElement.querySelectorAll('app-album-card .album-link')].map((a) => a.textContent.trim())`);
+  assert.deepEqual(recent, ['Moon Safari']);
+
+  await page.goto('/profile', carol);
+  await page.waitFor(`document.querySelector('#listening-title')`, { what: 'the listening figures' });
+  const plays = await page.eval(`Number(document.querySelector('.listening .figure-value').textContent)`);
+  assert.ok(plays >= 1, `plays this month: ${plays}`);
+  assert.equal(await page.eval(`document.querySelectorAll('.listening .bar').length`), 7);
+  assert.equal(await page.eval(`document.querySelector('.listening .top-artists a').textContent.trim()`), 'Air');
 });
 
 test('the Health tab of the administration renders', { skip }, async () => {

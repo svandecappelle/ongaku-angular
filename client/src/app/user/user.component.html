@@ -114,6 +114,83 @@
         </div>
       </div>
 
+      @if (p.self && stats(); as st) {
+        <section class="panel listening" aria-labelledby="listening-title">
+          <div class="panel-row">
+            <div class="panel-header">
+              <h2 id="listening-title">Your listening</h2>
+              <span class="muted">A track counts once you have listened to it for 30 seconds. Only you see these figures.</span>
+            </div>
+          </div>
+
+          @if (st.total) {
+            <div class="figures">
+              <div class="figure">
+                <span class="figure-value">{{ st.month.plays }}</span>
+                <span class="muted small">Play{{ st.month.plays === 1 ? '' : 's' }} this month</span>
+              </div>
+              <div class="figure">
+                <span class="figure-value">{{ formatListened(st.month.seconds) }}</span>
+                <span class="muted small">Listened this month</span>
+              </div>
+              <div class="figure">
+                <span class="figure-value ellipsis">{{ st.topArtists[0]?.name ?? '—' }}</span>
+                <span class="muted small">Top artist this month</span>
+              </div>
+            </div>
+
+            <div class="listening-columns">
+              <figure class="chart">
+                <figcaption class="eyebrow">Last 7 days</figcaption>
+                <div class="bars" role="img" [attr.aria-label]="'Plays per day. ' + chartSummary()">
+                  @for (day of chart(); track day.date) {
+                    <span class="bar-slot" [attr.title]="day.long + ': ' + day.plays + ' play' + (day.plays === 1 ? '' : 's')">
+                      <span class="bar-value small" aria-hidden="true">{{ day.plays || '' }}</span>
+                      <span class="bar" [class.today]="day.today" [style.height.%]="day.height"></span>
+                    </span>
+                  }
+                </div>
+                <div class="bar-labels" aria-hidden="true">
+                  @for (day of chart(); track day.date) {
+                    <span [class.today]="day.today">{{ day.label }}</span>
+                  }
+                </div>
+              </figure>
+
+              <div class="top-artists">
+                <span class="eyebrow">Top artists this month</span>
+                @if (st.topArtists.length) {
+                  <ol>
+                    @for (artist of st.topArtists; track artist.name) {
+                      <li>
+                        <a [routerLink]="['/artist', artist.name]" class="ellipsis">{{ artist.name }}</a>
+                        <span class="muted small">{{ artist.plays }} play{{ artist.plays === 1 ? '' : 's' }}</span>
+                      </li>
+                    }
+                  </ol>
+                } @else {
+                  <p class="muted small">Nothing played this month yet.</p>
+                }
+              </div>
+            </div>
+          } @else {
+            <p class="muted empty">
+              {{ st.paused ? 'Your history is paused: nothing is recorded.' : 'Nothing yet: play some music, your figures will show here.' }}
+            </p>
+          }
+
+          <div class="history-settings">
+            <mat-slide-toggle [checked]="!st.paused" (change)="setHistoryPaused(!$event.checked)">
+              Record my listening history
+            </mat-slide-toggle>
+            <button mat-button type="button" (click)="clearHistory()" [disabled]="!st.total">
+              <mat-icon>delete_sweep</mat-icon>
+              Clear history
+            </button>
+          </div>
+        </section>
+      }
+
       @if (p.self) {
         <section class="panel" aria-labelledby="privacy-title">
           <div class="panel-header">

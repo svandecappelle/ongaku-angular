@@ -62,6 +62,17 @@
     </div>
   }
 
+  @if (!search() && recentAlbums().length) {
+    <section class="section" aria-labelledby="recent-title">
+      <h2 id="recent-title">Recently played</h2>
+      <ul class="grid albums">
+        @for (album of recentAlbums(); track album.artist + '/' + album.name) {
+          <li><app-album-card [name]="album.name" [artist]="album.artist" [subtitle]="album.artist" [cover]="album.cover" (play)="playAlbum(album.artist, album.name)"></app-album-card></li>
+        }
+      </ul>
+    </section>
+  }
+
   @if (artists.items().length || (artists.loading() && !empty())) {
     <section class="section" aria-labelledby="artists-title">
       <h2 id="artists-title">Artists</h2>
