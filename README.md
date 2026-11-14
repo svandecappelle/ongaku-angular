@@ -22,6 +22,10 @@ Point the domain's DNS at the server and open ports 80 and 443 first. `make help
 single dedicated nginx site, `ongaku.host.conf`, from the templates in [deploy/](deploy/), and never touches
 other sites. Details, in French: [docs/docker.md](docs/docker.md).
 
+Music and videos added, changed or deleted in the music folder show in the application by themselves, without
+a rescan. On a network share (NFS, SMB), where the system tells no changes, set `watchLibrary: poll` in
+`server/config/application.yml`; on Linux, a very large library may need a higher `fs.inotify.max_user_watches`.
+
 For development, `make deps` installs the npm dependencies and `make dev` runs the server and the client in
 watch mode.
 

@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { MaterialModule } from '../../modules/material.module';
 import { Video, VideoService, folderLabel, formatResolution, formatSize } from '../../services/video.service';
 import { formatTime } from '../format-time';
+import { LibraryEventsService } from '../../services/library-events.service';
 
 type Load = 'loading' | 'error' | 'ready';
 
@@ -58,17 +59,30 @@ export class VideosPageComponent {
 
   constructor() {
     this.load();
+    // Videos added or deleted in the music folders: the list is loaded again, in place
+    const events = inject(LibraryEventsService);
+    effect(() => {
+      if (events.version()) {
+        untracked(() => this.load(true));
+      }
+    });
   }
 
-  load() {
-    this.status.set('loading');
+  load(quietly = false) {
+    if (!quietly) {
+      this.status.set('loading');
+    }
     this.service.list().subscribe({
       next: ({ videos, scanning }) => {
         this.videos.set(videos);
         this.scanning.set(scanning);
         this.status.set('ready');
       },
-      error: () => this.status.set('error'),
+      error: () => {
+        if (!quietly) {
+          this.status.set('error');
+        }
+      },
     });
   }
 

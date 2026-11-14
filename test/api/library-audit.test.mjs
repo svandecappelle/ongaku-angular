@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { MUSIC, api } from '../helpers/client.mjs';
+import { MUSIC, api, eventually, track } from '../helpers/client.mjs';
 
 const audit = async () => {
   const { status, body } = await api('/api/admin/library/audit', { as: 'boss' });
@@ -33,25 +33,38 @@ test('the audit tells why audio files are not listed', async () => {
   assert.ok(!has(report.notScanned, 'Audit/Caps/1.MP3'), 'the upper-case extension was scanned');
 });
 
-test('a file added after the scan and a track whose file is gone are reported', async (t) => {
+test('a file added after the scan and a track whose file is gone are reported, until the watcher updates the library', async (t) => {
   const late = path.join(MUSIC, 'Audit/Late/new.mp3');
   const gone = path.join(MUSIC, 'Audit/Gone/1.mp3');
   const moved = path.join(MUSIC, 'Audit/Gone/1.mp3.moved');
   fs.mkdirSync(path.dirname(late), { recursive: true });
   fs.copyFileSync(gone, late);
   fs.renameSync(gone, moved);
-  t.after(() => {
+  t.after(async () => {
     fs.rmSync(path.dirname(late), { recursive: true, force: true });
     if (fs.existsSync(moved)) {
       fs.renameSync(moved, gone);
     }
+    // The next tests find the library as it was
+    await eventually(async () => {
+      const report = await audit();
+      return !has(report.missing, 'Audit/Gone/1.mp3') && !has(report.missing, 'Audit/Late/new.mp3')
+        && !has(report.notScanned, 'Audit/Gone/1.mp3') && !!(await track('Moved away'));
+    }, { what: 'the library restored' });
   });
 
+  // At once: the watcher waits for the files to stay the same a moment (a copy in progress)
   const report = await audit();
   assert.equal(has(report.notScanned, 'Audit/Late/new.mp3')?.reason, 'after-scan');
   const missing = has(report.missing, 'Audit/Gone/1.mp3');
   assert.equal(missing?.title, 'Moved away');
   assert.ok(report.counts.missing >= 1 && report.counts.notScanned >= 1);
+
+  // Then the watcher lists the new file and takes out the one gone
+  await eventually(async () => {
+    const later = await audit();
+    return !has(later.notScanned, 'Audit/Late/new.mp3') && !has(later.missing, 'Audit/Gone/1.mp3');
+  }, { what: 'the library updated by the watcher' });
 });
 
 test('the audit and the rescan are for administrators', async () => {

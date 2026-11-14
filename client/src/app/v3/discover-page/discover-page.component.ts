@@ -13,6 +13,7 @@ import { AlbumCardComponent } from '../album-card/album-card.component';
 import { ArtistCardComponent } from '../artist-card/artist-card.component';
 import { AlbumItem, ArtistItem, albumArtistOf, albumLink } from '../library';
 import { LibraryService } from '../library.service';
+import { LibraryEventsService } from '../../services/library-events.service';
 import { Paged } from '../paged';
 import { SelectionBarComponent } from '../selection-bar/selection-bar.component';
 import { TrackActions } from '../track-list/track-actions.service';
@@ -36,6 +37,7 @@ export class DiscoverPageComponent {
   private readonly library = inject(LibraryService);
   private readonly store = inject<Store<IAppState>>(Store);
   private readonly history = inject(HistoryService);
+  private readonly events = inject(LibraryEventsService);
 
   readonly search = toSignal(this.store.select((state) => String(state.search ?? '').trim()), { initialValue: '' });
 
@@ -58,6 +60,12 @@ export class DiscoverPageComponent {
       untracked(() => [this.artists, this.albums, this.tracks].forEach((list) => list.reset()));
     });
     effect(() => this.actions.setPage(this.tracks.items(), null));
+    // Files added or deleted in the music folders: the lists shown are loaded again
+    effect(() => {
+      if (this.events.version()) {
+        untracked(() => [this.artists, this.albums, this.tracks].forEach((list) => list.refresh()));
+      }
+    });
     // Reloaded after each recorded play
     effect(() => {
       this.history.version();

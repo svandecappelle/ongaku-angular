@@ -774,6 +774,75 @@ class Library {
     return this.deduplication;
   }
 
+  // ---------- Changes of single files (see library-watcher.js) ----------
+
+  /** The track of a file of the music folders, if listed */
+  trackByFile(file) {
+    return _.find(this.tracks, (track) => track.file === file);
+  }
+
+  /**
+   * Adds a decoded track, or replaces the one of the same file (its tags changed). Its artist
+   * and album images are looked for. Resolves with 'added' or 'updated'.
+   */
+  upsertTrack(song) {
+    if (this.getByUid(song.uid)) {
+      this.set(song.uid, song);
+      return 'updated';
+    }
+    const track = _.extend(song, { uuid: song.uid, type: 'audio', private: false, user: null });
+    track.metadatas = track.metadatas || {};
+    this.setTracks(this.tracks.concat([track]));
+    this.getArtistCover({ artist: track.artist });
+    this.getAlbumCover({ artist: track.artist }, { title: track.album }, path.dirname(track.file));
+    return 'added';
+  }
+
+  /** Takes out the tracks and videos of the files of a folder, sub folders included */
+  removeUnder(folder) {
+    const inside = (entry) => entry.file === folder || String(entry.file).startsWith(folder + path.sep);
+    const tracks = this.tracks.filter(inside);
+    const videos = (this.data.video || []).filter(inside);
+    if (tracks.length) {
+      this.setTracks(_.reject(this.tracks, inside));
+    }
+    if (videos.length) {
+      this.data.video = _.reject(this.data.video, inside);
+    }
+    return { tracks, videos };
+  }
+
+  /** Adds a video of the music folders, or replaces the one of the same file */
+  upsertVideo(video) {
+    const videos = this.data.video || [];
+    const index = videos.findIndex((entry) => entry.uid === video.uid);
+    const entry = Object.assign({}, video, { private: false, user: null });
+    if (index >= 0) {
+      videos[index] = entry;
+      return 'updated';
+    }
+    this.data.video = videos.concat([entry]);
+    return 'added';
+  }
+
+  /** The cover.jpg of an album folder was added or removed: the image of its albums is looked for again */
+  refreshFolderCover(folder) {
+    const albums = new Map();
+    this.tracks.filter((track) => path.dirname(track.file) === folder)
+      .forEach((track) => albums.set(`${track.artist}\u0000${track.album}`, track));
+    albums.forEach((track) => {
+      if (this.loadingCoverAlbums[track.artist]) {
+        delete this.loadingCoverAlbums[track.artist][track.album];
+      }
+      if (this.coversLocation[track.artist]) {
+        delete this.coversLocation[track.artist][track.album];
+      }
+      delete this.loadingCoversAlbumsFlatten[track.album];
+      this.getAlbumCover({ artist: track.artist }, { title: track.album }, folder);
+    });
+    return albums.size;
+  }
+
   /** Takes a track out of the library (its file was deleted); a hidden copy of it shows up instead */
   removeTrack(uid) {
     this.setTracks(_.filter(this.tracks, (track) => track.uid !== uid));

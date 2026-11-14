@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { of } from 'rxjs';
-import { catchError, map, startWith, switchMap } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 import { MaterialModule } from '../../modules/material.module';
 import { AlbumCardComponent } from '../album-card/album-card.component';
@@ -14,6 +14,7 @@ import { TrackListComponent } from '../track-list/track-list.component';
 import { parseDuration } from '../track-list/tracks';
 import { AlbumSummary, ArtistView } from '../library';
 import { LibraryService } from '../library.service';
+import { LibraryEventsService } from '../../services/library-events.service';
 
 type Load = { status: 'loading' } | { status: 'error' } | { status: 'ready'; artist: ArtistView };
 
@@ -29,15 +30,16 @@ type Load = { status: 'loading' } | { status: 'error' } | { status: 'ready'; art
 export class ArtistPageComponent {
   readonly actions = inject(TrackActions);
   private readonly library = inject(LibraryService);
+  private readonly events = inject(LibraryEventsService);
 
   readonly load = toSignal(
     inject(ActivatedRoute).paramMap.pipe(
       map((params) => params.get('artist') ?? ''),
-      switchMap((name) => this.library.artist(name).pipe(
+      // Loaded again when the library changes (files added or deleted meanwhile)
+      switchMap((name) => this.events.reloading(() => this.library.artist(name).pipe(
         map((artist): Load => (artist ? { status: 'ready', artist } : { status: 'error' })),
         catchError(() => of<Load>({ status: 'error' })),
-        startWith<Load>({ status: 'loading' }),
-      )),
+      ), { status: 'loading' } as Load)),
     ),
     { initialValue: { status: 'loading' } as Load },
   );

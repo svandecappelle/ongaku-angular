@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, of } from 'rxjs';
-import { catchError, map, startWith, switchMap } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 import { MaterialModule } from '../../modules/material.module';
 import { formatTime } from '../format-time';
@@ -13,6 +13,7 @@ import { CoverEditComponent } from '../cover-edit/cover-edit.component';
 import { parseDuration } from '../track-list/tracks';
 import { AlbumView } from '../library';
 import { LibraryService } from '../library.service';
+import { LibraryEventsService } from '../../services/library-events.service';
 
 type Choice = { artist: string; tracks: number; cover: string | null };
 type Load = { status: 'loading' } | { status: 'error' } | { status: 'ready'; album: AlbumView }
@@ -31,18 +32,19 @@ type Load = { status: 'loading' } | { status: 'error' } | { status: 'ready'; alb
 export class AlbumPageComponent {
   readonly actions = inject(TrackActions);
   private readonly library = inject(LibraryService);
+  private readonly events = inject(LibraryEventsService);
 
   private readonly router = inject(Router);
 
   readonly load = toSignal(
     inject(ActivatedRoute).paramMap.pipe(
       map((params) => ({ artist: params.get('artist'), name: params.get('album') ?? '' })),
-      switchMap(({ artist, name }) => (artist !== null ? this.library.album(artist, name).pipe(
+      // Loaded again when the library changes (files added or deleted meanwhile)
+      switchMap(({ artist, name }) => this.events.reloading(() => (artist !== null ? this.library.album(artist, name).pipe(
         map((album): Load => (album ? { status: 'ready', album } : { status: 'error' })),
       ) : this.resolve(name)).pipe(
         catchError(() => of<Load>({ status: 'error' })),
-        startWith<Load>({ status: 'loading' }),
-      )),
+      ), { status: 'loading' } as Load)),
     ),
     { initialValue: { status: 'loading' } as Load },
   );

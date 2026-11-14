@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, effect, inject, signal, untracked } from '@angular/core';
 import { NotificationsService } from './notifications.service';
 import { Event } from '../model/event';
+import { LibraryEventsService, describeChange } from '../../services/library-events.service';
 
 /** A message pushed by the server */
 interface Notice {
@@ -34,8 +35,29 @@ export class NotificationsComponent implements OnInit {
 
   readonly notices = signal<Notice[]>([]);
   readonly scan = signal<ScanProgress | null>(null);
+  /** Files changed in the music folders, told for a few seconds */
+  readonly change = signal<{ text: string; albums: string } | null>(null);
   private nextId = 0;
   private hideScan: ReturnType<typeof setTimeout> | undefined;
+  private hideChange: ReturnType<typeof setTimeout> | undefined;
+
+  constructor() {
+    const events = inject(LibraryEventsService);
+    effect(() => {
+      const change = events.last();
+      if (!change) {
+        return;
+      }
+      untracked(() => {
+        clearTimeout(this.hideChange);
+        this.change.set({
+          text: describeChange(change),
+          albums: change.albums.map((album) => `${album.artist} – ${album.album}`).join(', '),
+        });
+        this.hideChange = setTimeout(() => this.change.set(null), 8000);
+      });
+    });
+  }
 
   ngOnInit() {
     this.service.initSocket();
@@ -61,11 +83,17 @@ export class NotificationsComponent implements OnInit {
       messages.unsubscribe();
       scans.unsubscribe();
       clearTimeout(this.hideScan);
+      clearTimeout(this.hideChange);
     });
   }
 
   close(notice: Notice) {
     this.notices.update((notices) => notices.filter((n) => n.id !== notice.id));
+  }
+
+  closeChange() {
+    clearTimeout(this.hideChange);
+    this.change.set(null);
   }
 
   closeScan() {

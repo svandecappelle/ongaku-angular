@@ -35,6 +35,28 @@ export class Paged<T> {
     this.more();
   }
 
+  /**
+   * Loads again the pages shown, and puts them in place once they all came: the list does
+   * not empty meanwhile (the library changed under the page).
+   */
+  refresh() {
+    if (!this.page) {
+      return this.reset();
+    }
+    this.subscription?.unsubscribe();
+    const pages = Array.from({ length: this.page }, (_, i) => i);
+    this.loading.set(false);
+    this.subscription = forkJoin(pages.map((page) => this.fetch(page))).subscribe({
+      next: (results) => {
+        this.items.set(results.flat());
+        this.done.set(results[results.length - 1].length < this.pageSize);
+        this.failed.set(false);
+      },
+      // The list shown stays: the next change or "Show more" tries again
+      error: () => undefined,
+    });
+  }
+
   more() {
     if (this.loading() || this.done()) {
       return;

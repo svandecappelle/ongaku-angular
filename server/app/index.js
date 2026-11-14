@@ -29,6 +29,8 @@ class Application {
 		}))));
 		await library.setupConnectors();
 		downloader.watch();
+		// Files changed in the music folders: read again alone, without a full scan
+		require('./middleware/library-watcher').start().catch((err) => console.error('Cannot watch the music folders', err));
 
 		var q = async.queue((task, callback) => {
 			console.info("Launch task: ".concat(task.name));

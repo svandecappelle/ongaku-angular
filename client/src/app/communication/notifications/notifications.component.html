@@ -21,6 +21,22 @@
       </div>
     }
 
+    @if (change(); as c) {
+      <div class="card library-change" role="status">
+        <span class="icon done" aria-hidden="true"><mat-icon>library_music</mat-icon></span>
+        <div class="body">
+          <span class="title">Library updated</span>
+          <span class="text">{{ c.text }}</span>
+          @if (c.albums) {
+            <span class="text albums">{{ c.albums }}</span>
+          }
+        </div>
+        <button mat-icon-button type="button" class="close" (click)="closeChange()" aria-label="Hide">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    }
+
     @for (notice of notices(); track notice.id) {
       <div class="card" role="alert">
         <span class="icon" aria-hidden="true"><mat-icon>notifications</mat-icon></span>

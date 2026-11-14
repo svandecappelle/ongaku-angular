@@ -346,9 +346,16 @@
             <ul class="folders">
               @for (folder of a.folders; track folder.path) {
                 <li>
-                  <mat-icon aria-hidden="true">{{ folder.exists ? 'folder' : 'folder_off' }}</mat-icon>
+                  <mat-icon aria-hidden="true">{{ folder.exists ? 'folder' : 'error_outline' }}</mat-icon>
                   <code>{{ folder.path }}</code>
                   <span class="muted small">{{ folder.exists ? (folder.files | number) + ' files' : 'This folder does not exist' }}</span>
+                  @if (folder.exists) {
+                    <span class="watch-state small" [class.on]="folder.watched"
+                      [title]="folder.watched ? 'Files added, changed or deleted here show in the library by themselves' : 'Rescan the library after changing files here'">
+                      <mat-icon aria-hidden="true">{{ folder.watched ? 'visibility' : 'visibility_off' }}</mat-icon>
+                      {{ folder.watched ? (a.watchMode === 'poll' ? 'Watched (polling)' : 'Watched') : 'Not watched' }}
+                    </span>
+                  }
                 </li>
               }
             </ul>

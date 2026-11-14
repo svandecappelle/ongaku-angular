@@ -96,7 +96,7 @@ async function audit() {
   for (const folder of folders) {
     const exists = fs.existsSync(folder);
     const files = exists ? await walk(folder) : [];
-    result.folders.push({ path: folder, exists: exists, files: files.length });
+    result.folders.push({ path: folder, exists: exists, files: files.length, watched: require('./library-watcher').watches(folder) });
     for (const file of files) {
       onDisk.add(file);
       const relative = path.relative(folder, file);
@@ -148,6 +148,7 @@ async function audit() {
   const byFile = (a, b) => String(a.file).localeCompare(String(b.file));
   ['notScanned', 'disabledFormat', 'unreadable', 'duplicates', 'missing'].forEach((list) => result[list].sort(byFile));
   result.enabledFormats = [...enabled].sort();
+  result.watchMode = require('./library-watcher').mode();
   return result;
 }
 

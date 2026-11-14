@@ -107,3 +107,11 @@ mat-progress-bar {
     animation: none;
   }
 }
+
+// The albums concerned by a library change, on one line
+.albums {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: .8;
+}

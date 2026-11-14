@@ -491,6 +491,25 @@ mat-slide-toggle .hint {
   code {
     overflow-wrap: anywhere;
   }
+  .watch-state {
+    padding: 1px 8px 1px 6px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--ongaku-muted);
+    border: 1px solid var(--ongaku-border);
+    mat-icon {
+      width: 14px;
+      height: 14px;
+      font-size: 14px;
+      color: inherit;
+    }
+    &.on {
+      color: var(--ongaku-accent);
+      border-color: color-mix(in srgb, var(--ongaku-accent) 45%, transparent);
+    }
+  }
 }
 
 .health-text {

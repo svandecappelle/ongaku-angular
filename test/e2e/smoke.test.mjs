@@ -1,6 +1,7 @@
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
@@ -435,6 +436,30 @@ test('the Videos page lists the videos by folder; one plays, stopping the music,
   await page.waitFor(`document.querySelector('app-video-page .unplayable a[download]')`, { what: 'the download of the MPEG-1' });
   assert.ok(!(await page.eval(`!!document.querySelector('app-video-page video')`)));
   assert.equal(await page.eval(`document.querySelector('app-video-page .unplayable a[download]').getAttribute('download')`), 'Old clip.mpg');
+});
+
+test('an album copied into the music folder shows in the open page, told by a notification', { skip }, async (t) => {
+  const folder = path.join(MUSIC, 'Aardvark Watchers/Live Update');
+  t.after(async () => {
+    fs.rmSync(path.join(MUSIC, 'Aardvark Watchers'), { recursive: true, force: true });
+    await eventually(async () => !JSON.stringify((await api('/api/audio/tracks/filter/Aardvark/0', { as: 'carol' })).body).includes('Aardvark'), { timeout: 20000, what: 'the album gone' });
+  });
+  await page.goto('/', await login('carol'));
+  await page.waitFor(`document.querySelectorAll('app-discover-page app-artist-card').length > 3`, { what: 'the artists' });
+  assert.ok(!(await page.eval(`document.querySelector('app-discover-page').textContent.includes('Aardvark Watchers')`)));
+
+  // Written beside the music folder, then moved in: a whole file
+  fs.mkdirSync(folder, { recursive: true });
+  const temporary = path.join(path.dirname(MUSIC), 'aardvark.mp3');
+  const made = spawnSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'sine=frequency=2400:duration=2',
+    '-metadata', 'artist=Aardvark Watchers', '-metadata', 'album=Live Update', '-metadata', 'title=Seen at once', '-q:a', '9', temporary]);
+  assert.equal(made.status, 0, String(made.stderr));
+  fs.renameSync(temporary, path.join(folder, '1.mp3'));
+
+  await page.waitFor(`document.querySelector('app-notifications .library-change')?.textContent.includes('1 track added')`, { timeout: 20000, what: 'the notification' });
+  assert.ok(await page.eval(`document.querySelector('app-notifications .library-change').textContent.includes('Aardvark Watchers – Live Update')`));
+  await page.waitFor(`document.querySelector('app-discover-page').textContent.includes('Aardvark Watchers')`, { what: 'the new artist in the page' });
+  assert.equal(await page.eval(`location.pathname`), '/', 'no navigation');
 });
 
 test('a backup is downloaded and restored from the Backup tab, the data and the music apart', { skip }, async () => {

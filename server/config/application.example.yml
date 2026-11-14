@@ -10,6 +10,10 @@ uploader: false
 library: [/path/to/your/music]
 audio: [mp3,  wav, wma, ogg, flac]
 video: [mp4, m4v, mov, webm, ogv, mkv, avi, flv, mpg, mpeg]
+# Files added, changed or deleted in the library folders show by themselves, without a rescan.
+# true: system events (local disks); poll: checks every few seconds (network shares, where the
+# system tells no changes); false: rescan by hand from the administration
+watchLibrary: true
 defaultLanguage: fr
 database: redis
 type: browser

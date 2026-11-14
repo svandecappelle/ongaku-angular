@@ -108,7 +108,10 @@ export interface RestoreReport {
 /** The music folders against the library (Administration > Files); lists hold the first 500 items */
 export interface LibraryAudit {
   scanning: boolean;
-  folders: { path: string; exists: boolean; files: number }[];
+  /** watched: changes of its files show by themselves (see library-watcher.js) */
+  folders: { path: string; exists: boolean; files: number; watched?: boolean }[];
+  /** How the music folders are watched: by system events, by polling, or not at all */
+  watchMode?: 'events' | 'poll' | 'off';
   counts: { audio: number; listed: number; duplicates: number; unreadable: number; notScanned: number; disabledFormat: number; missing: number; other: number };
   /** Supported audio files the library does not hold: added since the scan, or skipped by older scans */
   notScanned: { file: string; folder: string; reason: 'after-scan' | 'uppercase-extension' }[];
