@@ -106,27 +106,12 @@ class Decoder {
     };
   };
 
+  /** A video of the library: its duration, size and codecs read by ffprobe (see video.js) */
   video(filePath) {
-    var uuid,
-      shasum = crypto.createHash('sha1');
-
-    return new Promise((resolve, reject) => {
-      if (_.contains(nconf.get('video'), extensionOf(filePath))) {
-        shasum.update(filePath);
-        uuid = shasum.digest('hex');
-        resolve({
-          encoding: path.extname(filePath).replace(".", ""),
-          uid: uuid.concat(".").concat(path.extname(filePath).replace(".", "")),  /*uuid.v1().concat(".").concat(path.extname(filePath).replace(".", "")),*/
-          file: "/video/stream".concat(filePath.replace(nconf.get("library"), "")),
-          type: "video",
-          name: path.basename(filePath),
-          extension: path.extname(filePath).replace(".", ""),
-          relativePath: typeof nconf.get("library") === 'String' ? filePath.replace(nconf.get("library"), "") : filePath,
-        });
-      } else {
-        reject({ "cause": 'not an video file to listen' }); // asynchronously call the loop
-      }
-    });
+    if (!this.check(filePath)) {
+      return Promise.reject({ cause: 'not a video file' });
+    }
+    return require('./video').describe(filePath);
   };
 
   /** The file has an extension of this type; "Song.MP3" counts as mp3 */

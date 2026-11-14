@@ -1,0 +1,115 @@
+<div class="page">
+  <a mat-button routerLink="/videos" class="back">
+    <mat-icon>arrow_back</mat-icon>
+    Videos
+  </a>
+
+  @switch (load().status) {
+    @case ('loading') {
+      <div class="state" role="status">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span class="muted">Loading the video…</span>
+      </div>
+    }
+    @case ('error') {
+      <div class="state" role="alert">
+        <mat-icon class="state-icon">error_outline</mat-icon>
+        @if ($any(load()).notFound) {
+          <h1>This video is not in the library</h1>
+          <p class="muted">It may have been moved or deleted since.</p>
+        } @else {
+          <h1>The video could not be loaded</h1>
+        }
+        <a mat-stroked-button routerLink="/videos">See all the videos</a>
+      </div>
+    }
+    @default {
+      @if (video(); as v) {
+        <div class="layout">
+          <section class="main" aria-labelledby="video-title">
+            <div class="stage">
+              @if (v.playable && !playError()) {
+                <!-- The key gives a new element to each video: no frame of the previous one -->
+                @for (key of [v.uid]; track key) {
+                  <video #player controls autoplay playsinline preload="metadata"
+                    [src]="service.streamUrl(v.uid)" [poster]="service.posterUrl(v.uid)"
+                    [attr.aria-label]="v.title"
+                    (play)="onPlay()" (ended)="onEnded()" (error)="onError()"></video>
+                }
+              } @else {
+                <div class="unplayable" role="status">
+                  <mat-icon aria-hidden="true">movie</mat-icon>
+                  <h2>{{ playError() ? 'The browser could not play this video' : 'This format does not play in the browser' }}</h2>
+                  <p>Download it to watch it with a video player.</p>
+                  <a mat-flat-button color="accent" [href]="service.streamUrl(v.uid)" [attr.download]="v.name">
+                    <mat-icon>file_download</mat-icon>
+                    Download {{ v.name }}
+                  </a>
+                </div>
+              }
+            </div>
+
+            <div class="details">
+              <div class="title-row">
+                <h1 id="video-title">{{ v.title }}</h1>
+                @if (v.playable && !playError()) {
+                  <a mat-stroked-button class="download" [href]="service.streamUrl(v.uid)" [attr.download]="v.name">
+                    <mat-icon>file_download</mat-icon>
+                    Download
+                  </a>
+                }
+              </div>
+              <dl class="facts">
+                <div><dt>Folder</dt><dd>{{ v.folder || 'Root of the music folder' }}</dd></div>
+                @if (v.duration) {
+                  <div><dt>Length</dt><dd>{{ formatTime(v.duration) }}</dd></div>
+                }
+                @if (v.width && v.height) {
+                  <div><dt>Picture</dt><dd>{{ v.width }} × {{ v.height }} ({{ formatResolution(v) }})</dd></div>
+                }
+                <div><dt>File</dt><dd>{{ v.extension.toUpperCase() }} · {{ formatSize(v.size) }}</dd></div>
+              </dl>
+            </div>
+          </section>
+
+          @if (siblings().length > 1) {
+            <aside class="up-next" aria-labelledby="folder-title">
+              <div class="up-next-header">
+                <h2 id="folder-title"><mat-icon aria-hidden="true">folder</mat-icon>{{ folderLabel() }}</h2>
+                <mat-slide-toggle class="auto-next" [checked]="autoNext()" (change)="autoNext.set($event.checked)">Play the next one</mat-slide-toggle>
+              </div>
+              <ol class="siblings">
+                @for (item of siblings(); track item.uid) {
+                  <li>
+                    <a class="sibling" [routerLink]="['/videos', item.uid]" [class.current]="item.uid === v.uid"
+                      [attr.aria-current]="item.uid === v.uid ? 'page' : null">
+                      <span class="thumb">
+                        <mat-icon aria-hidden="true">movie</mat-icon>
+                        <img [src]="service.posterUrl(item.uid)" alt="" loading="lazy" (error)="$any($event.target).hidden = true">
+                        @if (item.duration) {
+                          <span class="duration">{{ formatTime(item.duration) }}</span>
+                        }
+                      </span>
+                      <span class="sibling-text">
+                        <strong>{{ item.title }}</strong>
+                        <span class="muted small">
+                          @if (item.uid === v.uid) {
+                            Playing
+                          } @else if (item.uid === next()?.uid) {
+                            Next
+                          } @else {
+                            {{ item.extension.toUpperCase() }} · {{ formatSize(item.size) }}
+                          }
+                        </span>
+                      </span>
+                    </a>
+                  </li>
+                }
+              </ol>
+            </aside>
+          }
+        </div>
+      }
+    }
+  }
+</div>

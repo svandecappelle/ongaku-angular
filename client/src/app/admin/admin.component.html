@@ -92,7 +92,7 @@
           <div class="panel-header">
             <h2 id="import-title">Import into the public library</h2>
             <span class="muted">
-              Audio files (mp3, ogg, flac, wav, wma) or archives (zip, tar, tar.gz) whose audio files are imported with their folders.
+              Audio files (mp3, ogg, flac, wav, wma), videos (mp4, webm, mpeg…) or archives (zip, tar, tar.gz) whose music and videos are imported with their folders.
               Every user sees the imported music.
             </span>
           </div>
@@ -113,7 +113,7 @@
             <mat-icon>cloud_upload</mat-icon>
             <span><strong>Drop files here</strong> or click to choose</span>
             <input type="file" multiple class="visually-hidden"
-              accept=".zip,.tar,.tar.gz,.tgz,.mp3,.ogg,.flac,.wav,.wma,application/zip,application/gzip,application/x-tar,audio/*"
+              accept=".zip,.tar,.tar.gz,.tgz,.mp3,.ogg,.flac,.wav,.wma,.mp4,.m4v,.mov,.webm,.ogv,.mkv,.avi,.flv,.mpg,.mpeg,application/zip,application/gzip,application/x-tar,audio/*,video/*"
               (change)="addImportFiles($any($event.target).files); $any($event.target).value = ''">
           </label>
 
@@ -142,7 +142,7 @@
                     }
                     @if (item.result; as result) {
                       <span class="small" [class.muted]="!result.error">
-                        {{ result.error ? result.error : (result.imported?.length ?? 0) + ' audio file(s) imported' }}
+                        {{ result.error ? result.error : (result.imported?.length ?? 0) + ' file(s) imported' }}
                       </span>
                     }
                   </div>

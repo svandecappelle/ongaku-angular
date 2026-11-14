@@ -8,14 +8,26 @@ const nconf = require('nconf');
 const logger = require('log4js').getLogger("Importer");
 
 /**
- * Unpack uploaded archives (zip, tar, tar.gz) or single audio files into a library folder.
- * Only files with an extension listed in the 'audio' configuration are kept.
+ * Unpack uploaded archives (zip, tar, tar.gz) or single audio and video files into a library
+ * folder. Only files with an extension listed in the 'audio' or 'video' configuration are kept.
  */
 class Importer {
 
+  extensionOf(filename) {
+    return path.extname(filename).replace(".", "").toLowerCase();
+  }
+
   isAudio(filename) {
-    const ext = path.extname(filename).replace(".", "").toLowerCase();
-    return (nconf.get("audio") || []).includes(ext);
+    return [].concat(nconf.get("audio") || []).map(String).includes(this.extensionOf(filename));
+  }
+
+  isVideo(filename) {
+    return [].concat(nconf.get("video") || []).map(String).includes(this.extensionOf(filename));
+  }
+
+  /** A file the library lists: music or video */
+  isMedia(filename) {
+    return this.isAudio(filename) || this.isVideo(filename);
   }
 
   archiveType(filename) {
@@ -30,12 +42,12 @@ class Importer {
   }
 
   isSupported(filename) {
-    return this.archiveType(filename) !== null || this.isAudio(filename);
+    return this.archiveType(filename) !== null || this.isMedia(filename);
   }
 
   /**
    * Import the uploaded file stored at `source` (named `filename` by the client) into `destination`.
-   * Resolves with the paths, relative to `destination`, of the imported audio files.
+   * Resolves with the paths, relative to `destination`, of the imported files.
    * With a `budget` ({ remaining } bytes), the files that do not fit are skipped and counted
    * in `budget.skipped`.
    */
@@ -46,7 +58,7 @@ class Importer {
       case "tar":
         return this.extractTar(source, destination, budget);
       default:
-        if (!this.isAudio(filename)) {
+        if (!this.isMedia(filename)) {
           throw new Error(`Unsupported file type: ${filename}`);
         }
         const size = (await fs.promises.stat(source)).size;
@@ -128,7 +140,7 @@ class Importer {
       file: source,
       cwd: destination,
       filter: (entryPath, entry) => {
-        const keep = entry.type === "File" && this.isAudio(entryPath) && this.fits(budget, entry.size);
+        const keep = entry.type === "File" && this.isMedia(entryPath) && this.fits(budget, entry.size);
         if (keep) {
           imported.push(entryPath);
         }
@@ -151,8 +163,8 @@ class Importer {
         zip.on("entry", (entry) => {
           const relative = path.normalize(entry.fileName);
           const target = path.resolve(root, relative);
-          // Directories and non audio files are skipped
-          if (entry.fileName.endsWith("/") || !this.isAudio(relative)) {
+          // Directories and the files that are neither music nor video are skipped
+          if (entry.fileName.endsWith("/") || !this.isMedia(relative)) {
             return zip.readEntry();
           }
           if (!target.startsWith(root + path.sep)) {

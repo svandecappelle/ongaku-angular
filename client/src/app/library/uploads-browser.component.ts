@@ -13,6 +13,7 @@ interface UploadedFile {
   size: number | null;
   modified: number;
   audio: boolean;
+  video?: boolean;
 }
 
 interface ImportResult {
@@ -277,6 +278,9 @@ export class UploadsBrowserComponent {
     }
     if (file.audio) {
       return 'audiotrack';
+    }
+    if (file.video) {
+      return 'movie';
     }
     return /\.(jpe?g|png|gif|webp)$/i.test(file.name) ? 'photo' : 'insert_drive_file';
   }

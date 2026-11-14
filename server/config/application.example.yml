@@ -9,7 +9,7 @@ hostname: localhost
 uploader: false
 library: [/path/to/your/music]
 audio: [mp3,  wav, wma, ogg, flac]
-video: [mp4, webm, flv, ogv, mpg]
+video: [mp4, m4v, mov, webm, ogv, mkv, avi, flv, mpg, mpeg]
 defaultLanguage: fr
 database: redis
 type: browser

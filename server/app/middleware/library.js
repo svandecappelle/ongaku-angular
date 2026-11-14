@@ -87,6 +87,10 @@ class Library {
     this.coversLocation = [];
     scan.on('decoded', (song, type) => {
       console.debug("decoded", song, type);
+      // The videos have their own list (see populate), never among the tracks
+      if (type !== 'audio') {
+        return;
+      }
       // this.flatten.push(song);
       try {
         var libraryElement = _.extend(song, {
@@ -185,24 +189,16 @@ class Library {
           folder: folder,
           content: folderContent
         }, folder);
-
-        callback({
-          type: 'audio'
-        });
-      } else if (folderContent.video) {
-        callback({
-          type: 'video'
-        });
-        // TODO desactivate at now scan video. Should be reactivated
-        /*that.populate("video", {
+      }
+      if (folderContent.video) {
+        that.populate("video", {
           folder: folder,
           content: folderContent
-        }, function (){
-          callback({
-            type: 'video'
-          });
-        }, folder);*/
+        }, folder);
       }
+      callback({
+        type: folderContent.audio && folderContent.audio.length ? 'audio' : 'video'
+      });
     })
   };
 
@@ -213,13 +209,9 @@ class Library {
    */
   removeFolder(folder) {
     scan.removeToScan(folder.path);
-    this.setTracks(_.filter(this.tracks, (track) => {
-      if (track.username && track.username === folder.username && folder.path ===
-        track.userfolder) {
-        return false;
-      }
-      return true;
-    }));
+    const inFolder = (entry) => entry.username && entry.username === folder.username && folder.path === entry.userfolder;
+    this.setTracks(_.reject(this.tracks, inFolder));
+    this.data.video = _.reject(this.data.video, inFolder);
   }
 
   /**
@@ -230,6 +222,9 @@ class Library {
    * @param {Object} folder folder path and state
    */
   populate(type, folderScanResult, folder) {
+    if (type === 'video') {
+      return this.populateVideos(folderScanResult, folder);
+    }
     var destination = this.data;
     var flattenDestination = this.flatten;
     var lib;
@@ -282,6 +277,43 @@ class Library {
       this.videoScanned = true;
     }
   };
+
+  /** Adds scanned videos (see video.js): a video found again replaces its former entry */
+  populateVideos(folderScanResult, folder) {
+    const scanned = folderScanResult.content ? folderScanResult.content.video : folderScanResult.video;
+    const owner = folderScanResult.folder || null;
+    const videos = _.compact(scanned || []).map((video) => {
+      const entry = Object.assign({}, video, {
+        private: !!(owner && owner.private),
+        user: owner ? owner.username || null : null,
+      });
+      if (folder && folder.username) {
+        entry.username = folder.username;
+        entry.userfolder = folder.path;
+        // Uploads live outside the music folders, in "imported" of the account folder: their
+        // folder is told from the uploads
+        const sub = path.relative(folder.path, path.dirname(video.file)).split(path.sep).join('/').replace(/^imported(\/|$)/, '');
+        entry.folder = sub && !sub.startsWith('..') ? `My uploads/${sub}` : 'My uploads';
+      }
+      return entry;
+    });
+    const byUid = new Map((this.data.video || []).map((video) => [video.uid, video]));
+    videos.forEach((video) => byUid.set(video.uid, video));
+    this.data.video = [...byUid.values()];
+    if (folderScanResult.isFinishedAll || (folderScanResult.content && folderScanResult.content.isFinishedAll)) {
+      this.videoScanned = true;
+    }
+  }
+
+  /** The videos a member can watch: the library ones, and the private ones of this member */
+  videosFor(username) {
+    return (this.data.video || []).filter((video) => !video.private || (username && video.user === username));
+  }
+
+  /** A video by its uid, if this member can watch it */
+  getVideo(uid, username) {
+    return this.videosFor(username).find((video) => video.uid === String(uid)) || null;
+  }
 
   /**
    * Retrieve and populate artist photo from lastfm
@@ -722,21 +754,6 @@ class Library {
     }));
     return [{ artists: [entry.artist], albums: groups }];
   }
-
-  /*
-    getVideo () {
-      return this.data.video;
-    };
-  */
-  /**
-   * Get video contents.
-   *
-   * @param {*} page page number (starts from 0)
-   * @param {*} lenght number of records
-   */
-  getVideo(page, lenght) {
-    return _.first(_.rest(this.data.video, page * lenght), lenght);
-  };
 
   /** Tracks of the library, each available music once (see deduplicate.js) */
   get flatten() {

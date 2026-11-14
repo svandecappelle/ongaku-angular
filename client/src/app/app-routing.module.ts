@@ -32,6 +32,10 @@ const routes: Routes = [
   { path: 'users', component: UsersComponent, canActivate: [AuthGuard]},
   { path: 'radios', canActivate: [AuthGuard],
     loadComponent: () => import('./v3/radios-page/radios-page.component').then((m) => m.RadiosPageComponent) },
+  { path: 'videos', canActivate: [AuthGuard],
+    loadComponent: () => import('./v3/videos-page/videos-page.component').then((m) => m.VideosPageComponent) },
+  { path: 'videos/:uid', canActivate: [AuthGuard],
+    loadComponent: () => import('./v3/video-page/video-page.component').then((m) => m.VideoPageComponent) },
   { path: 'my-library/:folder', component: LibraryComponent, canActivate: [AuthGuard]},
   { path: 'my-library', component: LibraryComponent, canActivate: [AuthGuard]},
   // The uploads are a tab of My library

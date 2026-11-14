@@ -128,12 +128,30 @@ function buildMusic(music) {
   tone(path.join(music, 'Search/ACDC/1.mp3'), { artist: 'AC/DC', album: 'Back in Black', title: 'Shoot to Thrill', track: 1 }, { frequency: 2050 });
   tone(path.join(music, 'Search/Sigur/1.mp3'), { artist: 'Sigur Rós', album: 'Ágætis byrjun', title: 'Svefn-g-englar', track: 1 }, { frequency: 2100 });
 
+  // Videos: two the browsers play (VP8 in WebM, one with a title tag), one they cannot (MPEG-1)
+  const videos = path.join(music, 'Videos');
+  fs.mkdirSync(path.join(videos, 'Holidays'), { recursive: true });
+  const clip = (file, seconds, codecs, extra = []) => ffmpeg([
+    '-f', 'lavfi', '-i', `testsrc=size=320x240:rate=15:duration=${seconds}`,
+    '-f', 'lavfi', '-i', `sine=frequency=440:duration=${seconds}`, '-shortest', ...codecs, ...extra, file,
+  ]);
+  clip(path.join(videos, 'Holidays/beach_day.webm'), 6, ['-c:v', 'libvpx', '-b:v', '150k', '-c:a', 'libvorbis'], ['-metadata', 'title=Beach day']);
+  clip(path.join(videos, 'Holidays/Mountain trip.webm'), 2, ['-c:v', 'libvpx', '-b:v', '150k', '-c:a', 'libvorbis']);
+  clip(path.join(videos, 'Old clip.mpg'), 2, ['-c:v', 'mpeg1video', '-r', '25', '-c:a', 'mp2']);
+
   fs.mkdirSync(path.join(music, 'Imported'), { recursive: true });
 }
 
 /** Files uploaded by the tests */
 function buildAssets(assets) {
   fs.mkdirSync(assets, { recursive: true });
+  // Videos to upload: an MPEG-1 (.mpeg), and a WebM inside a zip
+  const lavfi = (seconds) => ['-f', 'lavfi', '-i', `testsrc=size=160x120:rate=25:duration=${seconds}`, '-f', 'lavfi', '-i', `sine=frequency=330:duration=${seconds}`, '-shortest'];
+  ffmpeg([...lavfi(2), '-c:v', 'mpeg1video', '-c:a', 'mp2', '-f', 'mpeg', path.join(assets, 'home movie.mpeg')]);
+  const zipped = path.join(assets, 'zipped-video');
+  fs.mkdirSync(path.join(zipped, 'Trips'), { recursive: true });
+  ffmpeg([...lavfi(2), '-c:v', 'libvpx', '-b:v', '100k', '-c:a', 'libvorbis', path.join(zipped, 'Trips', 'lake.webm')]);
+  zip(path.join(assets, 'video.zip'), zipped, ['Trips/lake.webm']);
   tone(path.join(assets, 'small.mp3'), { artist: 'Alice Band', album: 'Demo', title: 'Small upload', track: 1 }, { seconds: 3, frequency: 500 });
   tone(path.join(assets, 'private.mp3'), { artist: 'Secret Band', album: 'Hidden Album', title: 'Private upload', track: 1 }, { seconds: 2, frequency: 520 });
   tone(path.join(assets, 'big.mp3'), { artist: 'Alice Band', album: 'Demo', title: 'Big upload', track: 2 }, { seconds: 30, frequency: 600, codec: ['-b:a', '128k'] });
@@ -161,7 +179,7 @@ uploader: false
 library: [${JSON.stringify(music)}]
 importFolder: ${JSON.stringify(path.join(music, 'Imported'))}
 audio: [mp3, wav, wma, ogg, flac]
-video: [mp4, webm, flv, ogv, mpg]
+video: [mp4, webm, flv, ogv, mpg, mpeg]
 defaultLanguage: fr
 database: redis
 type: browser

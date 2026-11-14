@@ -1,0 +1,107 @@
+<div class="page">
+  <header class="page-header">
+    <div class="header-text">
+      <span class="eyebrow">Watch</span>
+      <h1>Videos</h1>
+      <span class="muted">
+        The videos of the music folders.
+        @if (status() === 'ready' && videos().length) {
+          {{ videos().length }} {{ videos().length === 1 ? 'video' : 'videos' }} · {{ totalLabel() }}
+        }
+      </span>
+    </div>
+    @if (status() === 'ready' && videos().length) {
+      <mat-form-field class="search" subscriptSizing="dynamic">
+        <mat-icon matPrefix>search</mat-icon>
+        <mat-label>Find a video</mat-label>
+        <input matInput type="search" [ngModel]="search()" (ngModelChange)="search.set($event)" autocomplete="off">
+      </mat-form-field>
+    }
+  </header>
+
+  @switch (status()) {
+    @case ('loading') {
+      <div class="state" role="status">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span class="muted">Loading the videos…</span>
+      </div>
+    }
+    @case ('error') {
+      <div class="state" role="alert">
+        <mat-icon class="state-icon">error_outline</mat-icon>
+        <h2>The videos could not be loaded</h2>
+        <button mat-stroked-button type="button" (click)="load()">
+          <mat-icon>replay</mat-icon>
+          Retry
+        </button>
+      </div>
+    }
+    @default {
+      @if (!videos().length) {
+        <div class="state empty">
+          <mat-icon class="state-icon">video_library</mat-icon>
+          <h2>{{ scanning() ? 'The library is being scanned' : 'No videos yet' }}</h2>
+          <p class="muted">
+            Videos put in the music folders show here after a scan of the library.
+            They play in the browser as MP4, WebM or OGV files.
+          </p>
+          <button mat-stroked-button type="button" (click)="load()">
+            <mat-icon>refresh</mat-icon>
+            Look again
+          </button>
+        </div>
+      } @else if (!shown().length) {
+        <div class="state" role="status">
+          <mat-icon class="state-icon">search</mat-icon>
+          <h2>No video matches “{{ search().trim() }}”</h2>
+          <button mat-stroked-button type="button" (click)="search.set('')">Show all the videos</button>
+        </div>
+      } @else {
+        @for (folder of folders(); track folder.path) {
+          <section class="section" [attr.aria-labelledby]="'folder-' + $index">
+            <div class="section-header">
+              <h2 [id]="'folder-' + $index"><mat-icon aria-hidden="true">folder</mat-icon><span class="folder-name">{{ folder.label }}</span></h2>
+              @if (folder.path !== folder.label) {
+                <span class="muted small">{{ folder.path || 'At the root of the music folder' }}</span>
+              }
+            </div>
+            <ul class="video-grid">
+              @for (video of folder.videos; track video.uid) {
+                <li>
+                  <a class="video-card" [routerLink]="['/videos', video.uid]" [attr.aria-label]="video.title + (video.duration ? ', ' + formatTime(video.duration) : '')">
+                    <span class="poster">
+                      <mat-icon class="poster-icon" aria-hidden="true">movie</mat-icon>
+                      @if (!brokenPosters().has(video.uid)) {
+                        <img [src]="service.posterUrl(video.uid)" alt="" loading="lazy" (error)="posterFailed(video.uid)">
+                      }
+                      <span class="play" aria-hidden="true"><mat-icon>play_arrow</mat-icon></span>
+                      @if (video.duration) {
+                        <span class="badge duration">{{ formatTime(video.duration) }}</span>
+                      }
+                      @if (!video.playable) {
+                        <span class="badge download" title="This format does not play in the browser: it is downloaded">
+                          <mat-icon aria-hidden="true">file_download</mat-icon>Download only
+                        </span>
+                      }
+                    </span>
+                    <strong class="title">{{ video.title }}</strong>
+                    <span class="muted small meta">
+                      @if (formatResolution(video); as resolution) {
+                        <span>{{ resolution }}</span>
+                      }
+                      <span>{{ video.extension.toUpperCase() }}</span>
+                      <span>{{ formatSize(video.size) }}</span>
+                      @if (video.private) {
+                        <span><mat-icon aria-hidden="true">lock</mat-icon>Private</span>
+                      }
+                    </span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      }
+    }
+  }
+</div>

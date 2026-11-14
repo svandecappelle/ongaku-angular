@@ -2,7 +2,7 @@
   <div class="panel-row">
     <div class="panel-header">
       <h2 id="uploads-title">Uploaded files</h2>
-      <span class="muted">Only you can play the music you upload. Audio files (mp3, ogg, flac, wav, wma) or archives (zip, tar, tar.gz).</span>
+      <span class="muted">Only you can play the music and watch the videos you upload. Audio files (mp3, ogg, flac, wav, wma), videos (mp4, webm, mpeg…) or archives (zip, tar, tar.gz).</span>
     </div>
     <button mat-stroked-button type="button" (click)="newFolder.set('')" [disabled]="newFolder() !== null">
       <mat-icon>create_new_folder</mat-icon>
@@ -115,7 +115,7 @@
     <mat-icon>cloud_upload</mat-icon>
     <span><strong>Drop files here</strong> or click to choose · they go to <strong>{{ path() || 'Uploads' }}</strong></span>
     <input type="file" multiple class="visually-hidden"
-      accept=".zip,.tar,.tar.gz,.tgz,.mp3,.ogg,.flac,.wav,.wma,application/zip,application/gzip,application/x-tar,audio/*"
+      accept=".zip,.tar,.tar.gz,.tgz,.mp3,.ogg,.flac,.wav,.wma,.mp4,.m4v,.mov,.webm,.ogv,.mkv,.avi,.flv,.mpg,.mpeg,application/zip,application/gzip,application/x-tar,audio/*,video/*"
       (change)="addFiles($any($event.target).files); $any($event.target).value = ''">
   </label>
 
@@ -138,7 +138,7 @@
             }
             @if (item.result; as result) {
               <span class="small" [class.muted]="!result.error">
-                @if (result.imported?.length || !result.error) { {{ result.imported?.length ?? 0 }} audio file(s) added }
+                @if (result.imported?.length || !result.error) { {{ result.imported?.length ?? 0 }} file(s) added }
                 @if (result.imported?.length && result.error) { · }
                 @if (result.error) { {{ result.error }} }
               </span>

@@ -183,7 +183,8 @@ router.get('/files', (req, res) => {
                     type: entry.isDirectory() ? 'directory' : 'file',
                     size: entry.isDirectory() || !stat ? null : stat.size,
                     modified: stat ? stat.mtimeMs : null,
-                    audio: !entry.isDirectory() && importer.isAudio(entry.name)
+                    audio: !entry.isDirectory() && importer.isAudio(entry.name),
+                    video: !entry.isDirectory() && importer.isVideo(entry.name)
                 })))).then((files) => {
                 res.json({ path: relative, files: files, total: visible.length, page: page, size: size });
             });

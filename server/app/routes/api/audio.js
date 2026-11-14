@@ -355,10 +355,10 @@ router.get('/stream/:media', (req, res) => {
             res.status(404).json({ "error": "media not found" });
         });
     };
-    // The private uploads are streamed to their owner only
+    // Tracks only (a video has its own stream, see video.js); the private uploads to their owner
     const track = library.getByUid(req.params.media);
     const session = req.session && req.session.passport ? req.session.passport.user : null;
-    if (track && track.private && (!session || session.username !== track.user)) {
+    if (!track || (track.private && (!session || session.username !== track.user))) {
         return res.status(404).json({ message: 'media not found' });
     }
     helpers.checkingAuthorization(req, res, () => {

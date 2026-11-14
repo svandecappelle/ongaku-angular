@@ -397,6 +397,46 @@ test('the full player offers its animations, each one drawn; turned off, only th
   await page.waitFor(painted('app-player-bar .sheet app-spinning-disc canvas'), { what: 'the still disc and its progress ring' });
 });
 
+test('the Videos page lists the videos by folder; one plays, stopping the music, then the next one', { skip }, async () => {
+  // Music first: a video that plays pauses it
+  await page.goto('/album/Lyric%20Band/Songs', await login('carol'));
+  await page.waitFor(`document.querySelectorAll('app-track-list tbody tr').length === 3`, { what: 'the tracks' });
+  await playRow('No lyrics song');
+  await page.waitFor(`navigator.mediaSession.playbackState === 'playing'`, { what: 'the music playing' });
+
+  // From the menu, without leaving the application
+  await page.eval(`document.querySelector('a[href="/videos"]').click()`);
+  await page.waitFor(`document.querySelectorAll('app-videos-page .video-card').length === 3`, { what: 'the three videos' });
+  const sections = await page.eval(`[...document.querySelectorAll('app-videos-page .section')].map((s) => s.querySelector('.folder-name').textContent.trim() + ':' + s.querySelectorAll('.video-card').length)`);
+  assert.deepEqual(sections, ['Videos:1', 'Holidays:2']);
+  await page.waitFor(`[...document.querySelectorAll('app-videos-page .poster img')].some((img) => img.complete && img.naturalWidth > 0)`, { what: 'a poster' });
+  assert.ok(await page.eval(`[...document.querySelectorAll('app-videos-page .video-card')].find((c) => c.textContent.includes('Old clip')).textContent.includes('Download only')`), 'the MPEG-1 is marked');
+
+  // Search
+  await page.eval(`(() => { const input = document.querySelector('app-videos-page .search input'); input.value = 'beach'; input.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+  await page.waitFor(`document.querySelectorAll('app-videos-page .video-card').length === 1`, { what: 'the search' });
+
+  // It plays, and the music stops
+  await page.eval(`document.querySelector('app-videos-page .video-card').click()`);
+  await page.waitFor(`document.querySelector('app-video-page h1')?.textContent.trim() === 'Beach day'`, { what: 'the video page' });
+  await page.waitFor(`document.querySelector('app-video-page video')?.currentTime > 0.3`, { what: 'the video playing' });
+  await page.waitFor(`navigator.mediaSession.playbackState === 'paused'`, { what: 'the music paused' });
+  assert.equal(await page.eval(`document.querySelector('app-video-page .siblings .current').textContent.includes('Beach day')`), true);
+
+  // Seeking near the end: the next video of the folder follows
+  await page.eval(`(() => { const v = document.querySelector('app-video-page video'); v.currentTime = v.duration - 0.2; })()`);
+  await page.waitFor(`document.querySelector('app-video-page h1')?.textContent.trim() === 'Mountain trip'`, { what: 'the next video', timeout: 15000 });
+  await page.waitFor(`document.querySelector('app-video-page video')?.currentTime > 0.1`, { what: 'the next video playing' });
+
+  // A format the browsers do not play: a download instead
+  await page.eval(`document.querySelector('app-video-page .back').click()`);
+  await page.waitFor(`document.querySelectorAll('app-videos-page .video-card').length === 3`, { what: 'the list again' });
+  await page.eval(`[...document.querySelectorAll('app-videos-page .video-card')].find((c) => c.textContent.includes('Old clip')).click()`);
+  await page.waitFor(`document.querySelector('app-video-page .unplayable a[download]')`, { what: 'the download of the MPEG-1' });
+  assert.ok(!(await page.eval(`!!document.querySelector('app-video-page video')`)));
+  assert.equal(await page.eval(`document.querySelector('app-video-page .unplayable a[download]').getAttribute('download')`), 'Old clip.mpg');
+});
+
 test('a backup is downloaded and restored from the Backup tab, the data and the music apart', { skip }, async () => {
   await page.goto('/admin', await login('boss'));
   await page.waitFor(`[...document.querySelectorAll('.mdc-tab')].some((tab) => tab.textContent.trim() === 'Backup')`, { what: 'the tabs' });
