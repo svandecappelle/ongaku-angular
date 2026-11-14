@@ -314,6 +314,46 @@ async function waveformPlaces({ bar, full }) {
   }
 }
 
+test('several uploads are selected with their boxes, a range with shift, and deleted at once', { skip }, async (t) => {
+  await api('/api/user/files/folder', { as: 'carol', json: { name: 'Mass edit' } });
+  t.after(() => api(`/api/user/files?path=${encodeURIComponent('Mass edit')}`, { as: 'carol', method: 'DELETE' }));
+  const target = path.join(APP, 'public/user/carol/imported/Mass edit');
+  for (let n = 1; n <= 6; n++) {
+    fs.writeFileSync(path.join(target, `item-${n}.txt`), 'x'.repeat(1000));
+  }
+  await page.goto('/my-library?tab=uploads&path=Mass%20edit', await login('carol'));
+  await page.waitFor(`document.querySelectorAll('app-uploads-browser .file').length === 6`, { what: 'the files' });
+  // A press then a click, as a mouse does
+  const box = (n, shiftKey = false) => page.eval(`(() => {
+    const input = document.querySelectorAll('app-uploads-browser .file .file-check input')[${n}];
+    input.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, shiftKey: ${shiftKey} }));
+    input.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: ${shiftKey} }));
+  })()`);
+  const barText = () => page.eval(`document.querySelector('app-uploads-browser .selection-bar').textContent.replace(/\\s+/g, ' ').trim()`);
+
+  // The second, then the fifth with shift: the four between them
+  await box(1);
+  await page.waitFor(`document.querySelector('app-uploads-browser .selection-bar.active')`, { what: 'the selection bar' });
+  await box(4, true);
+  await page.waitFor(`document.querySelectorAll('app-uploads-browser .file.selected').length === 4`, { what: 'the range' });
+  assert.match(await barText(), /4 files selected · 3\.9 KB/);
+
+  // Deleted after the confirmation
+  await page.eval(`window.confirm = (text) => { window.lastConfirm = text; return true; }`);
+  await page.eval(`document.querySelector('app-uploads-browser .delete-selected').click()`);
+  await page.waitFor(`document.querySelectorAll('app-uploads-browser .file').length === 2`, { what: 'the files left' });
+  assert.equal(await page.eval(`window.lastConfirm`), 'Delete 4 files? This cannot be undone.');
+  assert.deepEqual(await page.eval(`[...document.querySelectorAll('app-uploads-browser .file-name')].map((n) => n.textContent.trim())`), ['item-1.txt', 'item-6.txt']);
+  assert.deepEqual(fs.readdirSync(target).sort(), ['item-1.txt', 'item-6.txt']);
+  assert.ok(!(await page.eval(`!!document.querySelector('app-uploads-browser .selection-bar.active')`)), 'the selection is cleared');
+
+  // The header box: all of the page, then none
+  await page.eval(`document.querySelector('app-uploads-browser .select-all input').click()`);
+  await page.waitFor(`document.querySelectorAll('app-uploads-browser .file.selected').length === 2`, { what: 'all selected' });
+  await page.eval(`[...document.querySelectorAll('app-uploads-browser .selection-actions button')].find((b) => b.textContent.includes('Clear')).click()`);
+  await page.waitFor(`!document.querySelector('app-uploads-browser .file.selected')`, { what: 'the selection cleared' });
+});
+
 test('the seek bar shows the waveform, the row playing an equalizer; each one chosen apart from the movement', { skip }, async (t) => {
   t.after(async () => {
     await appearance(MOVEMENT, 'Subtle');

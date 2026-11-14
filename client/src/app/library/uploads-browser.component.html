@@ -58,9 +58,32 @@
       }
     </div>
   @if (files()!.length) {
+    <div class="selection-bar" [class.active]="selected().size > 0" (keydown.escape)="clearSelection()">
+      <mat-checkbox class="select-all" [checked]="allSelected()" [indeterminate]="someSelected()" (change)="toggleAll()"
+        [aria-label]="allSelected() ? 'Unselect all the items of this page' : 'Select all the items of this page'"></mat-checkbox>
+      @if (selected().size) {
+        <span class="selection-text" role="status">
+          <strong>{{ selectionLabel() }}</strong> selected
+          @if (selectionSize()) {
+            <span class="muted">· {{ formatSize(selectionSize()) }}</span>
+          }
+        </span>
+        <span class="selection-actions">
+          <button mat-button type="button" (click)="clearSelection()">Clear</button>
+          <button mat-flat-button color="warn" type="button" class="delete-selected" (click)="removeSelected()" [disabled]="deleting()">
+            <mat-icon>delete_outline</mat-icon>
+            {{ deleting() ? 'Deleting…' : 'Delete' }}
+          </button>
+        </span>
+      } @else {
+        <span class="muted small">Select items to delete several at once · Shift+click selects a range</span>
+      }
+    </div>
     <ul class="files" [class.stale]="loading()">
       @for (file of files(); track file.name) {
-        <li class="file" [class.directory]="file.type === 'directory'">
+        <li class="file" [class.directory]="file.type === 'directory'" [class.selected]="isSelected(file)">
+          <mat-checkbox class="file-check" [checked]="isSelected(file)" (mousedown)="shift = $event.shiftKey" (keydown)="shift = $event.shiftKey" (change)="toggle(file, shift)"
+            [aria-label]="'Select ' + file.name"></mat-checkbox>
           <button type="button" class="file-main" (click)="open(file)" [disabled]="file.type !== 'directory'"
             [attr.aria-label]="file.type === 'directory' ? 'Open the folder ' + file.name : null">
             <mat-icon class="file-icon">{{ icon(file) }}</mat-icon>

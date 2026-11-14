@@ -300,3 +300,36 @@
 mat-paginator {
   background: transparent;
 }
+
+// Selection of several items: the bar over the list, the checked rows
+.selection-bar {
+  position: sticky;
+  top: 64px;
+  z-index: 2;
+  min-height: 48px;
+  padding: 4px 8px 4px 0;
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  transition: background .15s;
+  &.active {
+    background: color-mix(in srgb, var(--ongaku-accent) 14%, var(--ongaku-surface));
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .18);
+  }
+}
+
+.selection-text {
+  flex: 1;
+  min-width: 160px;
+}
+
+.selection-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.file.selected {
+  background: color-mix(in srgb, var(--ongaku-accent) 8%, transparent);
+}

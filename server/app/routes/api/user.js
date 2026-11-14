@@ -222,6 +222,51 @@ router.delete('/files', (req, res) => {
     });
 });
 
+/** Items deleted at once at most: a page of the uploads view holds 200 */
+const MAX_DELETED = 1000;
+
+/**
+ * Deletes several files and folders of the uploads at once: { paths: [relative paths] } ->
+ * { deleted: [paths], failed: [{ path, message }] }. The library is read again once.
+ */
+router.post('/files/delete', (req, res) => {
+    if (!middleware.isAuthenticated(req)) {
+        return res.status(403).json({ message: 'You need to be logged' });
+    }
+    const paths = req.body && req.body.paths;
+    if (!Array.isArray(paths) || !paths.length || paths.length > MAX_DELETED || !paths.every((item) => typeof item === 'string' && item.trim())) {
+        return res.status(400).json({ message: `paths must be a list of 1 to ${MAX_DELETED} paths of your uploads` });
+    }
+    const username = req.session.passport.user.username;
+    const root = uploadsRoot(username);
+    const deleted = [];
+    const failed = [];
+    // A folder and a file inside it may both be chosen: the folder takes the file along
+    const targets = [...new Set(paths)].map((relative) => ({ relative, target: insideUploads(username, relative) }));
+    async.eachSeries(targets, ({ relative, target }, next) => {
+        if (!target || target === root) {
+            failed.push({ path: relative, message: target === root ? 'The uploads folder itself cannot be deleted' : 'Invalid path' });
+            return next();
+        }
+        fs.rm(target, { recursive: true, force: false }, (err) => {
+            if (err && err.code !== 'ENOENT') {
+                console.error(`Cannot delete ${target}`, err.message);
+                failed.push({ path: relative, message: 'The file could not be deleted' });
+            } else if (err && !targets.some((other) => other.target && other.target !== target && target.startsWith(other.target + path.sep))) {
+                failed.push({ path: relative, message: 'No such file' });
+            } else {
+                deleted.push(relative);
+            }
+            next();
+        });
+    }, () => {
+        if (!deleted.length) {
+            return res.status(failed.length ? 400 : 200).json({ deleted, failed });
+        }
+        rescanUser(username).then(() => res.json({ deleted, failed }));
+    });
+});
+
 router.post('/files/upload', (req, res) => {
     withUploadsPath(req, res, (username, target) => {
         if (!fs.existsSync(target)) {

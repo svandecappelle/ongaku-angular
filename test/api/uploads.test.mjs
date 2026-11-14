@@ -90,3 +90,36 @@ test('private uploads are only visible to their owner', async (t) => {
 test('uploads need a session', async () => {
   assert.notEqual((await api('/api/user/files/upload', { form: fileForm('small.mp3') })).status, 200);
 });
+
+test('several uploads are deleted at once, folders with their content; the library follows', async (t) => {
+  t.after(() => removeUploads('alice'));
+  const names = async () => (await api('/api/user/files', { as: 'alice' })).body.files.map((file) => file.name).sort();
+  assert.equal((await upload('alice', 'small.mp3')).status, 200);
+  assert.equal((await upload('alice', 'private.mp3')).status, 200);
+  assert.equal((await api('/api/user/files/folder', { as: 'alice', json: { name: 'Kept' } })).status, 200);
+  assert.equal((await api('/api/user/files/folder', { as: 'alice', json: { name: 'Gone' } })).status, 200);
+  const intoGone = await api('/api/user/files/upload?path=Gone', { as: 'alice', form: fileForm('three.zip') });
+  assert.equal(intoGone.status, 200, JSON.stringify(intoGone.body));
+  await eventually(() => track('Zipped 1', 'alice'), { what: 'the tracks of the folder' });
+  await eventually(() => track('Small upload', 'alice'), { what: 'the uploaded track' });
+
+  // A folder and a file inside it, a file, a path out of the uploads, the uploads folder itself
+  const answer = await api('/api/user/files/delete', { as: 'alice', json: { paths: ['Gone', 'Gone/Band/z1.mp3', 'small.mp3', '../../carol', '.'] } });
+  assert.equal(answer.status, 200, JSON.stringify(answer.body));
+  assert.deepEqual(answer.body.deleted.sort(), ['Gone', 'Gone/Band/z1.mp3', 'small.mp3']);
+  assert.deepEqual(answer.body.failed.map((item) => item.path).sort(), ['.', '../../carol']);
+  assert.deepEqual(await names(), ['Kept', 'private.mp3']);
+
+  // The library was read again before the answer
+  assert.equal(await track('Small upload', 'alice'), undefined);
+  assert.equal(await track('Zipped 2', 'alice'), undefined);
+  assert.ok(await track('Private upload', 'alice'), 'the file not chosen stays');
+
+  // Nothing to delete, wrong requests, no session
+  assert.equal((await api('/api/user/files/delete', { as: 'alice', json: { paths: ['not-there.mp3'] } })).status, 400);
+  for (const body of [{}, { paths: [] }, { paths: 'small.mp3' }, { paths: [3] }, { paths: [''] }, { paths: Array(1001).fill('x') }]) {
+    assert.equal((await api('/api/user/files/delete', { as: 'alice', json: body })).status, 400, JSON.stringify(body).slice(0, 60));
+  }
+  assert.notEqual((await api('/api/user/files/delete', { json: { paths: ['private.mp3'] } })).status, 200);
+  assert.deepEqual(await names(), ['Kept', 'private.mp3']);
+});

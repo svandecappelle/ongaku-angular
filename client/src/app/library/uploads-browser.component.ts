@@ -101,6 +101,26 @@ export class UploadsBrowserComponent {
     return quota?.quota ? Math.min(100, Math.round((100 * quota.used) / quota.quota)) : 0;
   });
 
+  /** Names checked in the page shown: cleared with another folder, page or filter */
+  readonly selected = signal<ReadonlySet<string>>(new Set());
+  readonly deleting = signal(false);
+  /** Last row checked, for the range of a shift click */
+  private anchor: string | null = null;
+  readonly selectedFiles = computed(() => (this.files() ?? []).filter((file) => this.selected().has(file.name)));
+  readonly allSelected = computed(() => !!this.files()?.length && this.selectedFiles().length === this.files()!.length);
+  readonly someSelected = computed(() => this.selectedFiles().length > 0 && !this.allSelected());
+  readonly selectionSize = computed(() => this.selectedFiles().reduce((sum, file) => sum + (file.size ?? 0), 0));
+  /** "2 files and 1 folder" */
+  readonly selectionLabel = computed(() => {
+    const files = this.selectedFiles().filter((file) => file.type === 'file').length;
+    const folders = this.selectedFiles().length - files;
+    const parts = [
+      files ? `${files} ${files === 1 ? 'file' : 'files'}` : '',
+      folders ? `${folders} ${folders === 1 ? 'folder' : 'folders'}` : '',
+    ].filter(Boolean);
+    return parts.join(' and ');
+  });
+
   readonly crumbs = computed(() => {
     const parts = this.path().split('/').filter(Boolean);
     return parts.map((name, i) => ({ name, path: parts.slice(0, i + 1).join('/') }));
@@ -120,6 +140,7 @@ export class UploadsBrowserComponent {
   }
 
   load() {
+    this.clearSelection();
     this.failed.set(false);
     this.loading.set(true);
     const request = ++this.request;
@@ -203,6 +224,79 @@ export class UploadsBrowserComponent {
         this.changed.emit();
       },
       error: (err: HttpErrorResponse) => this.error(err, 'The file could not be deleted'),
+    });
+  }
+
+  isSelected(file: UploadedFile) {
+    return this.selected().has(file.name);
+  }
+
+  /** Shift held when a box was pressed (its change event does not tell, and comes before the click) */
+  shift = false;
+
+  /** Checks or unchecks a row; with shift, the rows since the last one checked too */
+  toggle(file: UploadedFile, range = false) {
+    const files = this.files() ?? [];
+    const check = !this.isSelected(file);
+    const next = new Set(this.selected());
+    const from = this.anchor === null ? -1 : files.findIndex((f) => f.name === this.anchor);
+    const to = files.findIndex((f) => f.name === file.name);
+    if (range && from >= 0 && to >= 0) {
+      for (const f of files.slice(Math.min(from, to), Math.max(from, to) + 1)) {
+        if (check) {
+          next.add(f.name);
+        } else {
+          next.delete(f.name);
+        }
+      }
+    } else if (check) {
+      next.add(file.name);
+    } else {
+      next.delete(file.name);
+    }
+    this.anchor = file.name;
+    this.shift = false;
+    this.selected.set(next);
+  }
+
+  /** The header box: all the rows of the page, or none */
+  toggleAll() {
+    this.selected.set(this.allSelected() ? new Set() : new Set((this.files() ?? []).map((file) => file.name)));
+    this.anchor = null;
+  }
+
+  clearSelection() {
+    if (this.selected().size) {
+      this.selected.set(new Set());
+    }
+    this.anchor = null;
+  }
+
+  removeSelected() {
+    const chosen = this.selectedFiles();
+    if (!chosen.length || this.deleting()) {
+      return;
+    }
+    const folders = chosen.some((file) => file.type === 'directory');
+    if (!confirm(`Delete ${this.selectionLabel()}${folders ? ' with everything in them' : ''}? This cannot be undone.`)) {
+      return;
+    }
+    this.deleting.set(true);
+    this.http.post<{ deleted: string[]; failed: { path: string; message: string }[] }>('/api/user/files/delete', {
+      paths: chosen.map((file) => this.join(file.name)),
+    }).subscribe({
+      next: ({ deleted, failed }) => {
+        this.deleting.set(false);
+        const done = `${deleted.length} ${deleted.length === 1 ? 'item' : 'items'} deleted`;
+        this.snackBar.open(failed.length ? `${done}, ${failed.length} could not be: ${failed[0].message}` : done, undefined, { duration: failed.length ? 6000 : 3000 });
+        this.load();
+        this.changed.emit();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.deleting.set(false);
+        this.error(err, 'The files could not be deleted');
+        this.load();
+      },
     });
   }
 
