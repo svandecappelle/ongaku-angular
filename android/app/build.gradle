@@ -1,0 +1,52 @@
+plugins {
+    id 'com.android.application'
+}
+
+// The signing key, made once by build.sh and kept out of git: an update must be signed with it
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('keystore/keystore.properties')
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+
+android {
+    namespace 'io.github.svandecappelle.ongaku'
+    compileSdk 35
+    buildToolsVersion '35.0.0'
+
+    defaultConfig {
+        applicationId 'io.github.svandecappelle.ongaku'
+        minSdk 23
+        targetSdk 35
+        versionCode Integer.parseInt(System.getenv('ONGAKU_VERSION_CODE') ?: '1')
+        versionName System.getenv('ONGAKU_VERSION_NAME') ?: '1.0.0'
+    }
+
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile rootProject.file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // Opens the server in Chrome (Trusted Web Activity): background playback and media controls
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="change_server"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/change_server_short"
+        android:shortcutLongLabel="@string/change_server">
+        <intent
+            android:action="io.github.svandecappelle.ongaku.SETUP"
+            android:targetPackage="io.github.svandecappelle.ongaku"
+            android:targetClass="io.github.svandecappelle.ongaku.MainActivity" />
+    </shortcut>
+</shortcuts>

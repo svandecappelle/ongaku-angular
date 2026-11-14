@@ -55,6 +55,9 @@ const routes: Routes = [
   { path: 'admin', component: AdminComponent, canActivate: [AuthGuard] },
 
   { path: 'login', component: LoginComponent },
+  // Open before signing in: the app is installed first, then signed in
+  { path: 'android',
+    loadComponent: () => import('./v3/android-page/android-page.component').then((m) => m.AndroidPageComponent) },
   { path: 'register', component: RegisterComponent },
 ];
 

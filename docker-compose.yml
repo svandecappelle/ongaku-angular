@@ -23,6 +23,8 @@ services:
       - ongaku-users:/app/public/user
       - ongaku-covers:/app/public/artists-covers
       - ongaku-lyrics:/app/public/lyrics
+      # The Android application built by "make apk", offered for download (created empty by "make app")
+      - ./android/dist:/app/android/dist:ro
 
   redis:
     image: redis:7-alpine

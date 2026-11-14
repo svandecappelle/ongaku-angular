@@ -1,0 +1,9 @@
+# Builds
+/build/
+/app/build/
+/.gradle/
+/.gradle-cache/
+/dist/
+local.properties
+# The signing key of the application: never in git, kept safe by its owner
+/keystore/

@@ -37,6 +37,9 @@ class Routes {
       console.log('Error on checking installation', err);
     });
 
+    // The Android application and the keys Chrome checks: open to everyone (before signing in)
+    app.use(require('./android'));
+
     // What changes something comes from the pages of this site, not from another one
     app.use('/api', sameOrigin());
     // The sessions of the accounts disabled or deleted since their login end here

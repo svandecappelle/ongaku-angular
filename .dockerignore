@@ -5,6 +5,8 @@ client/dist
 client/.angular
 
 # Not needed in the image
+# (the APK of android/dist is mounted by docker-compose.yml)
+android
 .git
 docs
 Makefile

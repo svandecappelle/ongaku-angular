@@ -17,6 +17,7 @@ import { MediaSessionService } from '../../services/media-session.service';
 import { QueueStorageService } from '../../services/queue-storage.service';
 import { PlayerBarComponent } from '../player-bar/player-bar.component';
 import { QueuePanelComponent } from '../queue-panel/queue-panel.component';
+import { AndroidAppService } from '../../services/android-app.service';
 
 interface NavItem {
   label: string;
@@ -62,6 +63,8 @@ export class ShellComponent {
   readonly queueOpen = signal(false);
   readonly searchValue = toSignal(this.store.select((state) => String(state.search ?? '')), { initialValue: '' });
   readonly administrator = toSignal(this.auth.isAdministrator(), { initialValue: false });
+  readonly android = inject(AndroidAppService);
+  readonly androidApp = toSignal(this.android.info$, { initialValue: null });
 
   readonly nav: NavItem[] = [
     { label: 'Discover', icon: 'home', link: '/', exact: true },

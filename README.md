@@ -26,6 +26,15 @@ Music and videos added, changed or deleted in the music folder show in the appli
 a rescan. On a network share (NFS, SMB), where the system tells no changes, set `watchLibrary: poll` in
 `server/config/application.yml`; on Linux, a very large library may need a higher `fs.inotify.max_user_watches`.
 
+### Android application
+
+`make apk` builds an Android application in Docker (nothing else to install): it asks for the address of
+the server once, then opens it full screen in Chrome, with the music playing on when the screen is off.
+The server offers it for download on its "Android app" page (from the login page and the account menu),
+and publishes `/.well-known/assetlinks.json` so Chrome shows it without its address bar (HTTPS needed).
+The signing key is made once in `android/keystore/`: back it up, the next versions must be signed with it.
+An APK built elsewhere is trusted by adding its key to `androidAppFingerprints` in `application.yml`.
+
 For development, `make deps` installs the npm dependencies and `make dev` runs the server and the client in
 watch mode.
 

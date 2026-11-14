@@ -88,6 +88,17 @@
         <span>Administration</span>
       </a>
     }
+    @if (android.insideApp) {
+      <a mat-menu-item class="change-server" href="ongaku://setup">
+        <mat-icon>swap_horiz</mat-icon>
+        <span>Change the server</span>
+      </a>
+    } @else if (androidApp()?.available) {
+      <a mat-menu-item routerLink="/android">
+        <mat-icon>phone_android</mat-icon>
+        <span>Android app</span>
+      </a>
+    }
     <mat-divider></mat-divider>
     <button mat-menu-item (click)="logout()">
       <mat-icon>exit_to_app</mat-icon>

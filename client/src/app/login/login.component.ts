@@ -8,6 +8,8 @@ import { MaterialModule } from '../modules/material.module';
 import { AuthenticationService } from '../services/authentication.service';
 import { InstallService } from '../install/install.service';
 import { AuthCardComponent } from '../auth-card/auth-card.component';
+import { AndroidAppService } from '../services/android-app.service';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 /** Why the sign-in failed, from the answer of /api/auth/login */
 function failureMessage(err: unknown): string {
@@ -39,6 +41,9 @@ function failureMessage(err: unknown): string {
   imports: [MaterialModule, ReactiveFormsModule, RouterLink, AuthCardComponent],
 })
 export class LoginComponent {
+  readonly android = inject(AndroidAppService);
+  readonly androidApp = toSignal(this.android.info$, { initialValue: null });
+
   private readonly auth = inject(AuthenticationService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);

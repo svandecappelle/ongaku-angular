@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ongaku</string>
+    <string name="setup_title">Connect to your server</string>
+    <string name="setup_text">The address of your Ongaku server, as you open it in a browser.</string>
+    <string name="server_hint">music.example.com</string>
+    <string name="connect">Connect</string>
+    <string name="checking">Checking the server…</string>
+    <string name="change_server">Change the server</string>
+    <string name="change_server_short">Change server</string>
+    <string name="error_empty">Type the address of your server.</string>
+    <string name="error_unreachable">The server could not be reached: %1$s</string>
+    <string name="error_not_ongaku">This address does not lead to an Ongaku server.</string>
+</resources>

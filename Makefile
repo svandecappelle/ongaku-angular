@@ -61,7 +61,7 @@ else
 fi
 endef
 
-.PHONY: help install app nginx https update upgrade uninstall status logs deps dev build test test-api clean gen-certificate
+.PHONY: help install app nginx https update upgrade uninstall status logs deps dev build test test-api clean gen-certificate apk
 
 help:
 	@cat <<'EOF'
@@ -87,6 +87,8 @@ help:
 	  make test      Run the automated tests (API and browser) on a throw-away instance:
 	                 port 4200, Redis database 14 (flushed). Needs ffmpeg; the browser tests a Chromium.
 	  make test-api  The API tests only (no client build).
+	  make apk       Build the Android application (Docker), offered for download by the server.
+	                 The signing key is made once in android/keystore/: back it up.
 	  make clean     Remove the dependencies and the builds.
 	EOF
 
@@ -142,6 +144,8 @@ app:
 	settings="$$( { grep -vE '^(MUSIC_DIR|ONGAKU_PORT|REDIS_PASSWORD)=' "$(ENV_FILE)" 2>/dev/null || true; printf 'MUSIC_DIR=%s\nONGAKU_PORT=%s\nREDIS_PASSWORD=%s\n' "$$music" "$(PORT)" "$$redis_password"; } )"
 	if [ "$$settings" != "$$(cat "$(ENV_FILE)" 2>/dev/null)" ]; then (umask 077; printf '%s\n' "$$settings" > "$(ENV_FILE)"); chmod 600 "$(ENV_FILE)"; fi
 	echo "Building and starting the containers on 127.0.0.1:$(PORT) (the first build takes a few minutes)…"
+	# Mounted by docker-compose.yml: empty until "make apk"
+	mkdir -p android/dist
 	$(COMPOSE) up -d --build
 	for i in $$(seq 1 60); do
 	  if curl -fsS -o /dev/null "http://127.0.0.1:$(PORT)/api/auth" 2>/dev/null; then echo "Ongaku answers on port $(PORT)."; exit 0; fi
@@ -288,6 +292,20 @@ build: deps
 test:
 	@if [ ! -f client/dist/index.html ]; then (cd client && npx ng build); fi
 	node test/run.mjs
+
+# ---------- Android application ----------
+
+APK_IMAGE ?= ongaku-android-build
+
+apk:
+	@command -v docker >/dev/null || { echo "Docker is not installed: https://docs.docker.com/engine/install/" >&2; exit 1; }
+	docker build -q -t $(APK_IMAGE) android > /dev/null
+	# The version code grows with each commit: the phones install a newer APK over the older one
+	version="$$(node -p "require('./package.json').version" 2>/dev/null || echo 1.0.0)"
+	code="$$(git rev-list --count HEAD 2>/dev/null || echo 1)"
+	docker run --rm -u "$$(id -u):$$(id -g)" -e HOME=/tmp -e GRADLE_USER_HOME=/project/.gradle-cache \
+	  -e ONGAKU_VERSION_NAME="$$version" -e ONGAKU_VERSION_CODE="$$code" \
+	  -v "$(CURDIR)/android:/project" $(APK_IMAGE) sh build.sh
 
 test-api:
 	@node test/run.mjs api

@@ -502,6 +502,35 @@ test('an album copied into the music folder shows in the open page, told by a no
   assert.equal(await page.eval(`location.pathname`), '/', 'no navigation');
 });
 
+test('the Android application is offered from the login page and the account menu', { skip }, async (t) => {
+  const dist = path.join(APP, 'android/dist');
+  fs.mkdirSync(dist, { recursive: true });
+  fs.writeFileSync(path.join(dist, 'ongaku.apk'), Buffer.alloc(2048));
+  fs.writeFileSync(path.join(dist, 'ongaku.json'), JSON.stringify({ versionName: '1.2.3', versionCode: 7, fingerprints: [] }));
+  t.after(() => fs.rmSync(dist, { recursive: true, force: true }));
+
+  // Before signing in
+  await page.goto('/login');
+  await page.waitFor(`document.querySelector('app-login .android-link a')`, { what: 'the link of the login page' });
+  await page.eval(`document.querySelector('app-login .android-link a').click()`);
+  await page.waitFor(`document.querySelector('app-android-page .download-button')`, { what: 'the Android page' });
+  assert.equal(await page.eval(`document.querySelector('app-android-page .download-button').getAttribute('href')`), '/download/ongaku.apk');
+  assert.match(await page.eval(`document.querySelector('app-android-page .download-text').textContent`), /Version 1\.2\.3 · 2\.0 KB/);
+  assert.equal(await page.eval(`document.querySelector('app-android-page .server').textContent.trim()`), await page.eval(`location.origin`));
+  // Not an Android phone: no link to the installed application
+  assert.ok(!(await page.eval(`!!document.querySelector('app-android-page .connect-app')`)));
+  assert.ok(await page.eval(`!!document.querySelector('app-android-page .back')`), 'back to the sign in');
+
+  // Signed in: from the account menu
+  await page.goto('/', await login('carol'));
+  await page.waitFor(`document.querySelector('app-shell button.avatar')`, { what: 'the account button' });
+  await page.eval(`document.querySelector('app-shell button.avatar').click()`);
+  await page.waitFor(`[...document.querySelectorAll('.mat-mdc-menu-panel a')].some((a) => a.textContent.includes('Android app'))`, { what: 'the menu entry' });
+  await page.eval(`[...document.querySelectorAll('.mat-mdc-menu-panel a')].find((a) => a.textContent.includes('Android app')).click()`);
+  await page.waitFor(`document.querySelector('app-android-page .download-button')`, { what: 'the Android page signed in' });
+  assert.ok(!(await page.eval(`!!document.querySelector('app-android-page .back')`)), 'no link to the sign in');
+});
+
 test('a backup is downloaded and restored from the Backup tab, the data and the music apart', { skip }, async () => {
   await page.goto('/admin', await login('boss'));
   await page.waitFor(`[...document.querySelectorAll('.mdc-tab')].some((tab) => tab.textContent.trim() === 'Backup')`, { what: 'the tabs' });

@@ -1,0 +1,161 @@
+@use '../page';
+
+:host {
+  display: block;
+  color: var(--ongaku-text);
+}
+
+@include page.layout;
+
+.page {
+  max-width: 760px;
+}
+
+.small {
+  font-size: 13px;
+}
+
+.page-header {
+  padding: 24px 28px;
+  border-radius: var(--ongaku-radius-xl);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: color-mix(in srgb, var(--ongaku-accent) 12%, var(--ongaku-surface));
+  border: 1px solid var(--ongaku-border);
+  h1 {
+    margin: 0;
+    font-size: 36px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  p {
+    margin: 0;
+  }
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ongaku-accent);
+}
+
+.card {
+  padding: 20px 24px;
+  border-radius: var(--ongaku-radius-xl);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  background: var(--ongaku-surface);
+  border: 1px solid var(--ongaku-border);
+  h2 {
+    margin: 0 0 4px;
+    font-size: 20px;
+  }
+  p {
+    margin: 0;
+  }
+}
+
+.card-icon {
+  width: 36px;
+  height: 36px;
+  font-size: 36px;
+  color: var(--ongaku-accent);
+}
+
+.inside > div {
+  flex: 1;
+  min-width: 200px;
+}
+
+.download-text {
+  flex: 1;
+  min-width: 220px;
+}
+
+.download-button {
+  height: 48px;
+  border-radius: 24px;
+  padding: 0 22px;
+}
+
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  li {
+    position: relative;
+    padding-left: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    counter-increment: step;
+    &::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: -2px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      color: var(--ongaku-on-accent);
+      background: var(--ongaku-accent);
+    }
+  }
+}
+
+.server-row {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.server {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+  background: var(--ongaku-surface-2);
+  border: 1px solid var(--ongaku-border);
+}
+
+.connect-app {
+  margin-top: 6px;
+}
+
+.note {
+  margin: 0;
+}
+
+.state {
+  border-radius: var(--ongaku-radius-xl);
+  background: var(--ongaku-surface);
+  border: 1px solid var(--ongaku-border);
+  padding: 24px;
+  h2 {
+    margin: 0;
+    font-size: 20px;
+  }
+  p {
+    max-width: 480px;
+    margin: 0;
+  }
+}
+
+.back {
+  align-self: flex-start;
+  color: var(--ongaku-muted);
+}

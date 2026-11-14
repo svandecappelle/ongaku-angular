@@ -1,0 +1,84 @@
+<div class="page">
+  <header class="page-header">
+    <span class="eyebrow">Get the app</span>
+    <h1>Ongaku for Android</h1>
+    <p class="muted">Your library on your phone: full screen, with the music going on when the screen is off and the controls on the lock screen.</p>
+  </header>
+
+  @if (android.insideApp) {
+    <section class="card inside" aria-labelledby="inside-title">
+      <mat-icon class="card-icon" aria-hidden="true">phone_android</mat-icon>
+      <div>
+        <h2 id="inside-title">You are using the app</h2>
+        <p class="muted">It is connected to <strong>{{ server }}</strong>.</p>
+      </div>
+      <a mat-stroked-button class="change-server" href="ongaku://setup">
+        <mat-icon>swap_horiz</mat-icon>
+        Change the server
+      </a>
+    </section>
+  }
+
+  @if (app(); as a) {
+    @if (a.available) {
+      <section class="card download" aria-labelledby="download-title">
+        <div class="download-text">
+          <h2 id="download-title">Install the app</h2>
+          <p class="muted">Version {{ a.versionName }} · {{ formatSize(a.size ?? 0) }} · for Android 6 and newer, with Chrome</p>
+        </div>
+        <a mat-flat-button color="accent" class="download-button" [href]="a.download" download>
+          <mat-icon>file_download</mat-icon>
+          Download the app
+        </a>
+      </section>
+
+      <ol class="steps">
+        <li>
+          <strong>Download the app</strong>
+          <span class="muted">{{ onAndroid ? 'With the button above.' : 'Open this page on your phone, then use the button above.' }}</span>
+        </li>
+        <li>
+          <strong>Install it</strong>
+          <span class="muted">Open the downloaded file. Android may ask to allow your browser to install apps: allow it, then come back.</span>
+        </li>
+        <li>
+          <strong>Connect it to this server</strong>
+          <span class="muted">{{ onAndroid ? 'Open the app and type the address below, or tap the button to fill it in.' : 'Open the app and type the address below.' }}</span>
+          <span class="server-row">
+            <code class="server">{{ server }}</code>
+            <button mat-icon-button type="button" (click)="copyAddress()" [attr.aria-label]="copied() ? 'Address copied' : 'Copy the address'"
+              [matTooltip]="copied() ? 'Copied' : 'Copy'">
+              <mat-icon>{{ copied() ? 'check' : 'content_copy' }}</mat-icon>
+            </button>
+          </span>
+          @if (onAndroid) {
+            <a mat-stroked-button class="connect-app" [href]="setupLink">
+              <mat-icon>open_in_new</mat-icon>
+              Connect the app to this server
+            </a>
+          }
+        </li>
+      </ol>
+      <p class="muted small note">
+        The app is not in the Play Store: it comes from this server. Updates are downloaded here the same way, and install over the previous version.
+      </p>
+    } @else {
+      <div class="state">
+        <mat-icon class="state-icon">phone_android</mat-icon>
+        <h2>The app is not available on this server yet</h2>
+        <p class="muted">An administrator builds it once with <code>make apk</code>. Meanwhile, Chrome can add Ongaku to the home screen from its menu.</p>
+      </div>
+    }
+  } @else {
+    <div class="state" role="status">
+      <mat-spinner diameter="36"></mat-spinner>
+    </div>
+  }
+
+  @if (!loggedIn()) {
+    <a mat-button routerLink="/login" class="back">
+      <mat-icon>arrow_back</mat-icon>
+      Back to the sign in
+    </a>
+  }
+</div>

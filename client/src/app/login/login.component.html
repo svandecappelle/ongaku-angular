@@ -46,4 +46,10 @@
         No account yet? <a routerLink="/register">Create one</a>
       </p>
     }
+
+    @if (androidApp()?.available && !android.insideApp) {
+      <p class="footer android-link">
+        <a routerLink="/android"><mat-icon aria-hidden="true">phone_android</mat-icon>Get the Android app</a>
+      </p>
+    }
 </app-auth-card>
