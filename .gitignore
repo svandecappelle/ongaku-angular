@@ -70,3 +70,4 @@ public/lyrics
 # Configuration of an instance: its session secret and API keys (the server creates it from
 # server/config/application.example.yml)
 /server/config/application.yml
+public/.cache

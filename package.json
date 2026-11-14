@@ -61,16 +61,20 @@
   },
   "optionalDependencies": {
     "identicon": "^3.1.1",
-    "node-wave": "git+ssh://git@github.com/svandecappelle/node-wave.git",
-    "parse-torrent": "^11.0.24",
-    "webtorrent": "^3.0.21"
+    "node-wave": "git+ssh://git@github.com/svandecappelle/node-wave.git"
   },
   "devDependencies": {
     "concurrently": "^10.0.6",
     "nodemon": "^3.1.14"
   },
   "overrides": {
-    "canvas": "^3.2.3"
+    "canvas": "^3.2.3",
+    "sequelize": {
+      "uuid": "^11.1.1"
+    },
+    "nodemon": {
+      "minimatch": "^11.0.1"
+    }
   },
   "allowScripts": {
     "canvas@3.2.3": true

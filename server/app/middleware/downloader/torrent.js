@@ -69,13 +69,15 @@ class TorrentDownloader {
     const client = await this.getClient();
     client.add(torrentContent, (torrent) => {
       // Got torrent metadata!
+      const root = path.resolve(folderContainer);
       torrent.files.forEach((file) => {
-        let folder = file.path.split(('/')).slice(0, -1).join("/");
-        if (folder) {
-          console.log("Creating dir: ", folder);
-          fs.mkdirSync(`${folderContainer}/${folder}`, { recursive: true });
+        // The paths come from the torrent: none may lead out of the folder ("../", absolute)
+        const newPath = path.resolve(root, file.path);
+        if (!newPath.startsWith(root + path.sep)) {
+          console.warn(`Skipping unsafe torrent file: ${file.path}`);
+          return;
         }
-        var newPath = `${folderContainer}/${file.path}`;
+        fs.mkdirSync(path.dirname(newPath), { recursive: true });
         console.log("create file: ", newPath);
 
         const rstream = file.createReadStream();
