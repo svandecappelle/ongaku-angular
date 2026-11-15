@@ -762,6 +762,38 @@ test('uploads are re-arranged: dragged onto a folder or a breadcrumb, moved with
   assert.ok(fs.existsSync(path.join(root, 'b.txt')));
 });
 
+test('an administrator makes a join link; it creates one account while sign up is closed', { skip }, async (t) => {
+  t.after(async () => {
+    await api('/api/admin/users/dana', { as: 'boss', method: 'DELETE' });
+    for (const item of (await api('/api/admin/invites', { as: 'boss' })).body.invites ?? []) {
+      await api(`/api/admin/invites/${item.token}`, { as: 'boss', method: 'DELETE' });
+    }
+  });
+  await page.goto('/admin', await login('boss'));
+  await page.waitFor(`[...document.querySelectorAll('.mdc-tab')].some((tab) => tab.textContent.trim() === 'Users')`, { what: 'the tabs' });
+  await page.eval(`[...document.querySelectorAll('.mdc-tab')].find((tab) => tab.textContent.trim() === 'Users').click()`);
+  await page.waitFor(`document.querySelector('.mat-mdc-tab-body-active app-join-links .create-link')`, { what: 'the join links' });
+  await page.eval(`(() => { const input = document.querySelector('app-join-links input[name=note]'); input.value = 'For Dana'; input.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+  await page.eval(`document.querySelector('app-join-links .create-link').click()`);
+  await page.waitFor(`document.querySelector('app-join-links .fresh input')?.value.includes('/join/')`, { what: 'the new link' });
+  const link = new URL(await page.eval(`document.querySelector('app-join-links .fresh input').value`));
+  assert.match(await page.eval(`document.querySelector('app-join-links .link-row').textContent.replace(/\\s+/g, ' ')`), /Waiting\s*For Dana\s+Until /);
+
+  // A visitor, without an account: sign up is closed, the link opens it for him
+  await page.goto(link.pathname);
+  await page.waitFor(`document.querySelector('app-register form')`, { what: 'the sign up form' });
+  assert.match(await page.eval(`document.querySelector('app-register').textContent`), /boss invited you/);
+  await fillAndSubmit('app-register', { username: 'dana', email: 'dana@test.io', password: 'danapass1', confirmPassword: 'danapass1' });
+  await page.waitFor(`location.pathname === '/' && !!document.querySelector('app-shell')`, { what: 'signed in' });
+
+  // Used: the link creates nothing more, the administrator sees who used it
+  await page.goto(link.pathname);
+  await page.waitFor(`document.querySelector('app-register .invite-problem')`, { what: 'the used link' });
+  assert.match(await page.eval(`document.querySelector('app-register .invite-problem').textContent`), /used already/);
+  const listed = (await api('/api/admin/invites', { as: 'boss' })).body.invites.find((item) => link.pathname.endsWith(item.token));
+  assert.equal(listed.usedBy, 'dana');
+});
+
 test('a backup is downloaded and restored from the Backup tab, the data and the music apart', { skip }, async () => {
   await page.goto('/admin', await login('boss'));
   await page.waitFor(`[...document.querySelectorAll('.mdc-tab')].some((tab) => tab.textContent.trim() === 'Backup')`, { what: 'the tabs' });

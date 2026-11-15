@@ -24,6 +24,7 @@ const groups = require("./../../model/groups");
 const meta = require("./../../meta");
 const communication = require("./../../communication");
 const db = require("./../../model/database");
+const invites = require('./../../middleware/invites');
 
 const MONTHS = 30;
 const WEEKS = 7;
@@ -278,6 +279,54 @@ router.get('/users', (req, res) => {
         Promise.all(users.map((userData) => folderSize(path.join(USERS_DIRECTORY, userData.username, 'imported'))
             .then((size) => _.extend(userData, { storage: size, self: userData.uid === currentUid(req) }))))
             .then((users) => res.json(_.sortBy(users, (userData) => userData.username.toLowerCase())));
+    });
+});
+
+// ---------- Join links ----------
+
+/** The join links: { invites: [{ token, createdBy, note, created, expires, usedBy, usedAt, state }] } */
+router.get('/invites', (req, res) => {
+    invites.model.list((err, list) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+        res.set('Cache-Control', 'no-cache');
+        res.json({ invites: list.map(invites.describe) });
+    });
+});
+
+/** A link that creates one account, even when sign up is closed: { note?, expiresInDays?: 0 | 1 | 7 | 30 } */
+router.post('/invites', (req, res) => {
+    // Desktop mode: no session, a single local administrator
+    const createdBy = req.session.passport && req.session.passport.user ? req.session.passport.user.username : 'administrator';
+    invites.create(createdBy, req.body || {}, (err, invite, refused) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+        if (!invite) {
+            return res.status(400).json({ message: refused });
+        }
+        res.status(201).json(invites.describe(invite));
+    });
+});
+
+router.delete('/invites/:token', (req, res) => {
+    if (!invites.TOKEN.test(req.params.token)) {
+        return res.status(404).json({ message: 'No such link' });
+    }
+    invites.model.get(req.params.token, (err, invite) => {
+        if (err || !invite) {
+            return res.status(err ? 500 : 404).json({ message: err ? 'Internal server error' : 'No such link' });
+        }
+        invites.model.remove(invite.token, (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+            res.json({ message: 'revoked' });
+        });
     });
 });
 

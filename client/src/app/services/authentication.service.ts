@@ -80,8 +80,13 @@ export class AuthenticationService {
         return this.http.get<{ open: boolean; registerLeft: number }>('/api/auth/register');
     }
 
+    /** Whether a join link can still create an account: { valid, invitedBy, expires }; 404 with the reason */
+    invite(token: string): Observable<{ valid: boolean; invitedBy: string; expires: number | null }> {
+        return this.http.get<{ valid: boolean; invitedBy: string; expires: number | null }>(`/api/auth/invite/${encodeURIComponent(token)}`);
+    }
+
     /** Creates an account and signs it in; errors with the HTTP error (400: invalid field, 409: name or e-mail used, 403: closed) */
-    register(fields: { username: string; email: string; password: string; confirmPassword: string }): Observable<void> {
+    register(fields: { username: string; email: string; password: string; confirmPassword: string; invite?: string }): Observable<void> {
         return this.http.post<any>('/api/auth/register', fields).pipe(map((data) => {
             const userConnected = new User();
             userConnected.id = data?.user?.uid;

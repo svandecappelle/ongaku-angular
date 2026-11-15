@@ -43,6 +43,7 @@ interface Settings {
 }
 
 /** A file queued for the public library import */
+import { JoinLinksComponent } from './join-links.component';
 interface ImportItem {
   file: File;
   progress: number;
@@ -58,7 +59,7 @@ const flag = (value: unknown) => value === true || value === 'true';
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialModule, FormsModule, DatePipe, DecimalPipe, NgTemplateOutlet, RouterLink, CoverEditComponent],
+  imports: [MaterialModule, FormsModule, DatePipe, DecimalPipe, NgTemplateOutlet, RouterLink, CoverEditComponent, JoinLinksComponent],
 })
 export class AdminComponent {
   private readonly admin = inject(AdminService);

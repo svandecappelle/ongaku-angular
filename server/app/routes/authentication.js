@@ -8,6 +8,7 @@ const meta = require('./../meta');
 const utils = require('./../utils');
 const user = require('./../model/user');
 const { limitLogins, limitSignUps } = require('./../middleware/attempts');
+const invites = require('../middleware/invites');
 
 class Authenticator {
 
@@ -63,7 +64,21 @@ class Authenticator {
 
     this.app.post('/api/auth/logout', authority.logout);
     // Slowed down: the guessing of passwords, the creation of accounts in numbers
-    this.app.post('/api/auth/register', limitSignUps, authority.register);
+    this.app.post('/api/auth/register', limitSignUps, (req, res) => authority.register(req, res));
+    // Whether a join link can still create an account (the sign up page asks before showing its form)
+    this.app.get('/api/auth/invite/:token', (req, res) => {
+      invites.usable(req.params.token, (err, invite, reason) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ message: 'Internal server error' });
+        }
+        res.set('Cache-Control', 'no-store');
+        if (!invite) {
+          return res.status(404).json({ message: reason });
+        }
+        res.json({ valid: true, expires: invite.expires || null, invitedBy: invite.createdBy });
+      });
+    });
     this.app.post('/api/auth/login', limitLogins, (req, res, next) => {
 
       if (req.body.username && utils.isEmailValid(req.body.username)) {

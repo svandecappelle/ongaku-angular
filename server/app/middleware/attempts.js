@@ -87,6 +87,11 @@ function limitLogins(req, res, next) {
 
 /** Before a sign up: a few accounts per address and per hour */
 function limitSignUps(req, res, next) {
+  // A join link creates one account only, made by an administrator: not counted. A wrong
+  // token creates nothing (see authority.register).
+  if (req.body && typeof req.body.invite === 'string') {
+    return next();
+  }
   const wait = signUps.wait(req.ip);
   if (wait > 0) {
     return tooMany(res, wait);

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { MaterialModule } from '../../modules/material.module';
 import { AuthenticationService } from '../../services/authentication.service';
@@ -18,7 +18,10 @@ export function samePasswords(group: AbstractControl): ValidationErrors | null {
   return password && confirm && password !== confirm ? { mismatch: true } : null;
 }
 
-/** Sign up page (/register), while the server accepts new accounts */
+/**
+ * Sign up page: /register while the server accepts new accounts, /join/:token with a join
+ * link made by an administrator (one account per link, even when sign up is closed).
+ */
 @Component({
   selector: 'app-register',
   templateUrl: './register.component.html',
@@ -38,17 +41,38 @@ export class RegisterComponent {
     confirmPassword: ['', Validators.required],
   }, { validators: samePasswords });
 
-  /** loading: asking the server whether sign up is open */
-  readonly state = signal<'loading' | 'open' | 'closed'>('loading');
+  /** loading: asking the server whether sign up is open (or the join link usable) */
+  readonly state = signal<'loading' | 'open' | 'closed' | 'invalid'>('loading');
+  /** The token of a join link (/join/:token) */
+  readonly invite = inject(ActivatedRoute).snapshot.paramMap.get('token');
+  /** Who made the join link, once checked */
+  readonly invitedBy = signal<string | null>(null);
+  /** Why the join link cannot be used */
+  readonly inviteProblem = signal<string | null>(null);
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
   readonly showPassword = signal(false);
 
   constructor() {
+    if (this.invite !== null) {
+      this.auth.invite(this.invite).subscribe({
+        next: (invite) => {
+          this.invitedBy.set(invite.invitedBy);
+          this.state.set('open');
+        },
+        error: (err: HttpErrorResponse) => this.refuseInvite(err),
+      });
+      return;
+    }
     this.auth.registration().subscribe({
       next: (registration) => this.state.set(registration.open ? 'open' : 'closed'),
       error: () => this.state.set('closed'),
     });
+  }
+
+  private refuseInvite(err: HttpErrorResponse) {
+    this.inviteProblem.set(err.status === 0 ? 'The server cannot be reached.' : err.error?.message || 'This join link cannot be used');
+    this.state.set('invalid');
   }
 
   submit() {
@@ -62,11 +86,14 @@ export class RegisterComponent {
     const fields = this.form.getRawValue();
     this.submitting.set(true);
     this.error.set(null);
-    this.auth.register({ ...fields, username: fields.username.trim(), email: fields.email.trim() }).subscribe({
+    const invite = this.invite ?? undefined;
+    this.auth.register({ ...fields, username: fields.username.trim(), email: fields.email.trim(), invite }).subscribe({
       next: () => this.router.navigate(['/']),
       error: (err: HttpErrorResponse) => {
         this.submitting.set(false);
-        if (err.status === 403) {
+        if (err.status === 403 && this.invite !== null) {
+          this.refuseInvite(err);
+        } else if (err.status === 403) {
           this.state.set('closed');
         } else if (err.status === 0) {
           this.error.set('The server cannot be reached. Check your connection and try again.');

@@ -19,6 +19,7 @@ const statistics = require('./../model/statistics');
 
 const utils = require('./../utils');
 const { invalidAccountFields } = require('./account-fields');
+const invites = require('./invites');
 
 
 const USERS_IMAGE_DIRECTORY = path.join(__dirname, "/../../../public/user/");
@@ -138,11 +139,36 @@ class Authority {
     };
 
   /**
-   * Sign up, while the number of accounts is under the "allowRegisteration" setting:
-   * { username, email, password, confirmPassword }. The new user is signed in.
+   * Sign up: { username, email, password, confirmPassword, invite? }. Open while the number of
+   * accounts is under the "allowRegisteration" setting; with the token of a join link made by
+   * an administrator (see invites.js), always, once per link. The new user is signed in.
    */
   register (req, res) {
     const body = req.body || {};
+    const token = typeof body.invite === 'string' ? body.invite : null;
+    const proceed = (invite) => {
+      const invalid = invalidAccountFields(body);
+      if (invalid) {
+        return res.status(400).json({ message: invalid });
+      }
+      if (body.password !== body.confirmPassword) {
+        return res.status(400).json({ message: 'The password and its confirmation are different' });
+      }
+      const userData = { username: body.username, password: body.password, email: body.email.trim(), ip: req.ip };
+      this.createAccount(req, res, userData, invite);
+    };
+    if (token !== null) {
+      return invites.usable(token, (err, invite, reason) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ message: 'Internal server error' });
+        }
+        if (!invite) {
+          return res.status(403).json({ message: reason });
+        }
+        proceed(invite);
+      });
+    }
     user.count((err, usercount) => {
       if (err) {
         console.error(err);
@@ -152,25 +178,38 @@ class Authority {
         if (err || !(usercount < (parseInt(val, 10) || 0))) {
           return res.status(403).json({ message: 'Sign up is closed on this server' });
         }
-        const invalid = invalidAccountFields(body);
-        if (invalid) {
-          return res.status(400).json({ message: invalid });
+        proceed(null);
+      });
+    });
+  };
+
+  /** Creates the account of a sign up and signs it in; a join link is taken first, given back on failure */
+  createAccount (req, res, userData, invite) {
+    const claim = (next) => (invite ? invites.model.claim(invite.token, userData.username, next) : next(null, true));
+    claim((err, claimed) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+      if (!claimed) {
+        return res.status(403).json({ message: 'This join link was used already' });
+      }
+      const giveBack = () => invite && invites.model.release(invite.token, () => undefined);
+      user.create(userData, (err, uid) => {
+        if (err === 'already exists username') {
+          giveBack();
+          return res.status(409).json({ message: 'This user name is already used' });
         }
-        if (body.password !== body.confirmPassword) {
-          return res.status(400).json({ message: 'The password and its confirmation are different' });
+        if (err === 'already exists email') {
+          giveBack();
+          return res.status(409).json({ message: 'This e-mail is already used' });
         }
-        const userData = { username: body.username, password: body.password, email: body.email.trim(), ip: req.ip };
-        user.create(userData, (err, uid) => {
-          if (err === 'already exists username') {
-            return res.status(409).json({ message: 'This user name is already used' });
-          }
-          if (err === 'already exists email') {
-            return res.status(409).json({ message: 'This e-mail is already used' });
-          }
-          if (err || !uid) {
-            console.error(err);
-            return res.status(500).json({ message: 'Internal server error' });
-          }
+        if (err || !uid) {
+          giveBack();
+          console.error(err);
+          return res.status(500).json({ message: 'Internal server error' });
+        }
+        const signIn = () => {
           // The same session as a login: the session guard checks the username
           req.session.cookie.maxAge = 1000 * 60 * 60 * 8;
           req.logIn({ uid: uid, username: userData.username, administrator: false }, (err) => {
@@ -181,6 +220,16 @@ class Authority {
             communication.setStatus(userData.username, 'online');
             res.json({ message: 'OK', user: { uid: uid, username: userData.username, administrator: false } });
           });
+        };
+        if (!invite) {
+          return signIn();
+        }
+        invites.model.save(Object.assign({}, invite, { usedBy: userData.username, usedAt: Date.now() }), (err) => {
+          if (err) {
+            console.error('The join link could not be marked as used', err);
+          }
+          logger.info(`Account ${userData.username} created with a join link of ${invite.createdBy}`);
+          signIn();
         });
       });
     });

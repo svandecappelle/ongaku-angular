@@ -64,6 +64,8 @@ const routes: Routes = [
   { path: 'android',
     loadComponent: () => import('./v3/android-page/android-page.component').then((m) => m.AndroidPageComponent) },
   { path: 'register', component: RegisterComponent },
+  // Join links made by the administrators: one account each
+  { path: 'join/:token', component: RegisterComponent },
 ];
 
 const routerOptions: ExtraOptions = {

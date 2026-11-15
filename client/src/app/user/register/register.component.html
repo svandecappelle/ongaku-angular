@@ -1,16 +1,24 @@
-<app-auth-card heading="Create your account" [subtitle]="state() === 'closed' ? null : 'Join to listen, like and share music on this server.'"
+<app-auth-card heading="Create your account"
+  [subtitle]="state() === 'closed' || state() === 'invalid' ? null : invitedBy() ? invitedBy() + ' invited you: this link creates your account on this server.' : 'Join to listen, like and share music on this server.'"
   [busy]="submitting() || state() === 'loading'">
   @switch (state()) {
     @case ('loading') {
       <div class="checking" role="status">
         <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span class="muted">Checking whether sign up is open…</span>
+        <span class="muted">{{ invite !== null ? 'Checking your join link…' : 'Checking whether sign up is open…' }}</span>
       </div>
     }
     @case ('closed') {
       <p class="notice" role="status">
         <mat-icon aria-hidden="true">lock_outline</mat-icon>
         <span class="notice-text">Sign up is closed on this server. Ask an administrator to create an account for you.</span>
+      </p>
+      <a mat-flat-button color="accent" routerLink="/login" class="submit">Back to sign in</a>
+    }
+    @case ('invalid') {
+      <p class="notice error invite-problem" role="alert">
+        <mat-icon aria-hidden="true">link</mat-icon>
+        <span class="notice-text">{{ inviteProblem() }}. Ask an administrator for a new one.</span>
       </p>
       <a mat-flat-button color="accent" routerLink="/login" class="submit">Back to sign in</a>
     }
