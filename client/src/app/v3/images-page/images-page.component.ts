@@ -49,6 +49,10 @@ export class ImagesPageComponent {
   /** The original shown in the viewer is loaded: the thumbnail under it goes */
   readonly loaded = signal(false);
   readonly deleting = signal(false);
+  /** Selection mode: a tap checks an image instead of opening it */
+  readonly selecting = signal(false);
+  /** Paths of the checked images */
+  readonly selected = signal<ReadonlySet<string>>(new Set());
 
   readonly folders = computed(() => [...new Set(this.images().map((image) => image.folder))].sort((a, b) => a.localeCompare(b)));
   readonly shown = computed(() => {
@@ -75,11 +79,20 @@ export class ImagesPageComponent {
     return index === null ? null : this.shown()[index] ?? null;
   });
   readonly totalSize = computed(() => this.images().reduce((sum, image) => sum + image.size, 0));
+  /** The checked images among the shown ones, in their order */
+  readonly selectedImages = computed(() => this.shown().filter((image) => this.selected().has(image.path)));
+  readonly selectedSize = computed(() => this.selectedImages().reduce((sum, image) => sum + image.size, 0));
+  readonly allSelected = computed(() => this.shown().length > 0 && this.selectedImages().length === this.shown().length);
 
   readonly formatSize = formatSize;
   readonly folderName = (folder: string) => folder || 'Uploads';
   private swipeStart: number | null = null;
   private returnFocus: HTMLElement | null = null;
+  /** Last image checked, for the range of a shift click */
+  private anchor: string | null = null;
+  /** A long press on a phone starts the selection; the click that follows it does nothing */
+  private pressTimer: ReturnType<typeof setTimeout> | undefined;
+  private pressed = false;
 
   constructor() {
     this.load();
@@ -92,6 +105,8 @@ export class ImagesPageComponent {
     this.gallery.list().subscribe({
       next: (images) => {
         this.images.set(images);
+        const paths = new Set(images.map((image) => image.path));
+        this.selected.update((selected) => new Set([...selected].filter((path) => paths.has(path))));
         if (this.folder() !== ALL && !images.some((image) => image.folder === this.folder())) {
           this.folder.set(ALL);
         }
@@ -101,6 +116,117 @@ export class ImagesPageComponent {
         if (!quietly) {
           this.status.set('error');
         }
+      },
+    });
+  }
+
+  /** Another folder: the selection is of the images shown only */
+  setFolder(folder: string) {
+    this.folder.set(folder);
+    this.selected.set(new Set());
+    this.anchor = null;
+  }
+
+  // ---------- Selection ----------
+
+  /** A tile tapped: checked in selection mode (its check circle starts it), else opened */
+  tileClick(index: number, image: GalleryImage, event: MouseEvent) {
+    if (this.pressed) {
+      this.pressed = false;
+      return;
+    }
+    const onCheck = (event.target as HTMLElement).closest?.('.check');
+    if (this.selecting() || onCheck) {
+      this.selecting.set(true);
+      this.toggle(image, event.shiftKey);
+    } else {
+      this.view(index, event);
+    }
+  }
+
+  isSelected(image: GalleryImage) {
+    return this.selected().has(image.path);
+  }
+
+  /** Checks or unchecks an image; with shift, the images since the last one checked too */
+  toggle(image: GalleryImage, range = false) {
+    const shown = this.shown();
+    const check = !this.isSelected(image);
+    const next = new Set(this.selected());
+    const from = this.anchor === null ? -1 : shown.findIndex((other) => other.path === this.anchor);
+    const to = shown.findIndex((other) => other.path === image.path);
+    const affected = range && from >= 0 && to >= 0 ? shown.slice(Math.min(from, to), Math.max(from, to) + 1) : [image];
+    for (const other of affected) {
+      if (check) {
+        next.add(other.path);
+      } else {
+        next.delete(other.path);
+      }
+    }
+    this.anchor = image.path;
+    this.selected.set(next);
+  }
+
+  startSelection() {
+    this.selecting.set(true);
+  }
+
+  selectAll() {
+    this.selected.set(this.allSelected() ? new Set() : new Set(this.shown().map((image) => image.path)));
+    this.anchor = null;
+  }
+
+  exitSelection() {
+    this.selecting.set(false);
+    this.selected.set(new Set());
+    this.anchor = null;
+  }
+
+  onPress(image: GalleryImage, event: PointerEvent) {
+    clearTimeout(this.pressTimer);
+    if (event.pointerType === 'mouse') {
+      return;
+    }
+    this.pressTimer = setTimeout(() => {
+      this.pressed = true;
+      this.selecting.set(true);
+      if (!this.isSelected(image)) {
+        this.toggle(image);
+      }
+      navigator.vibrate?.(20);
+    }, 500);
+  }
+
+  onRelease() {
+    clearTimeout(this.pressTimer);
+  }
+
+  deleteSelected() {
+    const chosen = this.selectedImages();
+    if (!chosen.length || this.deleting()) {
+      return;
+    }
+    const label = chosen.length === 1 ? `“${chosen[0].name}”` : `${chosen.length} images`;
+    if (!confirm(`Delete ${label}? This cannot be undone.`)) {
+      return;
+    }
+    this.deleting.set(true);
+    this.gallery.delete(chosen).subscribe({
+      next: ({ deleted, failed }) => {
+        this.deleting.set(false);
+        const gone = new Set(deleted);
+        this.images.update((images) => images.filter((image) => !gone.has(image.path)));
+        const done = `${deleted.length} ${deleted.length === 1 ? 'image' : 'images'} deleted`;
+        this.snackBar.open(failed.length ? `${done}, ${failed.length} could not be: ${failed[0].message}` : done, undefined, { duration: failed.length ? 6000 : 3000 });
+        // What could not be deleted stays checked
+        this.selected.set(new Set(failed.map((item) => item.path)));
+        if (!failed.length) {
+          this.exitSelection();
+        }
+      },
+      error: (err) => {
+        this.deleting.set(false);
+        this.snackBar.open(err.error?.message || 'The images could not be deleted', undefined, { duration: 5000 });
       },
     });
   }
@@ -135,6 +261,13 @@ export class ImagesPageComponent {
 
   onKey(event: KeyboardEvent) {
     if (this.open() === null) {
+      if (this.selecting() && event.key === 'Escape') {
+        event.preventDefault();
+        this.exitSelection();
+      } else if (this.selecting() && event.key === 'Delete' && this.selected().size) {
+        event.preventDefault();
+        this.deleteSelected();
+      }
       return;
     }
     const actions: Record<string, () => void> = {

@@ -44,9 +44,39 @@
   color: var(--ongaku-accent);
 }
 
-.add {
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.add,
+.select {
   height: 48px;
   border-radius: 24px;
+}
+
+// ---------- Selection ----------
+
+.selection-bar {
+  position: sticky;
+  top: 64px;
+  z-index: 3;
+  min-height: 52px;
+  padding: 4px 8px 4px 4px;
+  border-radius: var(--ongaku-radius-lg);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  background: color-mix(in srgb, var(--ongaku-accent) 16%, var(--ongaku-surface));
+  border: 1px solid var(--ongaku-border);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .2);
+}
+
+.selection-text {
+  flex: 1;
+  min-width: 150px;
 }
 
 .upload-progress {
@@ -143,6 +173,56 @@
   }
   &:focus-visible {
     box-shadow: 0 0 0 3px var(--ongaku-accent);
+  }
+  // The check circle: on hover, always while selecting
+  .check {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    z-index: 1;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    background: rgba(0, 0, 0, .35);
+    opacity: 0;
+    transition: opacity .15s;
+    cursor: pointer;
+    mat-icon {
+      width: 24px;
+      height: 24px;
+      font-size: 24px;
+    }
+  }
+  &:hover .check,
+  &:focus-visible .check,
+  &.selecting .check {
+    opacity: 1;
+  }
+  &.selecting {
+    cursor: pointer;
+    img {
+      transition: transform .15s ease;
+    }
+    &:hover img {
+      transform: none;
+    }
+  }
+  &.checked {
+    box-shadow: inset 0 0 0 3px var(--ongaku-accent);
+    img {
+      transform: scale(.88);
+      border-radius: var(--ongaku-radius-sm, 6px);
+    }
+    &:hover img {
+      transform: scale(.88);
+    }
+    .check {
+      color: var(--ongaku-accent);
+      background: #fff;
+    }
   }
 }
 

@@ -581,6 +581,55 @@ test('the Images page shows my uploaded images only, opens them in a viewer, add
   assert.notEqual(await page.eval(`document.querySelector('app-images-page .viewer-info strong')?.textContent.trim()`), deleted, 'the viewer goes on with another image');
 });
 
+test('several images are selected on the Images page, a range with shift, and deleted at once', { skip }, async (t) => {
+  const clear = async () => {
+    const { body } = await api('/api/user/files', { as: 'carol' });
+    for (const file of body.files ?? []) {
+      await api(`/api/user/files?path=${encodeURIComponent(file.name)}`, { as: 'carol', method: 'DELETE' });
+    }
+  };
+  t.after(clear);
+  for (const file of ['photo.jpg', 'tiny.png', 'photos.zip']) {
+    await api('/api/user/files/upload', { as: 'carol', form: fileForm(file) });
+  }
+  await page.goto('/images', await login('carol'));
+  await page.waitFor(`document.querySelectorAll('app-images-page .tile').length === 3`, { what: 'the three images' });
+  const tile = (n, shiftKey = false) => page.eval(`document.querySelectorAll('app-images-page .tile')[${n}].dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: ${shiftKey} }))`);
+  const barText = () => page.eval(`document.querySelector('app-images-page .selection-text').textContent.replace(/\\s+/g, ' ').trim()`);
+
+  // The check circle of a tile starts the selection, without opening the viewer
+  await page.eval(`document.querySelectorAll('app-images-page .tile .check')[1].dispatchEvent(new MouseEvent('click', { bubbles: true }))`);
+  await page.waitFor(`document.querySelector('app-images-page .selection-bar')`, { what: 'the selection bar' });
+  assert.ok(!(await page.eval(`!!document.querySelector('app-images-page .viewer')`)), 'no viewer');
+  assert.match(await barText(), /^1 image selected/);
+  // Escape leaves the selection
+  await page.eval(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`);
+  await page.waitFor(`!document.querySelector('app-images-page .selection-bar')`, { what: 'the selection left' });
+
+  // From the Select button: the first, then the third with shift
+  await page.eval(`document.querySelector('app-images-page .select').click()`);
+  await page.waitFor(`document.querySelector('app-images-page .selection-bar')`, { what: 'the selection mode' });
+  assert.match(await barText(), /Tap images to select them/);
+  await tile(0);
+  await tile(2, true);
+  await page.waitFor(`document.querySelectorAll('app-images-page .tile.checked').length === 3`, { what: 'the range' });
+  assert.match(await barText(), /^3 images selected · /);
+  await page.eval(`document.querySelector('app-images-page .select-all').click()`);
+  await page.waitFor(`!document.querySelector('app-images-page .tile.checked')`, { what: 'select none' });
+  await tile(0);
+  await tile(1);
+  await page.waitFor(`document.querySelectorAll('app-images-page .tile.checked').length === 2`, { what: 'two images' });
+  const kept = await page.eval(`document.querySelectorAll('app-images-page .tile')[2].getAttribute('aria-label')`);
+
+  await page.eval(`window.confirm = (text) => { window.lastConfirm = text; return true; }`);
+  await page.eval(`document.querySelector('app-images-page .delete-selected').click()`);
+  await page.waitFor(`document.querySelectorAll('app-images-page .tile').length === 1`, { what: 'the images deleted' });
+  assert.equal(await page.eval(`window.lastConfirm`), 'Delete 2 images? This cannot be undone.');
+  assert.ok(!(await page.eval(`!!document.querySelector('app-images-page .selection-bar')`)), 'the selection mode ends');
+  assert.equal(await page.eval(`document.querySelector('app-images-page .tile').getAttribute('aria-label')`), kept.replace('Select ', 'Open '));
+  assert.equal((await api('/api/images', { as: 'carol' })).body.images.length, 1);
+});
+
 test('a backup is downloaded and restored from the Backup tab, the data and the music apart', { skip }, async () => {
   await page.goto('/admin', await login('boss'));
   await page.waitFor(`[...document.querySelectorAll('.mdc-tab')].some((tab) => tab.textContent.trim() === 'Backup')`, { what: 'the tabs' });

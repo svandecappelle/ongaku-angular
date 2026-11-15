@@ -10,10 +10,18 @@
         }
       </span>
     </div>
+    <span class="header-actions">
+    @if (status() === 'ready' && images().length && !selecting()) {
+      <button mat-stroked-button type="button" class="select" (click)="startSelection()">
+        <mat-icon>check_circle</mat-icon>
+        Select
+      </button>
+    }
     <button mat-flat-button color="accent" type="button" class="add" (click)="picker.click()" [disabled]="!!uploading()">
       <mat-icon>cloud_upload</mat-icon>
       Add images
     </button>
+    </span>
     <input #picker type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/bmp" multiple hidden
       (change)="addFiles(picker.files); picker.value = ''">
   </header>
@@ -62,8 +70,29 @@
           </button>
         </div>
       } @else {
+        @if (selecting()) {
+          <div class="selection-bar" role="toolbar" aria-label="Selection">
+            <button mat-icon-button type="button" class="exit" (click)="exitSelection()" aria-label="Stop selecting" matTooltip="Stop selecting (Esc)">
+              <mat-icon>close</mat-icon>
+            </button>
+            <span class="selection-text" role="status">
+              @if (selected().size) {
+                <strong>{{ selectedImages().length }} {{ selectedImages().length === 1 ? 'image' : 'images' }}</strong> selected
+                <span class="muted">· {{ formatSize(selectedSize()) }}</span>
+              } @else {
+                <span class="muted">Tap images to select them · Shift+click selects a range</span>
+              }
+            </span>
+            <button mat-button type="button" class="select-all" (click)="selectAll()">{{ allSelected() ? 'Select none' : 'Select all' }}</button>
+            <button mat-flat-button color="warn" type="button" class="delete-selected" (click)="deleteSelected()" [disabled]="!selected().size || deleting()">
+              <mat-icon>delete</mat-icon>
+              {{ deleting() ? 'Deleting…' : 'Delete' }}
+            </button>
+          </div>
+        }
+
         @if (folders().length > 1) {
-          <mat-chip-listbox class="folders" aria-label="Folder" [value]="folder()" (change)="folder.set($event.value ?? '')">
+          <mat-chip-listbox class="folders" aria-label="Folder" [value]="folder()" (change)="setFolder($event.value ?? '')">
             <mat-chip-option value="">All</mat-chip-option>
             @for (name of folders(); track name) {
               <mat-chip-option [value]="name">{{ folderName(name) }}</mat-chip-option>
@@ -77,11 +106,20 @@
             <ul class="grid">
               @for (item of month.items; track item.image.path) {
                 <li>
-                  <button type="button" class="tile" (click)="view(item.index, $event)" [attr.aria-label]="'Open ' + item.image.name">
+                  @let checked = isSelected(item.image);
+                  <button type="button" class="tile" [class.selecting]="selecting()" [class.checked]="checked"
+                    (click)="tileClick(item.index, item.image, $event)"
+                    (pointerdown)="onPress(item.image, $event)" (pointerup)="onRelease()" (pointercancel)="onRelease()" (pointerleave)="onRelease()"
+                    (contextmenu)="selecting() || $event.pointerType === 'touch' ? $event.preventDefault() : null"
+                    [attr.aria-pressed]="selecting() ? checked : null"
+                    [attr.aria-label]="(selecting() ? 'Select ' : 'Open ') + item.image.name">
                     <mat-icon class="tile-icon" aria-hidden="true">image</mat-icon>
                     @if (!broken().has(item.image.path)) {
-                      <img [src]="gallery.thumbUrl(item.image)" alt="" loading="lazy" (error)="thumbFailed(item.image)">
+                      <img [src]="gallery.thumbUrl(item.image)" alt="" loading="lazy" draggable="false" (error)="thumbFailed(item.image)">
                     }
+                    <span class="check" aria-hidden="true" [title]="selecting() ? '' : 'Select'">
+                      <mat-icon>{{ checked ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
+                    </span>
                   </button>
                 </li>
               }
