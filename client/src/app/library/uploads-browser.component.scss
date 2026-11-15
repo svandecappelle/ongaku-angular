@@ -333,3 +333,40 @@ mat-paginator {
 .file.selected {
   background: color-mix(in srgb, var(--ongaku-accent) 8%, transparent);
 }
+
+// ---------- Re-arranging ----------
+
+.file[draggable='true'] {
+  cursor: grab;
+}
+
+.file.drop-target,
+.crumb.drop-target {
+  outline: 2px dashed var(--ongaku-accent);
+  outline-offset: -2px;
+  background: color-mix(in srgb, var(--ongaku-accent) 16%, transparent);
+}
+
+.crumb.drop-target {
+  border-radius: 8px;
+}
+
+.file-main.renaming {
+  cursor: default;
+}
+
+.rename-input {
+  min-width: 0;
+  grid-column: 2 / -1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font: inherit;
+  color: var(--ongaku-text);
+  background: var(--ongaku-surface-2);
+  border: 1px solid var(--ongaku-accent);
+  outline: none;
+}
+
+.file-menu {
+  flex: none;
+}

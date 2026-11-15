@@ -11,13 +11,18 @@
   </div>
 
   <nav class="crumbs" aria-label="Folder">
-    <button type="button" class="crumb" (click)="navigate.emit('')" [attr.aria-current]="!path() ? 'page' : null">
+    <button type="button" class="crumb" (click)="navigate.emit('')" [attr.aria-current]="!path() ? 'page' : null"
+      [class.drop-target]="dropTarget() === 'crumb:'"
+      (dragover)="onFolderDragOver('crumb:', $event)" (dragleave)="onFolderDragLeave('crumb:')" (drop)="onFolderDrop('crumb:', $event)">
       <mat-icon>home</mat-icon>
       <span>Uploads</span>
     </button>
     @for (crumb of crumbs(); track crumb.path; let last = $last) {
       <mat-icon class="separator" aria-hidden="true">chevron_right</mat-icon>
-      <button type="button" class="crumb" (click)="navigate.emit(crumb.path)" [attr.aria-current]="last ? 'page' : null">{{ crumb.name }}</button>
+      <button type="button" class="crumb" (click)="navigate.emit(crumb.path)" [attr.aria-current]="last ? 'page' : null"
+        [class.drop-target]="dropTarget() === 'crumb:' + crumb.path"
+        (dragover)="onFolderDragOver('crumb:' + crumb.path, $event)" (dragleave)="onFolderDragLeave('crumb:' + crumb.path)"
+        (drop)="onFolderDrop('crumb:' + crumb.path, $event)">{{ crumb.name }}</button>
     }
   </nav>
 
@@ -70,30 +75,68 @@
         </span>
         <span class="selection-actions">
           <button mat-button type="button" (click)="clearSelection()">Clear</button>
+          @if (selectedFiles().length === 1) {
+            <button mat-stroked-button type="button" class="rename-selected" (click)="startRename(selectedFiles()[0])" matTooltip="Rename (F2)">
+              <mat-icon>edit</mat-icon>
+              Rename
+            </button>
+          }
+          <button mat-stroked-button type="button" class="move-selected" (click)="moveSelected()" [disabled]="moving()">
+            <mat-icon>subdirectory_arrow_right</mat-icon>
+            Move to…
+          </button>
           <button mat-flat-button color="warn" type="button" class="delete-selected" (click)="removeSelected()" [disabled]="deleting()">
             <mat-icon>delete_outline</mat-icon>
             {{ deleting() ? 'Deleting…' : 'Delete' }}
           </button>
         </span>
       } @else {
-        <span class="muted small">Select items to delete several at once · Shift+click selects a range</span>
+        <span class="muted small">Select items to move, rename or delete them · drag them onto a folder · Shift+click selects a range</span>
       }
     </div>
-    <ul class="files" [class.stale]="loading()">
+    <ul class="files" [class.stale]="loading()" (keydown)="onListKey($event)">
       @for (file of files(); track file.name) {
-        <li class="file" [class.directory]="file.type === 'directory'" [class.selected]="isSelected(file)">
+        @let isFolder = file.type === 'directory';
+        <li class="file" [class.directory]="isFolder" [class.selected]="isSelected(file)"
+          [class.drop-target]="dropTarget() === 'row:' + file.name"
+          [attr.draggable]="renaming() === file.name ? null : 'true'" (dragstart)="onDragStart(file, $event)" (dragend)="onDragEnd()"
+          (dragover)="isFolder && onFolderDragOver('row:' + file.name, $event)" (dragleave)="isFolder && onFolderDragLeave('row:' + file.name)"
+          (drop)="isFolder && onFolderDrop('row:' + file.name, $event)">
           <mat-checkbox class="file-check" [checked]="isSelected(file)" (mousedown)="shift = $event.shiftKey" (keydown)="shift = $event.shiftKey" (change)="toggle(file, shift)"
             [aria-label]="'Select ' + file.name"></mat-checkbox>
-          <button type="button" class="file-main" (click)="open(file)" [disabled]="file.type !== 'directory'"
-            [attr.aria-label]="file.type === 'directory' ? 'Open the folder ' + file.name : null">
-            <mat-icon class="file-icon">{{ icon(file) }}</mat-icon>
-            <span class="file-name">{{ file.name }}</span>
-            <span class="file-size muted small">{{ formatSize(file.size) }}</span>
-            <span class="file-date muted small">{{ file.modified | date: 'mediumDate' }}</span>
+          @if (renaming() === file.name) {
+            <div class="file-main renaming">
+              <mat-icon class="file-icon">{{ icon(file) }}</mat-icon>
+              <input #renameInput class="rename-input" [value]="renameValue()" (input)="renameValue.set($any($event.target).value)" maxlength="255"
+                [attr.aria-label]="'New name of ' + file.name" autocomplete="off" spellcheck="false"
+                (keydown.enter)="commitRename()" (keydown.escape)="cancelRename()" (blur)="commitRename()">
+            </div>
+          } @else {
+            <button type="button" class="file-main" (click)="open(file)" (dblclick)="!isFolder && startRename(file)" [disabled]="!isFolder"
+              [attr.aria-label]="isFolder ? 'Open the folder ' + file.name : null">
+              <mat-icon class="file-icon">{{ icon(file) }}</mat-icon>
+              <span class="file-name">{{ file.name }}</span>
+              <span class="file-size muted small">{{ formatSize(file.size) }}</span>
+              <span class="file-date muted small">{{ file.modified | date: 'mediumDate' }}</span>
+            </button>
+          }
+          <button mat-icon-button type="button" class="file-menu" [matMenuTriggerFor]="itemMenu" [matMenuTriggerRestoreFocus]="false" [attr.aria-label]="'Actions on ' + file.name" matTooltip="Actions">
+            <mat-icon>more_vert</mat-icon>
           </button>
-          <button mat-icon-button type="button" (click)="remove(file)" [attr.aria-label]="'Delete ' + file.name" matTooltip="Delete">
-            <mat-icon>delete_outline</mat-icon>
-          </button>
+          <mat-menu #itemMenu="matMenu" xPosition="before">
+            <button mat-menu-item (click)="startRename(file)">
+              <mat-icon>edit</mat-icon>
+              <span>Rename</span>
+            </button>
+            <button mat-menu-item (click)="moveTo(itemsForMenu(file))">
+              <mat-icon>subdirectory_arrow_right</mat-icon>
+              <span>Move to…</span>
+            </button>
+            <button mat-menu-item class="delete-item" (click)="remove(file)">
+              <mat-icon>delete_outline</mat-icon>
+              <span>Delete</span>
+            </button>
+          </mat-menu>
         </li>
       }
     </ul>

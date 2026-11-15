@@ -89,6 +89,36 @@ class SharesRedisModel {
     });
   }
 
+  /**
+   * Files of a member moved or renamed in his uploads: his links follow them. `moves`:
+   * [[old path, new path]], of files or folders (a folder takes the images inside it).
+   */
+  renamePaths (username, moves, callback) {
+    this.list(username, (err, shares) => {
+      if (err || !shares.length || !moves.length) {
+        return callback(err);
+      }
+      var multi = db.client.multi();
+      shares.forEach((share) => {
+        var changed = false;
+        share.paths = share.paths.map((item) => {
+          for (var [from, to] of moves) {
+            if (item === from || item.startsWith(from + '/')) {
+              changed = true;
+              return to + item.slice(from.length);
+            }
+          }
+          return item;
+        });
+        if (changed) {
+          delete share.views;
+          multi.hset(SHARES, share.token, JSON.stringify(share));
+        }
+      });
+      multi.exec((err) => callback(err));
+    });
+  }
+
   countView (token, callback) {
     db.incrObjectField(VIEWS, token, (err) => callback(err));
   }

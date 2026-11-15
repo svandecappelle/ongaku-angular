@@ -688,6 +688,80 @@ test('selected images are shared by a public link, opened without an account, th
   await page.waitFor(`document.querySelector('app-share-page h1')?.textContent.includes('revoked')`, { what: 'the link no longer working' });
 });
 
+test('uploads are re-arranged: dragged onto a folder or a breadcrumb, moved with "Move to…", renamed, undone', { skip }, async (t) => {
+  const root = path.join(APP, 'public/user/carol/imported');
+  const clear = async () => {
+    const { body } = await api('/api/user/files', { as: 'carol' });
+    for (const file of body.files ?? []) {
+      await api(`/api/user/files?path=${encodeURIComponent(file.name)}`, { as: 'carol', method: 'DELETE' });
+    }
+  };
+  t.after(clear);
+  await clear();
+  for (const name of ['Albums', 'Inbox']) {
+    await api('/api/user/files/folder', { as: 'carol', json: { name } });
+  }
+  for (const name of ['a.txt', 'b.txt', 'c.txt']) {
+    fs.writeFileSync(path.join(root, name), name);
+  }
+  const names = () => page.eval(`[...document.querySelectorAll('app-uploads-browser .file-name')].map((n) => n.textContent.trim())`);
+  const row = (name) => `[...document.querySelectorAll('app-uploads-browser .file')].find((li) => li.querySelector('.file-name, .rename-input') && (li.querySelector('.file-name')?.textContent.trim() ?? li.querySelector('.rename-input').value) === ${JSON.stringify(name)})`;
+  /** A drag and drop as the browser makes it: the same DataTransfer from start to drop */
+  const drag = (from, toSelector) => page.eval(`(() => {
+    const data = new DataTransfer();
+    const source = ${row(from)};
+    const target = ${toSelector};
+    source.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: data }));
+    target.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: data }));
+    target.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: data }));
+    source.dispatchEvent(new DragEvent('dragend', { bubbles: true, dataTransfer: data }));
+  })()`);
+  const snack = () => page.eval(`document.querySelector('.mat-mdc-snack-bar-label')?.textContent.trim() ?? ''`);
+
+  await page.goto('/my-library?tab=uploads', await login('carol'));
+  await page.waitFor(`document.querySelectorAll('app-uploads-browser .file').length === 5`, { what: 'the uploads' });
+
+  // Dragged onto a folder, then undone
+  await drag('a.txt', row('Albums'));
+  await page.waitFor(`document.querySelectorAll('app-uploads-browser .file').length === 4`, { what: 'the file moved' });
+  assert.ok(fs.existsSync(path.join(root, 'Albums/a.txt')));
+  assert.match(await snack(), /1 item moved to “Albums”/);
+  await page.eval(`[...document.querySelectorAll('.mat-mdc-snack-bar-container button')].find((b) => b.textContent.includes('Undo')).click()`);
+  await page.waitFor(`document.querySelectorAll('app-uploads-browser .file').length === 5`, { what: 'the move undone' });
+  assert.ok(fs.existsSync(path.join(root, 'a.txt')));
+
+  // The selection, "Move to…" a folder chosen in the tree
+  for (const name of ['b.txt', 'c.txt']) {
+    await page.eval(`(${row(name)}).querySelector('.file-check input').click()`);
+  }
+  await page.waitFor(`document.querySelectorAll('app-uploads-browser .file.selected').length === 2`, { what: 'two selected' });
+  await page.eval(`document.querySelector('app-uploads-browser .move-selected').click()`);
+  await page.waitFor(`document.querySelectorAll('app-move-dialog .row').length === 3`, { what: 'the folder tree' });
+  assert.deepEqual(await page.eval(`[...document.querySelectorAll('app-move-dialog .row')].map((r) => [r.querySelector('.row-name').textContent.trim(), r.disabled])`),
+    [['Uploads', true], ['Albums', false], ['Inbox', false]], 'the folder they are in cannot be chosen');
+  await page.eval(`[...document.querySelectorAll('app-move-dialog .row')].find((r) => r.textContent.includes('Inbox')).click()`);
+  await page.eval(`document.querySelector('app-move-dialog .confirm').click()`);
+  await page.waitFor(`document.querySelectorAll('app-uploads-browser .file').length === 3`, { what: 'the two files moved' });
+  assert.deepEqual(fs.readdirSync(path.join(root, 'Inbox')).sort(), ['b.txt', 'c.txt']);
+
+  // Renamed from the menu of its row, in place
+  await page.eval(`(${row('Inbox')}).querySelector('.file-menu').click()`);
+  await page.waitFor(`[...document.querySelectorAll('.mat-mdc-menu-panel button')].some((b) => b.textContent.includes('Rename'))`, { what: 'the menu' });
+  await page.eval(`[...document.querySelectorAll('.mat-mdc-menu-panel button')].find((b) => b.textContent.includes('Rename')).click()`);
+  await page.waitFor(`document.activeElement?.classList.contains('rename-input')`, { what: 'the name field focused' });
+  await page.eval(`(() => { const input = document.querySelector('app-uploads-browser .rename-input'); input.value = 'Archive'; input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); })()`);
+  await page.waitFor(`[...document.querySelectorAll('app-uploads-browser .file-name')].some((n) => n.textContent.trim() === 'Archive')`, { what: 'the folder renamed' });
+  assert.deepEqual(await names(), ['Albums', 'Archive', 'a.txt']);
+  assert.ok(fs.existsSync(path.join(root, 'Archive/b.txt')));
+
+  // Inside a folder: dragged onto the breadcrumb of the uploads
+  await page.eval(`(${row('Archive')}).querySelector('.file-main').click()`);
+  await page.waitFor(`document.querySelectorAll('app-uploads-browser .file').length === 2 && location.search.includes('Archive')`, { what: 'the folder opened' });
+  await drag('b.txt', `document.querySelector('app-uploads-browser .crumb')`);
+  await page.waitFor(`document.querySelectorAll('app-uploads-browser .file').length === 1`, { what: 'moved up' });
+  assert.ok(fs.existsSync(path.join(root, 'b.txt')));
+});
+
 test('a backup is downloaded and restored from the Backup tab, the data and the music apart', { skip }, async () => {
   await page.goto('/admin', await login('boss'));
   await page.waitFor(`[...document.querySelectorAll('.mdc-tab')].some((tab) => tab.textContent.trim() === 'Backup')`, { what: 'the tabs' });

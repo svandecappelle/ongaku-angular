@@ -1,11 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse, HttpEventType, HttpParams, HttpRequest } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
 
 import { MaterialModule } from '../modules/material.module';
+import { MoveDialogComponent, MoveDialogData } from './move-dialog.component';
 
 interface UploadedFile {
   name: string;
@@ -69,6 +71,7 @@ interface UploadItem {
 export class UploadsBrowserComponent {
   private readonly http = inject(HttpClient);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
 
   /** Folder shown, relative to the uploads folder ('' for the root) */
   readonly path = input('');
@@ -103,6 +106,15 @@ export class UploadsBrowserComponent {
 
   /** Names checked in the page shown: cleared with another folder, page or filter */
   readonly selected = signal<ReadonlySet<string>>(new Set());
+  /** Name of the item being renamed in its row, and the name typed */
+  readonly renaming = signal<string | null>(null);
+  readonly renameValue = signal('');
+  /** Folder a dragged item is over: "row:<name>" or "crumb:<path>" */
+  readonly dropTarget = signal<string | null>(null);
+  /** Names of the items dragged (the selection when the row dragged is in it) */
+  private dragged: string[] = [];
+  private readonly renameInput = viewChild<ElementRef<HTMLInputElement>>('renameInput');
+  readonly moving = signal(false);
   readonly deleting = signal(false);
   /** Last row checked, for the range of a shift click */
   private anchor: string | null = null;
@@ -127,6 +139,18 @@ export class UploadsBrowserComponent {
   });
 
   constructor() {
+    // The name being renamed: focused, without its extension selected ("song" of "song.mp3")
+    effect(() => {
+      const input = this.renameInput()?.nativeElement;
+      // After the menu or the button that started it gave its focus back
+      if (input) {
+        setTimeout(() => {
+          input.focus();
+          const dot = input.value.lastIndexOf('.');
+          input.setSelectionRange(0, dot > 0 ? dot : input.value.length);
+        });
+      }
+    });
     // Another folder: its first page, without filter
     effect(() => {
       this.path();
@@ -298,6 +322,175 @@ export class UploadsBrowserComponent {
         this.load();
       },
     });
+  }
+
+  // ---------- Rename ----------
+
+  startRename(file: UploadedFile) {
+    this.renameValue.set(file.name);
+    this.renaming.set(file.name);
+  }
+
+  cancelRename() {
+    this.renaming.set(null);
+  }
+
+  commitRename() {
+    const from = this.renaming();
+    const name = this.renameValue().trim();
+    if (from === null) {
+      return;
+    }
+    this.renaming.set(null);
+    if (!name || name === from) {
+      return;
+    }
+    this.http.post<{ path: string }>('/api/user/files/rename', { path: this.join(from), name }).subscribe({
+      next: () => {
+        this.snackBar.open(`Renamed to “${name}”`, undefined, { duration: 3000 });
+        this.load();
+        this.changed.emit();
+      },
+      error: (err: HttpErrorResponse) => this.error(err, 'It could not be renamed'),
+    });
+  }
+
+  // ---------- Move ----------
+
+  /** The items to act on from a row: the selection when the row is in it, else the row */
+  private itemsFor(file: UploadedFile): UploadedFile[] {
+    return this.isSelected(file) ? this.selectedFiles() : [file];
+  }
+
+  /** "Move to…" of a row menu: the row alone (the selection has its own button) */
+  itemsForMenu(file: UploadedFile): UploadedFile[] {
+    return [file];
+  }
+
+  moveTo(files: UploadedFile[]) {
+    if (!files.length) {
+      return;
+    }
+    const data: MoveDialogData = {
+      from: this.path(),
+      paths: files.map((file) => this.join(file.name)),
+      folders: files.filter((file) => file.type === 'directory').map((file) => this.join(file.name)),
+    };
+    this.dialog.open(MoveDialogComponent, { data, autoFocus: 'first-tabbable' }).afterClosed().subscribe((to?: string) => {
+      if (to !== undefined) {
+        this.move(data.paths, to);
+      }
+    });
+  }
+
+  moveSelected() {
+    this.moveTo(this.selectedFiles());
+  }
+
+  /** Moves items, then offers to put them back where they were */
+  move(paths: string[], to: string, undo = true) {
+    if (this.moving()) {
+      return;
+    }
+    const from = this.path();
+    this.moving.set(true);
+    this.http.post<{ moved: { from: string; to: string }[]; failed: { path: string; message: string }[] }>('/api/user/files/move', { paths, to }).subscribe({
+      next: ({ moved, failed }) => {
+        this.moving.set(false);
+        this.load();
+        this.changed.emit();
+        const where = to ? `“${to.split('/').pop()}”` : 'Uploads';
+        const done = `${moved.length} ${moved.length === 1 ? 'item' : 'items'} moved to ${where}`;
+        const text = failed.length ? `${moved.length ? done + '. ' : ''}${failed.length} not moved: ${failed[0].message}` : done;
+        const ref = this.snackBar.open(text, undo && moved.length ? 'Undo' : undefined, { duration: failed.length ? 7000 : 6000 });
+        if (undo && moved.length) {
+          ref.onAction().subscribe(() => this.move(moved.map((item) => item.to), from, false));
+        }
+      },
+      error: (err: HttpErrorResponse) => {
+        this.moving.set(false);
+        const failed = err.error?.failed?.[0]?.message;
+        this.snackBar.open(failed || err.error?.message || 'Nothing could be moved', undefined, { duration: 5000 });
+      },
+    });
+  }
+
+  // ---------- Drag and drop between folders ----------
+
+  onDragStart(file: UploadedFile, event: DragEvent) {
+    if (this.renaming() !== null) {
+      event.preventDefault();
+      return;
+    }
+    this.dragged = this.itemsFor(file).map((item) => item.name);
+    event.dataTransfer?.setData('application/x-ongaku-uploads', JSON.stringify(this.dragged));
+    event.dataTransfer?.setData('text/plain', this.dragged.join('\n'));
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+    }
+  }
+
+  onDragEnd() {
+    this.dragged = [];
+    this.dropTarget.set(null);
+  }
+
+  /** The folder a target leads to, or null when the dragged items cannot go there */
+  private targetFolder(target: string): string | null {
+    if (!this.dragged.length) {
+      return null;
+    }
+    if (target.startsWith('row:')) {
+      const name = target.slice(4);
+      return this.dragged.includes(name) ? null : this.join(name);
+    }
+    const folder = target.slice(6);
+    return folder === this.path() ? null : folder;
+  }
+
+  onFolderDragOver(target: string, event: DragEvent) {
+    if (this.targetFolder(target) === null) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+    this.dropTarget.set(target);
+  }
+
+  onFolderDragLeave(target: string) {
+    if (this.dropTarget() === target) {
+      this.dropTarget.set(null);
+    }
+  }
+
+  onFolderDrop(target: string, event: DragEvent) {
+    const folder = this.targetFolder(target);
+    if (folder === null) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    const paths = this.dragged.map((name) => this.join(name));
+    this.onDragEnd();
+    this.move(paths, folder);
+  }
+
+  /** F2 renames the item selected alone, Delete deletes the selection */
+  onListKey(event: KeyboardEvent) {
+    if (this.renaming() !== null || (event.target as HTMLElement).tagName === 'INPUT' && (event.target as HTMLInputElement).type === 'text') {
+      return;
+    }
+    const chosen = this.selectedFiles();
+    if (event.key === 'F2' && chosen.length === 1) {
+      event.preventDefault();
+      this.startRename(chosen[0]);
+    } else if (event.key === 'Delete' && chosen.length) {
+      event.preventDefault();
+      this.removeSelected();
+    }
   }
 
   addFiles(files: FileList | null) {

@@ -14,6 +14,8 @@ const communication = require("./../../communication");
 const searchText = require("./../../middleware/search-text");
 
 const userlib = require("./../../model/library");
+const references = require("./../../model/database/redis/references");
+const shares = require("./../../model/shares");
 const likes = require("./../../model/likes");
 const user = require("./../../model/user");
 const db = require("./../../model/database");
@@ -209,6 +211,163 @@ router.delete('/files', (req, res) => {
             rescanUser(username).then(() => res.json({ message: 'deleted' }));
         });
     });
+});
+
+// ---------- Re-arranging the uploads ----------
+
+const MAX_FOLDERS = 5000;
+
+/** A name for a file or a folder: no path, not hidden */
+function validName(name) {
+    return !!name && name.length <= 255 && !/[\\/]/.test(name) && name !== '.' && name !== '..' && !name.startsWith('.');
+}
+
+const relativeTo = (root, target) => path.relative(root, target).split(path.sep).join('/');
+
+/**
+ * Applies moves of files or folders of the uploads ([[old absolute path, new absolute path]],
+ * already done on the disk): what the member saved follows his tracks (their uids come from
+ * their paths), his public links follow his images, then his library is read again.
+ */
+function afterMoves(username, moves) {
+    const root = uploadsRoot(username);
+    const uidOf = (file) => require('crypto').createHash('sha1').update(file).digest('hex');
+    const trackMoves = [];
+    library.tracks.filter((track) => track.private && track.user === username).forEach((track) => {
+        for (const [from, to] of moves) {
+            if (track.file === from || String(track.file).startsWith(from + path.sep)) {
+                trackMoves.push([track.uid, uidOf(to + track.file.slice(from.length))]);
+                break;
+            }
+        }
+    });
+    const pathMoves = moves.map(([from, to]) => [relativeTo(root, from), relativeTo(root, to)]);
+    return new Promise((resolve) => references.renameTracks(username, trackMoves, (err) => {
+        if (err) {
+            console.error('The saved tracks could not follow their files', err);
+        }
+        shares.renamePaths(username, pathMoves, (err) => {
+            if (err) {
+                console.error('The shared links could not follow their images', err);
+            }
+            rescanUser(username).then(resolve);
+        });
+    }));
+}
+
+/** Every folder of the uploads, for "Move to": { folders: ['', 'A', 'A/B'] } */
+router.get('/files/folders', (req, res) => {
+    withUploadsPath(req, res, (username) => {
+        const root = uploadsRoot(username);
+        const folders = [''];
+        const walk = (dir) => {
+            let entries = [];
+            try {
+                entries = fs.readdirSync(dir, { withFileTypes: true });
+            } catch (err) {
+                return;
+            }
+            entries.filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
+                .sort((a, b) => NAME_ORDER.compare(a.name, b.name))
+                .forEach((entry) => {
+                    if (folders.length < MAX_FOLDERS) {
+                        folders.push(relativeTo(root, path.join(dir, entry.name)));
+                        walk(path.join(dir, entry.name));
+                    }
+                });
+        };
+        walk(root);
+        res.json({ folders });
+    });
+});
+
+/**
+ * Moves files and folders of the uploads into one of its folders: { paths, to } ->
+ * { moved: [{ from, to }], failed: [{ path, message }] }. Nothing is replaced.
+ */
+router.post('/files/move', (req, res) => {
+    if (!middleware.isAuthenticated(req)) {
+        return res.status(403).json({ message: 'You need to be logged' });
+    }
+    const body = req.body || {};
+    const paths = body.paths;
+    if (!Array.isArray(paths) || !paths.length || paths.length > MAX_DELETED || !paths.every((item) => typeof item === 'string' && item.trim())
+        || typeof body.to !== 'string') {
+        return res.status(400).json({ message: `paths (1 to ${MAX_DELETED}) and to (a folder of your uploads) are required` });
+    }
+    const username = req.session.passport.user.username;
+    const root = uploadsRoot(username);
+    const destination = insideUploads(username, body.to);
+    if (!destination || !fs.existsSync(destination) || !fs.statSync(destination).isDirectory()) {
+        return res.status(400).json({ message: 'No such folder in your uploads' });
+    }
+    const moved = [];
+    const failed = [];
+    const moves = [];
+    for (const relative of [...new Set(paths)]) {
+        const source = insideUploads(username, relative);
+        if (!source || source === root || !fs.existsSync(source)) {
+            failed.push({ path: relative, message: source === root ? 'The uploads folder itself cannot be moved' : 'No such file' });
+            continue;
+        }
+        const target = path.join(destination, path.basename(source));
+        if (target === source) {
+            continue;
+        }
+        if (destination === source || destination.startsWith(source + path.sep)) {
+            failed.push({ path: relative, message: 'A folder cannot go into itself' });
+            continue;
+        }
+        if (fs.existsSync(target)) {
+            failed.push({ path: relative, message: `“${path.basename(source)}” is already there` });
+            continue;
+        }
+        try {
+            fs.renameSync(source, target);
+            moves.push([source, target]);
+            moved.push({ from: relativeTo(root, source), to: relativeTo(root, target) });
+        } catch (err) {
+            console.error(`Cannot move ${source}`, err.message);
+            failed.push({ path: relative, message: 'It could not be moved' });
+        }
+    }
+    if (!moves.length) {
+        return res.status(failed.length ? 400 : 200).json({ moved, failed });
+    }
+    afterMoves(username, moves).then(() => res.json({ moved, failed }));
+});
+
+/** Renames a file or a folder of the uploads, in its folder: { path, name } -> { path } */
+router.post('/files/rename', (req, res) => {
+    if (!middleware.isAuthenticated(req)) {
+        return res.status(403).json({ message: 'You need to be logged' });
+    }
+    const body = req.body || {};
+    const name = typeof body.name === 'string' ? body.name.trim() : '';
+    if (typeof body.path !== 'string' || !body.path.trim() || !validName(name)) {
+        return res.status(400).json({ message: 'A name without slashes, not starting with a dot' });
+    }
+    const username = req.session.passport.user.username;
+    const root = uploadsRoot(username);
+    const source = insideUploads(username, body.path);
+    if (!source || source === root || !fs.existsSync(source)) {
+        return res.status(404).json({ message: 'No such file' });
+    }
+    const target = path.join(path.dirname(source), name);
+    if (target === source) {
+        return res.json({ path: relativeTo(root, target) });
+    }
+    // Only the case changes ("song.MP3" -> "song.mp3"): the same file on some disks
+    if (fs.existsSync(target) && target.toLowerCase() !== source.toLowerCase()) {
+        return res.status(409).json({ message: `“${name}” is already there` });
+    }
+    try {
+        fs.renameSync(source, target);
+    } catch (err) {
+        console.error(`Cannot rename ${source}`, err.message);
+        return res.status(500).json({ message: 'It could not be renamed' });
+    }
+    afterMoves(username, [[source, target]]).then(() => res.json({ path: relativeTo(root, target) }));
 });
 
 /** Items deleted at once at most: a page of the uploads view holds 200 */
