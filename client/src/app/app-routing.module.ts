@@ -64,6 +64,9 @@ const routes: Routes = [
   { path: 'android',
     loadComponent: () => import('./v3/android-page/android-page.component').then((m) => m.AndroidPageComponent) },
   { path: 'register', component: RegisterComponent },
+  // Password reset links made by the administrators
+  { path: 'reset/:token',
+    loadComponent: () => import('./user/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent) },
   // Join links made by the administrators: one account each
   { path: 'join/:token', component: RegisterComponent },
 ];

@@ -25,6 +25,7 @@ const meta = require("./../../meta");
 const communication = require("./../../communication");
 const db = require("./../../model/database");
 const invites = require('./../../middleware/invites');
+const passwordResets = require('./../../middleware/password-resets');
 
 const MONTHS = 30;
 const WEEKS = 7;
@@ -355,6 +356,51 @@ router.post('/users', (req, res) => {
     });
 });
 
+// ---------- Password reset links ----------
+
+/** The reset link waiting for an account: { reset: { token, expires, ... } | null } */
+router.get('/users/:username/reset-link', (req, res) => {
+    withUser(req, res, (uid) => {
+        passwordResets.model.ofUser(uid, (err, reset) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+            const waiting = reset && !reset.usedAt && reset.expires > Date.now();
+            res.set('Cache-Control', 'no-cache');
+            res.json({ reset: waiting ? passwordResets.describe(reset) : null });
+        });
+    });
+});
+
+/** A link that lets the person of the account choose a new password, once: { expiresInHours?: 1 | 24 | 168 } */
+router.post('/users/:username/reset-link', (req, res) => {
+    withUser(req, res, (uid) => {
+        const createdBy = req.session.passport && req.session.passport.user ? req.session.passport.user.username : 'administrator';
+        passwordResets.create(uid, req.params.username, createdBy, req.body || {}).then(({ reset, refused }) => {
+            if (refused) {
+                return res.status(400).json({ message: refused });
+            }
+            res.status(201).json(passwordResets.describe(reset));
+        }).catch((err) => {
+            console.error(err);
+            res.status(500).json({ message: 'Internal server error' });
+        });
+    });
+});
+
+router.delete('/users/:username/reset-link', (req, res) => {
+    withUser(req, res, (uid) => {
+        passwordResets.model.removeOfUser(uid, (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+            res.json({ message: 'revoked' });
+        });
+    });
+});
+
 router.put('/users/:username', (req, res) => {
     withUser(req, res, (uid) => {
         const changes = req.body;
@@ -363,7 +409,20 @@ router.put('/users/:username', (req, res) => {
             return res.status(400).json({ message: 'You cannot remove your own administrator rights or disable your own account' });
         }
         async.series([
-            (next) => changes.password ? user.setPassword(uid, changes.password, next) : next(),
+            (next) => changes.password ? user.setPassword(uid, changes.password, (err) => {
+                if (err) {
+                    return next(err);
+                }
+                // A new password: the sessions opened with the old one end (not the one of the
+                // administrator changing his own)
+                user.markPasswordChanged(uid, (err) => {
+                    sessionGuard.forget(uid);
+                    if (self) {
+                        req.session.signedInAt = Date.now();
+                    }
+                    next(err);
+                });
+            }) : next(),
             (next) => {
                 if (changes.banned === undefined) {
                     return next();

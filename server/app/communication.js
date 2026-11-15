@@ -37,7 +37,7 @@ class Communication {
 			if (!user || !user.username) {
 				return;
 			}
-			// Not for an account disabled or deleted since its login
+			// Not for an account disabled or deleted since its login, nor a session older than its password
 			require('./middleware/session-guard').check(user.uid, user.username, (valid) => {
 				if (!valid || !socket.connected) {
 					return socket.disconnect(true);
@@ -49,7 +49,7 @@ class Communication {
 
 				socket.on('now-playing', (data) => this.setNowPlaying(user.username, data));
 				socket.on('disconnect', () => this.disconnect(socket, user));
-			});
+			}, session.signedInAt);
 		});
 	}
 

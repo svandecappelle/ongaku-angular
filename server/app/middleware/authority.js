@@ -100,6 +100,8 @@ class Authority {
             token: req.passport
           };
           req.logIn(userBean, () => {
+            // After the login (it makes a new session): a session older than a change of the password ends
+            req.session.signedInAt = Date.now();
             if (userData.uid) {
               //user.logIP(userData.uid, req.ip);
               logger.info("user '" + userData.uid + "' connected on: " + req.ip);
@@ -217,6 +219,7 @@ class Authority {
               console.error(err);
               return res.status(500).json({ message: 'Internal server error' });
             }
+            req.session.signedInAt = Date.now();
             communication.setStatus(userData.username, 'online');
             res.json({ message: 'OK', user: { uid: uid, username: userData.username, administrator: false } });
           });

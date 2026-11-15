@@ -328,6 +328,16 @@ class UserRedisModel extends security {
         });
     };
 
+    /**
+     * The password changed by a reset link or an administrator: the sessions opened before end
+     * (see session-guard.js), and the account is no longer locked by failed logins.
+     */
+    markPasswordChanged (uid, callback) {
+        db.deleteAll(['lockout:' + uid, 'loginAttempts:' + uid], () => {
+            this.setUserField(uid, 'passwordChangedAt', Date.now(), callback);
+        });
+    };
+
     setPassword (uid, password, callback) {
         this.hashPassword(password, (err, hash) => {
             if (err) {
@@ -356,6 +366,7 @@ class UserRedisModel extends security {
                 (next) => history.clear(username, next),
                 // The public links to his images stop working with his account
                 (next) => require('../../shares').removeAll(username, next),
+                (next) => require('../../password-resets').removeOfUser(uid, next),
                 (next) => db.deleteAll([username + ':playlists', username + ':playlists:updated', username + ':likes', username + ':radio-favourites', username + ':library', 'settings:' + uid, 'user:' + uid], next),
                 (next) => db.deleteObjectField('username:uid', username, next),
                 (next) => userData.email ? db.deleteObjectField('email:uid', userData.email, next) : next(),

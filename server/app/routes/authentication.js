@@ -9,6 +9,7 @@ const utils = require('./../utils');
 const user = require('./../model/user');
 const { limitLogins, limitSignUps } = require('./../middleware/attempts');
 const invites = require('../middleware/invites');
+const passwordResets = require('../middleware/password-resets');
 
 class Authenticator {
 
@@ -65,6 +66,31 @@ class Authenticator {
     this.app.post('/api/auth/logout', authority.logout);
     // Slowed down: the guessing of passwords, the creation of accounts in numbers
     this.app.post('/api/auth/register', limitSignUps, (req, res) => authority.register(req, res));
+    // Password reset links made by the administrators: who it is for, then the new password
+    this.app.get('/api/auth/reset/:token', (req, res) => {
+      passwordResets.usable(req.params.token).then(({ reset, reason }) => {
+        res.set('Cache-Control', 'no-store');
+        if (!reset) {
+          return res.status(404).json({ message: reason });
+        }
+        res.json({ valid: true, username: reset.username, expires: reset.expires });
+      }).catch((err) => {
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error' });
+      });
+    });
+    this.app.post('/api/auth/reset/:token', (req, res) => {
+      passwordResets.use(req.params.token, req.body || {}).then((result) => {
+        if (result.status) {
+          return res.status(result.status).json({ message: result.message });
+        }
+        console.info(`Password of ${result.username} changed with a reset link`);
+        res.json({ message: 'changed', username: result.username });
+      }).catch((err) => {
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error' });
+      });
+    });
     // Whether a join link can still create an account (the sign up page asks before showing its form)
     this.app.get('/api/auth/invite/:token', (req, res) => {
       invites.usable(req.params.token, (err, invite, reason) => {

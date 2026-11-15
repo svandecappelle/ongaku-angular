@@ -794,6 +794,39 @@ test('an administrator makes a join link; it creates one account while sign up i
   assert.equal(listed.usedBy, 'dana');
 });
 
+test('a password reset link from the user menu lets the person choose a new password, then sign in', { skip }, async (t) => {
+  t.after(() => api('/api/admin/users/forgetful', { as: 'boss', method: 'DELETE' }));
+  await api('/api/admin/users', { as: 'boss', json: { username: 'forgetful', email: 'forgetful@test.io', password: 'lostpassword1' } });
+
+  await page.goto('/admin', await login('boss'));
+  await page.waitFor(`[...document.querySelectorAll('.mdc-tab')].some((tab) => tab.textContent.trim() === 'Users')`, { what: 'the tabs' });
+  await page.eval(`[...document.querySelectorAll('.mdc-tab')].find((tab) => tab.textContent.trim() === 'Users').click()`);
+  await page.waitFor(`document.querySelector('.mat-mdc-tab-body-active [aria-label="Actions for forgetful"]')`, { what: 'the user row' });
+  await page.eval(`document.querySelector('.mat-mdc-tab-body-active [aria-label="Actions for forgetful"]').click()`);
+  await page.waitFor(`document.querySelector('.mat-mdc-menu-panel .reset-link')`, { what: 'the menu' });
+  await page.eval(`document.querySelector('.mat-mdc-menu-panel .reset-link').click()`);
+  await page.waitFor(`document.querySelector('app-reset-link-dialog .create')`, { what: 'the dialog' });
+  await page.eval(`document.querySelector('app-reset-link-dialog .create').click()`);
+  await page.waitFor(`document.querySelector('app-reset-link-dialog input.link')?.value.includes('/reset/')`, { what: 'the link' });
+  const link = new URL(await page.eval(`document.querySelector('app-reset-link-dialog input.link').value`));
+
+  // The person, without a session
+  await page.goto(link.pathname);
+  await page.waitFor(`document.querySelector('app-reset-password form')`, { what: 'the reset form' });
+  assert.match(await page.eval(`document.querySelector('app-reset-password').textContent`), /For the account “forgetful”/);
+  await fillAndSubmit('app-reset-password', { password: 'foundpassword1', confirmPassword: 'foundpassword1' });
+  await page.waitFor(`document.querySelector('app-reset-password .reset-done')`, { what: 'the password changed' });
+  await page.eval(`document.querySelector('app-reset-password .submit').click()`);
+  await page.waitFor(`document.querySelector('app-login input[formcontrolname=userName]')?.value === 'forgetful'`, { what: 'the login, the name filled in' });
+  await fillAndSubmit('app-login', { password: 'foundpassword1' });
+  await page.waitFor(`location.pathname === '/' && !!document.querySelector('app-shell')`, { what: 'signed in with the new password' });
+
+  // Once
+  await page.goto(link.pathname);
+  await page.waitFor(`document.querySelector('app-reset-password .reset-problem')`, { what: 'the used link' });
+  assert.match(await page.eval(`document.querySelector('app-reset-password .reset-problem').textContent`), /used already/);
+});
+
 test('a backup is downloaded and restored from the Backup tab, the data and the music apart', { skip }, async () => {
   await page.goto('/admin', await login('boss'));
   await page.waitFor(`[...document.querySelectorAll('.mdc-tab')].some((tab) => tab.textContent.trim() === 'Backup')`, { what: 'the tabs' });

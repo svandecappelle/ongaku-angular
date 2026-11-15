@@ -751,6 +751,10 @@
                         <mat-icon>vpn_key</mat-icon>
                         <span>Change the password</span>
                       </button>
+                      <button mat-menu-item class="reset-link" (click)="resetLink(user)">
+                        <mat-icon>link</mat-icon>
+                        <span>Password reset link…</span>
+                      </button>
                       <button mat-menu-item (click)="setQuota(user)" [disabled]="user.administrator">
                         <mat-icon>data_usage</mat-icon>
                         <span>Upload quota…</span>

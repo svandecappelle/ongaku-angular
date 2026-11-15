@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, afterNextRender, inject, signal, viewChild } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -61,6 +61,12 @@ export class LoginComponent {
   private readonly passwordInput = viewChild<ElementRef<HTMLInputElement>>('passwordInput');
 
   constructor() {
+    // From the page of a reset link: the account whose password was just changed
+    const username = this.route.snapshot.queryParamMap.get('username');
+    if (username) {
+      this.form.controls.userName.setValue(username);
+      afterNextRender(() => this.passwordInput()?.nativeElement.focus());
+    }
     // Already connected: nothing to do here
     this.auth.isLoggedIn().pipe(take(1)).subscribe((connected) => {
       if (connected) {

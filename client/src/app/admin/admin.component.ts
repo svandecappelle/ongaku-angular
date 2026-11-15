@@ -44,6 +44,7 @@ interface Settings {
 
 /** A file queued for the public library import */
 import { JoinLinksComponent } from './join-links.component';
+import { ResetLinkDialogComponent } from './reset-link-dialog.component';
 interface ImportItem {
   file: File;
   progress: number;
@@ -633,6 +634,11 @@ export class AdminComponent {
           this.changeUser(user, { password: result.password }, `Password of “${user.username}” changed`);
         }
       });
+  }
+
+  /** A link the person opens to choose a new password himself */
+  resetLink(user: AdminUser) {
+    this.dialog.open(ResetLinkDialogComponent, { data: { username: user.username }, autoFocus: false });
   }
 
   setQuota(user: AdminUser) {

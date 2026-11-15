@@ -52,6 +52,20 @@ const failedLogins = {
   address: new Attempts({ windowMs: 15 * MINUTE, max: 20 }),
   account: new Attempts({ windowMs: 15 * MINUTE, max: 50 }),
 };
+/**
+ * The password of an account was reset: its failed logins are forgotten, from every address
+ * (not the ones of the addresses themselves).
+ */
+function forgetAccount(username) {
+  const name = String(username || '').trim().toLowerCase();
+  failedLogins.account.clear(name);
+  for (const key of [...failedLogins.pair.hits.keys()]) {
+    if (key.endsWith(`|${name}`)) {
+      failedLogins.pair.clear(key);
+    }
+  }
+}
+
 /** Accounts created per address (the refused attempts cost nothing: the server caps the accounts) */
 const signUps = new Attempts({ windowMs: 60 * MINUTE, max: 5 });
 
@@ -100,4 +114,4 @@ function limitSignUps(req, res, next) {
   next();
 }
 
-module.exports = { Attempts, limitLogins, limitSignUps, failedLogins, signUps };
+module.exports = { Attempts, limitLogins, limitSignUps, failedLogins, signUps, forgetAccount };
