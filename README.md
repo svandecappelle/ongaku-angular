@@ -40,6 +40,28 @@ An APK built elsewhere is trusted by adding its key to `androidAppFingerprints` 
 For development, `make deps` installs the npm dependencies and `make dev` runs the server and the client in
 watch mode.
 
+## Releases
+
+`make release VERSION=1.2.0` sets the version in `package.json`, commits it and tags `v1.2.0`, without pushing.
+Pushing the tag (`git push origin master v1.2.0`) runs [.github/workflows/release.yml](.github/workflows/release.yml):
+the checks of the CI, then the Docker image for x86 and ARM published to `ghcr.io/svandecappelle/ongaku`
+(tags `1.2.0`, `1.2` and `latest`), the Android application signed with the key of the project, and a GitHub
+release with notes made from the commits (`feat`, `fix`, other). A server installed with `make install` then
+updates with `make update RELEASE=1.2.0` (or `RELEASE=latest`): its image is pulled instead of built.
+
+The signing key of the APK comes from four repository secrets (Settings › Secrets and variables › Actions); use
+the key made by `make apk` so that the APK of the releases and the one of a server update each other:
+
+| Secret | Value |
+|---|---|
+| `ANDROID_KEYSTORE` | `base64 -w0 android/keystore/ongaku.jks` |
+| `ANDROID_KEYSTORE_PASSWORD` | `storePassword` of `android/keystore/keystore.properties` |
+| `ANDROID_KEY_ALIAS` | `ongaku` |
+| `ANDROID_KEY_PASSWORD` | `keyPassword` of the same file |
+
+Without them the release is published without its APK. The first image published on `ghcr.io` may be private:
+make the package public (its page › Package settings) for the servers to pull it without logging in.
+
 ## Tests
 
 ```

@@ -1,0 +1,258 @@
+# Release of a version, on a tag v<major>.<minor>.<patch> (made by "make release VERSION=…"):
+#  1. the checks of the CI on the tag (tests, Docker image, Android build);
+#  2. the Docker image for x86 and ARM servers, published to ghcr.io/<owner>/ongaku;
+#  3. the Android application signed with the key of the project (secrets, see the README);
+#  4. a GitHub release with the notes made from the commits, the APK and its description.
+# Servers then update with "make update RELEASE=<version>" (pull, no build).
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+concurrency:
+  group: release-${{ github.ref }}
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/ongaku
+
+jobs:
+  version:
+    name: Version
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the tag against package.json
+        id: version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          package="$(node -p "require('./package.json').version")"
+          if [ "$version" != "$package" ]; then
+            echo "::error::The tag $GITHUB_REF_NAME does not match the version of package.json ($package): use make release VERSION=$version"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  checks:
+    name: Checks
+    needs: version
+    uses: ./.github/workflows/ci.yml
+
+  # Each architecture on a machine of its own (no emulation), pushed by digest, then gathered
+  image:
+    name: Docker image (${{ matrix.arch }})
+    needs: [version, checks]
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Labels of the image
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=release-${{ matrix.arch }}
+          cache-to: type=gha,scope=release-${{ matrix.arch }},mode=max
+      - name: Keep the digest
+        run: |
+          mkdir -p "$RUNNER_TEMP/digests"
+          digest="${{ steps.build.outputs.digest }}"
+          touch "$RUNNER_TEMP/digests/${digest#sha256:}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+          retention-days: 1
+
+  manifest:
+    name: Docker image (x86 and ARM)
+    needs: [version, image]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: digest-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/digests
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Tags of the version
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+      - name: Gather the architectures under the tags
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          # shellcheck disable=SC2046
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf "$IMAGE@sha256:%s " *)
+      - name: Check the image
+        run: docker buildx imagetools inspect "$IMAGE:${{ needs.version.outputs.version }}"
+
+  android:
+    name: Android application (signed)
+    needs: [version, checks]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      signed: ${{ steps.key.outputs.signed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # The key of the project: phones install a new version over the previous one only when
+      # both are signed with it. Without the secrets, the release has no APK.
+      - name: Signing key
+        id: key
+        env:
+          ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE" ] || [ -z "$ANDROID_KEYSTORE_PASSWORD" ]; then
+            echo "::warning::No ANDROID_KEYSTORE secret: the release has no APK (see the README to add the key)"
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          mkdir -p android/keystore
+          base64 -d <<< "$ANDROID_KEYSTORE" > android/keystore/ongaku.jks
+          {
+            echo "storeFile=keystore/ongaku.jks"
+            echo "storePassword=$ANDROID_KEYSTORE_PASSWORD"
+            echo "keyAlias=${ANDROID_KEY_ALIAS:-ongaku}"
+            echo "keyPassword=${ANDROID_KEY_PASSWORD:-$ANDROID_KEYSTORE_PASSWORD}"
+          } > android/keystore/keystore.properties
+          echo "signed=true" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@v4
+        if: steps.key.outputs.signed == 'true'
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        if: steps.key.outputs.signed == 'true'
+        with:
+          gradle-version: '8.10.2'
+      - name: Install the Android SDK parts
+        if: steps.key.outputs.signed == 'true'
+        run: |
+          sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$sdkmanager" --licenses > /dev/null
+          "$sdkmanager" --install "platforms;android-35" "build-tools;35.0.0" > /dev/null
+          echo "$ANDROID_HOME/build-tools/35.0.0" >> "$GITHUB_PATH"
+      - name: Build the APK
+        if: steps.key.outputs.signed == 'true'
+        env:
+          ONGAKU_VERSION_NAME: ${{ needs.version.outputs.version }}
+        run: |
+          ONGAKU_VERSION_CODE="$(git rev-list --count HEAD)"
+          export ONGAKU_VERSION_CODE
+          sh android/build.sh
+          rm -rf android/keystore
+      - uses: actions/upload-artifact@v4
+        if: steps.key.outputs.signed == 'true'
+        with:
+          name: android
+          path: android/dist/
+          retention-days: 7
+
+  release:
+    name: GitHub release
+    needs: [version, manifest, android]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        if: needs.android.outputs.signed == 'true'
+        with:
+          name: android
+          path: dist
+
+      - name: Notes from the commits since the previous version
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          previous="$(git describe --tags --abbrev=0 --match 'v[0-9]*' "$GITHUB_REF_NAME^" 2>/dev/null || true)"
+          range="${previous:+$previous..}$GITHUB_REF_NAME"
+          section() {
+            local lines
+            lines="$(git log --no-merges --format='%s (%h)' "$range" | grep -E "$2" | sed -E 's/^[a-z]+(\(([^)]*)\))?!?: /- **\2** /; s/\*\*\*\* //')" || true
+            if [ -n "$lines" ]; then
+              printf '### %s\n\n%s\n\n' "$1" "$lines"
+            fi
+          }
+          {
+            section 'New' '^feat(\(|:|!)'
+            section 'Fixes' '^fix(\(|:|!)'
+            section 'Other changes' '^(ci|chore|docs|refactor|perf|test|build|style)(\(|:|!)'
+            echo '### Install or update'
+            echo
+            echo '```'
+            echo "make update RELEASE=$VERSION        # a server installed with make install"
+            echo "docker pull $IMAGE:$VERSION"
+            echo '```'
+            if [ -n "$previous" ]; then
+              echo
+              echo "Every change: https://github.com/$GITHUB_REPOSITORY/compare/$previous...$GITHUB_REF_NAME"
+            fi
+          } > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md"
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          files=()
+          if [ -f dist/ongaku.apk ]; then
+            files=(dist/ongaku.apk dist/ongaku.json)
+          fi
+          gh release create "$GITHUB_REF_NAME" --title "Ongaku $VERSION" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag "${files[@]}"

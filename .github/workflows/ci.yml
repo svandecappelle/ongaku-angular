@@ -1,5 +1,5 @@
 # Continuous integration: the test suite (API and browser), the Docker image and the Android
-# application, on every push and pull request.
+# application, on every push and pull request, and before a release (see release.yml).
 name: CI
 
 on:
@@ -7,6 +7,8 @@ on:
     branches: [master]
   pull_request:
   workflow_dispatch:
+  # The release workflow runs it first, on the tag
+  workflow_call:
 
 # A newer push of the same branch replaces the run in progress
 concurrency:

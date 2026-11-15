@@ -33,7 +33,8 @@ sudo make install DOMAIN=music.example.com MUSIC_DIR=/srv/musique HTTPS=1 EMAIL=
 | `sudo make nginx DOMAIN=…` | Installe ou met à jour le site nginx seulement. |
 | `sudo make https DOMAIN=… [EMAIL=…]` | Obtient le certificat et passe le site en HTTPS. |
 | `make update` | `git pull`, reconstruit et redémarre les conteneurs. |
-| `make upgrade [BACKUP=0]` | Met à jour une instance installée : sauvegarde Redis dans `backups/`, `git pull`, reconstruit avec des images de base à jour, redémarre, met à jour le site nginx si ses modèles ont changé et signale les nouveaux réglages. |
+| `make update RELEASE=1.2.0` (ou `latest`) | Passe à une version publiée : le dépôt à son tag, son image téléchargée depuis `ghcr.io` (sans construction, x86 ou ARM), son application Android téléchargée. `make update` sans `RELEASE` revient aux sources. |
+| `make upgrade [BACKUP=0] [RELEASE=…]` | Met à jour une instance installée : sauvegarde Redis dans `backups/`, `git pull`, reconstruit avec des images de base à jour, redémarre, met à jour le site nginx si ses modèles ont changé et signale les nouveaux réglages. |
 | `make status` / `make logs` | État des conteneurs / journaux de l'application. |
 | `sudo make uninstall` | Arrête les conteneurs et supprime le site nginx (uniquement le sien). |
 

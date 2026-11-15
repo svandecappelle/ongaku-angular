@@ -46,6 +46,11 @@ CONTAINER_UID := 1000
 # Commands, overridable (e.g. NGINX_RELOAD="nginx -s reload" without systemd).
 SUDO ?= $(shell [ "$$(id -u)" = 0 ] || echo sudo)
 COMPOSE ?= docker compose
+# Releases (see .github/workflows/release.yml): the repository of the project and its images
+REPOSITORY ?= svandecappelle/ongaku-angular
+IMAGE_NAME ?= ghcr.io/svandecappelle/ongaku
+RELEASE ?=
+VERSION ?=
 NGINX_TEST ?= nginx -t
 NGINX_DUMP ?= nginx -T
 NGINX_RELOAD ?= systemctl reload nginx
@@ -61,7 +66,7 @@ else
 fi
 endef
 
-.PHONY: help install app nginx https update upgrade uninstall status logs deps dev build test test-api clean gen-certificate apk
+.PHONY: help install app nginx https update upgrade uninstall status logs deps dev build test test-api clean gen-certificate apk release release-pull
 
 help:
 	@cat <<'EOF'
@@ -73,7 +78,8 @@ help:
 	  sudo make nginx DOMAIN=…                    Install or update the nginx site only.
 	  sudo make https DOMAIN=… [EMAIL=…]          Get the HTTPS certificate (certbot, webroot) and switch the site to HTTPS.
 	  make update                                 git pull, rebuild and restart the containers.
-	  make upgrade [BACKUP=0]                     Upgrade a running instance: back up Redis to $(BACKUP_DIR)/, update, rebuild, restart.
+	  make update RELEASE=1.2.0|latest            Switch to a published version: its image is pulled (no build), its APK downloaded.
+	  make upgrade [BACKUP=0] [RELEASE=…]         Upgrade a running instance: back up Redis to $(BACKUP_DIR)/, update, rebuild (or pull), restart.
 	  make status / make logs                     Containers state / follow the application logs.
 	  sudo make uninstall                         Stop the containers and remove the nginx site (only $(SITE)).
 
@@ -87,6 +93,8 @@ help:
 	  make test      Run the automated tests (API and browser) on a throw-away instance:
 	                 port 4200, Redis database 14 (flushed). Needs ffmpeg; the browser tests a Chromium.
 	  make test-api  The API tests only (no client build).
+	  make release VERSION=1.2.0   Set the version, commit it and tag v1.2.0 (not pushed): pushing the tag publishes
+	                 the release (image, APK, notes) from GitHub Actions.
 	  make apk       Build the Android application (Docker), offered for download by the server.
 	                 The signing key is made once in android/keystore/: back it up.
 	  make clean     Remove the dependencies and the builds.
@@ -144,9 +152,15 @@ app:
 	settings="$$( { grep -vE '^(MUSIC_DIR|ONGAKU_PORT|REDIS_PASSWORD)=' "$(ENV_FILE)" 2>/dev/null || true; printf 'MUSIC_DIR=%s\nONGAKU_PORT=%s\nREDIS_PASSWORD=%s\n' "$$music" "$(PORT)" "$$redis_password"; } )"
 	if [ "$$settings" != "$$(cat "$(ENV_FILE)" 2>/dev/null)" ]; then (umask 077; printf '%s\n' "$$settings" > "$(ENV_FILE)"); chmod 600 "$(ENV_FILE)"; fi
 	echo "Building and starting the containers on 127.0.0.1:$(PORT) (the first build takes a few minutes)…"
-	# Mounted by docker-compose.yml: empty until "make apk"
+	# Mounted by docker-compose.yml: empty until "make apk" (or the APK of a release)
 	mkdir -p android/dist
-	$(COMPOSE) up -d --build
+	# A published version (ONGAKU_IMAGE, set by "make update RELEASE=…"): pulled, not built
+	if [ -n "$$(sed -n 's/^ONGAKU_IMAGE=//p' "$(ENV_FILE)" 2>/dev/null)" ]; then
+	  $(COMPOSE) pull ongaku
+	  $(COMPOSE) up -d --no-build
+	else
+	  $(COMPOSE) up -d --build
+	fi
 	for i in $$(seq 1 60); do
 	  if curl -fsS -o /dev/null "http://127.0.0.1:$(PORT)/api/auth" 2>/dev/null; then echo "Ongaku answers on port $(PORT)."; exit 0; fi
 	  sleep 3
@@ -155,7 +169,45 @@ app:
 	exit 1
 
 update:
-	@git pull --ff-only
+	@if [ -n "$(RELEASE)" ]; then $(MAKE) --no-print-directory release-pull; exit 0; fi
+	# Back to the sources: the published version is left, the branch followed again
+	if grep -q '^ONGAKU_IMAGE=' "$(ENV_FILE)" 2>/dev/null; then
+	  sed -i '/^ONGAKU_IMAGE=/d' "$(ENV_FILE)"
+	  git checkout --quiet "$$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||' || echo master)"
+	fi
+	git pull --ff-only
+	$(MAKE) --no-print-directory app
+
+# A published version: the repository at its tag (compose file, nginx templates, configuration
+# template), its image pulled, its signed APK downloaded when the release has one.
+release-pull:
+	@command -v curl >/dev/null || { echo "curl is needed to find the releases" >&2; exit 1; }
+	version="$(RELEASE)"
+	if [ "$$version" = latest ]; then
+	  version="$$(curl -fsSL "https://api.github.com/repos/$(REPOSITORY)/releases/latest" | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | head -n 1)"
+	  [ -n "$$version" ] || { echo "No release found for $(REPOSITORY)" >&2; exit 1; }
+	fi
+	version="$${version#v}"
+	[[ "$$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$$ ]] || { echo "Invalid version: $(RELEASE) (expected 1.2.0 or latest)" >&2; exit 1; }
+	if [ -n "$$(git status --porcelain --untracked-files=no)" ]; then
+	  echo "Local changes in the repository: commit or stash them before switching version." >&2; exit 1
+	fi
+	git fetch --quiet --tags --force origin
+	git rev-parse --quiet --verify "refs/tags/v$$version" >/dev/null || { echo "No tag v$$version in $(REPOSITORY)" >&2; exit 1; }
+	git checkout --quiet "v$$version"
+	echo "Version $$version: $(IMAGE_NAME):$$version"
+	touch "$(ENV_FILE)"; chmod 600 "$(ENV_FILE)"
+	{ grep -v '^ONGAKU_IMAGE=' "$(ENV_FILE)" || true; echo "ONGAKU_IMAGE=$(IMAGE_NAME):$$version"; } > "$(ENV_FILE).new"
+	mv "$(ENV_FILE).new" "$(ENV_FILE)"
+	mkdir -p android/dist
+	base="https://github.com/$(REPOSITORY)/releases/download/v$$version"
+	if curl -fsSL -o android/dist/ongaku.apk.new "$$base/ongaku.apk" && curl -fsSL -o android/dist/ongaku.json.new "$$base/ongaku.json"; then
+	  mv android/dist/ongaku.apk.new android/dist/ongaku.apk; mv android/dist/ongaku.json.new android/dist/ongaku.json
+	  echo "Android application $$version downloaded."
+	else
+	  rm -f android/dist/ongaku.apk.new android/dist/ongaku.json.new
+	  echo "This release has no Android application: the one in android/dist (if any) is kept."
+	fi
 	$(MAKE) --no-print-directory app
 
 # Upgrade of an installed instance. On failure, prints how to go back to the previous version.
@@ -178,13 +230,21 @@ upgrade:
 	    echo "Redis is not running: no backup made." >&2
 	  fi
 	fi
-	# 2. Fetch the new version.
-	git pull --ff-only
-	if [ "$$(git rev-parse HEAD)" = "$$previous" ]; then echo "Already on the latest version: rebuilding anyway."; else git log --oneline "$$previous..HEAD"; fi
-	# 3. Rebuild with up to date base images (Node, Redis), then restart and wait for the application.
+	# 2. and 3. A published version (RELEASE=…): its image pulled. Else the sources: fetched, rebuilt
+	#    with up to date base images (Node, Redis). Then a restart, waiting for the application.
 	$(COMPOSE) pull redis
-	$(COMPOSE) build --pull ongaku
-	$(MAKE) --no-print-directory app
+	if [ -n "$(RELEASE)" ]; then
+	  $(MAKE) --no-print-directory release-pull
+	else
+	  if grep -q '^ONGAKU_IMAGE=' "$(ENV_FILE)" 2>/dev/null; then
+	    sed -i '/^ONGAKU_IMAGE=/d' "$(ENV_FILE)"
+	    git checkout --quiet "$$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||' || echo master)"
+	  fi
+	  git pull --ff-only
+	  if [ "$$(git rev-parse HEAD)" = "$$previous" ]; then echo "Already on the latest version: rebuilding anyway."; else git log --oneline "$$previous..HEAD"; fi
+	  $(COMPOSE) build --pull ongaku
+	  $(MAKE) --no-print-directory app
+	fi
 	# 4. nginx site: re-rendered only when it is installed and its templates changed.
 	$(nginx_paths)
 	if [ -f "$$avail" ] && ! git diff --quiet "$$previous" HEAD -- deploy/; then
@@ -196,7 +256,7 @@ upgrade:
 	if [ -n "$$missing" ]; then
 	  echo "New settings in $(CONFIG_TEMPLATE), not in $(CONFIG): $$(echo $$missing)"
 	fi
-	echo "Ongaku is upgraded to $$(git rev-parse --short HEAD)."
+	echo "Ongaku is upgraded to $$(git describe --tags --always 2>/dev/null || git rev-parse --short HEAD)."
 
 status:
 	@$(COMPOSE) ps
@@ -292,6 +352,20 @@ build: deps
 test:
 	@if [ ! -f client/dist/index.html ]; then (cd client && npx ng build); fi
 	node test/run.mjs
+
+# ---------- Releases ----------
+
+# Sets the version (package.json), commits it and tags it; pushing the tag publishes the release
+release:
+	@[[ "$(VERSION)" =~ ^[0-9]+\.[0-9]+\.[0-9]+$$ ]] || { echo "Usage: make release VERSION=1.2.0" >&2; exit 1; }
+	git rev-parse --quiet --verify "refs/tags/v$(VERSION)" >/dev/null && { echo "The tag v$(VERSION) exists already" >&2; exit 1; }
+	if [ -n "$$(git diff --cached --name-only)" ]; then echo "Staged changes: commit them first" >&2; exit 1; fi
+	npm version "$(VERSION)" --no-git-tag-version --allow-same-version >/dev/null
+	# Only the version: other local changes are left out of the commit
+	git commit --quiet -m "chore(release): $(VERSION)" -- package.json package-lock.json
+	git tag -a "v$(VERSION)" -m "Ongaku $(VERSION)"
+	echo "Version $(VERSION) committed and tagged. Publish it with:"
+	echo "  git push origin $$(git branch --show-current) v$(VERSION)"
 
 # ---------- Android application ----------
 
