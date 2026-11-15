@@ -10,6 +10,10 @@
  * Usage: node test/run.mjs [api|e2e] [--keep]
  *   api / e2e  only that folder (default: both; e2e is skipped without a built client or a browser)
  *   --keep     keep the fixture folder and print its path (to read server.log)
+ *
+ * In continuous integration (CI set), what would be skipped fails instead (no ffmpeg, no
+ * browser, no built client), and the server log of a failed run is copied to
+ * ONGAKU_TEST_ARTIFACTS when it is set.
  */
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -25,6 +29,8 @@ const REDIS_DB = Number(process.env.ONGAKU_TEST_REDIS_DB || 14);
 const args = process.argv.slice(2);
 const only = args.find((arg) => arg === 'api' || arg === 'e2e');
 const keep = args.includes('--keep');
+/** On a CI machine nothing is skipped: a missing tool fails the run */
+const STRICT = !!process.env.CI && process.env.CI !== 'false';
 
 const USERS = {
   boss: { username: 'boss', email: 'boss@test.io', password: 'bosspass1', administrator: true },
@@ -110,9 +116,19 @@ function testFiles(folder) {
   return fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.test.mjs')).sort().map((f) => path.join(dir, f)) : [];
 }
 
+/** The server log of a failed run, for the artifacts of the CI */
+function keepServerLog(workDir) {
+  const target = process.env.ONGAKU_TEST_ARTIFACTS;
+  const source = path.join(workDir, 'server.log');
+  if (target && fs.existsSync(source)) {
+    fs.mkdirSync(target, { recursive: true });
+    fs.copyFileSync(source, path.join(target, 'server.log'));
+  }
+}
+
 async function main() {
   if (spawnSync('ffmpeg', ['-version'], { stdio: 'ignore' }).status !== 0) {
-    log('ffmpeg is needed to generate the test music: skipping the suite.');
+    (STRICT ? fail : log)('ffmpeg is needed to generate the test music: skipping the suite.');
     return;
   }
   const shared = resolveShared(ROOT);
@@ -209,7 +225,7 @@ async function main() {
       CHROME: chrome ?? '',
     };
     if (folders.includes('e2e') && (!fixture.client || !chrome)) {
-      log(`Browser tests skipped: ${!fixture.client ? 'no built client (client/dist; "make test" builds it)' : 'no Chromium found (set CHROME)'}.`);
+      (STRICT ? fail : log)(`Browser tests skipped: ${!fixture.client ? 'no built client (client/dist; "make test" builds it)' : 'no Chromium found (set CHROME)'}.`);
     }
     log(`Running ${files.length} test files`);
     const started = Date.now();
@@ -221,10 +237,12 @@ async function main() {
     log(`Done in ${Math.round((Date.now() - started) / 1000)}s`);
     if (result.status !== 0) {
       process.exitCode = result.status || 1;
+      keepServerLog(workDir);
       log(`Server log: ${path.join(workDir, 'server.log')}${keep ? '' : ' (removed; run with --keep to read it)'}`);
     }
   } catch (err) {
     fail(err.stack || err.message);
+    keepServerLog(workDir);
     const logPath = path.join(workDir, 'server.log');
     if (fs.existsSync(logPath)) {
       console.error(fs.readFileSync(logPath, 'utf8').split('\n').slice(-30).join('\n'));

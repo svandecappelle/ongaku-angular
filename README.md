@@ -1,5 +1,7 @@
 # ongaku-client
 
+[![CI](https://github.com/svandecappelle/ongaku-angular/actions/workflows/ci.yml/badge.svg)](https://github.com/svandecappelle/ongaku-angular/actions/workflows/ci.yml)
+
 ## This project is yet a devlopment state
 The aim is to migrate ongaku music stream application to new angular stack with nodejs es6 support and refractoring server side to new coding conventions.
 
@@ -51,3 +53,8 @@ generated with ffmpeg in a temporary folder, removed afterwards (`node test/run.
 server log). The browser tests use the Chromium headless shell of Playwright when it is installed, or the
 browser given by `CHROME`; they are skipped otherwise. The tests are under [test/](test/): `api/` for the
 HTTP and Socket.io API, `e2e/` for the pages.
+
+GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs them on every push and pull
+request, with Redis, ffmpeg and Chrome; there nothing is skipped, and the server log of a failed run is kept as
+an artifact. The same workflow builds the Docker image and the Android application (signed with a key made for
+the run: to check the build only).
