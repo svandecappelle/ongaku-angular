@@ -66,6 +66,8 @@ class Routes {
     app.use('/api', (req, res) => res.status(404).json({ message: 'Not found' }));
 
     // app.use('/api/auth', authority);
+    // The folders of the members hold their private uploads: only their profile images are public
+    app.use('/static/user', (req, res, next) => (/^\/[^/]+\/(avatar|cover)$/.test(req.path) ? next() : res.status(404).end()));
     app.use('/static', express.static(path.join(__dirname, '../../../public')));
     app.use(express.static(path.join(__dirname, '../../../client/dist')));
     app.get('/{*splat}', (req, res) => {
