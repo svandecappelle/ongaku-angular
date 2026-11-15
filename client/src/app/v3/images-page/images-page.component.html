@@ -1,0 +1,134 @@
+<div class="page" [class.dragging]="dragging()">
+  <header class="page-header">
+    <div class="header-text">
+      <span class="eyebrow">Only yours</span>
+      <h1>Images</h1>
+      <span class="muted">
+        The images of your uploads. Nobody else can see them.
+        @if (status() === 'ready' && images().length) {
+          {{ images().length }} {{ images().length === 1 ? 'image' : 'images' }} · {{ formatSize(totalSize()) }}
+        }
+      </span>
+    </div>
+    <button mat-flat-button color="accent" type="button" class="add" (click)="picker.click()" [disabled]="!!uploading()">
+      <mat-icon>cloud_upload</mat-icon>
+      Add images
+    </button>
+    <input #picker type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/bmp" multiple hidden
+      (change)="addFiles(picker.files); picker.value = ''">
+  </header>
+
+  @if (uploading(); as u) {
+    <div class="upload-progress" role="status">
+      <span>Adding images · {{ u.done }} of {{ u.total }}</span>
+      <mat-progress-bar mode="determinate" [value]="((u.done + u.percent / 100) / u.total) * 100" aria-label="Upload progress"></mat-progress-bar>
+    </div>
+  }
+
+  @if (dragging()) {
+    <div class="drop-hint" aria-hidden="true">
+      <mat-icon>cloud_upload</mat-icon>
+      Drop the images to add them
+    </div>
+  }
+
+  @switch (status()) {
+    @case ('loading') {
+      <div class="state" role="status">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span class="muted">Loading your images…</span>
+      </div>
+    }
+    @case ('error') {
+      <div class="state" role="alert">
+        <mat-icon class="state-icon">error_outline</mat-icon>
+        <h2>Your images could not be loaded</h2>
+        <button mat-stroked-button type="button" (click)="load()">
+          <mat-icon>replay</mat-icon>
+          Retry
+        </button>
+      </div>
+    }
+    @default {
+      @if (!images().length) {
+        <div class="state empty">
+          <mat-icon class="state-icon">photo_library</mat-icon>
+          <h2>No images yet</h2>
+          <p class="muted">Add JPEG, PNG, GIF, WebP or AVIF images, or drop them here. Archives sent from
+            <a routerLink="/my-library" [queryParams]="{ tab: 'uploads' }">your uploads</a> bring their images too.</p>
+          <button mat-flat-button color="accent" type="button" (click)="picker.click()">
+            <mat-icon>cloud_upload</mat-icon>
+            Add images
+          </button>
+        </div>
+      } @else {
+        @if (folders().length > 1) {
+          <mat-chip-listbox class="folders" aria-label="Folder" [value]="folder()" (change)="folder.set($event.value ?? '')">
+            <mat-chip-option value="">All</mat-chip-option>
+            @for (name of folders(); track name) {
+              <mat-chip-option [value]="name">{{ folderName(name) }}</mat-chip-option>
+            }
+          </mat-chip-listbox>
+        }
+
+        @for (month of months(); track month.key) {
+          <section class="month" [attr.aria-label]="(month.date | date: 'MMMM y')">
+            <h2>{{ month.date | date: 'MMMM y' }}</h2>
+            <ul class="grid">
+              @for (item of month.items; track item.image.path) {
+                <li>
+                  <button type="button" class="tile" (click)="view(item.index, $event)" [attr.aria-label]="'Open ' + item.image.name">
+                    <mat-icon class="tile-icon" aria-hidden="true">image</mat-icon>
+                    @if (!broken().has(item.image.path)) {
+                      <img [src]="gallery.thumbUrl(item.image)" alt="" loading="lazy" (error)="thumbFailed(item.image)">
+                    }
+                  </button>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      }
+    }
+  }
+</div>
+
+@if (current(); as image) {
+  <div #viewer class="viewer" role="dialog" aria-modal="true" [attr.aria-label]="image.name" tabindex="-1" cdkTrapFocus
+    (pointerdown)="onPointerDown($event)" (pointerup)="onPointerUp($event)">
+    <div class="viewer-bar">
+      <div class="viewer-info">
+        <strong>{{ image.name }}</strong>
+        <span class="muted small">{{ folderName(image.folder) }} · {{ formatSize(image.size) }} · {{ image.modified | date: 'medium' }}</span>
+      </div>
+      <span class="muted small counter">{{ open()! + 1 }} / {{ shown().length }}</span>
+      <a mat-icon-button class="download" [href]="gallery.fileUrl(image, true)" aria-label="Download" matTooltip="Download">
+        <mat-icon>file_download</mat-icon>
+      </a>
+      <button mat-icon-button type="button" class="delete" (click)="deleteCurrent()" [disabled]="deleting()" aria-label="Delete" matTooltip="Delete">
+        <mat-icon>delete</mat-icon>
+      </button>
+      <button mat-icon-button type="button" class="close" (click)="close()" aria-label="Close" matTooltip="Close (Esc)">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="stage" (click)="$event.target === $event.currentTarget && close()">
+      @if (!loaded()) {
+        <img class="placeholder" [src]="gallery.thumbUrl(image, 640)" alt="" aria-hidden="true">
+      }
+      @for (key of [image.path]; track key) {
+        <img class="full" [class.ready]="loaded()" [src]="gallery.fileUrl(image)" [alt]="image.name" (load)="loaded.set(true)" draggable="false">
+      }
+    </div>
+
+    @if (shown().length > 1) {
+      <button mat-icon-button type="button" class="nav previous" (click)="step(-1)" aria-label="Previous image">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <button mat-icon-button type="button" class="nav next" (click)="step(1)" aria-label="Next image">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    }
+  </div>
+}

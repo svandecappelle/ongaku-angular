@@ -10,6 +10,7 @@ const lyrics = require('./lyrics');
 const history = require('./history');
 const radios = require('./radios');
 const video = require('./video');
+const gallery = require('./gallery');
 
 
 var router = express.Router();
@@ -21,6 +22,7 @@ router.use('/lyrics', lyrics);
 router.use('/history', history);
 router.use('/radios', radios);
 router.use('/video', video);
+router.use('/images', gallery);
 
 router.use('/user', user);
 router.use('/users', users);

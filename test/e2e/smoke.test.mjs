@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 
-import { APP, MUSIC, api, eventually, login } from '../helpers/client.mjs';
+import { APP, ASSETS, MUSIC, api, eventually, fileForm, login } from '../helpers/client.mjs';
 import { openBrowser } from '../helpers/browser.mjs';
 
 const skip = !process.env.CHROME ? 'no Chromium (set CHROME)' : !process.env.ONGAKU_TEST_CLIENT ? 'client not built (client/dist)' : false;
@@ -529,6 +529,56 @@ test('the Android application is offered from the login page and the account men
   await page.eval(`[...document.querySelectorAll('.mat-mdc-menu-panel a')].find((a) => a.textContent.includes('Android app')).click()`);
   await page.waitFor(`document.querySelector('app-android-page .download-button')`, { what: 'the Android page signed in' });
   assert.ok(!(await page.eval(`!!document.querySelector('app-android-page .back')`)), 'no link to the sign in');
+});
+
+test('the Images page shows my uploaded images only, opens them in a viewer, adds and deletes them', { skip }, async (t) => {
+  const clear = async (as) => {
+    const { body } = await api('/api/user/files', { as });
+    for (const file of body.files ?? []) {
+      await api(`/api/user/files?path=${encodeURIComponent(file.name)}`, { as, method: 'DELETE' });
+    }
+  };
+  t.after(async () => {
+    await clear('carol');
+    await clear('alice');
+  });
+  await api('/api/user/files/upload', { as: 'carol', form: fileForm('photo.jpg') });
+  await api('/api/user/files/upload', { as: 'carol', form: fileForm('photos.zip') });
+  // Another member's image: never on carol's page
+  await api('/api/user/files/upload', { as: 'alice', form: fileForm('tiny.png') });
+
+  await page.goto('/images', await login('carol'));
+  await page.waitFor(`document.querySelectorAll('app-images-page .tile').length === 2`, { what: 'the two images' });
+  await page.waitFor(`[...document.querySelectorAll('app-images-page .tile img')].every((img) => img.complete && img.naturalWidth > 0)`, { what: 'the thumbnails' });
+  assert.deepEqual(await page.eval(`[...document.querySelectorAll('app-images-page .folders mat-chip-option')].map((c) => c.textContent.trim())`), ['All', 'Uploads', 'Holiday']);
+
+  // The viewer: the original, the keyboard, Escape
+  await page.eval(`document.querySelector('app-images-page .tile').click()`);
+  await page.waitFor(`document.querySelector('app-images-page .viewer .full.ready')?.naturalWidth > 0`, { what: 'the original in the viewer' });
+  const first = await page.eval(`document.querySelector('app-images-page .viewer-info strong').textContent.trim()`);
+  await page.eval(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }))`);
+  await page.waitFor(`document.querySelector('app-images-page .viewer-info strong').textContent.trim() !== ${JSON.stringify(first)}`, { what: 'the next image' });
+  assert.match(await page.eval(`document.querySelector('app-images-page .viewer .counter').textContent`), /2 \/ 2/);
+  assert.match(await page.eval(`document.querySelector('app-images-page .viewer .download').getAttribute('href')`), /^\/api\/images\/file\?path=.+&download=1$/);
+  await page.eval(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`);
+  await page.waitFor(`!document.querySelector('app-images-page .viewer')`, { what: 'the viewer closed' });
+
+  // Added from the page: into the Images folder of the uploads
+  await page.send('DOM.enable');
+  const { root } = await page.send('DOM.getDocument').then((answer) => answer.result);
+  const { nodeId } = await page.send('DOM.querySelector', { nodeId: root.nodeId, selector: 'app-images-page input[type=file]' }).then((answer) => answer.result);
+  await page.send('DOM.setFileInputFiles', { nodeId, files: [path.join(ASSETS, 'tiny.png')] });
+  await page.waitFor(`document.querySelectorAll('app-images-page .tile').length === 3`, { timeout: 15000, what: 'the added image' });
+  assert.ok(fs.existsSync(path.join(APP, 'public/user/carol/imported/Images/tiny.png')));
+
+  // Deleted from the viewer
+  await page.eval(`window.confirm = () => true`);
+  await page.eval(`document.querySelector('app-images-page .tile').click()`);
+  await page.waitFor(`document.querySelector('app-images-page .viewer')`, { what: 'the viewer' });
+  const deleted = await page.eval(`document.querySelector('app-images-page .viewer-info strong').textContent.trim()`);
+  await page.eval(`document.querySelector('app-images-page .viewer .delete').click()`);
+  await page.waitFor(`document.querySelectorAll('app-images-page .tile').length === 2`, { what: 'the image deleted' });
+  assert.notEqual(await page.eval(`document.querySelector('app-images-page .viewer-info strong')?.textContent.trim()`), deleted, 'the viewer goes on with another image');
 });
 
 test('a backup is downloaded and restored from the Backup tab, the data and the music apart', { skip }, async () => {

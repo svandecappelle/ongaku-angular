@@ -18,7 +18,7 @@ const likes = require("./../../model/likes");
 const user = require("./../../model/user");
 const db = require("./../../model/database");
 
-const USERS_DIRECTORY = path.resolve(__dirname, '../../../../public/user');
+const { USERS_DIRECTORY, uploadsRoot, insideUploads } = require("./../../middleware/uploads-path");
 
 var router = express.Router();
 
@@ -114,18 +114,6 @@ function sendProfile(req, res, username) {
 
 // ---------- Uploaded files of the connected user ----------
 
-function uploadsRoot(username) {
-    const root = path.resolve(USERS_DIRECTORY, username, 'imported');
-    fs.mkdirSync(root, { recursive: true });
-    return root;
-}
-
-// Absolute path of a path relative to the uploads folder, null when it leaves it
-function insideUploads(username, relative) {
-    const root = uploadsRoot(username);
-    const target = path.resolve(root, String(relative || '.'));
-    return target === root || target.startsWith(root + path.sep) ? target : null;
-}
 
 // Rescan of the private library of a user; resolves when done (or after 30s: the scan
 // calls back only when the folder holds media)
@@ -184,7 +172,8 @@ router.get('/files', (req, res) => {
                     size: entry.isDirectory() || !stat ? null : stat.size,
                     modified: stat ? stat.mtimeMs : null,
                     audio: !entry.isDirectory() && importer.isAudio(entry.name),
-                    video: !entry.isDirectory() && importer.isVideo(entry.name)
+                    video: !entry.isDirectory() && importer.isVideo(entry.name),
+                    image: !entry.isDirectory() && importer.isImage(entry.name)
                 })))).then((files) => {
                 res.json({ path: relative, files: files, total: visible.length, page: page, size: size });
             });

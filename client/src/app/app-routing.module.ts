@@ -32,6 +32,8 @@ const routes: Routes = [
   { path: 'users', component: UsersComponent, canActivate: [AuthGuard]},
   { path: 'radios', canActivate: [AuthGuard],
     loadComponent: () => import('./v3/radios-page/radios-page.component').then((m) => m.RadiosPageComponent) },
+  { path: 'images', canActivate: [AuthGuard],
+    loadComponent: () => import('./v3/images-page/images-page.component').then((m) => m.ImagesPageComponent) },
   { path: 'videos', canActivate: [AuthGuard],
     loadComponent: () => import('./v3/videos-page/videos-page.component').then((m) => m.VideosPageComponent) },
   { path: 'videos/:uid', canActivate: [AuthGuard],

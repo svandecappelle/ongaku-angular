@@ -8,8 +8,9 @@ const nconf = require('nconf');
 const logger = require('log4js').getLogger("Importer");
 
 /**
- * Unpack uploaded archives (zip, tar, tar.gz) or single audio and video files into a library
- * folder. Only files with an extension listed in the 'audio' or 'video' configuration are kept.
+ * Unpack uploaded archives (zip, tar, tar.gz) or single audio, video and image files into a
+ * library folder. Only files with an extension of the 'audio', 'video' or 'image' configuration
+ * are kept.
  */
 class Importer {
 
@@ -25,9 +26,14 @@ class Importer {
     return [].concat(nconf.get("video") || []).map(String).includes(this.extensionOf(filename));
   }
 
-  /** A file the library lists: music or video */
+  /** An image the browsers show (see gallery.js): the Images page of its owner lists it */
+  isImage(filename) {
+    return require('./gallery').isImage(filename);
+  }
+
+  /** A file kept from an upload: music, video or image */
   isMedia(filename) {
-    return this.isAudio(filename) || this.isVideo(filename);
+    return this.isAudio(filename) || this.isVideo(filename) || this.isImage(filename);
   }
 
   archiveType(filename) {

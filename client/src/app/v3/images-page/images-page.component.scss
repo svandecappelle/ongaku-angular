@@ -1,0 +1,260 @@
+@use '../page';
+
+:host {
+  display: block;
+  color: var(--ongaku-text);
+}
+
+@include page.layout;
+
+.small {
+  font-size: 13px;
+}
+
+// Opaque: the profile background image may be busy
+.page-header {
+  padding: 24px 28px;
+  border-radius: var(--ongaku-radius-xl);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  background: color-mix(in srgb, var(--ongaku-accent) 12%, var(--ongaku-surface));
+  border: 1px solid var(--ongaku-border);
+  h1 {
+    margin: 0;
+    font-size: 40px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ongaku-accent);
+}
+
+.add {
+  height: 48px;
+  border-radius: 24px;
+}
+
+.upload-progress {
+  padding: 12px 16px;
+  border-radius: var(--ongaku-radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--ongaku-surface);
+  border: 1px solid var(--ongaku-border);
+}
+
+.page.dragging .month,
+.page.dragging .state {
+  opacity: .35;
+}
+
+.drop-hint {
+  padding: 28px;
+  border-radius: var(--ongaku-radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ongaku-accent);
+  border: 2px dashed var(--ongaku-accent);
+  background: color-mix(in srgb, var(--ongaku-accent) 8%, transparent);
+}
+
+.state {
+  border-radius: var(--ongaku-radius-xl);
+  background: var(--ongaku-surface);
+  border: 1px solid var(--ongaku-border);
+  h2 {
+    margin: 0;
+    font-size: 22px;
+  }
+  p {
+    max-width: 480px;
+    margin: 0;
+  }
+  a {
+    color: var(--ongaku-accent);
+  }
+}
+
+.month {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+}
+
+.grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px;
+}
+
+.tile {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ongaku-radius-md);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  cursor: zoom-in;
+  background: var(--ongaku-surface-2);
+  outline: none;
+  .tile-icon {
+    color: var(--ongaku-muted);
+  }
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .25s ease;
+  }
+  &:hover img {
+    transform: scale(1.04);
+  }
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--ongaku-accent);
+  }
+}
+
+// ---------- Viewer ----------
+
+.viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  background: #050506;
+  color: #fff;
+  outline: none;
+  .muted {
+    color: rgba(255, 255, 255, .7);
+  }
+  button, a {
+    color: #fff;
+  }
+}
+
+.viewer-bar {
+  padding: 8px 8px 8px 20px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.viewer-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.counter {
+  margin-right: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0 64px 24px;
+  display: grid;
+  place-items: center;
+  touch-action: pan-y;
+  img {
+    grid-area: 1 / 1;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    user-select: none;
+  }
+  .placeholder {
+    width: 100%;
+    height: 100%;
+    filter: blur(6px);
+  }
+  .full {
+    opacity: 0;
+    transition: opacity .2s;
+    &.ready {
+      opacity: 1;
+    }
+  }
+}
+
+.nav {
+  position: absolute;
+  top: 50%;
+  width: 52px;
+  height: 52px;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, .1);
+  &.previous {
+    left: 8px;
+  }
+  &.next {
+    right: 8px;
+  }
+  mat-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+  }
+  .stage {
+    margin: 0 0 16px;
+  }
+  .nav {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile img,
+  .stage .full {
+    transition: none;
+  }
+}

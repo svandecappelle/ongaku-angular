@@ -145,6 +145,15 @@ function buildMusic(music) {
 /** Files uploaded by the tests */
 function buildAssets(assets) {
   fs.mkdirSync(assets, { recursive: true });
+  // Images for the Images page: a photo, a small PNG, an SVG (refused), an archive of photos
+  ffmpeg(['-f', 'lavfi', '-i', 'testsrc=size=800x600:rate=1', '-frames:v', '1', path.join(assets, 'photo.jpg')]);
+  ffmpeg(['-f', 'lavfi', '-i', 'color=c=green:s=64x48', '-frames:v', '1', path.join(assets, 'tiny.png')]);
+  fs.writeFileSync(path.join(assets, 'drawing.svg'), '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');
+  const photos = path.join(assets, 'photos');
+  fs.mkdirSync(path.join(photos, 'Holiday'), { recursive: true });
+  ffmpeg(['-f', 'lavfi', '-i', 'color=c=blue:s=300x400', '-frames:v', '1', path.join(photos, 'Holiday', 'beach.jpg')]);
+  fs.writeFileSync(path.join(photos, 'Holiday', 'notes.txt'), 'not an image');
+  zip(path.join(assets, 'photos.zip'), photos, ['Holiday/beach.jpg', 'Holiday/notes.txt']);
   // Videos to upload: an MPEG-1 (.mpeg), and a WebM inside a zip
   const lavfi = (seconds) => ['-f', 'lavfi', '-i', `testsrc=size=160x120:rate=25:duration=${seconds}`, '-f', 'lavfi', '-i', `sine=frequency=330:duration=${seconds}`, '-shortest'];
   ffmpeg([...lavfi(2), '-c:v', 'mpeg1video', '-c:a', 'mp2', '-f', 'mpeg', path.join(assets, 'home movie.mpeg')]);
