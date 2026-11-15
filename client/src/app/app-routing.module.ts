@@ -57,6 +57,9 @@ const routes: Routes = [
   { path: 'admin', component: AdminComponent, canActivate: [AuthGuard] },
 
   { path: 'login', component: LoginComponent },
+  // Public links to images: open to everyone
+  { path: 's/:token',
+    loadComponent: () => import('./v3/share-page/share-page.component').then((m) => m.SharePageComponent) },
   // Open before signing in: the app is installed first, then signed in
   { path: 'android',
     loadComponent: () => import('./v3/android-page/android-page.component').then((m) => m.AndroidPageComponent) },

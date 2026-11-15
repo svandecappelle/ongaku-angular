@@ -630,6 +630,64 @@ test('several images are selected on the Images page, a range with shift, and de
   assert.equal((await api('/api/images', { as: 'carol' })).body.images.length, 1);
 });
 
+test('selected images are shared by a public link, opened without an account, then revoked', { skip }, async (t) => {
+  const clear = async () => {
+    for (const share of (await api('/api/shares', { as: 'carol' })).body.shares ?? []) {
+      await api(`/api/shares/${share.token}`, { as: 'carol', method: 'DELETE' });
+    }
+    const { body } = await api('/api/user/files', { as: 'carol' });
+    for (const file of body.files ?? []) {
+      await api(`/api/user/files?path=${encodeURIComponent(file.name)}`, { as: 'carol', method: 'DELETE' });
+    }
+  };
+  t.after(clear);
+  await api('/api/user/files/upload', { as: 'carol', form: fileForm('photo.jpg') });
+  await api('/api/user/files/upload', { as: 'carol', form: fileForm('photos.zip') });
+
+  await page.goto('/images', await login('carol'));
+  await page.waitFor(`document.querySelectorAll('app-images-page .tile').length === 2`, { what: 'the images' });
+  await page.eval(`document.querySelector('app-images-page .select').click()`);
+  for (const n of [0, 1]) {
+    await page.eval(`document.querySelectorAll('app-images-page .tile')[${n}].click()`);
+  }
+  await page.waitFor(`document.querySelectorAll('app-images-page .tile.checked').length === 2`, { what: 'two images selected' });
+  await page.eval(`document.querySelector('app-images-page .share-selected').click()`);
+  await page.waitFor(`document.querySelector('app-share-dialog input[matinput]')`, { what: 'the share dialog' });
+  assert.equal(await page.eval(`document.querySelector('app-share-dialog input[matinput]').value`), '2 images', 'a title suggested');
+  await page.eval(`(() => { const input = document.querySelector('app-share-dialog input[matinput]'); input.value = 'For the family'; input.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+  await page.eval(`document.querySelector('app-share-dialog .create').click()`);
+  await page.waitFor(`document.querySelector('app-share-dialog input.link')?.value.includes('/s/')`, { what: 'the link' });
+  const link = new URL(await page.eval(`document.querySelector('app-share-dialog input.link').value`));
+  assert.match(link.pathname, /^\/s\/[A-Za-z0-9_-]{22}$/);
+  await page.eval(`[...document.querySelectorAll('app-share-dialog button')].find((b) => b.textContent.includes('Done')).click()`);
+  await page.waitFor(`!document.querySelector('app-share-dialog') && !document.querySelector('app-images-page .selection-bar')`, { what: 'the selection done' });
+
+  // Without an account
+  await page.goto(link.pathname);
+  await page.waitFor(`document.querySelector('app-share-page h1')?.textContent.trim() === 'For the family'`, { what: 'the shared page' });
+  assert.match(await page.eval(`document.querySelector('app-share-page .intro p').textContent`), /Shared by carol · 2 images/);
+  await page.waitFor(`document.querySelectorAll('app-share-page .tile img').length === 2 && [...document.querySelectorAll('app-share-page .tile img')].every((img) => img.complete && img.naturalWidth > 0)`, { what: 'the thumbnails' });
+  assert.ok(!(await page.eval(`!!document.querySelector('app-shell')`)), 'no application around');
+  await page.eval(`document.querySelector('app-share-page .tile').click()`);
+  await page.waitFor(`document.querySelector('app-share-page .viewer .full.ready')?.naturalWidth > 0`, { what: 'the image in the viewer' });
+  assert.ok(!(await page.eval(`!!document.querySelector('app-share-page .viewer .delete')`)), 'no delete for visitors');
+  await page.eval(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }))`);
+  await page.waitFor(`/2 \\/ 2/.test(document.querySelector('app-share-page .viewer .counter').textContent)`, { what: 'the next image' });
+
+  // The owner sees it among her links, opened once, and revokes it
+  await page.goto('/images', await login('carol'));
+  await page.waitFor(`document.querySelector('app-images-page .shares')`, { what: 'the Shared links button' });
+  await page.eval(`document.querySelector('app-images-page .shares').click()`);
+  await page.waitFor(`document.querySelector('app-shares-dialog .share')`, { what: 'the links' });
+  assert.match(await page.eval(`document.querySelector('app-shares-dialog .share').textContent.replace(/\\s+/g, ' ')`), /For the family 2 images · 1 view/);
+  await page.eval(`window.confirm = () => true`);
+  await page.eval(`document.querySelector('app-shares-dialog .revoke').click()`);
+  await page.waitFor(`!document.querySelector('app-shares-dialog .share')`, { what: 'the link revoked' });
+
+  await page.goto(link.pathname);
+  await page.waitFor(`document.querySelector('app-share-page h1')?.textContent.includes('revoked')`, { what: 'the link no longer working' });
+});
+
 test('a backup is downloaded and restored from the Backup tab, the data and the music apart', { skip }, async () => {
   await page.goto('/admin', await login('boss'));
   await page.waitFor(`[...document.querySelectorAll('.mdc-tab')].some((tab) => tab.textContent.trim() === 'Backup')`, { what: 'the tabs' });

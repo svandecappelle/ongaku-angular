@@ -1,0 +1,58 @@
+<div class="page">
+  <header class="brand">
+    <span class="logo" aria-hidden="true"><mat-icon>music_note</mat-icon></span>
+    <span class="wordmark">Ongaku</span>
+  </header>
+
+  @switch (load().status) {
+    @case ('loading') {
+      <div class="state" role="status">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+    }
+    @case ('error') {
+      <div class="state" role="alert">
+        <mat-icon class="state-icon">link</mat-icon>
+        <h1>{{ $any(load()).message }}</h1>
+        <p class="muted">Ask whoever gave it to you for a new one.</p>
+      </div>
+    }
+    @default {
+      @if (share(); as s) {
+        <section class="intro" aria-labelledby="share-title">
+          <h1 id="share-title">{{ s.title }}</h1>
+          <p class="muted">
+            Shared by <strong>{{ s.owner }}</strong> · {{ s.images.length }} {{ s.images.length === 1 ? 'image' : 'images' }} · {{ formatSize(totalSize()) }}
+            @if (s.expires) {
+              · until {{ s.expires | date: 'mediumDate' }}
+            }
+          </p>
+        </section>
+
+        @if (s.images.length) {
+          <ul class="grid">
+            @for (image of s.images; track image.index; let position = $index) {
+              <li>
+                <button type="button" class="tile" (click)="view(position, $event)" [attr.aria-label]="'Open ' + image.name">
+                  <mat-icon class="tile-icon" aria-hidden="true">image</mat-icon>
+                  @if (!broken().has(image.index)) {
+                    <img [src]="thumbUrl(image.index)" alt="" loading="lazy" (error)="thumbFailed(image.index)">
+                  }
+                </button>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="state">
+            <mat-icon class="state-icon">image</mat-icon>
+            <h2>These images are no longer here</h2>
+          </div>
+        }
+      }
+    }
+  }
+</div>
+
+@if (open() !== null) {
+  <app-image-viewer [items]="viewerItems()" [index]="open()!" (indexChange)="open.set($event)" (closed)="close()"></app-image-viewer>
+}

@@ -11,6 +11,12 @@
       </span>
     </div>
     <span class="header-actions">
+    @if (status() === 'ready') {
+      <button mat-stroked-button type="button" class="shares" (click)="openShares()">
+        <mat-icon>link</mat-icon>
+        Shared links
+      </button>
+    }
     @if (status() === 'ready' && images().length && !selecting()) {
       <button mat-stroked-button type="button" class="select" (click)="startSelection()">
         <mat-icon>check_circle</mat-icon>
@@ -84,6 +90,10 @@
               }
             </span>
             <button mat-button type="button" class="select-all" (click)="selectAll()">{{ allSelected() ? 'Select none' : 'Select all' }}</button>
+            <button mat-stroked-button type="button" class="share-selected" (click)="shareSelected()" [disabled]="!selected().size">
+              <mat-icon>share</mat-icon>
+              Share
+            </button>
             <button mat-flat-button color="warn" type="button" class="delete-selected" (click)="deleteSelected()" [disabled]="!selected().size || deleting()">
               <mat-icon>delete</mat-icon>
               {{ deleting() ? 'Deleting…' : 'Delete' }}
@@ -131,42 +141,7 @@
   }
 </div>
 
-@if (current(); as image) {
-  <div #viewer class="viewer" role="dialog" aria-modal="true" [attr.aria-label]="image.name" tabindex="-1" cdkTrapFocus
-    (pointerdown)="onPointerDown($event)" (pointerup)="onPointerUp($event)">
-    <div class="viewer-bar">
-      <div class="viewer-info">
-        <strong>{{ image.name }}</strong>
-        <span class="muted small">{{ folderName(image.folder) }} · {{ formatSize(image.size) }} · {{ image.modified | date: 'medium' }}</span>
-      </div>
-      <span class="muted small counter">{{ open()! + 1 }} / {{ shown().length }}</span>
-      <a mat-icon-button class="download" [href]="gallery.fileUrl(image, true)" aria-label="Download" matTooltip="Download">
-        <mat-icon>file_download</mat-icon>
-      </a>
-      <button mat-icon-button type="button" class="delete" (click)="deleteCurrent()" [disabled]="deleting()" aria-label="Delete" matTooltip="Delete">
-        <mat-icon>delete</mat-icon>
-      </button>
-      <button mat-icon-button type="button" class="close" (click)="close()" aria-label="Close" matTooltip="Close (Esc)">
-        <mat-icon>close</mat-icon>
-      </button>
-    </div>
-
-    <div class="stage" (click)="$event.target === $event.currentTarget && close()">
-      @if (!loaded()) {
-        <img class="placeholder" [src]="gallery.thumbUrl(image, 640)" alt="" aria-hidden="true">
-      }
-      @for (key of [image.path]; track key) {
-        <img class="full" [class.ready]="loaded()" [src]="gallery.fileUrl(image)" [alt]="image.name" (load)="loaded.set(true)" draggable="false">
-      }
-    </div>
-
-    @if (shown().length > 1) {
-      <button mat-icon-button type="button" class="nav previous" (click)="step(-1)" aria-label="Previous image">
-        <mat-icon>chevron_left</mat-icon>
-      </button>
-      <button mat-icon-button type="button" class="nav next" (click)="step(1)" aria-label="Next image">
-        <mat-icon>chevron_right</mat-icon>
-      </button>
-    }
-  </div>
+@if (open() !== null) {
+  <app-image-viewer [items]="viewerItems()" [index]="open()!" (indexChange)="open.set($event)"
+    [deletable]="true" [deleting]="deleting()" (deleteRequested)="deleteViewed($event)" (closed)="close()"></app-image-viewer>
 }

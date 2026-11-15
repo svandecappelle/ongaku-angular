@@ -15,6 +15,30 @@ export interface GalleryImage {
   modified: number;
 }
 
+/** A public link to images (server/app/routes/api/shares.js), as its owner sees it */
+export interface ImageShare {
+  token: string;
+  title: string;
+  /** Images of the link still in the uploads */
+  count: number;
+  created: number;
+  /** Milliseconds; null: never */
+  expires: number | null;
+  expired: boolean;
+  views: number;
+}
+
+/** A shared link, as anyone opening it sees it */
+export interface SharedImages {
+  title: string;
+  owner: string;
+  created: number;
+  expires: number | null;
+  images: { index: number; name: string; size: number }[];
+}
+
+export type ShareExpiry = 0 | 1 | 7 | 30;
+
 /** Folder of the uploads where the Images page puts the images sent from it */
 export const IMAGES_FOLDER = 'Images';
 
@@ -50,6 +74,34 @@ export class GalleryService {
       params: new HttpParams({ fromObject: { path: IMAGES_FOLDER } }),
       reportProgress: true,
     }));
+  }
+
+  // ---------- Public links ----------
+
+  shares(): Observable<ImageShare[]> {
+    return this.http.get<{ shares: ImageShare[] }>('/api/shares').pipe(map(({ shares }) => shares));
+  }
+
+  share(images: GalleryImage[], title: string, expiresInDays: ShareExpiry): Observable<ImageShare & { skipped: number }> {
+    return this.http.post<ImageShare & { skipped: number }>('/api/shares', { title, expiresInDays, paths: images.map((image) => image.path) });
+  }
+
+  revoke(token: string): Observable<unknown> {
+    return this.http.delete(`/api/shares/${encodeURIComponent(token)}`);
+  }
+
+  /** The address to give: the page of the link */
+  shareUrl(token: string): string {
+    return `${location.origin}/s/${token}`;
+  }
+
+  openShare(token: string): Observable<SharedImages> {
+    return this.http.get<SharedImages>(`/api/share/${encodeURIComponent(token)}`);
+  }
+
+  sharedImageUrl(token: string, index: number, options: { size?: 320 | 640; download?: boolean } = {}): string {
+    const query = options.size ? `?size=${options.size}` : options.download ? '?download=1' : '';
+    return `/api/share/${encodeURIComponent(token)}/image/${index}${query}`;
   }
 
   delete(images: GalleryImage[]): Observable<{ deleted: string[]; failed: { path: string; message: string }[] }> {

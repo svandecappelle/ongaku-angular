@@ -1,18 +1,21 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpEventType } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { catchError, concatMap, from, last, of, tap } from 'rxjs';
 
 import { MaterialModule } from '../../modules/material.module';
 import { GalleryImage, GalleryService, IMAGES_FOLDER } from '../../services/gallery.service';
 import { formatSize } from '../../services/video.service';
+import { ShareDialogComponent, ShareDialogData } from './share-dialog.component';
+import { ImageViewerComponent, ViewerItem } from '../image-viewer/image-viewer.component';
+import { DatePipe as DateFormatter } from '@angular/common';
+import { SharesDialogComponent } from './shares-dialog.component';
 
 type Load = 'loading' | 'error' | 'ready';
 const ALL = '';
-/** Swipe distance that turns the image, in pixels */
-const SWIPE = 50;
 
 /**
  * The images the member uploaded: his only, nobody else sees them. By month, the latest
@@ -23,7 +26,7 @@ const SWIPE = 50;
   templateUrl: './images-page.component.html',
   styleUrls: ['./images-page.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialModule, RouterLink, DatePipe],
+  imports: [MaterialModule, RouterLink, DatePipe, ImageViewerComponent],
   host: {
     '(document:keydown)': 'onKey($event)',
     '(dragover)': 'onDragOver($event)',
@@ -34,7 +37,7 @@ const SWIPE = 50;
 export class ImagesPageComponent {
   readonly gallery = inject(GalleryService);
   private readonly snackBar = inject(MatSnackBar);
-  private readonly viewerElement = viewChild<ElementRef<HTMLElement>>('viewer');
+  private readonly dialog = inject(MatDialog);
 
   readonly status = signal<Load>('loading');
   readonly images = signal<GalleryImage[]>([]);
@@ -46,8 +49,6 @@ export class ImagesPageComponent {
   readonly uploading = signal<{ done: number; total: number; percent: number } | null>(null);
   /** Thumbnails that could not be made: the icon instead */
   readonly broken = signal<ReadonlySet<string>>(new Set());
-  /** The original shown in the viewer is loaded: the thumbnail under it goes */
-  readonly loaded = signal(false);
   readonly deleting = signal(false);
   /** Selection mode: a tap checks an image instead of opening it */
   readonly selecting = signal(false);
@@ -74,10 +75,16 @@ export class ImagesPageComponent {
     });
     return groups;
   });
-  readonly current = computed(() => {
-    const index = this.open();
-    return index === null ? null : this.shown()[index] ?? null;
-  });
+  private readonly dates = new DateFormatter('en-US');
+  /** The shown images, for the viewer */
+  readonly viewerItems = computed<ViewerItem[]>(() => this.shown().map((image) => ({
+    key: image.path,
+    name: image.name,
+    src: this.gallery.fileUrl(image),
+    placeholder: this.gallery.thumbUrl(image, 640),
+    download: this.gallery.fileUrl(image, true),
+    details: `${this.folderName(image.folder)} · ${formatSize(image.size)} · ${this.dates.transform(image.modified, 'medium')}`,
+  })));
   readonly totalSize = computed(() => this.images().reduce((sum, image) => sum + image.size, 0));
   /** The checked images among the shown ones, in their order */
   readonly selectedImages = computed(() => this.shown().filter((image) => this.selected().has(image.path)));
@@ -86,7 +93,6 @@ export class ImagesPageComponent {
 
   readonly formatSize = formatSize;
   readonly folderName = (folder: string) => folder || 'Uploads';
-  private swipeStart: number | null = null;
   private returnFocus: HTMLElement | null = null;
   /** Last image checked, for the range of a shift click */
   private anchor: string | null = null;
@@ -201,6 +207,30 @@ export class ImagesPageComponent {
     clearTimeout(this.pressTimer);
   }
 
+  /** A public link to the checked images; the title suggested is their folder when they share one */
+  shareSelected() {
+    const chosen = this.selectedImages();
+    if (!chosen.length) {
+      return;
+    }
+    const folders = new Set(chosen.map((image) => image.folder));
+    const folder = folders.size === 1 ? [...folders][0] : '';
+    const data: ShareDialogData = {
+      images: chosen,
+      title: folder ? folder.split('/').pop()! : `${chosen.length} ${chosen.length === 1 ? 'image' : 'images'}`,
+    };
+    // A link made: the selection is done
+    this.dialog.open(ShareDialogComponent, { data, autoFocus: 'first-tabbable' }).afterClosed().subscribe((created?: boolean) => {
+      if (created) {
+        this.exitSelection();
+      }
+    });
+  }
+
+  openShares() {
+    this.dialog.open(SharesDialogComponent, { autoFocus: false });
+  }
+
   deleteSelected() {
     const chosen = this.selectedImages();
     if (!chosen.length || this.deleting()) {
@@ -239,9 +269,7 @@ export class ImagesPageComponent {
 
   view(index: number, event?: Event) {
     this.returnFocus = (event?.currentTarget as HTMLElement) ?? null;
-    this.loaded.set(false);
     this.open.set(index);
-    setTimeout(() => this.viewerElement()?.nativeElement.focus());
   }
 
   close() {
@@ -249,57 +277,22 @@ export class ImagesPageComponent {
     this.returnFocus?.focus();
   }
 
-  step(delta: number) {
-    const index = this.open();
-    const count = this.shown().length;
-    if (index === null || !count) {
-      return;
-    }
-    this.loaded.set(false);
-    this.open.set((index + delta + count) % count);
-  }
-
+  /** Escape and Delete act on the selection while the viewer is closed (it has its own keys) */
   onKey(event: KeyboardEvent) {
-    if (this.open() === null) {
-      if (this.selecting() && event.key === 'Escape') {
-        event.preventDefault();
-        this.exitSelection();
-      } else if (this.selecting() && event.key === 'Delete' && this.selected().size) {
-        event.preventDefault();
-        this.deleteSelected();
-      }
+    if (this.open() !== null || !this.selecting()) {
       return;
     }
-    const actions: Record<string, () => void> = {
-      Escape: () => this.close(),
-      ArrowLeft: () => this.step(-1),
-      ArrowRight: () => this.step(1),
-      Delete: () => this.deleteCurrent(),
-    };
-    const action = actions[event.key];
-    if (action) {
+    if (event.key === 'Escape') {
       event.preventDefault();
-      action();
+      this.exitSelection();
+    } else if (event.key === 'Delete' && this.selected().size) {
+      event.preventDefault();
+      this.deleteSelected();
     }
   }
 
-  onPointerDown(event: PointerEvent) {
-    this.swipeStart = event.pointerType === 'mouse' ? null : event.clientX;
-  }
-
-  onPointerUp(event: PointerEvent) {
-    if (this.swipeStart === null) {
-      return;
-    }
-    const distance = event.clientX - this.swipeStart;
-    this.swipeStart = null;
-    if (Math.abs(distance) > SWIPE) {
-      this.step(distance < 0 ? 1 : -1);
-    }
-  }
-
-  deleteCurrent() {
-    const image = this.current();
+  deleteViewed(item: ViewerItem) {
+    const image = this.shown().find((other) => other.path === item.key);
     if (!image || this.deleting() || !confirm(`Delete “${image.name}”? This cannot be undone.`)) {
       return;
     }
@@ -312,13 +305,12 @@ export class ImagesPageComponent {
           return;
         }
         this.snackBar.open(`“${image.name}” deleted`, undefined, { duration: 3000 });
-        const index = this.open()!;
+        const index = this.open() ?? 0;
         this.images.update((images) => images.filter((other) => other.path !== image.path));
         const count = this.shown().length;
         if (!count) {
           this.close();
         } else {
-          this.loaded.set(false);
           this.open.set(Math.min(index, count - 1));
         }
       },

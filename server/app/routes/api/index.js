@@ -11,6 +11,7 @@ const history = require('./history');
 const radios = require('./radios');
 const video = require('./video');
 const gallery = require('./gallery');
+const shares = require('./shares');
 
 
 var router = express.Router();
@@ -23,6 +24,8 @@ router.use('/history', history);
 router.use('/radios', radios);
 router.use('/video', video);
 router.use('/images', gallery);
+router.use('/shares', shares.owner);
+router.use('/share', shares.visitor);
 
 router.use('/user', user);
 router.use('/users', users);

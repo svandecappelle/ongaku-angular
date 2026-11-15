@@ -1,0 +1,109 @@
+@use '../page';
+
+:host {
+  display: block;
+  min-height: 100vh;
+  color: var(--ongaku-text);
+  background: var(--ongaku-bg);
+}
+
+@include page.layout;
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  .logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: grid;
+    place-items: center;
+    color: var(--ongaku-on-accent);
+    background: var(--ongaku-accent);
+  }
+  .wordmark {
+    font-size: 20px;
+    font-weight: 700;
+  }
+}
+
+.intro {
+  h1 {
+    margin: 0 0 6px;
+    font-size: 36px;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+  }
+  p {
+    margin: 0;
+  }
+}
+
+.state {
+  border-radius: var(--ongaku-radius-xl);
+  background: var(--ongaku-surface);
+  border: 1px solid var(--ongaku-border);
+  h1, h2 {
+    margin: 0;
+    font-size: 22px;
+  }
+  p {
+    margin: 0;
+  }
+}
+
+.grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 6px;
+}
+
+.tile {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ongaku-radius-md);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  cursor: zoom-in;
+  background: var(--ongaku-surface-2);
+  outline: none;
+  .tile-icon {
+    color: var(--ongaku-muted);
+  }
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .25s ease;
+  }
+  &:hover img {
+    transform: scale(1.04);
+  }
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--ongaku-accent);
+  }
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile img {
+    transition: none;
+  }
+}

@@ -2,8 +2,8 @@ const nconf = require('nconf');
 const middleware = require('./middleware');
 const user = require('../model/user');
 
-/** Under /api, open to anonymous visitors: the authentication, the installation, the audio stream */
-const PUBLIC_API = [/^\/auth(\/|$)/, /^\/install\/?$/, /^\/audio\/stream\//];
+/** Under /api, open to anonymous visitors: the authentication, the installation, the audio stream, the shared images */
+const PUBLIC_API = [/^\/auth(\/|$)/, /^\/install\/?$/, /^\/audio\/stream\//, /^\/share\/[^/]+(\/image\/[^/]+)?$/];
 
 function desktop() {
   return nconf.get('type') === 'desktop';
