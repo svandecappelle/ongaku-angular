@@ -1,0 +1,141 @@
+<div class="reader" [class.epub]="epub()">
+  <header class="bar">
+    <a mat-icon-button routerLink="/books" class="back" aria-label="Back to the books" matTooltip="Back to the books">
+      <mat-icon>arrow_back</mat-icon>
+    </a>
+    <div class="heading">
+      @if (book(); as b) {
+        <h1>{{ b.title }}</h1>
+        <span class="muted small sub">
+          @if (location()?.chapter; as chapter) {
+            {{ chapter }}
+          } @else {
+            {{ b.author || b.name }}
+          }
+        </span>
+      }
+    </div>
+
+    @if (book(); as b) {
+      @if (opening() === 'open') {
+        @if (location(); as where) {
+          <span class="where" role="status">{{ where.label }}</span>
+        }
+        @if (toc().length) {
+          <button mat-icon-button type="button" class="toc-button" (click)="tocOpen.set(!tocOpen())" [attr.aria-expanded]="tocOpen()"
+            aria-controls="reader-toc" aria-label="Contents" matTooltip="Contents">
+            <mat-icon>toc</mat-icon>
+          </button>
+        }
+        <button mat-icon-button type="button" class="zoom-out" (click)="zoomBy(-1)" [disabled]="zoom() <= 0"
+          [attr.aria-label]="epub() ? 'Smaller text' : 'Zoom out'" [matTooltip]="epub() ? 'Smaller text (-)' : 'Zoom out (-)'">
+          <mat-icon>{{ epub() ? 'remove' : 'zoom_out' }}</mat-icon>
+        </button>
+        <span class="zoom-value small" aria-hidden="true">{{ zooms()[zoom()] }}%</span>
+        <button mat-icon-button type="button" class="zoom-in" (click)="zoomBy(1)" [disabled]="zoom() >= zooms().length - 1"
+          [attr.aria-label]="epub() ? 'Larger text' : 'Zoom in'" [matTooltip]="epub() ? 'Larger text (+)' : 'Zoom in (+)'">
+          <mat-icon>{{ epub() ? 'add' : 'zoom_in' }}</mat-icon>
+        </button>
+      }
+      @if (playback.current()) {
+        <button mat-icon-button type="button" class="music" (click)="playback.toggle()"
+          [attr.aria-label]="playback.playing() ? 'Pause the music' : 'Play the music'" [matTooltip]="playback.playing() ? 'Pause the music' : 'Play the music'">
+          <mat-icon>{{ playback.playing() ? 'pause' : 'play_arrow' }}</mat-icon>
+        </button>
+      }
+      <a mat-icon-button class="download" [href]="service.fileUrl(b.uid, true)" [attr.download]="b.name" aria-label="Download" matTooltip="Download">
+        <mat-icon>file_download</mat-icon>
+      </a>
+      @if (document.fullscreenEnabled) {
+        <button mat-icon-button type="button" class="fullscreen" (click)="toggleFullscreen()"
+          [attr.aria-label]="fullscreen() ? 'Leave full screen' : 'Full screen'" [matTooltip]="fullscreen() ? 'Leave full screen' : 'Full screen'">
+          <mat-icon>{{ fullscreen() ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
+        </button>
+      }
+    }
+  </header>
+
+  <div class="body">
+    @switch (load().status) {
+      @case ('loading') {
+        <div class="state" role="status">
+          <mat-spinner diameter="40"></mat-spinner>
+          <span class="muted">Loading the book…</span>
+        </div>
+      }
+      @case ('error') {
+        <div class="state" role="alert">
+          <mat-icon class="state-icon">error_outline</mat-icon>
+          @if ($any(load()).notFound) {
+            <h2>This book is not in the library</h2>
+            <p class="muted">It may have been moved or deleted since.</p>
+          } @else {
+            <h2>The book could not be loaded</h2>
+          }
+          <a mat-stroked-button routerLink="/books">See all the books</a>
+        </div>
+      }
+      @default {
+        @if (book(); as b) {
+          <!-- The key gives a new stage to each book: nothing of the previous one -->
+          @for (key of [b.uid]; track key) {
+            <div #stage class="stage" tabindex="0" [attr.aria-label]="b.title" [class.ready]="opening() === 'open'"></div>
+          }
+
+          @if (opening() === 'opening') {
+            <div class="state over" role="status">
+              <mat-spinner diameter="40"></mat-spinner>
+              <span class="muted">Opening the book…</span>
+            </div>
+          } @else if (opening() === 'failed') {
+            <div class="state over" role="alert">
+              <mat-icon class="state-icon">import_contacts</mat-icon>
+              <h2>This book could not be opened</h2>
+              <p class="muted">The file may be damaged, or protected by a password. Download it to read it with another reader.</p>
+              <a mat-flat-button color="accent" [href]="service.fileUrl(b.uid, true)" [attr.download]="b.name">
+                <mat-icon>file_download</mat-icon>
+                Download {{ b.name }}
+              </a>
+            </div>
+          } @else if (epub()) {
+            <!-- Beside the pages, outside their frames: they turn whatever the book holds -->
+            <button type="button" class="turn previous" (click)="previous()" aria-label="Previous page">
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+            <button type="button" class="turn next" (click)="next()" aria-label="Next page">
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+          }
+
+          @if (tocOpen()) {
+            <div class="toc-backdrop" (click)="tocOpen.set(false)"></div>
+            <nav id="reader-toc" class="toc" aria-label="Contents">
+              <div class="toc-header">
+                <h2>Contents</h2>
+                <button mat-icon-button type="button" (click)="tocOpen.set(false)" aria-label="Close the contents">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+              <ol>
+                @for (entry of toc(); track $index) {
+                  <li>
+                    <button type="button" class="toc-entry" [style.padding-left.px]="16 + entry.depth * 16"
+                      [class.current]="entry.label === location()?.chapter" (click)="goTo(entry)">{{ entry.label }}</button>
+                  </li>
+                }
+              </ol>
+            </nav>
+          }
+        }
+      }
+    }
+  </div>
+
+  @if (opening() === 'open' && location(); as where) {
+    <footer class="foot">
+      <input type="range" class="seek" min="0" max="100" step="0.1" [value]="percent()" [style.--done.%]="percent()"
+        aria-label="Position in the book" [attr.aria-valuetext]="where.label"
+        (input)="onSeekInput($any($event.target).value)" (change)="onSeek($any($event.target).value)">
+    </footer>
+  }
+</div>

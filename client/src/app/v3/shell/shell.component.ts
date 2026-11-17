@@ -72,6 +72,7 @@ export class ShellComponent {
     { label: 'Playlists', icon: 'queue_music', link: '/playlists', exact: false },
     { label: 'Radios', icon: 'radio', link: '/radios', exact: false },
     { label: 'Videos', icon: 'video_library', link: '/videos', exact: false },
+    { label: 'Books', icon: 'import_contacts', link: '/books', exact: false },
     { label: 'Images', icon: 'photo_library', link: '/images', exact: false },
     { label: 'Users', icon: 'group', link: '/users', exact: false },
   ];

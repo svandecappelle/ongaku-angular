@@ -70,7 +70,8 @@ class Library {
   constructor() {
     this.data = {
       audio: [],
-      video: []
+      video: [],
+      book: []
     };
     // Every scanned track; `flatten` is the deduplicated view used by the listings
     this.tracks = [];
@@ -153,6 +154,9 @@ class Library {
             if (libFolder.video) {
               this.populate("video", libFolder);
             }
+            if (libFolder.book) {
+              this.populate("book", libFolder);
+            }
           });
         } else {
           if (lib.audio) {
@@ -160,6 +164,9 @@ class Library {
           }
           if (lib.video) {
             this.populate("video", lib);
+          }
+          if (lib.book) {
+            this.populate("book", lib);
           }
         }
         resolve(lib);
@@ -196,6 +203,12 @@ class Library {
           content: folderContent
         }, folder);
       }
+      if (folderContent.book) {
+        that.populate("book", {
+          folder: folder,
+          content: folderContent
+        }, folder);
+      }
       callback({
         type: folderContent.audio && folderContent.audio.length ? 'audio' : 'video'
       });
@@ -212,6 +225,7 @@ class Library {
     const inFolder = (entry) => entry.username && entry.username === folder.username && folder.path === entry.userfolder;
     this.setTracks(_.reject(this.tracks, inFolder));
     this.data.video = _.reject(this.data.video, inFolder);
+    this.data.book = _.reject(this.data.book, inFolder);
   }
 
   /**
@@ -224,6 +238,9 @@ class Library {
   populate(type, folderScanResult, folder) {
     if (type === 'video') {
       return this.populateVideos(folderScanResult, folder);
+    }
+    if (type === 'book') {
+      return this.populateEntries('book', folderScanResult, folder);
     }
     var destination = this.data;
     var flattenDestination = this.flatten;
@@ -280,10 +297,21 @@ class Library {
 
   /** Adds scanned videos (see video.js): a video found again replaces its former entry */
   populateVideos(folderScanResult, folder) {
-    const scanned = folderScanResult.content ? folderScanResult.content.video : folderScanResult.video;
+    this.populateEntries('video', folderScanResult, folder);
+    if (folderScanResult.isFinishedAll || (folderScanResult.content && folderScanResult.content.isFinishedAll)) {
+      this.videoScanned = true;
+    }
+  }
+
+  /**
+   * Adds the scanned files of a list of their own ('video', 'book'): a file found again
+   * replaces its former entry. The ones of the uploads of a member are his alone.
+   */
+  populateEntries(type, folderScanResult, folder) {
+    const scanned = folderScanResult.content ? folderScanResult.content[type] : folderScanResult[type];
     const owner = folderScanResult.folder || null;
-    const videos = _.compact(scanned || []).map((video) => {
-      const entry = Object.assign({}, video, {
+    const entries = _.compact(scanned || []).map((file) => {
+      const entry = Object.assign({}, file, {
         private: !!(owner && owner.private),
         user: owner ? owner.username || null : null,
       });
@@ -292,17 +320,14 @@ class Library {
         entry.userfolder = folder.path;
         // Uploads live outside the music folders, in "imported" of the account folder: their
         // folder is told from the uploads
-        const sub = path.relative(folder.path, path.dirname(video.file)).split(path.sep).join('/').replace(/^imported(\/|$)/, '');
+        const sub = path.relative(folder.path, path.dirname(file.file)).split(path.sep).join('/').replace(/^imported(\/|$)/, '');
         entry.folder = sub && !sub.startsWith('..') ? `My uploads/${sub}` : 'My uploads';
       }
       return entry;
     });
-    const byUid = new Map((this.data.video || []).map((video) => [video.uid, video]));
-    videos.forEach((video) => byUid.set(video.uid, video));
-    this.data.video = [...byUid.values()];
-    if (folderScanResult.isFinishedAll || (folderScanResult.content && folderScanResult.content.isFinishedAll)) {
-      this.videoScanned = true;
-    }
+    const byUid = new Map((this.data[type] || []).map((entry) => [entry.uid, entry]));
+    entries.forEach((entry) => byUid.set(entry.uid, entry));
+    this.data[type] = [...byUid.values()];
   }
 
   /** The videos a member can watch: the library ones, and the private ones of this member */
@@ -313,6 +338,16 @@ class Library {
   /** A video by its uid, if this member can watch it */
   getVideo(uid, username) {
     return this.videosFor(username).find((video) => video.uid === String(uid)) || null;
+  }
+
+  /** The books a member can read: the library ones, and the private ones of this member */
+  booksFor(username) {
+    return (this.data.book || []).filter((book) => !book.private || (username && book.user === username));
+  }
+
+  /** A book by its uid, if this member can read it */
+  getBook(uid, username) {
+    return this.booksFor(username).find((book) => book.uid === String(uid)) || null;
   }
 
   /**
@@ -493,7 +528,8 @@ class Library {
     // Clear all datas.
     this.data = {
       audio: [],
-      video: []
+      video: [],
+      book: []
     };
     this.loadingCoverAlbums = [];
     this.loadingCoverArtists = [];
@@ -798,7 +834,7 @@ class Library {
     return 'added';
   }
 
-  /** Takes out the tracks and videos of the files of a folder, sub folders included */
+  /** Takes out the tracks, videos and books of the files of a folder, sub folders included */
   removeUnder(folder) {
     const inside = (entry) => entry.file === folder || String(entry.file).startsWith(folder + path.sep);
     const tracks = this.tracks.filter(inside);
@@ -809,7 +845,24 @@ class Library {
     if (videos.length) {
       this.data.video = _.reject(this.data.video, inside);
     }
-    return { tracks, videos };
+    const books = (this.data.book || []).filter(inside);
+    if (books.length) {
+      this.data.book = _.reject(this.data.book, inside);
+    }
+    return { tracks, videos, books };
+  }
+
+  /** Adds a book of the music folders, or replaces the one of the same file */
+  upsertBook(book) {
+    const books = this.data.book || [];
+    const index = books.findIndex((entry) => entry.uid === book.uid);
+    const entry = Object.assign({}, book, { private: false, user: null });
+    if (index >= 0) {
+      books[index] = entry;
+      return 'updated';
+    }
+    this.data.book = books.concat([entry]);
+    return 'added';
   }
 
   /** Adds a video of the music folders, or replaces the one of the same file */

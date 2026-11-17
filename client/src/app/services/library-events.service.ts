@@ -12,6 +12,8 @@ export interface LibraryChange {
   removed: number;
   /** Videos added, changed or removed */
   videos: number;
+  /** Books added, changed or removed */
+  books?: number;
   /** Album folders whose cover.jpg was added or removed */
   covers: number;
   unreadable: number;
@@ -65,6 +67,9 @@ export function describeChange(change: LibraryChange): string {
   }
   if (change.videos) {
     parts.push(`${plural(change.videos, 'video')} changed`);
+  }
+  if (change.books) {
+    parts.push(`${plural(change.books, 'book')} changed`);
   }
   if (change.covers) {
     parts.push(`${plural(change.covers, 'album cover')} changed`);

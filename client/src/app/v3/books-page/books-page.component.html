@@ -1,0 +1,163 @@
+<ng-template #card let-book>
+  <a class="book-card" [routerLink]="['/books', book.uid]" [attr.aria-label]="label(book)">
+    <span class="jacket" [class.plain]="withoutCover().has(book.uid)">
+      @if (withoutCover().has(book.uid)) {
+        <span class="plain-title" aria-hidden="true">{{ book.title }}</span>
+        @if (book.author) {
+          <span class="plain-author" aria-hidden="true">{{ book.author }}</span>
+        }
+      } @else {
+        <mat-icon class="jacket-icon" aria-hidden="true">import_contacts</mat-icon>
+        <img [src]="service.coverUrl(book)" alt="" loading="lazy" (error)="coverFailed(book.uid)">
+      }
+      <span class="badge format">{{ book.format.toUpperCase() }}</span>
+      @if (book.progress; as progress) {
+        @if (progress.percent >= 1) {
+          <span class="badge done"><mat-icon aria-hidden="true">check</mat-icon>Read</span>
+        } @else {
+          <span class="reading-bar" aria-hidden="true"><span [style.width.%]="percent(progress)"></span></span>
+        }
+      }
+    </span>
+    <strong class="title">{{ book.title }}</strong>
+    @if (book.author) {
+      <span class="author muted small">{{ book.author }}</span>
+    }
+    <span class="muted small meta">
+      @if (book.progress && book.progress.percent < 1) {
+        <span class="percent">{{ percent(book.progress) }}%</span>
+      }
+      @if (book.pages) {
+        <span>{{ book.pages }} {{ book.pages === 1 ? 'page' : 'pages' }}</span>
+      }
+      <span>{{ formatSize(book.size) }}</span>
+      @if (book.private) {
+        <span><mat-icon aria-hidden="true">lock</mat-icon>Private</span>
+      }
+    </span>
+  </a>
+</ng-template>
+
+<div class="page" [class.dragging]="dragging()">
+  <header class="page-header">
+    <div class="header-text">
+      <span class="eyebrow">Read</span>
+      <h1>Books</h1>
+      <span class="muted">
+        The PDF and EPUB books of the library, and the ones you upload.
+        @if (status() === 'ready' && books().length) {
+          {{ books().length }} {{ books().length === 1 ? 'book' : 'books' }}
+        }
+      </span>
+    </div>
+    <span class="header-actions">
+      @if (status() === 'ready' && books().length) {
+        <mat-form-field class="search" subscriptSizing="dynamic">
+          <mat-icon matPrefix>search</mat-icon>
+          <mat-label>Find a book</mat-label>
+          <input matInput type="search" [ngModel]="search()" (ngModelChange)="search.set($event)" autocomplete="off">
+        </mat-form-field>
+      }
+      <button mat-flat-button color="accent" type="button" class="add" (click)="picker.click()" [disabled]="!!uploading()">
+        <mat-icon>cloud_upload</mat-icon>
+        Add books
+      </button>
+    </span>
+    <input #picker type="file" accept=".pdf,.epub,application/pdf,application/epub+zip" multiple hidden
+      (change)="addFiles(picker.files); picker.value = ''">
+  </header>
+
+  @if (uploading(); as u) {
+    <div class="upload-progress" role="status">
+      <span>Adding books · {{ u.done }} of {{ u.total }}</span>
+      <mat-progress-bar mode="determinate" [value]="((u.done + u.percent / 100) / u.total) * 100" aria-label="Upload progress"></mat-progress-bar>
+    </div>
+  }
+
+  @if (dragging()) {
+    <div class="drop-hint" aria-hidden="true">
+      <mat-icon>cloud_upload</mat-icon>
+      Drop the books to add them
+    </div>
+  }
+
+  @switch (status()) {
+    @case ('loading') {
+      <div class="state" role="status">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span class="muted">Loading the books…</span>
+      </div>
+    }
+    @case ('error') {
+      <div class="state" role="alert">
+        <mat-icon class="state-icon">error_outline</mat-icon>
+        <h2>The books could not be loaded</h2>
+        <button mat-stroked-button type="button" (click)="load()">
+          <mat-icon>replay</mat-icon>
+          Retry
+        </button>
+      </div>
+    }
+    @default {
+      @if (!books().length) {
+        <div class="state empty">
+          <mat-icon class="state-icon">import_contacts</mat-icon>
+          <h2>{{ scanning() ? 'The library is being scanned' : 'No books yet' }}</h2>
+          <p class="muted">
+            Add PDF or EPUB books, or drop them here: only you read the ones you upload.
+            Books put in the music folders show here for everyone.
+          </p>
+          <button mat-flat-button color="accent" type="button" (click)="picker.click()" [disabled]="!!uploading()">
+            <mat-icon>cloud_upload</mat-icon>
+            Add books
+          </button>
+        </div>
+      } @else {
+        @if (formats()) {
+          <mat-chip-listbox class="formats" aria-label="Format" [value]="format()" (change)="format.set($event.value ?? '')">
+            <mat-chip-option value="">All</mat-chip-option>
+            <mat-chip-option value="epub">EPUB</mat-chip-option>
+            <mat-chip-option value="pdf">PDF</mat-chip-option>
+          </mat-chip-listbox>
+        }
+
+        @if (reading().length) {
+          <section class="section continue" aria-labelledby="continue-title">
+            <div class="section-header">
+              <h2 id="continue-title"><mat-icon aria-hidden="true">chrome_reader_mode</mat-icon>Continue reading</h2>
+            </div>
+            <ul class="book-grid">
+              @for (book of reading(); track book.uid) {
+                <li><ng-container [ngTemplateOutlet]="card" [ngTemplateOutletContext]="{ $implicit: book }"></ng-container></li>
+              }
+            </ul>
+          </section>
+        }
+
+        @if (!shown().length) {
+          <div class="state" role="status">
+            <mat-icon class="state-icon">search</mat-icon>
+            <h2>No book matches</h2>
+            <button mat-stroked-button type="button" (click)="clearFilters()">Show all the books</button>
+          </div>
+        } @else {
+          @for (folder of folders(); track folder.path) {
+            <section class="section folder" [attr.aria-labelledby]="'folder-' + $index">
+              <div class="section-header">
+                <h2 [id]="'folder-' + $index"><mat-icon aria-hidden="true">folder</mat-icon><span class="folder-name">{{ folder.label }}</span></h2>
+                @if (folder.path !== folder.label) {
+                  <span class="muted small">{{ folder.path || 'At the root of the music folder' }}</span>
+                }
+              </div>
+              <ul class="book-grid">
+                @for (book of folder.books; track book.uid) {
+                  <li><ng-container [ngTemplateOutlet]="card" [ngTemplateOutletContext]="{ $implicit: book }"></ng-container></li>
+                }
+              </ul>
+            </section>
+          }
+        }
+      }
+    }
+  }
+</div>

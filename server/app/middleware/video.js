@@ -180,4 +180,4 @@ async function posterOf(video) {
   return job;
 }
 
-module.exports = { describe, publicVideo, posterOf, probe, isPlayable, titleFromName };
+module.exports = { describe, publicVideo, posterOf, probe, isPlayable, titleFromName, folderOf };

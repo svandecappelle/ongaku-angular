@@ -149,4 +149,4 @@ async function thumbnail(username, file, stat, size) {
   return job;
 }
 
-module.exports = { list, isImage, mimeOf, thumbnail, extensions, THUMB_SIZES, DEFAULT_EXTENSIONS };
+module.exports = { list, isImage, mimeOf, thumbnail, scale, extensions, THUMB_SIZES, DEFAULT_EXTENSIONS };

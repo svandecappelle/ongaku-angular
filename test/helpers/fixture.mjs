@@ -80,6 +80,80 @@ function zip(target, cwd, files) {
   }
 }
 
+/** A PDF of `pages` pages of text, with its title and author when given */
+function pdf(file, { title, author, pages = 2 } = {}) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const objects = [];
+  const add = (body) => objects.push(body) && objects.length;
+  const font = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+  const pagesId = objects.length + 1 + pages * 2;
+  const kids = [];
+  for (let n = 1; n <= pages; n++) {
+    const text = `BT /F1 24 Tf 72 720 Td (Page ${n} of ${title ?? path.basename(file)}) Tj ET`;
+    const content = add(`<< /Length ${text.length} >>\nstream\n${text}\nendstream`);
+    kids.push(add(`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 612 792] /Contents ${content} 0 R /Resources << /Font << /F1 ${font} 0 R >> >> >>`));
+  }
+  add(`<< /Type /Pages /Kids [${kids.map((id) => `${id} 0 R`).join(' ')}] /Count ${pages} >>`);
+  const catalog = add(`<< /Type /Catalog /Pages ${pagesId} 0 R >>`);
+  const info = title || author ? add(`<< ${title ? `/Title (${title}) ` : ''}${author ? `/Author (${author}) ` : ''}>>`) : null;
+  let out = '%PDF-1.4\n';
+  const offsets = objects.map((body, index) => {
+    const offset = out.length;
+    out += `${index + 1} 0 obj\n${body}\nendobj\n`;
+    return offset;
+  });
+  const xref = out.length;
+  out += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n${offsets.map((offset) => `${String(offset).padStart(10, '0')} 00000 n \n`).join('')}`;
+  out += `trailer\n<< /Size ${objects.length + 1} /Root ${catalog} 0 R${info ? ` /Info ${info} 0 R` : ''} >>\nstartxref\n${xref}\n%%EOF\n`;
+  fs.writeFileSync(file, out, 'latin1');
+}
+
+/** An EPUB of two chapters, with a cover image unless `cover` is false */
+function epub(file, { title, author, cover = true }) {
+  const source = `${file}.src`;
+  fs.mkdirSync(path.join(source, 'META-INF'), { recursive: true });
+  fs.mkdirSync(path.join(source, 'OEBPS'), { recursive: true });
+  fs.writeFileSync(path.join(source, 'mimetype'), 'application/epub+zip');
+  fs.writeFileSync(path.join(source, 'META-INF/container.xml'), `<?xml version="1.0"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+  <rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles>
+</container>`);
+  const chapter = (n) => `<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter ${n}</title></head>
+<body><h1>Chapter ${n}</h1>${Array.from({ length: 40 }, (_, i) => `<p>Paragraph ${i + 1} of chapter ${n} of ${title}. ${'Words fill the page. '.repeat(12)}</p>`).join('')}
+<script>window.parent.document.title = 'scripted';</script></body></html>`;
+  fs.writeFileSync(path.join(source, 'OEBPS/chapter1.xhtml'), chapter(1));
+  fs.writeFileSync(path.join(source, 'OEBPS/chapter2.xhtml'), chapter(2));
+  fs.writeFileSync(path.join(source, 'OEBPS/nav.xhtml'), `<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Contents</title></head>
+<body><nav epub:type="toc"><ol><li><a href="chapter1.xhtml">The first chapter</a></li><li><a href="chapter2.xhtml">The second chapter</a></li></ol></nav></body></html>`);
+  const files = ['mimetype', 'META-INF/container.xml', 'OEBPS/content.opf', 'OEBPS/nav.xhtml', 'OEBPS/chapter1.xhtml', 'OEBPS/chapter2.xhtml'];
+  if (cover) {
+    ffmpeg(['-f', 'lavfi', '-i', 'testsrc=size=300x450:rate=1', '-frames:v', '1', path.join(source, 'OEBPS/cover.jpg')]);
+    files.push('OEBPS/cover.jpg');
+  }
+  fs.writeFileSync(path.join(source, 'OEBPS/content.opf'), `<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:identifier id="id">urn:uuid:${crypto.randomUUID()}</dc:identifier>
+    <dc:title>${title}</dc:title>
+    <dc:creator>${author}</dc:creator>
+    <dc:language>en</dc:language>
+    <meta property="dcterms:modified">2024-01-01T00:00:00Z</meta>
+    ${cover ? '<meta name="cover" content="cover-img"/>' : ''}
+  </metadata>
+  <manifest>
+    <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>
+    <item id="c1" href="chapter1.xhtml" media-type="application/xhtml+xml"/>
+    <item id="c2" href="chapter2.xhtml" media-type="application/xhtml+xml"/>
+    ${cover ? '<item id="cover-img" href="cover.jpg" media-type="image/jpeg"/>' : ''}
+  </manifest>
+  <spine><itemref idref="c1"/><itemref idref="c2"/></spine>
+</package>`);
+  zip(file, source, files);
+  fs.rmSync(source, { recursive: true });
+}
+
 /** The music of the tests: every scenario relies on these names */
 function buildMusic(music) {
   // Genres for the library radio stations
@@ -139,6 +213,11 @@ function buildMusic(music) {
   clip(path.join(videos, 'Holidays/Mountain trip.webm'), 2, ['-c:v', 'libvpx', '-b:v', '150k', '-c:a', 'libvorbis']);
   clip(path.join(videos, 'Old clip.mpg'), 2, ['-c:v', 'mpeg1video', '-r', '25', '-c:a', 'mp2']);
 
+  // Books: an EPUB with its title, author and cover, a PDF with tags, a PDF without
+  epub(path.join(music, 'Books/Novels/time_machine.epub'), { title: 'The Time Machine', author: 'H. G. Wells &amp; Co' });
+  pdf(path.join(music, 'Books/manual.pdf'), { title: 'Ongaku Manual', author: 'Test Author', pages: 3 });
+  pdf(path.join(music, 'Books/Field_notes.pdf'));
+
   fs.mkdirSync(path.join(music, 'Imported'), { recursive: true });
 }
 
@@ -161,6 +240,11 @@ function buildAssets(assets) {
   fs.mkdirSync(path.join(zipped, 'Trips'), { recursive: true });
   ffmpeg([...lavfi(2), '-c:v', 'libvpx', '-b:v', '100k', '-c:a', 'libvorbis', path.join(zipped, 'Trips', 'lake.webm')]);
   zip(path.join(assets, 'video.zip'), zipped, ['Trips/lake.webm']);
+  // Books to upload: a PDF, and an EPUB without cover inside a zip
+  pdf(path.join(assets, 'pocket guide.pdf'), { title: 'Pocket Guide', pages: 2 });
+  const shelf = path.join(assets, 'zipped-books');
+  epub(path.join(shelf, 'Shelf', 'story.epub'), { title: 'A Short Story', author: 'Alice', cover: false });
+  zip(path.join(assets, 'ebooks.zip'), shelf, ['Shelf/story.epub']);
   tone(path.join(assets, 'small.mp3'), { artist: 'Alice Band', album: 'Demo', title: 'Small upload', track: 1 }, { seconds: 3, frequency: 500 });
   tone(path.join(assets, 'private.mp3'), { artist: 'Secret Band', album: 'Hidden Album', title: 'Private upload', track: 1 }, { seconds: 2, frequency: 520 });
   tone(path.join(assets, 'big.mp3'), { artist: 'Alice Band', album: 'Demo', title: 'Big upload', track: 2 }, { seconds: 30, frequency: 600, codec: ['-b:a', '128k'] });

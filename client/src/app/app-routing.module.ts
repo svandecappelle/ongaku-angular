@@ -38,6 +38,10 @@ const routes: Routes = [
     loadComponent: () => import('./v3/videos-page/videos-page.component').then((m) => m.VideosPageComponent) },
   { path: 'videos/:uid', canActivate: [AuthGuard],
     loadComponent: () => import('./v3/video-page/video-page.component').then((m) => m.VideoPageComponent) },
+  { path: 'books', canActivate: [AuthGuard],
+    loadComponent: () => import('./v3/books-page/books-page.component').then((m) => m.BooksPageComponent) },
+  { path: 'books/:uid', canActivate: [AuthGuard],
+    loadComponent: () => import('./v3/book-page/book-page.component').then((m) => m.BookPageComponent) },
   { path: 'my-library/:folder', component: LibraryComponent, canActivate: [AuthGuard]},
   { path: 'my-library', component: LibraryComponent, canActivate: [AuthGuard]},
   // The uploads are a tab of My library

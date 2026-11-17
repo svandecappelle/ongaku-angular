@@ -10,6 +10,7 @@ const lyrics = require('./lyrics');
 const history = require('./history');
 const radios = require('./radios');
 const video = require('./video');
+const books = require('./books');
 const gallery = require('./gallery');
 const shares = require('./shares');
 
@@ -23,6 +24,7 @@ router.use('/lyrics', lyrics);
 router.use('/history', history);
 router.use('/radios', radios);
 router.use('/video', video);
+router.use('/books', books);
 router.use('/images', gallery);
 router.use('/shares', shares.owner);
 router.use('/share', shares.visitor);

@@ -863,6 +863,126 @@ test('a backup is downloaded and restored from the Backup tab, the data and the 
   }, { timeout: 30000, what: 'the library after the restore' });
 });
 
+test('the Books page lists the books; an EPUB has its pages turned, a PDF is drawn, and the place is kept', { skip }, async (t) => {
+  const { body } = await api('/api/books', { as: 'carol' });
+  const novel = body.books.find((book) => book.name === 'time_machine.epub');
+  const manual = body.books.find((book) => book.name === 'manual.pdf');
+  const forget = () => Promise.all([novel, manual].map((book) => api(`/api/books/${book.uid}/progress`, { as: 'carol', method: 'DELETE' })));
+  await forget();
+  t.after(forget);
+  const progress = async (book) => (await api(`/api/books/${book.uid}`, { as: 'carol' })).body.progress;
+  const card = (book) => `document.querySelector('app-books-page .folder a.book-card[href="/books/${book.uid}"]')`;
+  const frameText = `[...document.querySelectorAll('app-book-page .stage iframe')].map((frame) => frame.contentDocument?.body?.textContent ?? '').join(' ')`;
+
+  // From the menu, without leaving the application
+  await page.goto('/', await login('carol'));
+  await page.waitFor(`document.querySelector('a[href="/books"]')`, { what: 'the Books entry of the menu' });
+  await page.eval(`document.querySelector('a[href="/books"]').click()`);
+  await page.waitFor(`document.querySelectorAll('app-books-page .folder .book-card').length === 3`, { what: 'the three books' });
+  const sections = await page.eval(`[...document.querySelectorAll('app-books-page .folder')].map((s) => s.querySelector('.folder-name').textContent.trim() + ':' + s.querySelectorAll('.book-card').length)`);
+  assert.deepEqual(sections, ['Books:2', 'Novels:1']);
+  assert.equal(await page.eval(`!!document.querySelector('app-books-page .continue')`), false, 'nothing being read yet');
+  await page.waitFor(`${card(novel)}.querySelector('.jacket img')?.naturalWidth > 0`, { what: 'the cover of the EPUB' });
+  assert.ok(await page.eval(`${card(novel)}.textContent.includes('The Time Machine') && ${card(novel)}.textContent.includes('H. G. Wells')`));
+  // A book without a cover image shows its title on a plain cover
+  await page.waitFor(`[...document.querySelectorAll('app-books-page .jacket')].every((jacket) => jacket.classList.contains('plain') || jacket.querySelector('img')?.complete)`, { what: 'the covers' });
+
+  // Search
+  await page.eval(`(() => { const input = document.querySelector('app-books-page .search input'); input.value = 'wells'; input.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+  await page.waitFor(`document.querySelectorAll('app-books-page .folder .book-card').length === 1`, { what: 'the search' });
+
+  // The EPUB: laid out in pages, with the colours of the theme, its scripts never run
+  await page.eval(`${card(novel)}.click()`);
+  await page.waitFor(`document.querySelector('app-book-page .stage.ready iframe')`, { what: 'the pages of the EPUB' });
+  await page.waitFor(`(${frameText}).includes('Paragraph 1 of chapter 1')`, { what: 'the text of the first chapter' });
+  assert.equal(await page.eval(`document.querySelector('app-book-page h1').textContent.trim()`), 'The Time Machine');
+  assert.equal(await page.eval(`document.querySelector('app-book-page .stage iframe').getAttribute('sandbox')`), 'allow-same-origin', 'no scripts in the pages');
+  assert.notEqual(await page.eval(`document.title`), 'scripted');
+  assert.equal(await page.eval(`(() => {
+    const frame = document.querySelector('app-book-page .stage iframe');
+    const probe = document.createElement('span');
+    probe.style.color = getComputedStyle(document.documentElement).getPropertyValue('--ongaku-text');
+    document.body.append(probe);
+    const wanted = getComputedStyle(probe).color;
+    probe.remove();
+    return frame.contentWindow.getComputedStyle(frame.contentDocument.querySelector('p')).color === wanted;
+  })()`), true, 'the text has the colour of the theme');
+  assert.equal(await page.eval(`getComputedStyle(document.querySelector('app-shell .sidebar')).visibility !== 'hidden' && document.elementFromPoint(20, 300).closest('app-book-page') !== null`), true, 'the reader covers the navigation');
+
+  // Turning the pages moves on in the book, by the buttons and by the keyboard
+  const where = () => page.eval(`document.querySelector('app-book-page .where')?.textContent.trim()`);
+  await page.eval(`document.querySelector('app-book-page .turn.next').click()`);
+  await page.waitFor(`document.querySelector('app-book-page .seek') && Number(document.querySelector('app-book-page .seek').value) > 0`, { what: 'a page turned' });
+  const afterClick = Number(await page.eval(`document.querySelector('app-book-page .seek').value`));
+  await page.eval(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))`);
+  await page.waitFor(`Number(document.querySelector('app-book-page .seek').value) > ${afterClick}`, { what: 'a page turned by the keyboard' });
+
+  // The contents lead to the second chapter, told in the heading
+  await page.waitFor(`document.querySelector('app-book-page .toc-button')`, { what: 'the contents button' });
+  await page.eval(`document.querySelector('app-book-page .toc-button').click()`);
+  await page.waitFor(`document.querySelectorAll('app-book-page .toc-entry').length === 2`, { what: 'the contents' });
+  await page.eval(`[...document.querySelectorAll('app-book-page .toc-entry')].find((entry) => entry.textContent.includes('second chapter')).click()`);
+  await page.waitFor(`(${frameText}).includes('Paragraph 1 of chapter 2')`, { what: 'the second chapter' });
+  await page.waitFor(`document.querySelector('app-book-page .sub').textContent.trim() === 'The second chapter'`, { what: 'the chapter in the heading' });
+  assert.match(await where(), /^\d+%$/);
+
+  // Larger text: fewer words by page
+  const size = () => page.eval(`(() => { const frame = document.querySelector('app-book-page .stage iframe'); return parseFloat(frame.contentWindow.getComputedStyle(frame.contentDocument.querySelector('p')).fontSize); })()`);
+  const small = await size();
+  await page.eval(`document.querySelector('app-book-page .zoom-in').click()`);
+  await page.waitFor(`document.querySelector('app-book-page .zoom-value').textContent.trim() === '110%'`, { what: 'the larger text' });
+  await eventually(async () => (await size()) > small, { what: 'the text to grow' });
+  await page.eval(`document.querySelector('app-book-page .zoom-out').click()`);
+
+  // The place is kept, and found again after a reload
+  const kept = await eventually(async () => {
+    const saved = await progress(novel);
+    return saved?.position.startsWith('epubcfi(') && saved.percent > 0.4 ? saved : null;
+  }, { what: 'the position kept on the server' });
+  assert.ok(kept.percent < 1);
+  await page.reload();
+  await page.waitFor(`(${frameText}).includes('of chapter 2')`, { what: 'the second chapter after a reload' });
+  assert.ok(!(await page.eval(`(${frameText}).includes('of chapter 1')`)), 'not back to the start');
+
+  // Back to the books: it is being read
+  await page.eval(`document.querySelector('app-book-page .back').click()`);
+  await page.waitFor(`document.querySelector('app-books-page .continue .book-card')`, { what: 'Continue reading' });
+  assert.ok(await page.eval(`document.querySelector('app-books-page .continue .book-card').textContent.includes('The Time Machine')`));
+  assert.ok(await page.eval(`!!document.querySelector('app-books-page .continue .reading-bar')`));
+
+  // The PDF: its pages drawn one under the other
+  await page.eval(`${card(manual)}.click()`);
+  await page.waitFor(`document.querySelectorAll('app-book-page .pdf-page').length === 3`, { what: 'the three pages of the PDF' });
+  const drawn = `(() => {
+    const c = document.querySelector('app-book-page .pdf-page canvas');
+    const d = c && c.width > 1 && c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    return !!d && d.some((v, i) => i % 4 === 0 && v < 100);
+  })()`;
+  await page.waitFor(drawn, { what: 'the text of the first page drawn' });
+  assert.equal(await where(), 'Page 1 of 3');
+  const width = await page.eval(`document.querySelector('app-book-page .pdf-page').offsetWidth`);
+
+  await page.eval(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))`);
+  await page.waitFor(`document.querySelector('app-book-page .where')?.textContent.trim() === 'Page 2 of 3'`, { what: 'the second page' });
+  await page.eval(`document.querySelector('app-book-page .zoom-in').click()`);
+  await page.waitFor(`document.querySelector('app-book-page .pdf-page').offsetWidth > ${width}`, { what: 'the zoom' });
+  assert.equal(await where(), 'Page 2 of 3', 'the zoom keeps the page');
+  await page.waitFor(`(() => { const c = document.querySelector('app-book-page .pdf-page[data-page="2"] canvas'); return !!c && c.width > ${width}; })()`, { what: 'the page drawn again, larger' });
+  await page.eval(`document.querySelector('app-book-page .zoom-out').click()`);
+  assert.equal((await eventually(async () => {
+    const saved = await progress(manual);
+    return saved?.position === '2' ? saved : null;
+  }, { what: 'the page kept on the server' })).percent, 0.6667);
+
+  await page.reload();
+  await page.waitFor(`document.querySelector('app-book-page .where')?.textContent.trim() === 'Page 2 of 3'`, { what: 'the second page after a reload' });
+  assert.equal(await page.eval(`document.querySelector('app-book-page a.download').getAttribute('download')`), 'manual.pdf');
+
+  // An unknown book
+  await page.goto('/books/unknown', await login('carol'));
+  await page.waitFor(`document.querySelector('app-book-page .state[role=alert]')?.textContent.includes('not in the library')`, { what: 'the unknown book' });
+});
+
 test('no uncaught error in the pages', { skip }, () => {
   assert.deepEqual(page.errors, []);
 });

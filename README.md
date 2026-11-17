@@ -28,6 +28,15 @@ Music and videos added, changed or deleted in the music folder show in the appli
 a rescan. On a network share (NFS, SMB), where the system tells no changes, set `watchLibrary: poll` in
 `server/config/application.yml`; on Linux, a very large library may need a higher `fs.inotify.max_user_watches`.
 
+### Books
+
+PDF and EPUB files put in the music folders, or uploaded by a member (then his alone), show on the Books
+page and are read in the browser: a PDF is scrolled, an EPUB has its pages turned with the colours of the
+theme, and the place reached is kept on the server for every device of the member. The formats are the
+`book` setting of `application.yml` (`[pdf, epub]` by default). The title, the number of pages and the cover
+of a PDF are read by `pdfinfo` and `pdftoppm` (the `poppler-utils` package, in the Docker image): without
+them a PDF is listed under the name of its file, with a plain cover.
+
 ### Android application
 
 `make apk` builds an Android application in Docker (nothing else to install): it asks for the address of

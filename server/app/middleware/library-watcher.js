@@ -7,6 +7,7 @@ const communication = require('../communication');
 const library = require('./library');
 const scanner = require('./scanner');
 const video = require('./video');
+const books = require('./books');
 const Decoder = require('./decoder').class;
 
 /** Changes gathered before they are applied: a copied album is one update */
@@ -139,7 +140,7 @@ class LibraryWatcher {
       return;
     }
     this.running = true;
-    const summary = { added: 0, updated: 0, removed: 0, videos: 0, covers: 0, unreadable: 0, albums: new Map() };
+    const summary = { added: 0, updated: 0, removed: 0, videos: 0, books: 0, covers: 0, unreadable: 0, albums: new Map() };
     try {
       for (const [file, kind] of batch) {
         await this.apply(file, kind, summary);
@@ -163,10 +164,12 @@ class LibraryWatcher {
         logger.warn(`Ignoring the removal of ${file}: its music folder is not reachable`);
         return;
       }
-      const { tracks, videos } = library.removeUnder(file);
+      const removed = library.removeUnder(file);
+      const { tracks, videos } = removed;
       tracks.forEach((track) => this.noteAlbum(summary, track));
       summary.removed += tracks.length;
       summary.videos += videos.length;
+      summary.books += removed.books.length;
       scanner.failures.delete(file);
       if (kind === 'unlink' && path.basename(file).toLowerCase() === COVER) {
         summary.covers += library.refreshFolderCover(path.dirname(file));
@@ -201,6 +204,14 @@ class LibraryWatcher {
         summary.unreadable++;
         logger.warn(`Cannot read the video ${file}: ${err && err.message}`);
       }
+    } else if (books.isBook(file)) {
+      try {
+        library.upsertBook(await books.describe(file));
+        summary.books++;
+      } catch (err) {
+        summary.unreadable++;
+        logger.warn(`Cannot read the book ${file}: ${err && err.message}`);
+      }
     }
   }
 
@@ -211,13 +222,13 @@ class LibraryWatcher {
   }
 
   announce(summary) {
-    const { added, updated, removed, videos, covers, unreadable } = summary;
-    if (!added && !updated && !removed && !videos && !covers && !unreadable) {
+    const { added, updated, removed, videos, books, covers, unreadable } = summary;
+    if (!added && !updated && !removed && !videos && !books && !covers && !unreadable) {
       return;
     }
     const albums = [...summary.albums.values()];
-    logger.info(`Library updated: ${added} added, ${updated} updated, ${removed} removed, ${videos} video changes, ${covers} covers, ${unreadable} unreadable`);
-    communication.broadcast('library:changed', { added, updated, removed, videos, covers, unreadable, albums, at: Date.now() });
+    logger.info(`Library updated: ${added} added, ${updated} updated, ${removed} removed, ${videos} video changes, ${books} book changes, ${covers} covers, ${unreadable} unreadable`);
+    communication.broadcast('library:changed', { added, updated, removed, videos, books, covers, unreadable, albums, at: Date.now() });
   }
 }
 

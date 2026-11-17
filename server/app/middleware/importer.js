@@ -8,9 +8,9 @@ const nconf = require('nconf');
 const logger = require('log4js').getLogger("Importer");
 
 /**
- * Unpack uploaded archives (zip, tar, tar.gz) or single audio, video and image files into a
- * library folder. Only files with an extension of the 'audio', 'video' or 'image' configuration
- * are kept.
+ * Unpack uploaded archives (zip, tar, tar.gz) or single audio, video, image and book files into
+ * a library folder. Only files with an extension of the 'audio', 'video', 'image' or 'book'
+ * configuration are kept.
  */
 class Importer {
 
@@ -31,9 +31,14 @@ class Importer {
     return require('./gallery').isImage(filename);
   }
 
-  /** A file kept from an upload: music, video or image */
+  /** A book the reader opens (see books.js): PDF or EPUB */
+  isBook(filename) {
+    return require('./books').isBook(filename);
+  }
+
+  /** A file kept from an upload: music, video, image or book */
   isMedia(filename) {
-    return this.isAudio(filename) || this.isVideo(filename) || this.isImage(filename);
+    return this.isAudio(filename) || this.isVideo(filename) || this.isImage(filename) || this.isBook(filename);
   }
 
   archiveType(filename) {
@@ -169,7 +174,7 @@ class Importer {
         zip.on("entry", (entry) => {
           const relative = path.normalize(entry.fileName);
           const target = path.resolve(root, relative);
-          // Directories and the files that are neither music nor video are skipped
+          // Directories and the files that are no media (music, video, image, book) are skipped
           if (entry.fileName.endsWith("/") || !this.isMedia(relative)) {
             return zip.readEntry();
           }

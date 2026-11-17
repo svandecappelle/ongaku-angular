@@ -1,0 +1,348 @@
+// The reader covers the window, over the navigation and the player: a page of its own
+:host {
+  position: fixed;
+  inset: 0;
+  // Over the bottom navigation (93) and the player bar; under the dialogs and the menus (1000)
+  z-index: 200;
+  display: block;
+  color: var(--ongaku-text);
+  background: var(--ongaku-bg);
+}
+
+.reader {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.muted {
+  color: var(--ongaku-muted);
+}
+
+.small {
+  font-size: 13px;
+}
+
+.bar {
+  flex: none;
+  min-height: 56px;
+  padding: 4px 8px;
+  padding-top: max(4px, env(safe-area-inset-top));
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--ongaku-surface);
+  border-bottom: 1px solid var(--ongaku-border);
+}
+
+.heading {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 8px;
+  display: flex;
+  flex-direction: column;
+  h1 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0;
+  }
+  h1,
+  .sub {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.where {
+  flex: none;
+  padding: 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ongaku-muted);
+}
+
+.zoom-value {
+  min-width: 42px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--ongaku-muted);
+}
+
+.body {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+}
+
+.stage {
+  flex: 1 1 0;
+  min-width: 0;
+  outline: none;
+  // Shown once open: no half laid out page
+  visibility: hidden;
+  &.ready {
+    visibility: visible;
+  }
+}
+
+// ---------- PDF: pages one under the other, made by pdf-view.ts ----------
+
+.reader:not(.epub) .stage {
+  position: relative;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--ongaku-surface-2);
+}
+
+:host ::ng-deep .pdf-pages {
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 100%;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+:host ::ng-deep .pdf-page {
+  flex: none;
+  margin: 0 auto;
+  // Paper, whatever the theme: the pages of a PDF have their own colours
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .3);
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  &.failed {
+    background: repeating-linear-gradient(45deg, #fff, #fff 12px, #f0f0f0 12px, #f0f0f0 24px);
+  }
+}
+
+// ---------- EPUB: pages to turn, made by epub.js ----------
+
+.reader.epub .stage {
+  margin: 0 auto;
+  max-width: 1500px;
+  // Room for the buttons that turn the pages
+  padding: 16px 56px;
+  box-sizing: border-box;
+  background: var(--ongaku-surface);
+}
+
+.reader.epub .body {
+  background: var(--ongaku-surface);
+}
+
+.turn {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 56px;
+  padding: 0;
+  border: 0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--ongaku-muted);
+  background: transparent;
+  outline: none;
+  transition: background-color .15s, color .15s;
+  &.previous {
+    left: 0;
+  }
+  &.next {
+    right: 0;
+  }
+  &:hover,
+  &:focus-visible {
+    color: var(--ongaku-text);
+    background: color-mix(in srgb, var(--ongaku-accent) 10%, transparent);
+  }
+  &:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--ongaku-accent);
+  }
+}
+
+// ---------- States ----------
+
+.state {
+  flex: 1 1 0;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  h2 {
+    margin: 0;
+    font-size: 22px;
+  }
+  p {
+    max-width: 440px;
+    margin: 0;
+  }
+  .state-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 48px;
+    color: var(--ongaku-muted);
+  }
+  &.over {
+    position: absolute;
+    inset: 0;
+    background: var(--ongaku-bg);
+  }
+}
+
+// ---------- Contents ----------
+
+.toc-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, .4);
+}
+
+.toc {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(360px, 88vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--ongaku-surface);
+  border-left: 1px solid var(--ongaku-border);
+  box-shadow: -12px 0 32px rgba(0, 0, 0, .3);
+  ol {
+    flex: 1 1 0;
+    margin: 0;
+    padding: 0 0 12px;
+    list-style: none;
+    overflow: auto;
+  }
+}
+
+.toc-header {
+  flex: none;
+  padding: 8px 8px 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+}
+
+.toc-entry {
+  width: 100%;
+  padding: 10px 16px;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.35;
+  cursor: pointer;
+  color: var(--ongaku-text);
+  background: transparent;
+  outline: none;
+  &:hover,
+  &:focus-visible {
+    background: var(--ongaku-surface-2);
+  }
+  &.current {
+    font-weight: 600;
+    color: var(--ongaku-accent);
+  }
+}
+
+// ---------- Position ----------
+
+.foot {
+  flex: none;
+  padding: 0 16px;
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  align-items: center;
+  background: var(--ongaku-surface);
+  border-top: 1px solid var(--ongaku-border);
+}
+
+.seek {
+  flex: 1 1 0;
+  height: 32px;
+  margin: 0;
+  appearance: none;
+  cursor: pointer;
+  background: transparent;
+  outline: none;
+  &::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--ongaku-accent) var(--done, 0%), var(--ongaku-border) var(--done, 0%));
+  }
+  &::-moz-range-track {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--ongaku-border);
+  }
+  &::-moz-range-progress {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--ongaku-accent);
+  }
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    margin-top: -5px;
+    border-radius: 50%;
+    background: var(--ongaku-accent);
+  }
+  &::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--ongaku-accent);
+  }
+  &:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--ongaku-accent) 35%, transparent);
+  }
+  &:focus-visible::-moz-range-thumb {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--ongaku-accent) 35%, transparent);
+  }
+}
+
+@media (max-width: 599px) {
+  .where,
+  .zoom-value,
+  .music,
+  .fullscreen {
+    display: none;
+  }
+  .reader.epub .stage {
+    padding: 12px 16px;
+  }
+  // No room beside the pages: the edges of the page turn it, unseen
+  .turn {
+    width: 16px;
+    mat-icon {
+      display: none;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn {
+    transition: none;
+  }
+}

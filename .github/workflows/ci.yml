@@ -44,10 +44,10 @@ jobs:
             package-lock.json
             client/package-lock.json
 
-      - name: Install ffmpeg (the test music, the waveforms, the posters)
+      - name: Install ffmpeg (the test music, the waveforms, the posters) and poppler (the PDF books)
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends ffmpeg > /dev/null
+          sudo apt-get install -y -qq --no-install-recommends ffmpeg poppler-utils > /dev/null
           ffmpeg -hide_banner -encoders | grep -q libvpx
 
       # node-wave, an optional dependency, comes from a git+ssh repository and is not in the lock

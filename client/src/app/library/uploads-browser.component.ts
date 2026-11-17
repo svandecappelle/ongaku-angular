@@ -16,6 +16,8 @@ interface UploadedFile {
   modified: number;
   audio: boolean;
   video?: boolean;
+  image?: boolean;
+  book?: boolean;
 }
 
 interface ImportResult {
@@ -569,7 +571,10 @@ export class UploadsBrowserComponent {
     if (file.video) {
       return 'movie';
     }
-    return /\.(jpe?g|png|gif|webp)$/i.test(file.name) ? 'photo' : 'insert_drive_file';
+    if (file.book) {
+      return 'import_contacts';
+    }
+    return file.image || /\.(jpe?g|png|gif|webp)$/i.test(file.name) ? 'photo' : 'insert_drive_file';
   }
 
   readonly formatSize = (bytes: number | null) => {

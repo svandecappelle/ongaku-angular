@@ -1,0 +1,309 @@
+@use '../page';
+@use '../placeholder';
+
+:host {
+  display: block;
+  color: var(--ongaku-text);
+}
+
+@include page.layout;
+
+.small {
+  font-size: 13px;
+}
+
+// Opaque: the profile background image may be busy
+.page-header {
+  padding: 24px 28px;
+  border-radius: var(--ongaku-radius-xl);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  background: color-mix(in srgb, var(--ongaku-accent) 12%, var(--ongaku-surface));
+  border: 1px solid var(--ongaku-border);
+  h1 {
+    margin: 0;
+    font-size: 40px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.search {
+  width: min(100%, 280px);
+}
+
+.add {
+  height: 48px;
+  border-radius: 24px;
+}
+
+.upload-progress {
+  padding: 12px 16px;
+  border-radius: var(--ongaku-radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--ongaku-surface);
+  border: 1px solid var(--ongaku-border);
+}
+
+.page.dragging .section,
+.page.dragging .state {
+  opacity: .35;
+}
+
+.drop-hint {
+  padding: 28px;
+  border-radius: var(--ongaku-radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ongaku-accent);
+  border: 2px dashed var(--ongaku-accent);
+  background: color-mix(in srgb, var(--ongaku-accent) 8%, transparent);
+}
+
+.state {
+  border-radius: var(--ongaku-radius-xl);
+  background: var(--ongaku-surface);
+  border: 1px solid var(--ongaku-border);
+  h2 {
+    margin: 0;
+    font-size: 22px;
+  }
+  p {
+    max-width: 480px;
+    margin: 0;
+  }
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.continue {
+  padding: 20px;
+  border-radius: var(--ongaku-radius-xl);
+  background: var(--ongaku-surface);
+  border: 1px solid var(--ongaku-border);
+}
+
+.section-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  h2 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 20px;
+    mat-icon {
+      color: var(--ongaku-muted);
+    }
+  }
+}
+
+.book-grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 22px 18px;
+}
+
+.book-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+  &:focus-visible .jacket {
+    box-shadow: 0 0 0 3px var(--ongaku-accent);
+  }
+  &:hover .jacket,
+  &:focus-visible .jacket {
+    transform: translateY(-4px);
+  }
+}
+
+// The shape of a book, whatever its cover image
+.jacket {
+  position: relative;
+  margin-bottom: 4px;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--ongaku-radius-sm);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ongaku-border);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .25);
+  transition: transform .2s ease;
+  @include placeholder.placeholder;
+  .jacket-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 44px;
+  }
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: var(--ongaku-surface-2);
+  }
+  // No image: the title as on a cloth binding
+  &.plain {
+    padding: 28px 12px 16px;
+    justify-content: flex-start;
+    gap: 10px;
+    text-align: center;
+    font-family: 'Literata Variable', Georgia, serif;
+    border-left: 6px solid color-mix(in srgb, var(--ongaku-accent) 55%, var(--ongaku-surface-2));
+  }
+}
+
+.plain-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ongaku-text);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+
+.plain-author {
+  font-size: 12px;
+  color: var(--ongaku-muted);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.badge {
+  position: absolute;
+  padding: 2px 7px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--ongaku-font);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: #fff;
+  background: rgba(0, 0, 0, .72);
+  mat-icon {
+    width: 13px;
+    height: 13px;
+    font-size: 13px;
+    opacity: 1;
+  }
+  &.format {
+    top: 8px;
+    right: 8px;
+  }
+  &.done {
+    bottom: 8px;
+    left: 8px;
+    color: var(--ongaku-on-accent, #000);
+    background: var(--ongaku-accent);
+  }
+}
+
+.reading-bar {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 5px;
+  background: rgba(0, 0, 0, .55);
+  span {
+    display: block;
+    height: 100%;
+    background: var(--ongaku-accent);
+  }
+}
+
+.title {
+  font-size: 15px;
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+
+.author {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .percent {
+    font-weight: 600;
+    color: var(--ongaku-accent);
+  }
+  mat-icon {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 599px) {
+  .book-grid {
+    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+    gap: 18px 12px;
+  }
+  .continue {
+    padding: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jacket {
+    transition: none;
+  }
+}

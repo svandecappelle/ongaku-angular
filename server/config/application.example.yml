@@ -12,6 +12,9 @@ audio: [mp3,  wav, wma, ogg, flac]
 video: [mp4, m4v, mov, webm, ogv, mkv, avi, flv, mpg, mpeg]
 # Images kept from the uploads, shown to their owner only on the Images page (no SVG)
 image: [jpg, jpeg, png, gif, webp, avif, bmp]
+# Books read in the browser, from the library folders and the uploads. The title, the pages and
+# the cover of a PDF need pdfinfo and pdftoppm (poppler-utils) on the server
+book: [pdf, epub]
 # Files added, changed or deleted in the library folders show by themselves, without a rescan.
 # true: system events (local disks); poll: checks every few seconds (network shares, where the
 # system tells no changes); false: rescan by hand from the administration

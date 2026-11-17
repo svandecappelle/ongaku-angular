@@ -163,9 +163,12 @@ class Scanner extends events.EventEmitter {
               logger.debug(`Callback scan video folder: ${folder}`, res.length);
               next(null,  res);
             });
+          },
+          book: (next) => {
+            this.scanBooks(folder).then((res) => next(null, res));
           }
         }, function(err, scanned){
-          logger.info(`Adding ${scanned.audio.length} audio files and ${scanned.video.length} video files to library.`);
+          logger.info(`Adding ${scanned.audio.length} audio files, ${scanned.video.length} video files and ${scanned.book.length} books to library.`);
           scanned.isFinishedAll = true;
           resolve(scanned);
         });
@@ -177,6 +180,12 @@ class Scanner extends events.EventEmitter {
 
   scanVideo (apath) {
       return this.scan(apath, new Decoder("video"));
+  };
+
+  /** The books (PDF, EPUB) of a folder: see books.js */
+  scanBooks (apath) {
+      const books = require('./books');
+      return this.scan(apath, { type: 'book', check: (file) => books.isBook(file), decode: (file) => books.describe(file) });
   };
 
   scanAudio (apath, callback) {

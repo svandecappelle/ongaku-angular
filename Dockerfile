@@ -29,8 +29,9 @@ RUN npm pkg delete optionalDependencies \
 # --- Runtime ----------------------------------------------------------------
 FROM node:${NODE_VERSION}-bookworm-slim
 # ffmpeg: transcoding of the formats browsers can't play, and tag reading
+# poppler-utils: title, pages and cover of the PDF books (pdfinfo, pdftoppm)
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ffmpeg tini \
+  && apt-get install -y --no-install-recommends ffmpeg poppler-utils tini \
   && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production

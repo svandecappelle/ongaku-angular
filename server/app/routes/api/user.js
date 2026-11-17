@@ -17,6 +17,7 @@ const userlib = require("./../../model/library");
 const references = require("./../../model/database/redis/references");
 const shares = require("./../../model/shares");
 const likes = require("./../../model/likes");
+const reading = require("./../../model/books");
 const user = require("./../../model/user");
 const db = require("./../../model/database");
 
@@ -175,7 +176,8 @@ router.get('/files', (req, res) => {
                     modified: stat ? stat.mtimeMs : null,
                     audio: !entry.isDirectory() && importer.isAudio(entry.name),
                     video: !entry.isDirectory() && importer.isVideo(entry.name),
-                    image: !entry.isDirectory() && importer.isImage(entry.name)
+                    image: !entry.isDirectory() && importer.isImage(entry.name),
+                    book: !entry.isDirectory() && importer.isBook(entry.name)
                 })))).then((files) => {
                 res.json({ path: relative, files: files, total: visible.length, page: page, size: size });
             });
@@ -227,7 +229,8 @@ const relativeTo = (root, target) => path.relative(root, target).split(path.sep)
 /**
  * Applies moves of files or folders of the uploads ([[old absolute path, new absolute path]],
  * already done on the disk): what the member saved follows his tracks (their uids come from
- * their paths), his public links follow his images, then his library is read again.
+ * their paths), his public links follow his images, the pages he reached follow his books, then
+ * his library is read again.
  */
 function afterMoves(username, moves) {
     const root = uploadsRoot(username);
@@ -241,6 +244,13 @@ function afterMoves(username, moves) {
             }
         }
     });
+    const bookMoves = [];
+    library.booksFor(username).filter((book) => book.private && book.user === username).forEach((book) => {
+        const move = moves.find(([from]) => book.file === from || String(book.file).startsWith(from + path.sep));
+        if (move) {
+            bookMoves.push([book.uid, uidOf(move[1] + book.file.slice(move[0].length))]);
+        }
+    });
     const pathMoves = moves.map(([from, to]) => [relativeTo(root, from), relativeTo(root, to)]);
     return new Promise((resolve) => references.renameTracks(username, trackMoves, (err) => {
         if (err) {
@@ -250,7 +260,12 @@ function afterMoves(username, moves) {
             if (err) {
                 console.error('The shared links could not follow their images', err);
             }
-            rescanUser(username).then(resolve);
+            reading.rename(username, bookMoves, (err) => {
+                if (err) {
+                    console.error('The reading positions could not follow their books', err);
+                }
+                rescanUser(username).then(resolve);
+            });
         });
     }));
 }
